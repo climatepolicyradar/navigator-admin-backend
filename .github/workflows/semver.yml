@@ -29,6 +29,6 @@ jobs:
 
       - name: Docker pull, retag and push
         run: |
-          docker pull ${DOCKER_REGISTRY}/navigator-backend:main-${GITHUB_SHA::8}
-          docker tag ${DOCKER_REGISTRY}/navigator-backend:main-${GITHUB_SHA::8}  navigator-backend:main-${GITHUB_SHA::8} 
-          .github/retag-and-push.sh navigator-backend main-${GITHUB_SHA::8}
+          docker pull ${DOCKER_REGISTRY}/navigator-admin-backend:main-${GITHUB_SHA::8}
+          docker tag ${DOCKER_REGISTRY}/navigator-admin-backend:main-${GITHUB_SHA::8}  navigator-admin-backend:main-${GITHUB_SHA::8} 
+          .github/retag-and-push.sh navigator-admin-backend main-${GITHUB_SHA::8}
