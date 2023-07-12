@@ -1,3 +1,4 @@
+
 #include .env
 #include ./makefile-local.defs
 #include ./makefile-docker.defs
@@ -12,3 +13,10 @@ bootstrap:
 git_hooks:
 	# Install git pre-commit hooks
 	poetry run pre-commit install --install-hooks
+
+build_bats:
+	docker build bats -t bats-with-helpers:latest
+
+
+test_bashscripts: build_bats
+	docker run --rm -v "${PWD}/.github:/code" bats-with-helpers:latest /code/tests/test_retag_and_push.bats

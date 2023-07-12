@@ -27,7 +27,7 @@ jobs:
         run:  docker pull python:3.9-slim
 
       - name: Build
-        run: docker run -t navigator-admin .
+        run: docker build -t navigator-admin .
 
       - name: Run Tests
         run: echo TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO
