@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# https://github.com/marketplace/actions/docker-layer-caching
+jobs:
+  test-bash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run:  make test_bashscripts
+
+  build-start-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get python Container
+        run:  docker pull python:3.9-slim
+
+      - name: Build
+        run: docker run -t navigator-admin .
+
+      - name: Run Tests
+        run: echo TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1.6.1
+
+      - name: Push Images to ECR
+        run: |
+          .github/retag-and-push.sh navigator-admin latest
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
