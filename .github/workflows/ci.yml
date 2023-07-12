@@ -27,7 +27,7 @@ jobs:
         run:  docker pull python:3.9-slim
 
       - name: Build
-        run: docker build -t navigator-admin .
+        run: docker build -t navigator-admin-backend .
 
       - name: Run Tests
         run: echo TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO
@@ -45,6 +45,6 @@ jobs:
 
       - name: Push Images to ECR
         run: |
-          .github/retag-and-push.sh navigator-admin latest
+          .github/retag-and-push.sh navigator-admin-backend latest
         env:
           DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
