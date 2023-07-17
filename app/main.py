@@ -39,4 +39,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8888,
         log_config=DEFAULT_LOGGING,
+        workers=10,
     )  # type: ignore
