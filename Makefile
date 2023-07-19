@@ -20,4 +20,4 @@ build:
 	docker build -t navigator-admin-backend .
 
 test:
-	PYTHONPATH=. pytest -vvv 
+	docker run navigator-admin-backend pytest -vvv tests
