@@ -1,8 +1,4 @@
 
-#include .env
-#include ./makefile-local.defs
-#include ./makefile-docker.defs
-
 bootstrap:
 	- pyenv deactivate
 	pyenv virtualenv 3.9 admin-backend
@@ -17,6 +13,11 @@ git_hooks:
 build_bats:
 	docker build bats -t bats-with-helpers:latest
 
-
 test_bashscripts: build_bats
 	docker run --rm -v "${PWD}/.github:/code" bats-with-helpers:latest /code/tests/test_retag_and_push.bats
+
+build:
+	docker build -t navigator-admin-backend .
+
+test:
+	PYTHONPATH=. pytest -vvv 
