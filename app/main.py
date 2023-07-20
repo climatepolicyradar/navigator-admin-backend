@@ -1,43 +1,25 @@
-import logging
-import logging.config
-import os
+from fastapi_pagination import add_pagination
+from app.logging_config import DEFAULT_LOGGING, setup_json_logging
+from app.api.api_v1.routers import families_router
 from fastapi import FastAPI
 import uvicorn
 
 
-app = FastAPI()
+app = FastAPI(title="navigator-admin")
+setup_json_logging(app)
+add_pagination(app)
+app.include_router(families_router, prefix="/api/v1", tags=["families"])
 
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-DEFAULT_LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stdout",  # Default is stderr
-        },
-    },
-    "loggers": {},
-    "root": {
-        "handlers": ["console"],
-        "level": LOG_LEVEL,
-    },
-}
-logger = logging.getLogger(__name__)
-logging.config.dictConfig(DEFAULT_LOGGING)
-
-
-@app.get("/")
+@app.get("/api/v1", include_in_schema=False)
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "CPR Navigator Admin API v1"}
 
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",
+        app,
         host="0.0.0.0",
         port=8888,
         log_config=DEFAULT_LOGGING,
-        workers=10,
     )  # type: ignore

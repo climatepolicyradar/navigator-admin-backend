@@ -23,14 +23,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Get python Container
-        run:  docker pull python:3.9-slim
-
       - name: Build
-        run: docker build -t navigator-admin-backend .
+        run: make build
 
       - name: Run Tests
-        run: echo TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO-TODO
+        run: make test
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
