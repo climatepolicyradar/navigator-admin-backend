@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class FamilyResponse(BaseModel):
+class FamilyDTO(BaseModel):
     """A JSON representation of a family."""
 
     # TODO organisation: str

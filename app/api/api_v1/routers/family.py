@@ -1,6 +1,7 @@
+"""Endpoints for managing the Family entity."""
 from fastapi import APIRouter, HTTPException
 
-from app.model.family import FamilyResponse
+from app.model.family import FamilyDTO
 import app.repository.family as family_repo
 
 families_router = r = APIRouter()
@@ -8,7 +9,7 @@ families_router = r = APIRouter()
 
 @r.get(
     "/families/{import_id}",
-    response_model=FamilyResponse,
+    response_model=FamilyDTO,
 )
 async def get_family(
     import_id: str,

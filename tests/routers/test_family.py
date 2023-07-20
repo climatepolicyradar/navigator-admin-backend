@@ -1,13 +1,16 @@
 from typing import Optional
-from app.model.family import FamilyResponse
+
+from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
+from app.model.family import FamilyDTO
 import app.repository.family as family_repo
 
 
-def mock_get_family(import_id: str) -> Optional[FamilyResponse]:
+def mock_get_family(import_id: str) -> Optional[FamilyDTO]:
     if import_id == "missing":
         return None
 
-    return FamilyResponse(
+    return FamilyDTO(
         import_id=import_id,
         title="title",
         summary="summary",
@@ -24,7 +27,7 @@ def mock_get_family(import_id: str) -> Optional[FamilyResponse]:
     )
 
 
-def test_get_family_ok(client, monkeypatch):
+def test_get_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatch):
     monkeypatch.setattr(family_repo, "get_family", mock_get_family)
     response = client.get(
         "/api/v1/families/import_id",
@@ -34,7 +37,7 @@ def test_get_family_ok(client, monkeypatch):
     assert data["import_id"] == "import_id"
 
 
-def test_get_family_not_found(client, monkeypatch):
+def test_get_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatch):
     monkeypatch.setattr(family_repo, "get_family", mock_get_family)
     response = client.get(
         "/api/v1/families/missing",

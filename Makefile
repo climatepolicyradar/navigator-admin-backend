@@ -19,5 +19,5 @@ test_bashscripts: build_bats
 build:
 	docker build -t navigator-admin-backend .
 
-test:
+test: build
 	docker run navigator-admin-backend pytest -vvv tests
