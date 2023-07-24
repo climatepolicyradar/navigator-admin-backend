@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 from app.model.family import FamilyDTO
-import app.repository.family as family_repo
+import app.service.family as family_service
 
 
 def get_family(import_id: str) -> FamilyDTO:
@@ -48,7 +48,7 @@ def mock_create_family(data: FamilyDTO) -> Optional[FamilyDTO]:
 
 
 def test_get_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "get_family", mock_get_family)
+    monkeypatch.setattr(family_service, "get_family", mock_get_family)
     response = client.get(
         "/api/v1/families/import_id",
     )
@@ -58,7 +58,7 @@ def test_get_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatch):
 
 
 def test_get_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "get_family", mock_get_family)
+    monkeypatch.setattr(family_service, "get_family", mock_get_family)
     response = client.get(
         "/api/v1/families/missing",
     )
@@ -68,7 +68,7 @@ def test_get_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatch):
 
 
 def test_search_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "search_families", mock_search_families)
+    monkeypatch.setattr(family_service, "search_families", mock_search_families)
     response = client.get(
         "/api/v1/families/?q=anything",
     )
@@ -80,7 +80,7 @@ def test_search_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatc
 
 
 def test_search_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "search_families", mock_search_families)
+    monkeypatch.setattr(family_service, "search_families", mock_search_families)
     response = client.get(
         "/api/v1/families/?q=empty",
     )
@@ -90,7 +90,7 @@ def test_search_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatc
 
 
 def test_update_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "update_family", mock_update_family)
+    monkeypatch.setattr(family_service, "update_family", mock_update_family)
     new_data = get_family("fam1").dict()
     response = client.put("/api/v1/families/fam1", json=new_data)
     assert response.status_code == 200
@@ -99,7 +99,7 @@ def test_update_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatc
 
 
 def test_update_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "update_family", mock_update_family)
+    monkeypatch.setattr(family_service, "update_family", mock_update_family)
     new_data = get_family("fam1").dict()
     response = client.put("/api/v1/families/missing", json=new_data)
     assert response.status_code == 404
@@ -108,7 +108,7 @@ def test_update_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatc
 
 
 def test_create_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "create_family", mock_create_family)
+    monkeypatch.setattr(family_service, "create_family", mock_create_family)
     new_data = get_family("fam1").dict()
     response = client.post("/api/v1/families", json=new_data)
     assert response.status_code == 200
@@ -117,7 +117,7 @@ def test_create_family_uses_repo_200(client: TestClient, monkeypatch: MonkeyPatc
 
 
 def test_create_family_uses_repo_404(client: TestClient, monkeypatch: MonkeyPatch):
-    monkeypatch.setattr(family_repo, "create_family", mock_create_family)
+    monkeypatch.setattr(family_service, "create_family", mock_create_family)
     new_data: FamilyDTO = get_family("fam1")
     new_data.import_id = "missing"
     response = client.post("/api/v1/families", json=new_data.dict())
