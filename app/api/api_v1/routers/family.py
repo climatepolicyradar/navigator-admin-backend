@@ -36,6 +36,19 @@ async def get_family(
 
 
 @r.get(
+    "/families",
+    response_model=list[FamilyDTO],
+)
+async def get_all_families() -> list[FamilyDTO]:
+    """
+    Returns all families
+
+    :return FamilyDTO: returns a FamilyDTO of the family found.
+    """
+    return family_service.get_all_families()
+
+
+@r.get(
     "/families/",
     response_model=list[FamilyDTO],
 )
