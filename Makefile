@@ -21,3 +21,6 @@ build:
 
 test: build
 	docker run navigator-admin-backend pytest -vvv tests
+
+run: build
+	docker run -p 8888:8888 -d navigator-admin-backend
