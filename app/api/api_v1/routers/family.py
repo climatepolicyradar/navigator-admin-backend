@@ -9,7 +9,7 @@ implemented directly accesses the "repository" layer.
 from fastapi import APIRouter, HTTPException
 
 from app.model.family import FamilyDTO
-import app.repository.family as family_repo
+import app.service.family as family_service
 
 families_router = r = APIRouter()
 
@@ -28,11 +28,24 @@ async def get_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
-    family = family_repo.get_family(import_id)
+    family = family_service.get(import_id)
     if family is None:
         raise HTTPException(status_code=404, detail=f"Family not found: {import_id}")
 
     return family
+
+
+@r.get(
+    "/families",
+    response_model=list[FamilyDTO],
+)
+async def get_all_families() -> list[FamilyDTO]:
+    """
+    Returns all families
+
+    :return FamilyDTO: returns a FamilyDTO of the family found.
+    """
+    return family_service.all()
 
 
 @r.get(
@@ -47,7 +60,7 @@ async def search_family(q: str = "") -> list[FamilyDTO]:
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[FamilyDTO]: A list of matching families.
     """
-    families = family_repo.search_families(q)
+    families = family_service.search(q)
     if families is None or len(families) == 0:
         raise HTTPException(status_code=404, detail=f"Families not found for term: {q}")
 
@@ -69,7 +82,7 @@ async def update_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family updated.
     """
-    family = family_repo.update_family(import_id, new_family)
+    family = family_service.update(import_id, new_family)
     if family is None:
         raise HTTPException(status_code=404, detail=f"Family not updated: {import_id}")
 
@@ -91,7 +104,7 @@ async def create_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the new family.
     """
-    family = family_repo.create_family(new_family)
+    family = family_service.create(new_family)
     if family is None:
         raise HTTPException(
             status_code=404, detail=f"Family not created: {new_family.import_id}"
@@ -114,6 +127,6 @@ async def delete_family(
     :param str import_id: Specified import_id.
     :raises HTTPException: If the family is not found a 404 is returned.
     """
-    family_deleted = family_repo.delete_family(import_id)
+    family_deleted = family_service.delete(import_id)
     if not family_deleted:
         raise HTTPException(status_code=404, detail=f"Family not deleted: {import_id}")

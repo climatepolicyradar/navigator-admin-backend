@@ -38,7 +38,7 @@ THE_REPO: list[FamilyDTO] = [
 ]
 
 
-def get_all_families() -> list[FamilyDTO]:
+def all() -> list[FamilyDTO]:
     """
     Returns all the families.
 
@@ -47,7 +47,7 @@ def get_all_families() -> list[FamilyDTO]:
     return THE_REPO
 
 
-def get_family(import_id: str) -> Optional[FamilyDTO]:
+def get(import_id: str) -> Optional[FamilyDTO]:
     """
     Gets a single family from the repository.
 
@@ -62,7 +62,7 @@ def get_family(import_id: str) -> Optional[FamilyDTO]:
     return found[0]
 
 
-def search_families(search_term: str) -> Optional[list[FamilyDTO]]:
+def search(search_term: str) -> Optional[list[FamilyDTO]]:
     """
     Gets a list of families from the repository searching title and summary.
 
@@ -74,7 +74,7 @@ def search_families(search_term: str) -> Optional[list[FamilyDTO]]:
     return found
 
 
-def update_family(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
+def update(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
     """
     Updates a single entry with the new values passed.
 
@@ -93,7 +93,7 @@ def update_family(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
     return family
 
 
-def create_family(family: FamilyDTO) -> Optional[FamilyDTO]:
+def create(family: FamilyDTO) -> Optional[FamilyDTO]:
     """
     Creates a new family.
 
@@ -108,7 +108,7 @@ def create_family(family: FamilyDTO) -> Optional[FamilyDTO]:
     return family
 
 
-def delete_family(import_id: str) -> bool:
+def delete(import_id: str) -> bool:
     """
     Deletes a single family by the import id.
 
