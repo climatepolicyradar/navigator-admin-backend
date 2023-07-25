@@ -26,8 +26,11 @@ jobs:
       - name: Build
         run: make build
 
-      - name: Run Tests
-        run: make test
+      - name: Run Unit Tests
+        run: make unit_test
+
+      - name: Run Integration Tests
+        run: make integration_test
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16

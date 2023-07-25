@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import registry, sessionmaker
+from sqlalchemy.orm import registry, sessionmaker, Session
 
 from app.config import SQLALCHEMY_DATABASE_URI
 
@@ -36,31 +36,10 @@ def make_declarative_base():
     return Base
 
 
+def get_db() -> Session:
+    return SessionLocal()
+
+
 Base = make_declarative_base()
 # Aliased type annotation useful for type hints
 AnyModel = Base
-
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# TODO: Update to async db connection
-# https://fastapi.tiangolo.com/advanced/async-sql-databases/
-# async def get_session() -> AsyncSession:
-#     async with async_session() as session:
-#         yield session
-#         await session.commit()
-#
-# class DB(AsyncSession):
-#     def __new__(cls,db:AsyncSession = Depends(get_session)):
-#         return db
-#
-# # in the route:
-# @app.post("/my-route/")
-# async def do_something(db: DB = Depends()): ...

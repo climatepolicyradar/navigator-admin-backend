@@ -2,7 +2,11 @@
 
 from datetime import datetime
 from typing import Optional
+from app.db.models.law_policy.collection import CollectionFamily
+from sqlalchemy.orm import Session
 from app.model.family import FamilyDTO
+from app.db.models.law_policy import Family
+
 
 THE_REPO: list[FamilyDTO] = [
     FamilyDTO(
@@ -38,13 +42,43 @@ THE_REPO: list[FamilyDTO] = [
 ]
 
 
-def all() -> list[FamilyDTO]:
+def _family_to_dto(db: Session, f: Family) -> FamilyDTO:
+    return FamilyDTO(
+        import_id=str(f.import_id),
+        title=str(f.title),
+        summary=str(f.description),
+        geography=str(f.geography_id),
+        category=str(f.family_category),
+        status=str(f.family_status),
+        metadata={},  # TODO: organisation and metadata
+        slug=str(f.slugs[0].name if len(f.slugs) > 0 else ""),
+        events=[str(e.import_id) for e in f.events],
+        published_date=f.published_date,
+        last_updated_date=f.last_updated_date,
+        documents=[str(d.import_id) for d in f.family_documents],
+        collections=[
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                f.import_id == CollectionFamily.family_import_id
+            )
+        ],
+    )
+
+
+def all(db: Session) -> list[FamilyDTO]:
     """
     Returns all the families.
 
     :return Optional[FamilyResponse]: All of things
     """
-    return THE_REPO
+    families = db.query(Family).all()
+
+    if not families:
+        return []
+
+    result = [_family_to_dto(db, f) for f in families]
+
+    return result
 
 
 def get(import_id: str) -> Optional[FamilyDTO]:
