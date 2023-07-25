@@ -2,24 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from app.model.family import FamilyDTO
-
-
-def get_family(import_id: str) -> FamilyDTO:
-    return FamilyDTO(
-        import_id=import_id,
-        title="title",
-        summary="summary",
-        geography="geo",
-        category="category",
-        status="status",
-        metadata={},
-        slug="slug",
-        events=["e1", "e2"],
-        published_date=None,
-        last_updated_date=None,
-        documents=["doc1", "doc2"],
-        collections=["col1", "col2"],
-    )
+from unit_tests.helpers.family import get_family
 
 
 def mock_get_all_families():

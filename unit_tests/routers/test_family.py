@@ -1,10 +1,15 @@
+"""
+Tests the routes for family management.
+
+This uses a service mock and ensures each endpoint calls into the service.
+"""
 from fastapi.testclient import TestClient
 from app.model.family import FamilyDTO
 import app.service.family as family_service
-from tests.mocks.family_service import get_family
+from unit_tests.mocks.family_service import get_family
 
 
-def test_get_all_familes_uses_service_200(client: TestClient, family_service_mock):
+def test_get_all_families_uses_service_200(client: TestClient, family_service_mock):
     response = client.get(
         "/api/v1/families",
     )
