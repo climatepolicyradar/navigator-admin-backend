@@ -54,20 +54,20 @@ def mock_delete_family(import_id: str) -> bool:
 
 
 def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
-    monkeypatch.setattr(family_service, "get_family", mock_get_family)
-    mocker.spy(family_service, "get_family")
+    monkeypatch.setattr(family_service, "get", mock_get_family)
+    mocker.spy(family_service, "get")
 
-    monkeypatch.setattr(family_service, "get_all_families", mock_get_all_families)
-    mocker.spy(family_service, "get_all_families")
+    monkeypatch.setattr(family_service, "all", mock_get_all_families)
+    mocker.spy(family_service, "all")
 
-    monkeypatch.setattr(family_service, "search_families", mock_search_families)
-    mocker.spy(family_service, "search_families")
+    monkeypatch.setattr(family_service, "search", mock_search_families)
+    mocker.spy(family_service, "search")
 
-    monkeypatch.setattr(family_service, "update_family", mock_update_family)
-    mocker.spy(family_service, "update_family")
+    monkeypatch.setattr(family_service, "update", mock_update_family)
+    mocker.spy(family_service, "update")
 
-    monkeypatch.setattr(family_service, "create_family", mock_create_family)
-    mocker.spy(family_service, "create_family")
+    monkeypatch.setattr(family_service, "create", mock_create_family)
+    mocker.spy(family_service, "create")
 
-    monkeypatch.setattr(family_service, "delete_family", mock_delete_family)
-    mocker.spy(family_service, "delete_family")
+    monkeypatch.setattr(family_service, "delete", mock_delete_family)
+    mocker.spy(family_service, "delete")

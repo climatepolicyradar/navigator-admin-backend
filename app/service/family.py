@@ -8,25 +8,25 @@ from app.model.family import FamilyDTO
 import app.repository.family as family_repo
 
 
-def get_family(import_id: str) -> Optional[FamilyDTO]:
-    return family_repo.get_family(import_id)
+def get(import_id: str) -> Optional[FamilyDTO]:
+    return family_repo.get(import_id)
 
 
-def get_all_families() -> list[FamilyDTO]:
-    return family_repo.get_all_families()
+def all() -> list[FamilyDTO]:
+    return family_repo.all()
 
 
-def search_families(search_term: str) -> Optional[list[FamilyDTO]]:
-    return family_repo.search_families(search_term)
+def search(search_term: str) -> Optional[list[FamilyDTO]]:
+    return family_repo.search(search_term)
 
 
-def update_family(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
-    return family_repo.update_family(import_id, family)
+def update(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
+    return family_repo.update(import_id, family)
 
 
-def create_family(family: FamilyDTO) -> Optional[FamilyDTO]:
-    return family_repo.create_family(family)
+def create(family: FamilyDTO) -> Optional[FamilyDTO]:
+    return family_repo.create(family)
 
 
-def delete_family(import_id: str) -> bool:
-    return family_repo.delete_family(import_id)
+def delete(import_id: str) -> bool:
+    return family_repo.delete(import_id)
