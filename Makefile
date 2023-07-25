@@ -37,8 +37,8 @@ integration_test: build
 		postgres:14 
 	sleep 3
 	@echo Loading schema...
-	docker exec test_db psql -U navigator -f /data-load/blank.sql
-	docker exec test_db psql -U navigator -f /data-load/default-data.sql
+	docker exec test_db psql -U navigator -f /data-load/blank.sql > load_blank.txt
+	docker exec test_db psql -U navigator -f /data-load/default-data.sql > load_default.txt
 	@echo Running tests...
 	docker run --rm \
 		--network=test-network \
