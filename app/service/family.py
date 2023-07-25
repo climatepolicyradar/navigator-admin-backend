@@ -10,7 +10,8 @@ import app.db.session as db_session
 
 
 def get(import_id: str) -> Optional[FamilyDTO]:
-    return family_repo.get(import_id)
+    db = db_session.get_db()
+    return family_repo.get(db, import_id)
 
 
 def all() -> list[FamilyDTO]:
@@ -19,16 +20,20 @@ def all() -> list[FamilyDTO]:
 
 
 def search(search_term: str) -> Optional[list[FamilyDTO]]:
-    return family_repo.search(search_term)
+    db = db_session.get_db()
+    return family_repo.search(db, search_term)
 
 
 def update(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
-    return family_repo.update(import_id, family)
+    db = db_session.get_db()
+    return family_repo.update(db, import_id, family)
 
 
 def create(family: FamilyDTO) -> Optional[FamilyDTO]:
-    return family_repo.create(family)
+    db = db_session.get_db()
+    return family_repo.create(db, family)
 
 
 def delete(import_id: str) -> bool:
-    return family_repo.delete(import_id)
+    db = db_session.get_db()
+    return family_repo.delete(db, import_id)

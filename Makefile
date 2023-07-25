@@ -22,7 +22,7 @@ build:
 unit_test: build
 	docker run --rm navigator-admin-backend pytest -vvv unit_tests
 
-integration_test: build
+setup_test_db:
 	@echo Setting up...
 	-docker network create test-network
 	-docker stop test_db
@@ -38,7 +38,9 @@ integration_test: build
 	sleep 3
 	@echo Loading schema...
 	docker exec test_db psql -U navigator -f /data-load/blank.sql > load_blank.txt
-	docker exec test_db psql -U navigator -f /data-load/default-data.sql > load_default.txt
+
+integration_test: build 
+	@echo Assuming setup_test_db has already run.
 	@echo Running tests...
 	docker run --rm \
 		--network=test-network \
