@@ -5,12 +5,17 @@ from app.model.family import FamilyDTO
 from unit_tests.helpers.family import get_family
 
 
+MISSING_ID = "A.0.0.0"
+VALID_ID = "A.0.0.1"
+FAIL_ID = "F.F.F.F"
+
+
 def mock_get_all_families(_):
     return [get_family("test")]
 
 
 def mock_get_family(_, import_id: str) -> Optional[FamilyDTO]:
-    if import_id == "missing":
+    if import_id == MISSING_ID:
         return None
     return get_family(import_id)
 
@@ -23,17 +28,17 @@ def mock_search_families(_, q: str) -> list[FamilyDTO]:
 
 
 def mock_update_family(_, data: FamilyDTO) -> Optional[FamilyDTO]:
-    if data.import_id != "missing":
+    if data.import_id != MISSING_ID:
         return data
 
 
 def mock_create_family(_, data: FamilyDTO) -> Optional[FamilyDTO]:
-    if data.import_id != "error":
+    if data.import_id != FAIL_ID:
         return data
 
 
 def mock_delete_family(_, import_id: str) -> bool:
-    return import_id != "missing"
+    return import_id != MISSING_ID
 
 
 def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
