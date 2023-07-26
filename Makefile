@@ -49,5 +49,7 @@ integration_test: build
 		pytest -vvv integration_tests
 	docker stop test_db
 
+test: unit_test integration_test
+
 run: build
 	docker run -p 8888:8888 -d navigator-admin-backend
