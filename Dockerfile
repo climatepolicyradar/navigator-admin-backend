@@ -12,5 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Now code
 COPY ./app ./app
 COPY ./unit_tests ./unit_tests
+COPY ./integration_tests ./integration_tests
 
 CMD python app/main.py

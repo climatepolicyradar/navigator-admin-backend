@@ -2,28 +2,28 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from app.model.family import FamilyDTO
-from unit_tests.helpers.family import get_family
+from unit_tests.helpers.family import create_family_dto
 
 
 def mock_get_all_families():
-    return [get_family("test")]
+    return [create_family_dto("test")]
 
 
 def mock_get_family(import_id: str) -> Optional[FamilyDTO]:
     if import_id == "missing":
         return None
-    return get_family(import_id)
+    return create_family_dto(import_id)
 
 
 def mock_search_families(q: str) -> list[FamilyDTO]:
     if q == "empty":
         return []
     else:
-        return [get_family("search1")]
+        return [create_family_dto("search1")]
 
 
-def mock_update_family(import_id: str, data: FamilyDTO) -> Optional[FamilyDTO]:
-    if import_id != "missing":
+def mock_update_family(data: FamilyDTO) -> Optional[FamilyDTO]:
+    if data.import_id != "missing":
         return data
 
 

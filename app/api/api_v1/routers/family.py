@@ -6,12 +6,17 @@ directly.  However, this API has little / no logic in so the service
 layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
+import logging
 from fastapi import APIRouter, HTTPException
+from app.errors.repository_error import RepositoryError
+from app.errors.validation_error import ValidationError
 
 from app.model.family import FamilyDTO
 import app.service.family as family_service
 
 families_router = r = APIRouter()
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @r.get(
@@ -28,7 +33,13 @@ async def get_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
-    family = family_service.get(import_id)
+    try:
+        family = family_service.get(import_id)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(status_code=503, detail=e.message)
+
     if family is None:
         raise HTTPException(status_code=404, detail=f"Family not found: {import_id}")
 
@@ -68,11 +79,10 @@ async def search_family(q: str = "") -> list[FamilyDTO]:
 
 
 @r.put(
-    "/families/{import_id}",
+    "/families",
     response_model=FamilyDTO,
 )
 async def update_family(
-    import_id: str,
     new_family: FamilyDTO,
 ) -> FamilyDTO:
     """
@@ -82,9 +92,16 @@ async def update_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family updated.
     """
-    family = family_service.update(import_id, new_family)
+    try:
+        family = family_service.update(new_family)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(status_code=503, detail=e.message)
+
     if family is None:
-        raise HTTPException(status_code=404, detail=f"Family not updated: {import_id}")
+        detail = f"Family not updated: {new_family.import_id}"
+        raise HTTPException(status_code=404, detail=detail)
 
     # TODO: Handle db errors when implemented
 
@@ -104,7 +121,13 @@ async def create_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the new family.
     """
-    family = family_service.create(new_family)
+    try:
+        family = family_service.create(new_family)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(status_code=503, detail=e.message)
+
     if family is None:
         raise HTTPException(
             status_code=404, detail=f"Family not created: {new_family.import_id}"
@@ -127,6 +150,12 @@ async def delete_family(
     :param str import_id: Specified import_id.
     :raises HTTPException: If the family is not found a 404 is returned.
     """
-    family_deleted = family_service.delete(import_id)
+    try:
+        family_deleted = family_service.delete(import_id)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(status_code=503, detail=e.message)
+
     if not family_deleted:
         raise HTTPException(status_code=404, detail=f"Family not deleted: {import_id}")

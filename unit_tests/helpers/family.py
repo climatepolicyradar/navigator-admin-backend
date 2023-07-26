@@ -1,13 +1,16 @@
+from app.db.models.law_policy.family import FamilyCategory
 from app.model.family import FamilyDTO
 
 
-def get_family(import_id: str) -> FamilyDTO:
+def create_family_dto(
+    import_id: str, title: str = "title", summary: str = "summary"
+) -> FamilyDTO:
     return FamilyDTO(
         import_id=import_id,
-        title="title",
-        summary="summary",
-        geography="geo",
-        category="category",
+        title=title,
+        summary=summary,
+        geography="1",
+        category=FamilyCategory.LEGISLATIVE,
         status="status",
         metadata={},
         slug="slug",

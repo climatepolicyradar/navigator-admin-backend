@@ -155,3 +155,6 @@ backend/models
 
 # PyCharm
 .idea/
+
+# Sundry files
+load_blank.txt

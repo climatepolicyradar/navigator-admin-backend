@@ -1,80 +1,99 @@
 """Operations on the repository for the Family entity."""
 
-from datetime import datetime
+import logging
 from typing import Optional
+from app.db.models.law_policy.collection import CollectionFamily
+from sqlalchemy.orm import Session
 from app.model.family import FamilyDTO
-
-THE_REPO: list[FamilyDTO] = [
-    FamilyDTO(
-        import_id="sample1",
-        title="title",
-        summary="summary",
-        geography="geo",
-        category="category",
-        status="status",
-        metadata={},
-        slug="slug",
-        events=["e1", "e2"],
-        published_date=datetime.now(),
-        last_updated_date=datetime.now(),
-        documents=["doc1", "doc2"],
-        collections=["col1", "col2"],
-    ),
-    FamilyDTO(
-        import_id="sample2",
-        title="title two",
-        summary="summary",
-        geography="geo",
-        category="category",
-        status="status",
-        metadata={},
-        slug="slug",
-        events=["e1", "e2"],
-        published_date=datetime.now(),
-        last_updated_date=datetime.now(),
-        documents=["doc1", "doc2"],
-        collections=["col1", "col2"],
-    ),
-]
+from app.db.models.law_policy import Family
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy_utils import escape_like
+from sqlalchemy import or_, update as db_update, delete as db_delete
 
 
-def all() -> list[FamilyDTO]:
+_LOGGER = logging.getLogger(__name__)
+
+
+def _family_from_dto(dto: FamilyDTO) -> Family:
+    return Family(
+        import_id=dto.import_id,
+        title=dto.title,
+        description=dto.summary,
+        geography_id=int(dto.geography),
+        family_category=dto.category,
+    )
+
+
+def _family_to_dto(db: Session, f: Family) -> FamilyDTO:
+    return FamilyDTO(
+        import_id=str(f.import_id),
+        title=str(f.title),
+        summary=str(f.description),
+        geography=str(f.geography_id),
+        category=str(f.family_category),
+        status=str(f.family_status),
+        metadata={},  # TODO: organisation and metadata
+        slug=str(f.slugs[0].name if len(f.slugs) > 0 else ""),
+        events=[str(e.import_id) for e in f.events],
+        published_date=f.published_date,
+        last_updated_date=f.last_updated_date,
+        documents=[str(d.import_id) for d in f.family_documents],
+        collections=[
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                f.import_id == CollectionFamily.family_import_id
+            )
+        ],
+    )
+
+
+def all(db: Session) -> list[FamilyDTO]:
     """
     Returns all the families.
 
     :return Optional[FamilyResponse]: All of things
     """
-    return THE_REPO
+    families = db.query(Family).all()
+
+    if not families:
+        return []
+
+    result = [_family_to_dto(db, f) for f in families]
+
+    return result
 
 
-def get(import_id: str) -> Optional[FamilyDTO]:
+def get(db: Session, import_id: str) -> Optional[FamilyDTO]:
     """
     Gets a single family from the repository.
 
     :param str import_id: The import_id of the family
     :return Optional[FamilyResponse]: A single family or nothing
     """
-    found = [r for r in THE_REPO if r.import_id == import_id]
-
-    if len(found) == 0:
+    try:
+        family = db.query(Family).filter(Family.import_id == import_id).one()
+    except NoResultFound as e:
+        _LOGGER.error(e)
         return
 
-    return found[0]
+    return _family_to_dto(db, family)
 
 
-def search(search_term: str) -> Optional[list[FamilyDTO]]:
+def search(db: Session, search_term: str) -> list[FamilyDTO]:
     """
     Gets a list of families from the repository searching title and summary.
 
     :param str search_term: Any search term to filter on title or summary
     :return Optional[list[FamilyResponse]]: A list of matches
     """
-    found = [r for r in THE_REPO if search_term in r.title or search_term in r.summary]
+    term = f"%{escape_like(search_term)}%"
+    search = or_(Family.title.ilike(term), Family.description.ilike(term))
+    found = db.query(Family).filter(search).all()
 
-    return found
+    return [_family_to_dto(db, f) for f in found]
 
 
-def update(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
+def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
     """
     Updates a single entry with the new values passed.
 
@@ -82,45 +101,45 @@ def update(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
     :param FamilyDTO family: The new values
     :return Optional[FamilyDTO]: The new values set or None if not found.
     """
-    found = [i for i, r in enumerate(THE_REPO) if r.import_id == import_id]
-    if len(found) == 0:
-        return None
+    new_values = family.dict()
+    # TODO : Update more values on a family
+    result = db.execute(
+        db_update(Family)
+        .where(Family.import_id == family.import_id)
+        .values(title=new_values["title"], description=new_values["summary"])
+    )
 
-    # Now update the entry
-    index = found[0]
-    THE_REPO[index] = family
+    if result.rowcount == 0:  # type: ignore
+        return
 
-    return family
+    return get(db, family.import_id)
 
 
-def create(family: FamilyDTO) -> Optional[FamilyDTO]:
+def create(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
     """
     Creates a new family.
 
     :param FamilyDTO family: the values for the new family
     :return Optional[FamilyDTO]: the new family created
     """
-    found = [r for r in THE_REPO if r.import_id == family.import_id]
-    if len(found) > 0:
+    try:
+        new_family = _family_from_dto(family)
+        db.add(new_family)
+        db.commit()
+    except Exception as e:
+        _LOGGER.error(e)
         return
 
-    THE_REPO.append(family)
-    return family
+    return get(db, str(new_family.import_id))
 
 
-def delete(import_id: str) -> bool:
+def delete(db: Session, import_id: str) -> bool:
     """
     Deletes a single family by the import id.
 
     :param str import_id: The family import id to delete.
     :return bool: True if deleted False if not.
     """
-    found = [i for i, r in enumerate(THE_REPO) if r.import_id == import_id]
-    if len(found) == 0:
-        return False
+    result = db.execute(db_delete(Family).where(Family.import_id == import_id))
 
-    # Now update the entry
-    index = found[0]
-    del THE_REPO[index]
-
-    return True
+    return result.rowcount > 0  # type: ignore

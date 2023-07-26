@@ -1,44 +1,32 @@
 from typing import Optional
 from pytest import MonkeyPatch
+from app.errors.repository_error import RepositoryError
 
 from app.model.family import FamilyDTO
-from unit_tests.helpers.family import create_family_dto
-
-
-MISSING_ID = "A.0.0.0"
-VALID_ID = "A.0.0.1"
-FAIL_ID = "F.F.F.F"
 
 
 def mock_get_all_families(_):
-    return [create_family_dto("test")]
+    raise RepositoryError("Bad Repo")
 
 
 def mock_get_family(_, import_id: str) -> Optional[FamilyDTO]:
-    if import_id == MISSING_ID:
-        return None
-    return create_family_dto(import_id)
+    raise RepositoryError("Bad Repo")
 
 
 def mock_search_families(_, q: str) -> list[FamilyDTO]:
-    if q == "empty":
-        return []
-    else:
-        return [create_family_dto("search1")]
+    raise RepositoryError("Bad Repo")
 
 
 def mock_update_family(_, data: FamilyDTO) -> Optional[FamilyDTO]:
-    if data.import_id != MISSING_ID:
-        return data
+    raise RepositoryError("Bad Repo")
 
 
 def mock_create_family(_, data: FamilyDTO) -> Optional[FamilyDTO]:
-    if data.import_id != FAIL_ID:
-        return data
+    raise RepositoryError("Bad Repo")
 
 
 def mock_delete_family(_, import_id: str) -> bool:
-    return import_id != MISSING_ID
+    raise RepositoryError("Bad Repo")
 
 
 def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
