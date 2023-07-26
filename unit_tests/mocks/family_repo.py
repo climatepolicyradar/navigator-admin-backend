@@ -5,34 +5,34 @@ from app.model.family import FamilyDTO
 from unit_tests.helpers.family import get_family
 
 
-def mock_get_all_families():
+def mock_get_all_families(_):
     return [get_family("test")]
 
 
-def mock_get_family(import_id: str) -> Optional[FamilyDTO]:
+def mock_get_family(_, import_id: str) -> Optional[FamilyDTO]:
     if import_id == "missing":
         return None
     return get_family(import_id)
 
 
-def mock_search_families(q: str) -> list[FamilyDTO]:
+def mock_search_families(_, q: str) -> list[FamilyDTO]:
     if q == "empty":
         return []
     else:
         return [get_family("search1")]
 
 
-def mock_update_family(import_id: str, data: FamilyDTO) -> Optional[FamilyDTO]:
+def mock_update_family(_, import_id: str, data: FamilyDTO) -> Optional[FamilyDTO]:
     if import_id != "missing":
         return data
 
 
-def mock_create_family(data: FamilyDTO) -> Optional[FamilyDTO]:
+def mock_create_family(_, data: FamilyDTO) -> Optional[FamilyDTO]:
     if data.import_id != "missing":
         return data
 
 
-def mock_delete_family(import_id: str) -> bool:
+def mock_delete_family(_, import_id: str) -> bool:
     return import_id != "missing"
 
 
