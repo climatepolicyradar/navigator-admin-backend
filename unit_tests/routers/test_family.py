@@ -6,7 +6,7 @@ This uses a service mock and ensures each endpoint calls into the service.
 from fastapi.testclient import TestClient
 from app.model.family import FamilyDTO
 import app.service.family as family_service
-from unit_tests.mocks.family_service import get_family
+from unit_tests.mocks.family_service import create_family_dto
 
 
 def test_get_all_families_uses_service_200(client: TestClient, family_service_mock):
@@ -64,7 +64,7 @@ def test_search_family_uses_service_404(client: TestClient, family_service_mock)
 
 
 def test_update_family_uses_service_200(client: TestClient, family_service_mock):
-    new_data = get_family("fam1").dict()
+    new_data = create_family_dto("fam1").dict()
     response = client.put("/api/v1/families", json=new_data)
     assert response.status_code == 200
     data = response.json()
@@ -73,7 +73,7 @@ def test_update_family_uses_service_200(client: TestClient, family_service_mock)
 
 
 def test_update_family_uses_service_404(client: TestClient, family_service_mock):
-    new_data = get_family("missing").dict()
+    new_data = create_family_dto("missing").dict()
     response = client.put("/api/v1/families", json=new_data)
     assert response.status_code == 404
     data = response.json()
@@ -82,7 +82,7 @@ def test_update_family_uses_service_404(client: TestClient, family_service_mock)
 
 
 def test_create_family_uses_service_200(client: TestClient, family_service_mock):
-    new_data = get_family("fam1").dict()
+    new_data = create_family_dto("fam1").dict()
     response = client.post("/api/v1/families", json=new_data)
     assert response.status_code == 200
     data = response.json()
@@ -91,7 +91,7 @@ def test_create_family_uses_service_200(client: TestClient, family_service_mock)
 
 
 def test_create_family_uses_service_404(client: TestClient, family_service_mock):
-    new_data: FamilyDTO = get_family("fam1")
+    new_data: FamilyDTO = create_family_dto("fam1")
     new_data.import_id = "missing"
     response = client.post("/api/v1/families", json=new_data.dict())
     assert response.status_code == 404

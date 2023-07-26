@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import app.db.session as db_session
 from app.main import app
+from integration_tests.mocks.bad_family_repo import mock_family_repo
+import app.repository.family as family_repo
 
 
 def get_test_db_url() -> str:
@@ -53,3 +55,10 @@ def client(test_db, monkeypatch):
     monkeypatch.setattr(db_session, "get_db", get_test_db)
 
     yield TestClient(app)
+
+
+@pytest.fixture
+def bad_family_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_family_repo(family_repo, monkeypatch, mocker)
+    yield family_repo
