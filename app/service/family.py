@@ -19,14 +19,14 @@ def all() -> list[FamilyDTO]:
     return family_repo.all(db)
 
 
-def search(search_term: str) -> Optional[list[FamilyDTO]]:
+def search(search_term: str) -> list[FamilyDTO]:
     db = db_session.get_db()
     return family_repo.search(db, search_term)
 
 
-def update(import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
+def update(family: FamilyDTO) -> Optional[FamilyDTO]:
     db = db_session.get_db()
-    return family_repo.update(db, import_id, family)
+    return family_repo.update(db, family)
 
 
 def create(family: FamilyDTO) -> Optional[FamilyDTO]:

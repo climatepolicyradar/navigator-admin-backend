@@ -65,7 +65,7 @@ def test_search_family_uses_service_404(client: TestClient, family_service_mock)
 
 def test_update_family_uses_service_200(client: TestClient, family_service_mock):
     new_data = get_family("fam1").dict()
-    response = client.put("/api/v1/families/fam1", json=new_data)
+    response = client.put("/api/v1/families", json=new_data)
     assert response.status_code == 200
     data = response.json()
     assert data["import_id"] == "fam1"
@@ -73,8 +73,8 @@ def test_update_family_uses_service_200(client: TestClient, family_service_mock)
 
 
 def test_update_family_uses_service_404(client: TestClient, family_service_mock):
-    new_data = get_family("fam1").dict()
-    response = client.put("/api/v1/families/missing", json=new_data)
+    new_data = get_family("missing").dict()
+    response = client.put("/api/v1/families", json=new_data)
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Family not updated: missing"

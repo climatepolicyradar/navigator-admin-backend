@@ -22,8 +22,8 @@ def mock_search_families(q: str) -> list[FamilyDTO]:
         return [get_family("search1")]
 
 
-def mock_update_family(import_id: str, data: FamilyDTO) -> Optional[FamilyDTO]:
-    if import_id != "missing":
+def mock_update_family(data: FamilyDTO) -> Optional[FamilyDTO]:
+    if data.import_id != "missing":
         return data
 
 

@@ -79,7 +79,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyDTO]:
     return _family_to_dto(db, family)
 
 
-def search(db: Session, search_term: str) -> Optional[list[FamilyDTO]]:
+def search(db: Session, search_term: str) -> list[FamilyDTO]:
     """
     Gets a list of families from the repository searching title and summary.
 
@@ -93,7 +93,7 @@ def search(db: Session, search_term: str) -> Optional[list[FamilyDTO]]:
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(db: Session, import_id: str, family: FamilyDTO) -> Optional[FamilyDTO]:
+def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
     """
     Updates a single entry with the new values passed.
 
@@ -105,14 +105,14 @@ def update(db: Session, import_id: str, family: FamilyDTO) -> Optional[FamilyDTO
     # TODO : Update more values on a family
     result = db.execute(
         db_update(Family)
-        .where(Family.import_id == import_id)
+        .where(Family.import_id == family.import_id)
         .values(title=new_values["title"], description=new_values["summary"])
     )
 
     if result.rowcount == 0:  # type: ignore
         return
 
-    return get(db, import_id)
+    return get(db, family.import_id)
 
 
 def create(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:

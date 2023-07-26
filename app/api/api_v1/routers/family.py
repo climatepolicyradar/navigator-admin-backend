@@ -68,11 +68,10 @@ async def search_family(q: str = "") -> list[FamilyDTO]:
 
 
 @r.put(
-    "/families/{import_id}",
+    "/families",
     response_model=FamilyDTO,
 )
 async def update_family(
-    import_id: str,
     new_family: FamilyDTO,
 ) -> FamilyDTO:
     """
@@ -82,9 +81,10 @@ async def update_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family updated.
     """
-    family = family_service.update(import_id, new_family)
+    family = family_service.update(new_family)
     if family is None:
-        raise HTTPException(status_code=404, detail=f"Family not updated: {import_id}")
+        detail = f"Family not updated: {new_family.import_id}"
+        raise HTTPException(status_code=404, detail=detail)
 
     # TODO: Handle db errors when implemented
 
