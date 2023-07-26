@@ -104,7 +104,7 @@ def test_search_family_404(client: TestClient, test_db: Session):
 def test_update_family_200(client: TestClient, test_db: Session):
     _setup_db(test_db)
     new_family = FamilyDTO(
-        import_id="A.0.0.1",
+        import_id="A.0.0.2",
         title="Updated Title",
         summary="just a test",
         geography="A.0.0.1",
@@ -118,7 +118,7 @@ def test_update_family_200(client: TestClient, test_db: Session):
         documents=[],
         collections=[],
     )
-    response = client.put("/api/v1/families/A.0.0.2", json=new_family.dict())
+    response = client.put("/api/v1/families", json=new_family.dict())
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Updated Title"
