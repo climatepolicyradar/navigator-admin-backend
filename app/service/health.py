@@ -8,4 +8,4 @@ def is_database_online() -> bool:
     TODO: More comprehensive health checks
     """
 
-    return get_db() is not None
+    return get_db().execute("SELECT 1") is not None

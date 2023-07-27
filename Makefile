@@ -52,4 +52,4 @@ integration_test: build
 test: unit_test integration_test
 
 run: build
-	docker run -p 8888:8888 -d navigator-admin-backend
+	docker run -p 8888:8888 --network=test-network -d navigator-admin-backend

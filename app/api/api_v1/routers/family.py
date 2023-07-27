@@ -103,8 +103,6 @@ async def update_family(
         detail = f"Family not updated: {new_family.import_id}"
         raise HTTPException(status_code=404, detail=detail)
 
-    # TODO: Handle db errors when implemented
-
     return family
 
 
@@ -132,8 +130,6 @@ async def create_family(
         raise HTTPException(
             status_code=404, detail=f"Family not created: {new_family.import_id}"
         )
-
-    # TODO: Handle db errors when implemented
 
     return family
 

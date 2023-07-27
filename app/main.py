@@ -3,15 +3,34 @@ from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.api.api_v1.routers import families_router
 from fastapi import FastAPI
 from fastapi_health import health
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from app.service.health import is_database_online
 
+# TODO: Review this list of Origin exceptions.
+_ALLOW_ORIGIN_REGEX = (
+    r"http://localhost:3000|"
+    r"https://.+\.climatepolicyradar\.org|"
+    r"https://.+\.dev.climatepolicyradar\.org|"
+    r"https://.+\.sandbox\.climatepolicyradar\.org|"
+    r"https://climate-laws\.org|"
+    r"https://.+\.climate-laws\.org"
+)
 
 app = FastAPI(title="navigator-admin")
 setup_json_logging(app)
 add_pagination(app)
 app.include_router(families_router, prefix="/api/v1", tags=["families"])
+
+# Add CORS middleware to allow cross origin requests from any port
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=_ALLOW_ORIGIN_REGEX,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # add health endpoint
 app.add_api_route("/health", health([is_database_online]))
