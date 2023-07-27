@@ -158,3 +158,4 @@ backend/models
 
 # Sundry files
 load_blank.txt
+load_default.txt

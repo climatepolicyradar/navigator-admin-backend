@@ -147,6 +147,12 @@ def test_update_family_200(client: TestClient, test_db: Session):
     assert data["title"] == "Updated Title"
     assert data["summary"] == "just a test"
 
+    db_family: Family = (
+        test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
+    )
+    assert db_family.title == "Updated Title"
+    assert db_family.description == "just a test"
+
 
 def test_update_family_404(client: TestClient, test_db: Session):
     _setup_db(test_db)

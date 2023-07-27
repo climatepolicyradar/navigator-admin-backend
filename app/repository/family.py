@@ -108,6 +108,7 @@ def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
         .where(Family.import_id == family.import_id)
         .values(title=new_values["title"], description=new_values["summary"])
     )
+    db.commit()
 
     if result.rowcount == 0:  # type: ignore
         return
@@ -141,5 +142,6 @@ def delete(db: Session, import_id: str) -> bool:
     :return bool: True if deleted False if not.
     """
     result = db.execute(db_delete(Family).where(Family.import_id == import_id))
+    db.commit()
 
     return result.rowcount > 0  # type: ignore

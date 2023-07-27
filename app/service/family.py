@@ -28,8 +28,8 @@ def get(import_id: str) -> Optional[FamilyDTO]:
     """
     id.validate(import_id)
     try:
-        db = db_session.get_db()
-        return family_repo.get(db, import_id)
+        with db_session.get_db() as db:
+            return family_repo.get(db, import_id)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))
@@ -41,8 +41,8 @@ def all() -> list[FamilyDTO]:
 
     :return list[FamilyDTO]: The list of families.
     """
-    db = db_session.get_db()
-    return family_repo.all(db)
+    with db_session.get_db() as db:
+        return family_repo.all(db)
 
 
 def search(search_term: str) -> list[FamilyDTO]:
@@ -52,8 +52,8 @@ def search(search_term: str) -> list[FamilyDTO]:
     :param str search_term: Search pattern to match.
     :return list[FamilyDTO]: The list of families matching the search term.
     """
-    db = db_session.get_db()
-    return family_repo.search(db, search_term)
+    with db_session.get_db() as db:
+        return family_repo.search(db, search_term)
 
 
 def update(family: FamilyDTO) -> Optional[FamilyDTO]:
@@ -67,8 +67,8 @@ def update(family: FamilyDTO) -> Optional[FamilyDTO]:
     """
     id.validate(family.import_id)
     try:
-        db = db_session.get_db()
-        return family_repo.update(db, family)
+        with db_session.get_db() as db:
+            return family_repo.update(db, family)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))
@@ -85,8 +85,8 @@ def create(family: FamilyDTO) -> Optional[FamilyDTO]:
     """
     id.validate(family.import_id)
     try:
-        db = db_session.get_db()
-        return family_repo.create(db, family)
+        with db_session.get_db() as db:
+            return family_repo.create(db, family)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))
@@ -103,8 +103,8 @@ def delete(import_id: str) -> bool:
     """
     id.validate(import_id)
     try:
-        db = db_session.get_db()
-        return family_repo.delete(db, import_id)
+        with db_session.get_db() as db:
+            return family_repo.delete(db, import_id)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))
