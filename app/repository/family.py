@@ -108,7 +108,6 @@ def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
         .where(Family.import_id == family.import_id)
         .values(title=new_values["title"], description=new_values["summary"])
     )
-    db.commit()
 
     if result.rowcount == 0:  # type: ignore
         return

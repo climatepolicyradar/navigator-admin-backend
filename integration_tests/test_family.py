@@ -154,6 +154,25 @@ def test_update_family_200(client: TestClient, test_db: Session):
     assert db_family.description == "just a test"
 
 
+def test_update_family_rollback(
+    client: TestClient, test_db: Session, rollback_family_repo
+):
+    _setup_db(test_db)
+    new_family = create_family_dto(
+        import_id="A.0.0.2",
+        title="Updated Title",
+        summary="just a test",
+    )
+    response = client.put("/api/v1/families", json=new_family.dict())
+    assert response.status_code == 503
+
+    db_family: Family = (
+        test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
+    )
+    assert db_family.title != "Updated Title"
+    assert db_family.description != "just a test"
+
+
 def test_update_family_404(client: TestClient, test_db: Session):
     _setup_db(test_db)
     new_family = create_family_dto(

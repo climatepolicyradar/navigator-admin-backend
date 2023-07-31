@@ -29,7 +29,7 @@ def mock_delete_family(_, import_id: str) -> bool:
     raise RepositoryError("Bad Repo")
 
 
-def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
+def mock_bad_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
     monkeypatch.setattr(family_repo, "get", mock_get_family)
     mocker.spy(family_repo, "get")
 

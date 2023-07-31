@@ -66,12 +66,15 @@ def update(family: FamilyDTO) -> Optional[FamilyDTO]:
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
     id.validate(family.import_id)
+    db = db_session.get_db()
     try:
-        with db_session.get_db() as db:
-            return family_repo.update(db, family)
+        return family_repo.update(db, family)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
+        db.rollback()
         raise RepositoryError(str(e))
+    finally:
+        db.commit()
 
 
 def create(family: FamilyDTO) -> Optional[FamilyDTO]:
