@@ -10,6 +10,7 @@ from app.model.family import FamilyDTO
 import app.repository.family as family_repo
 import app.db.session as db_session
 from sqlalchemy import exc
+from sqlalchemy.orm import Session
 
 from app.service import id
 
@@ -56,7 +57,8 @@ def search(search_term: str) -> list[FamilyDTO]:
         return family_repo.search(db, search_term)
 
 
-def update(family: FamilyDTO) -> Optional[FamilyDTO]:
+@db_session.with_transaction
+def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
     """
     Updates a single Family with the values passed.
 
@@ -66,15 +68,8 @@ def update(family: FamilyDTO) -> Optional[FamilyDTO]:
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
     id.validate(family.import_id)
-    db = db_session.get_db()
-    try:
-        return family_repo.update(db, family)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        db.rollback()
-        raise RepositoryError(str(e))
-    finally:
-        db.commit()
+    new_family = family_repo.update(db, family)
+    return new_family
 
 
 def create(family: FamilyDTO) -> Optional[FamilyDTO]:
@@ -87,12 +82,17 @@ def create(family: FamilyDTO) -> Optional[FamilyDTO]:
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
     id.validate(family.import_id)
-    try:
-        with db_session.get_db() as db:
-            return family_repo.create(db, family)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
+    with db_session.get_db() as db:
+        try:
+            new_family = family_repo.create(db, family)
+            db.commit()
+            return new_family
+        except exc.SQLAlchemyError as e:
+            _LOGGER.error(e)
+            db.rollback()
+            raise RepositoryError(str(e))
+        finally:
+            db.close()
 
 
 def delete(import_id: str) -> bool:

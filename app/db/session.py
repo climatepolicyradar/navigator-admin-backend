@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine
+import logging
+from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import registry, sessionmaker, Session
 
 from app.config import SQLALCHEMY_DATABASE_URI
+from app.errors.repository_error import RepositoryError
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
@@ -11,6 +13,8 @@ engine = create_engine(
     max_overflow=240,
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def make_declarative_base():
@@ -43,3 +47,21 @@ def get_db() -> Session:
 Base = make_declarative_base()
 # Aliased type annotation useful for type hints
 AnyModel = Base
+
+
+def with_transaction(func):
+    def inner(*args, **kwargs):
+        db = get_db()
+        try:
+            db.begin()
+            result = func(*args, **kwargs, db=db)
+            db.commit()
+            return result
+        except exc.SQLAlchemyError as e:
+            _LOGGER.error(e, extra={"func": func.__name__})
+            db.rollback()
+            raise RepositoryError(str(e))
+        finally:
+            db.close()
+
+    return inner
