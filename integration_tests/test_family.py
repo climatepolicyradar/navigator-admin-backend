@@ -214,6 +214,26 @@ def test_create_family_200(client: TestClient, test_db: Session):
     data = response.json()
     assert data["title"] == "Title"
     assert data["summary"] == "test test test"
+    actual_family = test_db.query(Family).filter(Family.import_id == "A.0.0.9").one()
+    assert actual_family.title == "Title"
+    assert actual_family.description == "test test test"
+
+
+def test_create_family_rollback(
+    client: TestClient, test_db: Session, rollback_family_repo
+):
+    _setup_db(test_db)
+    new_family = create_family_dto(
+        import_id="A.0.0.9",
+        title="Title",
+        summary="test test test",
+    )
+    response = client.post("/api/v1/families", json=new_family.dict())
+    assert response.status_code == 503
+    actual_family = (
+        test_db.query(Family).filter(Family.import_id == "A.0.0.9").one_or_none()
+    )
+    assert actual_family is None
 
 
 def test_create_family_503(client: TestClient, test_db: Session, bad_family_repo):
@@ -240,6 +260,18 @@ def test_delete_family_200(client: TestClient, test_db: Session):
     assert response.status_code == 200
     n = test_db.query(Family).count()
     assert n == 2
+
+
+def test_delete_family_rollback(
+    client: TestClient, test_db: Session, rollback_family_repo
+):
+    _setup_db(test_db)
+    response = client.delete(
+        "/api/v1/families/A.0.0.2",
+    )
+    assert response.status_code == 503
+    n = test_db.query(Family).count()
+    assert n == 3
 
 
 def test_delete_family_404(client: TestClient, test_db: Session):
