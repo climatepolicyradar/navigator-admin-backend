@@ -108,7 +108,6 @@ def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
         .where(Family.import_id == family.import_id)
         .values(title=new_values["title"], description=new_values["summary"])
     )
-    db.commit()
 
     if result.rowcount == 0:  # type: ignore
         return
@@ -126,12 +125,11 @@ def create(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
     try:
         new_family = _family_from_dto(family)
         db.add(new_family)
-        db.commit()
     except Exception as e:
         _LOGGER.error(e)
         return
 
-    return get(db, str(new_family.import_id))
+    return family
 
 
 def delete(db: Session, import_id: str) -> bool:
@@ -142,6 +140,5 @@ def delete(db: Session, import_id: str) -> bool:
     :return bool: True if deleted False if not.
     """
     result = db.execute(db_delete(Family).where(Family.import_id == import_id))
-    db.commit()
 
     return result.rowcount > 0  # type: ignore

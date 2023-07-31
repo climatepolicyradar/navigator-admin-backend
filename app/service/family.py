@@ -10,6 +10,7 @@ from app.model.family import FamilyDTO
 import app.repository.family as family_repo
 import app.db.session as db_session
 from sqlalchemy import exc
+from sqlalchemy.orm import Session
 
 from app.service import id
 
@@ -56,7 +57,8 @@ def search(search_term: str) -> list[FamilyDTO]:
         return family_repo.search(db, search_term)
 
 
-def update(family: FamilyDTO) -> Optional[FamilyDTO]:
+@db_session.with_transaction
+def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
     """
     Updates a single Family with the values passed.
 
@@ -66,15 +68,11 @@ def update(family: FamilyDTO) -> Optional[FamilyDTO]:
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
     id.validate(family.import_id)
-    try:
-        with db_session.get_db() as db:
-            return family_repo.update(db, family)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
+    return family_repo.update(db, family)
 
 
-def create(family: FamilyDTO) -> Optional[FamilyDTO]:
+@db_session.with_transaction
+def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
     """
     Creates a new Family with the values passed.
 
@@ -84,15 +82,11 @@ def create(family: FamilyDTO) -> Optional[FamilyDTO]:
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
     id.validate(family.import_id)
-    try:
-        with db_session.get_db() as db:
-            return family_repo.create(db, family)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
+    return family_repo.create(db, family)
 
 
-def delete(import_id: str) -> bool:
+@db_session.with_transaction
+def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the Family specified by the import_id.
 
@@ -102,9 +96,4 @@ def delete(import_id: str) -> bool:
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
-    try:
-        with db_session.get_db() as db:
-            return family_repo.delete(db, import_id)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
+    return family_repo.delete(db, import_id)

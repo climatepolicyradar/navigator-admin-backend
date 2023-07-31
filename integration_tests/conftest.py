@@ -7,8 +7,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import app.db.session as db_session
 from app.main import app
-from integration_tests.mocks.bad_family_repo import mock_family_repo
+from integration_tests.mocks.bad_family_repo import mock_bad_family_repo
 import app.repository.family as family_repo
+from integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
 
 
 def get_test_db_url() -> str:
@@ -60,5 +61,12 @@ def client(test_db, monkeypatch):
 @pytest.fixture
 def bad_family_repo(monkeypatch, mocker):
     """Mocks the repository for a single test."""
-    mock_family_repo(family_repo, monkeypatch, mocker)
+    mock_bad_family_repo(family_repo, monkeypatch, mocker)
+    yield family_repo
+
+
+@pytest.fixture
+def rollback_family_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_rollback_family_repo(family_repo, monkeypatch, mocker)
     yield family_repo
