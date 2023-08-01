@@ -1,10 +1,12 @@
 """Operations on the repository for the Family entity."""
 
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 from app.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
+from app.db.models.law_policy.family import FamilyOrganisation
 from app.db.models.law_policy.geography import Geography
+from app.db.models.law_policy.metadata import FamilyMetadata
 from app.model.family import FamilyDTO
 from app.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
@@ -13,6 +15,16 @@ from sqlalchemy import or_, update as db_update, delete as db_delete
 
 
 _LOGGER = logging.getLogger(__name__)
+
+FamilyGeoMeta = Tuple[Family, str, dict]
+
+
+def _fam_geo_meta_query(db: Session):
+    return (
+        db.query(Family, Geography.value, FamilyMetadata.value)
+        .join(Geography, Family.geography_id == Geography.id)
+        .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
+    )
 
 
 def _family_from_dto(dto: FamilyDTO, geo_id: int) -> Family:
@@ -25,7 +37,10 @@ def _family_from_dto(dto: FamilyDTO, geo_id: int) -> Family:
     )
 
 
-def _family_to_dto(db: Session, f: Family, geo_value: str) -> FamilyDTO:
+def _family_to_dto(db: Session, fam_geo_meta: FamilyGeoMeta) -> FamilyDTO:
+    f = fam_geo_meta[0]
+    geo_value = fam_geo_meta[1]
+    metadata = fam_geo_meta[2]
     return FamilyDTO(
         import_id=str(f.import_id),
         title=str(f.title),
@@ -33,7 +48,7 @@ def _family_to_dto(db: Session, f: Family, geo_value: str) -> FamilyDTO:
         geography=geo_value,
         category=str(f.family_category),
         status=str(f.family_status),
-        metadata={},  # TODO: organisation and metadata
+        metadata=metadata,
         slug=str(f.slugs[0].name if len(f.slugs) > 0 else ""),
         events=[str(e.import_id) for e in f.events],
         published_date=f.published_date,
@@ -54,16 +69,12 @@ def all(db: Session) -> list[FamilyDTO]:
 
     :return Optional[FamilyResponse]: All of things
     """
-    family_geos = (
-        db.query(Family, Geography.value)
-        .join(Geography, Family.geography_id == Geography.id)
-        .all()
-    )
+    family_geo_metas = _fam_geo_meta_query(db).all()
 
-    if not family_geos:
+    if not family_geo_metas:
         return []
 
-    result = [_family_to_dto(db, fg[0], fg[1]) for fg in family_geos]
+    result = [_family_to_dto(db, fgm) for fgm in family_geo_metas]
 
     return result
 
@@ -76,17 +87,14 @@ def get(db: Session, import_id: str) -> Optional[FamilyDTO]:
     :return Optional[FamilyResponse]: A single family or nothing
     """
     try:
-        family_geo = (
-            db.query(Family, Geography.value)
-            .filter(Family.import_id == import_id)
-            .join(Geography, Family.geography_id == Geography.id)
-            .one()
+        fam_geo_meta = (
+            _fam_geo_meta_query(db).filter(Family.import_id == import_id).one()
         )
     except NoResultFound as e:
         _LOGGER.error(e)
         return
 
-    return _family_to_dto(db, family_geo[0], family_geo[1])
+    return _family_to_dto(db, fam_geo_meta)
 
 
 def search(db: Session, search_term: str) -> list[FamilyDTO]:
@@ -98,14 +106,9 @@ def search(db: Session, search_term: str) -> list[FamilyDTO]:
     """
     term = f"%{escape_like(search_term)}%"
     search = or_(Family.title.ilike(term), Family.description.ilike(term))
-    found = (
-        db.query(Family, Geography.value)
-        .join(Geography, Family.geography_id == Geography.id)
-        .filter(search)
-        .all()
-    )
+    found = _fam_geo_meta_query(db).filter(search).all()
 
-    return [_family_to_dto(db, f[0], f[1]) for f in found]
+    return [_family_to_dto(db, f) for f in found]
 
 
 def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
@@ -161,6 +164,14 @@ def delete(db: Session, import_id: str) -> bool:
     :param str import_id: The family import id to delete.
     :return bool: True if deleted False if not.
     """
-    result = db.execute(db_delete(Family).where(Family.import_id == import_id))
+    commands = [
+        db_delete(FamilyOrganisation).where(
+            FamilyOrganisation.family_import_id == import_id
+        ),
+        db_delete(FamilyMetadata).where(FamilyMetadata.family_import_id == import_id),
+        db_delete(Family).where(Family.import_id == import_id),
+    ]
+    for c in commands:
+        result = db.execute(c)
 
     return result.rowcount > 0  # type: ignore
