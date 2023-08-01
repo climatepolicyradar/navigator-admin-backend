@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 from app.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
+from app.db.models.law_policy.geography import Geography
 from app.model.family import FamilyDTO
 from app.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
@@ -14,22 +15,22 @@ from sqlalchemy import or_, update as db_update, delete as db_delete
 _LOGGER = logging.getLogger(__name__)
 
 
-def _family_from_dto(dto: FamilyDTO) -> Family:
+def _family_from_dto(dto: FamilyDTO, geo_id: int) -> Family:
     return Family(
         import_id=dto.import_id,
         title=dto.title,
         description=dto.summary,
-        geography_id=int(dto.geography),
+        geography_id=geo_id,
         family_category=dto.category,
     )
 
 
-def _family_to_dto(db: Session, f: Family) -> FamilyDTO:
+def _family_to_dto(db: Session, f: Family, geo_value: str) -> FamilyDTO:
     return FamilyDTO(
         import_id=str(f.import_id),
         title=str(f.title),
         summary=str(f.description),
-        geography=str(f.geography_id),
+        geography=geo_value,
         category=str(f.family_category),
         status=str(f.family_status),
         metadata={},  # TODO: organisation and metadata
@@ -53,12 +54,16 @@ def all(db: Session) -> list[FamilyDTO]:
 
     :return Optional[FamilyResponse]: All of things
     """
-    families = db.query(Family).all()
+    family_geos = (
+        db.query(Family, Geography.value)
+        .join(Geography, Family.geography_id == Geography.id)
+        .all()
+    )
 
-    if not families:
+    if not family_geos:
         return []
 
-    result = [_family_to_dto(db, f) for f in families]
+    result = [_family_to_dto(db, fg[0], fg[1]) for fg in family_geos]
 
     return result
 
@@ -71,12 +76,17 @@ def get(db: Session, import_id: str) -> Optional[FamilyDTO]:
     :return Optional[FamilyResponse]: A single family or nothing
     """
     try:
-        family = db.query(Family).filter(Family.import_id == import_id).one()
+        family_geo = (
+            db.query(Family, Geography.value)
+            .filter(Family.import_id == import_id)
+            .join(Geography, Family.geography_id == Geography.id)
+            .one()
+        )
     except NoResultFound as e:
         _LOGGER.error(e)
         return
 
-    return _family_to_dto(db, family)
+    return _family_to_dto(db, family_geo[0], family_geo[1])
 
 
 def search(db: Session, search_term: str) -> list[FamilyDTO]:
@@ -88,17 +98,23 @@ def search(db: Session, search_term: str) -> list[FamilyDTO]:
     """
     term = f"%{escape_like(search_term)}%"
     search = or_(Family.title.ilike(term), Family.description.ilike(term))
-    found = db.query(Family).filter(search).all()
+    found = (
+        db.query(Family, Geography.value)
+        .join(Geography, Family.geography_id == Geography.id)
+        .filter(search)
+        .all()
+    )
 
-    return [_family_to_dto(db, f) for f in found]
+    return [_family_to_dto(db, f[0], f[1]) for f in found]
 
 
-def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
+def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
     """
     Updates a single entry with the new values passed.
 
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
+    :param int geo_id: a validated geography id
     :return Optional[FamilyDTO]: The new values set or None if not found.
     """
     new_values = family.dict()
@@ -106,7 +122,11 @@ def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
     result = db.execute(
         db_update(Family)
         .where(Family.import_id == family.import_id)
-        .values(title=new_values["title"], description=new_values["summary"])
+        .values(
+            title=new_values["title"],
+            description=new_values["summary"],
+            geography_id=geo_id,
+        )
     )
 
     if result.rowcount == 0:  # type: ignore
@@ -115,15 +135,16 @@ def update(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
     return get(db, family.import_id)
 
 
-def create(db: Session, family: FamilyDTO) -> Optional[FamilyDTO]:
+def create(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
     """
     Creates a new family.
 
     :param FamilyDTO family: the values for the new family
+    :param int geo_id: a validated geography id
     :return Optional[FamilyDTO]: the new family created
     """
     try:
-        new_family = _family_from_dto(family)
+        new_family = _family_from_dto(family, geo_id)
         db.add(new_family)
     except Exception as e:
         _LOGGER.error(e)

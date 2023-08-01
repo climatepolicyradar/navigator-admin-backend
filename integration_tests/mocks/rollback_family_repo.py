@@ -10,12 +10,12 @@ def mock_rollback_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
     actual_create = family_repo.create
     actual_delete = family_repo.delete
 
-    def mock_update_family(db, data: FamilyDTO) -> Optional[FamilyDTO]:
-        actual_update(db, data)
+    def mock_update_family(db, data: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
+        actual_update(db, data, geo_id)
         raise NoResultFound()
 
-    def mock_create_family(db, data: FamilyDTO) -> Optional[FamilyDTO]:
-        actual_create(db, data)
+    def mock_create_family(db, data: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
+        actual_create(db, data, geo_id)
         raise NoResultFound()
 
     def mock_delete_family(db, import_id: str) -> bool:
