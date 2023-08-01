@@ -199,6 +199,22 @@ def test_update_family_503(client: TestClient, test_db: Session, bad_family_repo
     assert data["detail"] == "Bad Repo"
 
 
+def test_update_family__invalid_geo_400(
+    client: TestClient, test_db: Session, bad_family_repo
+):
+    _setup_db(test_db)
+    new_family = create_family_dto(
+        import_id="A.0.0.22",
+        title="Updated Title",
+        summary="just a test",
+    )
+    new_family.geography = "UK"
+    response = client.put("/api/v1/families", json=new_family.dict())
+    assert response.status_code == 400
+    data = response.json()
+    assert data["detail"] == "The geography value UK is invalid!"
+
+
 # --- CREATE
 
 
@@ -247,6 +263,22 @@ def test_create_family_503(client: TestClient, test_db: Session, bad_family_repo
     assert response.status_code == 503
     data = response.json()
     assert data["detail"] == "Bad Repo"
+
+
+def test_create_family__invalid_geo_400(
+    client: TestClient, test_db: Session, bad_family_repo
+):
+    _setup_db(test_db)
+    new_family = create_family_dto(
+        import_id="A.0.0.9",
+        title="Title",
+        summary="test test test",
+    )
+    new_family.geography = "UK"
+    response = client.post("/api/v1/families", json=new_family.dict())
+    assert response.status_code == 400
+    data = response.json()
+    assert data["detail"] == "The geography value UK is invalid!"
 
 
 # --- DELETE

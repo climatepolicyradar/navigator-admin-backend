@@ -1,9 +1,11 @@
 from typing import Optional
 from pytest import MonkeyPatch
 
+INVALID_GEO_VALUE = "UK"
+
 
 def mock_get_id_from_value(_, geo_string: str) -> Optional[int]:
-    if geo_string != "invalid":
+    if geo_string != INVALID_GEO_VALUE:
         return 1
 
 
