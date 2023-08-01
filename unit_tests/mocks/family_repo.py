@@ -27,12 +27,12 @@ def mock_search_families(_, q: str) -> list[FamilyDTO]:
         return [create_family_dto("search1")]
 
 
-def mock_update_family(_, data: FamilyDTO) -> Optional[FamilyDTO]:
+def mock_update_family(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
     if data.import_id != MISSING_ID:
         return data
 
 
-def mock_create_family(_, data: FamilyDTO) -> Optional[FamilyDTO]:
+def mock_create_family(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
     if data.import_id != FAIL_ID:
         return data
 

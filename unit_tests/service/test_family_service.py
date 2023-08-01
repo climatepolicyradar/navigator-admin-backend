@@ -77,7 +77,7 @@ def test_delete_family_raises_if_invalid_id(family_repo_mock):
 # --- UPDATE
 
 
-def test_update_family(family_repo_mock):
+def test_update_family(family_repo_mock, geography_service_mock):
     family = family_service.get(VALID_ID)
     assert family is not None
     family.slug = "snail"
@@ -86,9 +86,11 @@ def test_update_family(family_repo_mock):
     assert result is not None
     assert result.slug == "snail"
     assert family_repo_mock.update.call_count == 1
+    # Ensure the family service uses the geo service to validate
+    assert geography_service_mock.validate.call_count == 1
 
 
-def test_update_family_missing(family_repo_mock):
+def test_update_family_missing(family_repo_mock, geography_service_mock):
     family = family_service.get(VALID_ID)
     assert family is not None
     family.import_id = MISSING_ID
@@ -96,6 +98,8 @@ def test_update_family_missing(family_repo_mock):
     result = family_service.update(family)
     assert result is None
     assert family_repo_mock.update.call_count == 1
+    # Ensure the family service uses the geo service to validate
+    assert geography_service_mock.validate.call_count == 1
 
 
 def test_update_family_raises_if_invalid_id(family_repo_mock):
@@ -112,12 +116,12 @@ def test_update_family_raises_if_invalid_id(family_repo_mock):
 # --- CREATE
 
 
-def test_create_family(family_repo_mock):
+def test_create_family(family_repo_mock, geography_service_mock):
     new_family = FamilyDTO(
         import_id="A.0.0.5",
         title="This is a test",
         summary="summary",
-        geography="geo",
+        geography="GBR",
         category="category",
         status="status",
         metadata={},
@@ -131,14 +135,16 @@ def test_create_family(family_repo_mock):
     family = family_service.create(new_family)
     assert family is not None
     assert family_repo_mock.create.call_count == 1
+    # Ensure the family service uses the geo service to validate
+    assert geography_service_mock.validate.call_count == 1
 
 
-def test_create_family_error(family_repo_mock):
+def test_create_family_error(family_repo_mock, geography_service_mock):
     new_family = FamilyDTO(
         import_id=FAIL_ID,
         title="This is a test",
         summary="summary",
-        geography="geo",
+        geography="GBR",
         category="category",
         status="status",
         metadata={},
@@ -152,6 +158,8 @@ def test_create_family_error(family_repo_mock):
     family = family_service.create(new_family)
     assert family is None
     assert family_repo_mock.create.call_count == 1
+    # Ensure the family service uses the geo service to validate
+    assert geography_service_mock.validate.call_count == 1
 
 
 def test_create_family_raises_if_invalid_id(family_repo_mock):
@@ -159,7 +167,7 @@ def test_create_family_raises_if_invalid_id(family_repo_mock):
         import_id="invalid",
         title="invalid",
         summary="summary",
-        geography="geo",
+        geography="GBR",
         category="category",
         status="status",
         metadata={},

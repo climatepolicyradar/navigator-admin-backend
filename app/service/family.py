@@ -13,6 +13,7 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 from app.service import id
+from app.service import geography
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +69,8 @@ def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
     id.validate(family.import_id)
-    return family_repo.update(db, family)
+    geo_id = geography.validate(db, family.geography)
+    return family_repo.update(db, family, geo_id)
 
 
 @db_session.with_transaction
@@ -82,7 +84,8 @@ def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
     id.validate(family.import_id)
-    return family_repo.create(db, family)
+    geo_id = geography.validate(db, family.geography)
+    return family_repo.create(db, family, geo_id)
 
 
 @db_session.with_transaction

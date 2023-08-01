@@ -9,7 +9,7 @@ def create_family_dto(
         import_id=import_id,
         title=title,
         summary=summary,
-        geography="1",
+        geography="CHN",
         category=FamilyCategory.LEGISLATIVE,
         status="status",
         metadata={},
