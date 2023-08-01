@@ -49,19 +49,25 @@ Base = make_declarative_base()
 AnyModel = Base
 
 
-def with_transaction(func):
-    def inner(*args, **kwargs):
-        db = get_db()
-        try:
-            db.begin()
-            result = func(*args, **kwargs, db=db)
-            db.commit()
-            return result
-        except exc.SQLAlchemyError as e:
-            _LOGGER.error(e, extra={"func": func.__name__})
-            db.rollback()
-            raise RepositoryError(str(e))
-        finally:
-            db.close()
+def with_transaction(module_name):
+    def inner(func):
+        def wrapper(*args, **kwargs):
+            db = get_db()
+            try:
+                db.begin()
+                result = func(*args, **kwargs, db=db)
+                db.commit()
+                return result
+            except exc.SQLAlchemyError as e:
+                msg = f"Error {str(e)} in {module_name}.{func.__name__}()"
+                _LOGGER.error(
+                    msg, extra={"failing_module": module_name, "func": func.__name__}
+                )
+                db.rollback()
+                raise RepositoryError(str(e))
+            finally:
+                db.close()
+
+        return wrapper
 
     return inner
