@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional, Tuple
+from app.db.models.app.users import Organisation
 from app.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
 from app.db.models.law_policy.family import FamilyOrganisation
@@ -16,31 +17,41 @@ from sqlalchemy import or_, update as db_update, delete as db_delete
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMeta = Tuple[Family, str, dict]
+FamilyGeoMetaOrg = Tuple[Family, str, dict, str]
 
 
 def _fam_geo_meta_query(db: Session):
     return (
-        db.query(Family, Geography.value, FamilyMetadata.value)
+        db.query(Family, Geography.value, FamilyMetadata.value, Organisation.name)
         .join(Geography, Family.geography_id == Geography.id)
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
+        .join(
+            FamilyOrganisation, FamilyOrganisation.family_import_id == Family.import_id
+        )
+        .join(Organisation, FamilyOrganisation.organisation_id == Organisation.id)
     )
 
 
-def _family_from_dto(dto: FamilyDTO, geo_id: int) -> Family:
-    return Family(
-        import_id=dto.import_id,
-        title=dto.title,
-        description=dto.summary,
-        geography_id=geo_id,
-        family_category=dto.category,
+def _family_org_from_dto(
+    dto: FamilyDTO, geo_id: int, org_id
+) -> Tuple[Family, Organisation]:
+    return (
+        Family(
+            import_id=dto.import_id,
+            title=dto.title,
+            description=dto.summary,
+            geography_id=geo_id,
+            family_category=dto.category,
+        ),
+        FamilyOrganisation(family_import_id=dto.import_id, organisation_id=org_id),
     )
 
 
-def _family_to_dto(db: Session, fam_geo_meta: FamilyGeoMeta) -> FamilyDTO:
-    f = fam_geo_meta[0]
-    geo_value = fam_geo_meta[1]
-    metadata = fam_geo_meta[2]
+def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyDTO:
+    f = fam_geo_meta_org[0]
+    geo_value = fam_geo_meta_org[1]
+    metadata = fam_geo_meta_org[2]
+    org = fam_geo_meta_org[3]
     return FamilyDTO(
         import_id=str(f.import_id),
         title=str(f.title),
@@ -60,6 +71,7 @@ def _family_to_dto(db: Session, fam_geo_meta: FamilyGeoMeta) -> FamilyDTO:
                 f.import_id == CollectionFamily.family_import_id
             )
         ],
+        organisation=org,
     )
 
 
@@ -139,7 +151,9 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
     return get(db, family.import_id)
 
 
-def create(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
+def create(
+    db: Session, family: FamilyDTO, geo_id: int, org_id: int
+) -> Optional[FamilyDTO]:
     """
     Creates a new family.
 
@@ -148,8 +162,9 @@ def create(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
     :return Optional[FamilyDTO]: the new family created
     """
     try:
-        new_family = _family_from_dto(family, geo_id)
+        new_family, new_fam_org = _family_org_from_dto(family, geo_id, org_id)
         db.add(new_family)
+        db.add(new_fam_org)
     except Exception as e:
         _LOGGER.error(e)
         return
