@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.service import id
 from app.service import geography
+from app.service import category
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ def search(search_term: str) -> list[FamilyDTO]:
         return family_repo.search(db, search_term)
 
 
-@db_session.with_transaction
+@db_session.with_transaction(__name__)
 def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
     """
     Updates a single Family with the values passed.
@@ -70,10 +71,11 @@ def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     """
     id.validate(family.import_id)
     geo_id = geography.validate(db, family.geography)
+    category.validate(family.category)
     return family_repo.update(db, family, geo_id)
 
 
-@db_session.with_transaction
+@db_session.with_transaction(__name__)
 def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
     """
     Creates a new Family with the values passed.
@@ -85,10 +87,11 @@ def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     """
     id.validate(family.import_id)
     geo_id = geography.validate(db, family.geography)
+    category.validate(family.category)
     return family_repo.create(db, family, geo_id)
 
 
-@db_session.with_transaction
+@db_session.with_transaction(__name__)
 def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the Family specified by the import_id.

@@ -126,6 +126,7 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
             title=new_values["title"],
             description=new_values["summary"],
             geography_id=geo_id,
+            family_category=new_values["category"],
         )
     )
 
