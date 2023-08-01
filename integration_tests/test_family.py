@@ -1,8 +1,63 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.db.models.law_policy.family import Family, FamilyCategory
+from app.db.models.app.users import Organisation
+from app.db.models.law_policy.family import Family, FamilyCategory, FamilyOrganisation
+from app.db.models.law_policy.metadata import (
+    FamilyMetadata,
+    MetadataOrganisation,
+    MetadataTaxonomy,
+)
 from unit_tests.helpers.family import create_family_dto
+
+
+EXPECTED_FAMILIES = [
+    {
+        "import_id": "A.0.0.1",
+        "title": "apple",
+        "summary": "",
+        "geography": "South Asia",
+        "category": "UNFCCC",
+        "status": "Created",
+        "metadata": {"size": 3, "color": "red"},
+        "slug": "",
+        "events": [],
+        "published_date": None,
+        "last_updated_date": None,
+        "documents": [],
+        "collections": [],
+    },
+    {
+        "import_id": "A.0.0.2",
+        "title": "apple orange banana",
+        "summary": "",
+        "geography": "South Asia",
+        "category": "UNFCCC",
+        "status": "Created",
+        "metadata": {"size": 4, "color": "green"},
+        "slug": "",
+        "events": [],
+        "published_date": None,
+        "last_updated_date": None,
+        "documents": [],
+        "collections": [],
+    },
+    {
+        "import_id": "A.0.0.3",
+        "title": "title",
+        "summary": "orange peas",
+        "geography": "South Asia",
+        "category": "UNFCCC",
+        "status": "Created",
+        "metadata": {"size": 100, "color": "blue"},
+        "slug": "",
+        "events": [],
+        "published_date": None,
+        "last_updated_date": None,
+        "documents": [],
+        "collections": [],
+    },
+]
 
 
 def _setup_db(test_db: Session):
@@ -37,6 +92,52 @@ def _setup_db(test_db: Session):
     test_db.add(FAMILY_1)
     test_db.add(FAMILY_2)
     test_db.add(FAMILY_3)
+
+    # Now an organisation
+    org = Organisation(
+        name="test", description="for testing", organisation_type="testorg"
+    )
+    test_db.add(org)
+    test_db.flush()
+
+    # Link the families to the org
+    test_db.add(FamilyOrganisation(family_import_id="A.0.0.1", organisation_id=org.id))
+    test_db.add(FamilyOrganisation(family_import_id="A.0.0.2", organisation_id=org.id))
+    test_db.add(FamilyOrganisation(family_import_id="A.0.0.3", organisation_id=org.id))
+
+    # Now a Taxonomy
+    tax = MetadataTaxonomy(description="test meta", valid_metadata={})
+    test_db.add(tax)
+    test_db.flush()
+
+    # Now a MetadataOrganisation
+    mo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=org.id)
+    test_db.add(mo)
+    test_db.flush()
+
+    # Now add the metadata onto the families
+    test_db.add(
+        FamilyMetadata(
+            family_import_id="A.0.0.1",
+            taxonomy_id=tax.id,
+            value={"color": "red", "size": 3},
+        )
+    )
+    test_db.add(
+        FamilyMetadata(
+            family_import_id="A.0.0.2",
+            taxonomy_id=tax.id,
+            value={"color": "green", "size": 4},
+        )
+    )
+    test_db.add(
+        FamilyMetadata(
+            family_import_id="A.0.0.3",
+            taxonomy_id=tax.id,
+            value={"color": "blue", "size": 100},
+        )
+    )
+
     test_db.commit()
 
 
@@ -57,6 +158,11 @@ def test_get_all_families_200(client: TestClient, test_db: Session):
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
+    sdata = sorted(data, key=lambda d: d["import_id"])
+    assert sdata[0] == EXPECTED_FAMILIES[0]
+    assert sdata[1] == EXPECTED_FAMILIES[1]
+    assert sdata[2] == EXPECTED_FAMILIES[2]
+
 
 # --- GET
 
@@ -69,6 +175,7 @@ def test_get_family_200(client: TestClient, test_db: Session):
     assert response.status_code == 200
     data = response.json()
     assert data["import_id"] == "A.0.0.1"
+    assert data == EXPECTED_FAMILIES[0]
 
 
 def test_get_family_404(client: TestClient, test_db: Session):
