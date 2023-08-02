@@ -32,7 +32,7 @@ def mock_update_family(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
         return data
 
 
-def mock_create_family(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
+def mock_create_family(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
     if data.import_id != FAIL_ID:
         return data
 

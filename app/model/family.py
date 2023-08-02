@@ -20,3 +20,4 @@ class FamilyDTO(BaseModel):
     last_updated_date: Optional[datetime]
     documents: list[str]
     collections: list[str]
+    organisation: str

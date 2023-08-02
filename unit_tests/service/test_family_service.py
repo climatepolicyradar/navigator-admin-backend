@@ -131,22 +131,28 @@ def test_update_family_raiseson_invalid_category(
 # --- CREATE
 
 
-def test_create_family(family_repo_mock, geography_service_mock):
+def test_create_family(
+    family_repo_mock, geography_service_mock, organisation_service_mock
+):
     new_family = create_family_dto(import_id="A.0.0.5")
     family = family_service.create(new_family)
     assert family is not None
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
     assert geography_service_mock.validate.call_count == 1
+    assert organisation_service_mock.validate.call_count == 1
 
 
-def test_create_family_repo_fails(family_repo_mock, geography_service_mock):
+def test_create_family_repo_fails(
+    family_repo_mock, geography_service_mock, organisation_service_mock
+):
     new_family = create_family_dto(import_id=FAIL_ID)
     family = family_service.create(new_family)
     assert family is None
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
     assert geography_service_mock.validate.call_count == 1
+    assert organisation_service_mock.validate.call_count == 1
 
 
 def test_create_family_raiseson_invalid_id(family_repo_mock):

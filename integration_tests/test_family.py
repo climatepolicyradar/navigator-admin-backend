@@ -20,6 +20,7 @@ EXPECTED_FAMILIES = [
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": 3, "color": "red"},
+        "organisation": "test_org",
         "slug": "",
         "events": [],
         "published_date": None,
@@ -35,6 +36,7 @@ EXPECTED_FAMILIES = [
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": 4, "color": "green"},
+        "organisation": "test_org",
         "slug": "",
         "events": [],
         "published_date": None,
@@ -50,6 +52,7 @@ EXPECTED_FAMILIES = [
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": 100, "color": "blue"},
+        "organisation": "test_org",
         "slug": "",
         "events": [],
         "published_date": None,
@@ -95,7 +98,7 @@ def _setup_db(test_db: Session):
 
     # Now an organisation
     org = Organisation(
-        name="test", description="for testing", organisation_type="testorg"
+        name="test_org", description="for testing", organisation_type="testorg"
     )
     test_db.add(org)
     test_db.flush()
@@ -372,9 +375,7 @@ def test_create_family_503(client: TestClient, test_db: Session, bad_family_repo
     assert data["detail"] == "Bad Repo"
 
 
-def test_create_family__invalid_geo_400(
-    client: TestClient, test_db: Session, bad_family_repo
-):
+def test_create_family__invalid_geo_400(client: TestClient, test_db: Session):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.9",
@@ -388,9 +389,7 @@ def test_create_family__invalid_geo_400(
     assert data["detail"] == "The geography value UK is invalid!"
 
 
-def test_create_family__invalid_category_400(
-    client: TestClient, test_db: Session, bad_family_repo
-):
+def test_create_family__invalid_category_400(client: TestClient, test_db: Session):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.9",
@@ -402,6 +401,20 @@ def test_create_family__invalid_category_400(
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "Invalid is not a valid FamilyCategory"
+
+
+def test_create_family__invalid_org_400(client: TestClient, test_db: Session):
+    _setup_db(test_db)
+    new_family = create_family_dto(
+        import_id="A.0.0.9",
+        title="Title",
+        summary="test test test",
+    )
+    new_family.organisation = "chicken"
+    response = client.post("/api/v1/families", json=new_family.dict())
+    assert response.status_code == 400
+    data = response.json()
+    assert data["detail"] == "The organisation name chicken is invalid!"
 
 
 # --- DELETE

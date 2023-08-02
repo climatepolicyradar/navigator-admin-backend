@@ -21,7 +21,7 @@ def mock_update_family(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_create_family(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
+def mock_create_family(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
     raise RepositoryError("Bad Repo")
 
 

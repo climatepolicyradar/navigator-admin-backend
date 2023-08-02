@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.service import id
 from app.service import geography
 from app.service import category
+from app.service import organisation
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,14 +82,15 @@ def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     Creates a new Family with the values passed.
 
     :param FamilyDTO family: The values for the new Family.
-    :raises RepositoryError: raised on a database error.
+    :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
     id.validate(family.import_id)
     geo_id = geography.validate(db, family.geography)
     category.validate(family.category)
-    return family_repo.create(db, family, geo_id)
+    org_id = organisation.validate(db, family.organisation)
+    return family_repo.create(db, family, geo_id, org_id)
 
 
 @db_session.with_transaction(__name__)
