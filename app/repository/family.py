@@ -1,7 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, cast
 from app.db.models.app.users import Organisation
 from app.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
@@ -13,16 +13,17 @@ from app.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
 from sqlalchemy import or_, update as db_update, delete as db_delete
+from sqlalchemy.orm import Query
 
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, str, dict, str]
+FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Organisation]
 
 
-def _fam_geo_meta_query(db: Session):
+def _fam_geo_meta_query(db: Session) -> Query:
     return (
-        db.query(Family, Geography.value, FamilyMetadata.value, Organisation.name)
+        db.query(Family, Geography, FamilyMetadata, Organisation)
         .join(Geography, Family.geography_id == Geography.id)
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(
@@ -49,9 +50,9 @@ def _family_org_from_dto(
 
 def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyDTO:
     f = fam_geo_meta_org[0]
-    geo_value = fam_geo_meta_org[1]
-    metadata = fam_geo_meta_org[2]
-    org = fam_geo_meta_org[3]
+    geo_value = cast(str, fam_geo_meta_org[1].value)
+    metadata = cast(dict, fam_geo_meta_org[2].value)
+    org = cast(str, fam_geo_meta_org[3].name)
     return FamilyDTO(
         import_id=str(f.import_id),
         title=str(f.title),
