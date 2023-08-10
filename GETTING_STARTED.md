@@ -38,7 +38,7 @@ make build
 This should generate a container image named `navigator-admin-backend`, this image can be run locally with:
 
 ```
-make run
+make start
 ```
 
 ## Testing

@@ -52,7 +52,7 @@ integration_test: build
 
 test: unit_test integration_test
 
-run: build
+start: build
 	docker run -p 8888:8888 \
 	--network=test-network \
 	-e ADMIN_POSTGRES_HOST=test_db \
