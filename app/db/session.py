@@ -11,6 +11,7 @@ engine = create_engine(
     # TODO: configure as part of scaling work
     pool_size=10,
     max_overflow=240,
+    # echo="debug",
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

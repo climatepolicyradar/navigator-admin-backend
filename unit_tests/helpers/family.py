@@ -3,17 +3,22 @@ from app.model.family import FamilyDTO
 
 
 def create_family_dto(
-    import_id: str, title: str = "title", summary: str = "summary"
+    import_id: str,
+    title: str = "title",
+    summary: str = "summary",
+    geography: str = "CHN",
+    category: FamilyCategory = FamilyCategory.LEGISLATIVE,
+    slug: str = "slug",
 ) -> FamilyDTO:
     return FamilyDTO(
         import_id=import_id,
         title=title,
         summary=summary,
-        geography="CHN",
-        category=FamilyCategory.LEGISLATIVE,
+        geography=geography,
+        category=category,
         status="status",
         metadata={},
-        slug="slug",
+        slug=slug,
         events=["e1", "e2"],
         published_date=None,
         last_updated_date=None,

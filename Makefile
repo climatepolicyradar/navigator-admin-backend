@@ -43,7 +43,9 @@ setup_test_db:
 integration_test: build 
 	@echo Assuming setup_test_db has already run.
 	@echo Running tests...
+	- docker stop admin
 	docker run --rm \
+		--name admin \
 		--network=test-network \
 		-e ADMIN_POSTGRES_HOST=test_db \
 		navigator-admin-backend \
@@ -53,7 +55,9 @@ integration_test: build
 test: unit_test integration_test
 
 start: build
+	- docker stop admin
 	docker run -p 8888:8888 \
+	--name admin \
 	--network=test-network \
 	-e ADMIN_POSTGRES_HOST=test_db \
 	-d navigator-admin-backend

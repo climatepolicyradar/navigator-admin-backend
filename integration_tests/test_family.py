@@ -2,7 +2,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.db.models.app.users import Organisation
-from app.db.models.law_policy.family import Family, FamilyCategory, FamilyOrganisation
+from app.db.models.law_policy.family import (
+    Family,
+    FamilyCategory,
+    FamilyOrganisation,
+    Slug,
+)
 from app.db.models.law_policy.metadata import (
     FamilyMetadata,
     MetadataOrganisation,
@@ -250,18 +255,29 @@ def test_update_family_200(client: TestClient, test_db: Session):
         import_id="A.0.0.2",
         title="Updated Title",
         summary="just a test",
+        geography="USA",
+        category=FamilyCategory.UNFCCC,
+        slug="new-slug",
     )
     response = client.put("/api/v1/families", json=new_family.dict())
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Updated Title"
     assert data["summary"] == "just a test"
+    assert data["geography"] == "USA"
+    assert data["category"] == "UNFCCC"
+    assert data["slug"].startswith("updated-title")
 
     db_family: Family = (
         test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
     )
     assert db_family.title == "Updated Title"
     assert db_family.description == "just a test"
+    assert db_family.geography_id == 210
+    assert db_family.family_category == "UNFCCC"
+    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
+    assert len(db_slug) == 1
+    assert str(db_slug[0].name).startswith("updated-title")
 
 
 def test_update_family_rollback(
@@ -281,6 +297,9 @@ def test_update_family_rollback(
     )
     assert db_family.title != "Updated Title"
     assert db_family.description != "just a test"
+    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
+    # Ensure no slug was created
+    assert len(db_slug) == 0
 
 
 def test_update_family_404(client: TestClient, test_db: Session):
@@ -360,6 +379,9 @@ def test_create_family_rollback(
         test_db.query(Family).filter(Family.import_id == "A.0.0.9").one_or_none()
     )
     assert actual_family is None
+    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.9").all()
+    # Ensure no slug was created
+    assert len(db_slug) == 0
 
 
 def test_create_family_503(client: TestClient, test_db: Session, bad_family_repo):

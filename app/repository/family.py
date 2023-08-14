@@ -2,10 +2,13 @@
 
 import logging
 from typing import Optional, Tuple, cast
+from uuid import uuid4
+
+from slugify import slugify
 from app.db.models.app.users import Organisation
 from app.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
-from app.db.models.law_policy.family import FamilyOrganisation
+from app.db.models.law_policy.family import FamilyOrganisation, Slug
 from app.db.models.law_policy.geography import Geography
 from app.db.models.law_policy.metadata import FamilyMetadata
 from app.model.family import FamilyDTO
@@ -76,6 +79,27 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyDTO
     )
 
 
+def _generate_slug(
+    title: str,
+    lookup: set[str],
+    attempts: int = 100,
+    suffix_length: int = 4,
+):
+    base = slugify(str(title))
+    # TODO: try to extend suffix length if attempts are exhausted
+    suffix = str(uuid4())[:suffix_length]
+    count = 0
+    while (slug := f"{base}_{suffix}") in lookup:
+        count += 1
+        suffix = str(uuid4())[:suffix_length]
+        if count > attempts:
+            raise RuntimeError(
+                f"Failed to generate a slug for {base} after {attempts} attempts."
+            )
+    lookup.add(slug)
+    return slug
+
+
 def all(db: Session) -> list[FamilyDTO]:
     """
     Returns all the families.
@@ -134,7 +158,16 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
     :return Optional[FamilyDTO]: The new values set or None if not found.
     """
     new_values = family.dict()
-    # TODO : Update more values on a family
+
+    # Do we need a new slug?
+    original_title = cast(
+        str,
+        db.query(Family.title)
+        .filter(Family.import_id == family.import_id)
+        .one_or_none(),
+    )
+    need_slug = original_title is not None and original_title != family.title
+
     result = db.execute(
         db_update(Family)
         .where(Family.import_id == family.import_id)
@@ -145,9 +178,23 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
             family_category=new_values["category"],
         )
     )
+    # TODO: Update metadata
 
     if result.rowcount == 0:  # type: ignore
         return
+
+    db.flush()
+
+    if need_slug:
+        lookup = set([cast(str, n) for n in db.query(Slug.name).all()])
+        db.add(
+            Slug(
+                family_import_id=family.import_id,
+                family_document_import_id=None,
+                name=_generate_slug(family.title, lookup),
+            )
+        )
+        db.flush()
 
     return get(db, family.import_id)
 
@@ -170,6 +217,15 @@ def create(
         _LOGGER.error(e)
         return
 
+    # Add a slug
+    lookup = set([cast(str, n) for n in db.query(Slug.name).all()])
+    db.add(
+        Slug(
+            family_import_id=family.import_id,
+            family_document_import_id=None,
+            name=_generate_slug(family.title, lookup),
+        )
+    )
     return family
 
 
