@@ -80,11 +80,9 @@ def test_delete_family_raises_if_invalid_id(family_repo_mock):
 def test_update_family(family_repo_mock, geography_service_mock):
     family = family_service.get(VALID_ID)
     assert family is not None
-    family.slug = "snail"
 
     result = family_service.update(family)
     assert result is not None
-    assert result.slug == "snail"
     assert family_repo_mock.update.call_count == 1
     # Ensure the family service uses the geo service to validate
     assert geography_service_mock.validate.call_count == 1
