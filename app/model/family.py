@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 
+from app.model.general import Json
+
 
 class FamilyDTO(BaseModel):
     """A JSON representation of a family."""
@@ -13,7 +15,7 @@ class FamilyDTO(BaseModel):
     geography: str
     category: str
     status: str
-    metadata: dict
+    metadata: Json
     slug: str
     events: list[str]
     published_date: Optional[datetime]

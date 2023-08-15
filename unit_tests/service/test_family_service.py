@@ -77,7 +77,12 @@ def test_delete_family_raises_if_invalid_id(family_repo_mock):
 # --- UPDATE
 
 
-def test_update_family(family_repo_mock, geography_service_mock):
+def test_update_family(
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
+):
     family = family_service.get(VALID_ID)
     assert family is not None
 
@@ -85,10 +90,16 @@ def test_update_family(family_repo_mock, geography_service_mock):
     assert result is not None
     assert family_repo_mock.update.call_count == 1
     # Ensure the family service uses the geo service to validate
-    assert geography_service_mock.validate.call_count == 1
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
 
 
-def test_update_family_missing(family_repo_mock, geography_service_mock):
+def test_update_family_missing(
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
+):
     family = family_service.get(VALID_ID)
     assert family is not None
     family.import_id = MISSING_ID
@@ -97,10 +108,15 @@ def test_update_family_missing(family_repo_mock, geography_service_mock):
     assert result is None
     assert family_repo_mock.update.call_count == 1
     # Ensure the family service uses the geo service to validate
-    assert geography_service_mock.validate.call_count == 1
+    assert geography_repo_mock.get_id_from_value.call_count == 1
 
 
-def test_update_family_raiseson_invalid_id(family_repo_mock):
+def test_update_family_raiseson_invalid_id(
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
+):
     family = family_service.get(VALID_ID)
     assert family is not None  # needed to placate pyright
     family.import_id = "invalid"
@@ -113,7 +129,10 @@ def test_update_family_raiseson_invalid_id(family_repo_mock):
 
 
 def test_update_family_raiseson_invalid_category(
-    family_repo_mock, geography_service_mock
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
 ):
     family = family_service.get(VALID_ID)
     assert family is not None  # needed to placate pyright
@@ -126,31 +145,71 @@ def test_update_family_raiseson_invalid_category(
     assert family_repo_mock.update.call_count == 0
 
 
+def test_update_family_raiseson_invalid_organisation(
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
+):
+    family = family_service.get(VALID_ID)
+    assert family is not None  # needed to placate pyright
+    family.organisation = "Invalid"
+
+    with pytest.raises(ValidationError) as e:
+        family_service.update(family)
+    expected_msg = "The organisation name Invalid is invalid!"
+    assert e.value.message == expected_msg
+    assert family_repo_mock.update.call_count == 0
+
+
+def test_update_family_raiseson_invalid_metadata(
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
+):
+    family = family_service.get(VALID_ID)
+    assert family is not None  # needed to placate pyright
+    family.metadata = {"invalid": True}
+
+    with pytest.raises(ValidationError) as e:
+        family_service.update(family)
+    expected_msg = "Invalid Metadata"
+    assert e.value.message == expected_msg
+    assert family_repo_mock.update.call_count == 0
+
+
 # --- CREATE
 
 
 def test_create_family(
-    family_repo_mock, geography_service_mock, organisation_service_mock
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
 ):
     new_family = create_family_dto(import_id="A.0.0.5")
     family = family_service.create(new_family)
     assert family is not None
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
-    assert geography_service_mock.validate.call_count == 1
-    assert organisation_service_mock.validate.call_count == 1
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
 
 
 def test_create_family_repo_fails(
-    family_repo_mock, geography_service_mock, organisation_service_mock
+    family_repo_mock,
+    geography_repo_mock,
+    organisation_repo_mock,
+    metadata_service_mock,
 ):
     new_family = create_family_dto(import_id=FAIL_ID)
     family = family_service.create(new_family)
     assert family is None
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
-    assert geography_service_mock.validate.call_count == 1
-    assert organisation_service_mock.validate.call_count == 1
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
 
 
 def test_create_family_raiseson_invalid_id(family_repo_mock):
@@ -162,7 +221,7 @@ def test_create_family_raiseson_invalid_id(family_repo_mock):
     assert family_repo_mock.create.call_count == 0
 
 
-def test_create_raiseson_invalid_category(family_repo_mock, geography_service_mock):
+def test_create_raiseson_invalid_category(family_repo_mock, geography_repo_mock):
     new_family = create_family_dto(import_id="A.0.0.5")
     new_family.category = "invalid"
     with pytest.raises(ValidationError) as e:

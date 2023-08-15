@@ -3,15 +3,15 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.service.family as family_service
-import app.service.geography as geography_service
-import app.service.organisation as organisation_service
+import app.service.metadata as metadata_service
 import app.repository.family as family_repo
 import app.repository.geography as geography_repo
+import app.repository.organisation as organisation_repo
 from unit_tests.mocks.family_repo import mock_family_repo
 from unit_tests.mocks.family_service import mock_family_service
 from unit_tests.mocks.geography_repo import mock_geography_repo
-from unit_tests.mocks.geography_service import mock_geography_service
-from unit_tests.mocks.organisation_service import mock_organisation_service
+from unit_tests.mocks.metadata_service import mock_metadata_service
+from unit_tests.mocks.organisation_repo import mock_organisation_repo
 
 
 @pytest.fixture
@@ -22,17 +22,17 @@ def client():
 
 
 @pytest.fixture
-def organisation_service_mock(monkeypatch, mocker):
+def metadata_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
-    mock_geography_service(organisation_service, monkeypatch, mocker)
-    yield organisation_service
+    mock_metadata_service(metadata_service, monkeypatch, mocker)
+    yield metadata_service
 
 
 @pytest.fixture
-def geography_service_mock(monkeypatch, mocker):
+def organisation_repo_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
-    mock_organisation_service(geography_service, monkeypatch, mocker)
-    yield geography_service
+    mock_organisation_repo(organisation_repo, monkeypatch, mocker)
+    yield organisation_repo
 
 
 @pytest.fixture

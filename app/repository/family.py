@@ -216,7 +216,6 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> bool:
 
     # Update if metadata is changed
     if update_metadata:
-        # TODO: Validate metadata
         md_result = db.execute(
             db_update(FamilyMetadata)
             .where(FamilyMetadata.family_import_id == family.import_id)

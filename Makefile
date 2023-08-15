@@ -52,7 +52,7 @@ integration_test: build
 		pytest -vvv integration_tests
 	docker stop test_db
 
-test: unit_test integration_test
+test: unit_test setup_test_db integration_test
 
 start: build
 	- docker stop admin

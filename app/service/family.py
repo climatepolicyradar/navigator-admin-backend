@@ -16,6 +16,7 @@ from app.service import id
 from app.service import geography
 from app.service import category
 from app.service import organisation
+from app.service import metadata
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +74,9 @@ def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     id.validate(family.import_id)
     geo_id = geography.validate(db, family.geography)
     category.validate(family.category)
+    org_id = organisation.validate(db, family.organisation)
+    metadata.validate(db, org_id, family.metadata)
+
     if family_repo.update(db, family, geo_id):
         db.commit()
         return get(family.import_id)
@@ -92,6 +96,8 @@ def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     geo_id = geography.validate(db, family.geography)
     category.validate(family.category)
     org_id = organisation.validate(db, family.organisation)
+    metadata.validate(db, org_id, family.metadata)
+
     return family_repo.create(db, family, geo_id, org_id)
 
 
