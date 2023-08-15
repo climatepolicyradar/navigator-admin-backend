@@ -73,7 +73,9 @@ def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     id.validate(family.import_id)
     geo_id = geography.validate(db, family.geography)
     category.validate(family.category)
-    return family_repo.update(db, family, geo_id)
+    if family_repo.update(db, family, geo_id):
+        db.commit()
+        return get(family.import_id)
 
 
 @db_session.with_transaction(__name__)

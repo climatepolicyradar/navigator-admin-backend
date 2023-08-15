@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.models.law_policy.family import FamilyOrganisation, Slug
 from app.db.models.law_policy.geography import Geography
 from app.db.models.law_policy.metadata import FamilyMetadata
+from app.errors.repository_error import RepositoryError
 from app.model.family import FamilyDTO
 from app.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
@@ -25,6 +26,9 @@ FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Organisation]
 
 
 def _fam_geo_meta_query(db: Session) -> Query:
+    # NOTE: SqlAlchemy will make a complete hash of query generation
+    #       if columns are used in the query() call. Therefore, entire
+    #       objects are returned.
     return (
         db.query(Family, Geography, FamilyMetadata, Organisation)
         .join(Geography, Family.geography_id == Geography.id)
@@ -100,6 +104,23 @@ def _generate_slug(
     return slug
 
 
+def _update_intention(db, family, geo_id, original_family):
+    update_title = cast(str, original_family.title) != family.title
+    update_basics = (
+        update_title
+        or original_family.description != family.summary
+        or original_family.geography_id != geo_id
+        or original_family.family_category != family.category
+    )
+    existing_metadata = (
+        db.query(FamilyMetadata)
+        .filter(FamilyMetadata.family_import_id == family.import_id)
+        .one()
+    )
+    update_metadata = existing_metadata.value != family.metadata
+    return update_title, update_basics, update_metadata
+
+
 def all(db: Session) -> list[FamilyDTO]:
     """
     Returns all the families.
@@ -148,7 +169,7 @@ def search(db: Session, search_term: str) -> list[FamilyDTO]:
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
+def update(db: Session, family: FamilyDTO, geo_id: int) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -159,44 +180,70 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
     """
     new_values = family.dict()
 
-    # Do we need a new slug?
-    original_title = cast(
-        str,
-        db.query(Family.title)
-        .filter(Family.import_id == family.import_id)
-        .one_or_none(),
+    original_family = (
+        db.query(Family).filter(Family.import_id == family.import_id).one_or_none()
     )
-    need_slug = original_title is not None and original_title != family.title
 
-    result = db.execute(
-        db_update(Family)
-        .where(Family.import_id == family.import_id)
-        .values(
-            title=new_values["title"],
-            description=new_values["summary"],
-            geography_id=geo_id,
-            family_category=new_values["category"],
-        )
+    if original_family is None:  # Not found the family to update
+        _LOGGER.error(f"Unable to find family for update {family}")
+        return False
+
+    # Now figure out the intention of the request:
+    update_title, update_basics, update_metadata = _update_intention(
+        db, family, geo_id, original_family
     )
-    # TODO: Update metadata
 
-    if result.rowcount == 0:  # type: ignore
-        return
+    # Return if nothing to do
+    if not update_title and not update_basics and not update_metadata:
+        return True
 
-    db.flush()
-
-    if need_slug:
-        lookup = set([cast(str, n) for n in db.query(Slug.name).all()])
-        db.add(
-            Slug(
-                family_import_id=family.import_id,
-                family_document_import_id=None,
-                name=_generate_slug(family.title, lookup),
+    # Update basic fields
+    if update_basics:
+        result = db.execute(
+            db_update(Family)
+            .where(Family.import_id == family.import_id)
+            .values(
+                title=new_values["title"],
+                description=new_values["summary"],
+                geography_id=geo_id,
+                family_category=new_values["category"],
             )
         )
-        db.flush()
+        if result.rowcount == 0:  # type: ignore
+            msg = "Could not update family fields: {family}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
 
-    return get(db, family.import_id)
+    # Update if metadata is changed
+    if update_metadata:
+        # TODO: Validate metadata
+        md_result = db.execute(
+            db_update(FamilyMetadata)
+            .where(FamilyMetadata.family_import_id == family.import_id)
+            .values(value=family.metadata)
+        )
+        if md_result.rowcount == 0:  # type: ignore
+            msg = (
+                "Could not update the metadata for family: "
+                + f"{family.import_id} to {family.metadata}"
+            )
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
+
+    # update slug if title changed
+    if update_title:
+        db.flush()
+        lookup = set([cast(str, n) for n in db.query(Slug.name).all()])
+        name = _generate_slug(family.title, lookup)
+        new_slug = Slug(
+            family_import_id=family.import_id,
+            family_document_import_id=None,
+            name=name,
+        )
+        db.add(new_slug)
+        _LOGGER.info(f"Added a new slug for {family.import_id} of {new_slug.name}")
+
+    return True
 
 
 def create(

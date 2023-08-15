@@ -280,6 +280,27 @@ def test_update_family_200(client: TestClient, test_db: Session):
     assert str(db_slug[0].name).startswith("updated-title")
 
 
+def test_update_family_idempotent_200(client: TestClient, test_db: Session):
+    _setup_db(test_db)
+    family = EXPECTED_FAMILIES[1]
+    response = client.put("/api/v1/families", json=family)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["title"] == EXPECTED_FAMILIES[1]["title"]
+    assert data["summary"] == EXPECTED_FAMILIES[1]["summary"]
+    assert data["geography"] == EXPECTED_FAMILIES[1]["geography"]
+    assert data["category"] == EXPECTED_FAMILIES[1]["category"]
+    db_family: Family = (
+        test_db.query(Family)
+        .filter(Family.import_id == EXPECTED_FAMILIES[1]["import_id"])
+        .one()
+    )
+    assert db_family.title == EXPECTED_FAMILIES[1]["title"]
+    assert db_family.description == EXPECTED_FAMILIES[1]["summary"]
+    assert db_family.geography_id == 1
+    assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
+
+
 def test_update_family_rollback(
     client: TestClient, test_db: Session, rollback_family_repo
 ):
@@ -297,9 +318,19 @@ def test_update_family_rollback(
     )
     assert db_family.title != "Updated Title"
     assert db_family.description != "just a test"
+
     db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
     # Ensure no slug was created
     assert len(db_slug) == 0
+
+    db_meta = (
+        test_db.query(FamilyMetadata)
+        .filter(FamilyMetadata.family_import_id == "A.0.0.2")
+        .all()
+    )
+    # Ensure no metadata was updated
+    assert len(db_meta) == 1
+    assert db_meta[0].value == {"size": 4, "color": "green"}
 
 
 def test_update_family_404(client: TestClient, test_db: Session):
@@ -342,6 +373,30 @@ def test_update_family__invalid_geo_400(
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "The geography value UK is invalid!"
+
+
+def test_update_family_metadata_if_changed(client: TestClient, test_db: Session):
+    _setup_db(test_db)
+    expected_meta = {"color": "pink", "size": 23}
+    response = client.get(
+        "/api/v1/families/A.0.0.2",
+    )
+    assert response.status_code == 200
+    family_data = response.json()
+    assert {"color": "green", "size": 4} == family_data["metadata"]
+    family_data["metadata"] = expected_meta
+    response = client.put("/api/v1/families", json=family_data)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert expected_meta == data["metadata"]
+
+    metadata: FamilyMetadata = (
+        test_db.query(FamilyMetadata)
+        .filter(FamilyMetadata.family_import_id == "A.0.0.2")
+        .one()
+    )
+    assert metadata.value == expected_meta
 
 
 # --- CREATE
