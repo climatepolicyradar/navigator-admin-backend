@@ -1,3 +1,4 @@
+from typing import Optional
 from app.db.models.law_policy.family import FamilyCategory
 from app.model.family import FamilyDTO
 
@@ -8,8 +9,11 @@ def create_family_dto(
     summary: str = "summary",
     geography: str = "CHN",
     category: FamilyCategory = FamilyCategory.LEGISLATIVE,
+    metadata: Optional[dict] = None,
     slug: str = "slug",
 ) -> FamilyDTO:
+    if metadata is None:
+        metadata = {}
     return FamilyDTO(
         import_id=import_id,
         title=title,
@@ -17,7 +21,7 @@ def create_family_dto(
         geography=geography,
         category=category,
         status="status",
-        metadata={},
+        metadata=metadata,
         slug=slug,
         events=["e1", "e2"],
         published_date=None,

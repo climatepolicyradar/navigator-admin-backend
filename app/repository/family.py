@@ -10,7 +10,7 @@ from app.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
 from app.db.models.law_policy.family import FamilyOrganisation, Slug
 from app.db.models.law_policy.geography import Geography
-from app.db.models.law_policy.metadata import FamilyMetadata
+from app.db.models.law_policy.metadata import FamilyMetadata, MetadataOrganisation
 from app.errors.repository_error import RepositoryError
 from app.model.family import FamilyDTO
 from app.db.models.law_policy import Family
@@ -271,6 +271,23 @@ def create(
             family_import_id=family.import_id,
             family_document_import_id=None,
             name=_generate_slug(family.title, lookup),
+        )
+    )
+
+    # TODO: Validate the metadata
+
+    # Add the metadata
+    db.flush()
+    tax = (
+        db.query(MetadataOrganisation)
+        .filter(MetadataOrganisation.organisation_id == org_id)
+        .one()
+    )
+    db.add(
+        FamilyMetadata(
+            family_import_id=new_family.import_id,
+            taxonomy_id=tax.taxonomy_id,
+            value=family.metadata,
         )
     )
     return family

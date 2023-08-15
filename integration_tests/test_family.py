@@ -404,10 +404,12 @@ def test_update_family_metadata_if_changed(client: TestClient, test_db: Session)
 
 def test_create_family_200(client: TestClient, test_db: Session):
     _setup_db(test_db)
+    test_meta = {"color": "bluish"}
     new_family = create_family_dto(
         import_id="A.0.0.9",
         title="Title",
         summary="test test test",
+        metadata=test_meta,
     )
     response = client.post("/api/v1/families", json=new_family.dict())
     assert response.status_code == 200
@@ -417,6 +419,13 @@ def test_create_family_200(client: TestClient, test_db: Session):
     actual_family = test_db.query(Family).filter(Family.import_id == "A.0.0.9").one()
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
+    metadata = (
+        test_db.query(FamilyMetadata)
+        .filter(FamilyMetadata.family_import_id == "A.0.0.9")
+        .one()
+    )
+    assert metadata.value is not None
+    assert metadata.value == test_meta
 
 
 def test_create_family_rollback(
