@@ -1,7 +1,8 @@
 """
 Family Service
 
-This file hands off to the family repo, adding the dependency of the db (future)
+This layer uses the family repo to handle storage management and other
+services for validation etc.
 """
 import logging
 from typing import Optional
