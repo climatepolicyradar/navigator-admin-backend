@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Json
+from pydantic import BaseModel
+from app.model.general import Json
 
 
 class FamilyDTO(BaseModel):
