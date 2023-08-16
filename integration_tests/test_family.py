@@ -114,7 +114,19 @@ def _setup_db(test_db: Session):
     test_db.add(FamilyOrganisation(family_import_id="A.0.0.3", organisation_id=org.id))
 
     # Now a Taxonomy
-    tax = MetadataTaxonomy(description="test meta", valid_metadata={})
+    tax = MetadataTaxonomy(
+        description="test meta",
+        valid_metadata={
+            "color": {
+                "allow_any": False,
+                "allowed_values": ["green", "red", "pink", "blue"],
+            },
+            "size": {
+                "allow_any": True,
+                "allowed_values": [],
+            },
+        },
+    )
     test_db.add(tax)
     test_db.flush()
 
@@ -257,6 +269,7 @@ def test_update_family_200(client: TestClient, test_db: Session):
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
+        metadata={"color": "pink", "size": 0},
         slug="new-slug",
     )
     response = client.put("/api/v1/families", json=new_family.dict())
@@ -309,6 +322,7 @@ def test_update_family_rollback(
         import_id="A.0.0.2",
         title="Updated Title",
         summary="just a test",
+        metadata={"color": "pink", "size": 0},
     )
     response = client.put("/api/v1/families", json=new_family.dict())
     assert response.status_code == 503
@@ -339,6 +353,7 @@ def test_update_family_404(client: TestClient, test_db: Session):
         import_id="A.0.0.22",
         title="Updated Title",
         summary="just a test",
+        metadata={"color": "pink", "size": 0},
     )
     response = client.put("/api/v1/families", json=new_family.dict())
     assert response.status_code == 404
@@ -352,6 +367,7 @@ def test_update_family_503(client: TestClient, test_db: Session, bad_family_repo
         import_id="A.0.0.22",
         title="Updated Title",
         summary="just a test",
+        metadata={"color": "pink", "size": 0},
     )
     response = client.put("/api/v1/families", json=new_family.dict())
     assert response.status_code == 503
@@ -367,6 +383,7 @@ def test_update_family__invalid_geo_400(
         import_id="A.0.0.22",
         title="Updated Title",
         summary="just a test",
+        metadata={"color": "pink", "size": 0},
     )
     new_family.geography = "UK"
     response = client.put("/api/v1/families", json=new_family.dict())
@@ -404,7 +421,7 @@ def test_update_family_metadata_if_changed(client: TestClient, test_db: Session)
 
 def test_create_family_200(client: TestClient, test_db: Session):
     _setup_db(test_db)
-    test_meta = {"color": "bluish"}
+    test_meta = {"color": "blue", "size": 888}
     new_family = create_family_dto(
         import_id="A.0.0.9",
         title="Title",
@@ -436,6 +453,7 @@ def test_create_family_rollback(
         import_id="A.0.0.9",
         title="Title",
         summary="test test test",
+        metadata={"color": "pink", "size": 0},
     )
     response = client.post("/api/v1/families", json=new_family.dict())
     assert response.status_code == 503
@@ -454,6 +472,7 @@ def test_create_family_503(client: TestClient, test_db: Session, bad_family_repo
         import_id="A.0.0.9",
         title="Title",
         summary="test test test",
+        metadata={"color": "pink", "size": 0},
     )
     response = client.post("/api/v1/families", json=new_family.dict())
     assert response.status_code == 503

@@ -1,8 +1,10 @@
+import logging
 from app.errors.validation_error import ValidationError
 from app.model.general import Json
 from sqlalchemy.orm import Session
 import app.repository.metadata as metadata_repo
 
+_LOGGER = logging.getLogger(__name__)
 
 KEY_ALLOW_ANY = "allow_any"
 KEY_ALLOW_BLANKS = "allow_blanks"
@@ -26,7 +28,9 @@ VALID_SCHEMA_KEYS = [KEY_ALLOW_ANY, KEY_ALLOW_BLANKS, KEY_ALLOWED_VALUES]
 def validate(db: Session, org_id: int, data: Json) -> bool:
     schema = metadata_repo.get_schema_for_org(db, org_id)
     if schema is None:
-        raise ValidationError(f"Organisation {org_id} has no Taxonomy defined!")
+        msg = f"Organisation {org_id} has no Taxonomy defined!"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
     return _validate(schema, data)
 
 
@@ -47,9 +51,9 @@ def _validate(schema: Json, data: Json) -> bool:
     missing_data_keys = set(valid_data_keys).difference(set(data.keys()))
 
     if len(missing_data_keys) > 0:
-        raise ValidationError(
-            f"Values for the following are missing: {missing_data_keys}"
-        )
+        msg = f"Values for the following are missing: {missing_data_keys}"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
 
     _validate_data(schema, data, valid_data_keys)
 
@@ -60,7 +64,9 @@ def _validate_data(schema, data, valid_data_keys):
     for key, value in data.items():
         # First check key is valid against those in the schema
         if key not in valid_data_keys:
-            raise ValidationError(f"Unknown '{key}' not in {valid_data_keys}")
+            msg = f"Unknown '{key}' not in {valid_data_keys}"
+            _LOGGER.error(msg)
+            raise ValidationError(msg)
 
         key_schema = schema[key]
 
@@ -73,7 +79,9 @@ def _validate_data(schema, data, valid_data_keys):
         if value == "":
             if allow_blanks:
                 continue
-            raise ValidationError(f"Value for {key} is blank, and that is not allowed")
+            msg = f"Value for {key} is blank, and that is not allowed"
+            _LOGGER.error(msg)
+            raise ValidationError(msg)
 
         allow_any = (
             True
@@ -86,9 +94,9 @@ def _validate_data(schema, data, valid_data_keys):
 
         valid_values = key_schema[KEY_ALLOWED_VALUES]
         if value not in valid_values:
-            raise ValidationError(
-                f"Value '{value}' is not in the allowed list: {valid_values}"
-            )
+            msg = f"Value '{value}' is not in the allowed list: {valid_values}"
+            _LOGGER.error(msg)
+            raise ValidationError(msg)
 
 
 def _validate_schema(schema):
@@ -102,7 +110,9 @@ def _validate_schema(schema):
 
         # Raise if any unknown ones
         if len(unknown_values) > 0:
-            raise ValueError(f"Unknown values in schema: {unknown_values}")
+            msg = f"Unknown values in schema: {unknown_values}"
+            _LOGGER.error(msg)
+            raise ValueError(msg)
 
         # TODO: The following is too simplistic as certain sub-sets are valid
         # missing_values = set(VALID_SCHEMA_KEYS).difference(set(values))
