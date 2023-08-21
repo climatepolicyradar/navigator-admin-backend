@@ -1,0 +1,20 @@
+config:
+  admin_backend:apprunner_backend_max_concurrency: "1"
+  admin_backend:apprunner_backend_max_instance_count: "5"
+  admin_backend:apprunner_backend_min_instance_count: "2"
+  admin_backend:docker_tag: 0.0.9-beta
+  admin_backend:ecr_uri:
+    secure: AAABAJC89TGwi4joRyjuhull2xIYQDiMNCQX4B2HnwZpoUXTrswwJiMYhkIMuuYhMh6kXq67n3dPTd9QiDpqHOJQ1gWJpntv7UmDmC6pWXKLklLW87iX5z+by40ZZMJ0FOUoAg==
+  admin_backend:rds_address:
+    secure: AAABADe4vlk1LEh+750adXOQMX0BDaYadfPX8a3ErZmtBArLPMtdKfEoMy3ald8gyLbWhasn2qP0kY5zxBtHNtZhjwdDW7OnBsSLhvkZvVaiEP/CT9MAGLr4u8oCV27NgDUfNzGa3j/O
+  admin_backend:rds_database:
+    secure: AAABANY0EoBbHdqkOhoxPtiIiY/wCTLxzDKuk5APQZaA7eykPohvnbJzt4nfEFQ=
+  admin_backend:rds_password:
+    secure: AAABAAKUI1n5vZWfUXpgxQK52jp6nJ8m4sfywtdrPDq8sB+D0+yo2pcyxFODwfZFhPu5+gOihxIypQQ9apwYMdHoq24=
+  admin_backend:rds_username:
+    secure: AAABAA5ksIyhZpxyOnXXuix11W9tcT0m9hcqV5BG7JGzhuQrNNjoeB/uhejx+sY=
+  admin_backend:validation_account_id:
+    secure: AAABABLsojJHl5ZBeqjrwE/yzA9SksStylWPGSNe9rdzwHBmt0x0WoYo0kM=
+  admin_backend:vpc_connector_arn:
+    secure: AAABABKhC0qr28TNpSU6EKW3i+AfsqMFWNgdFJ0k0CjZgSKDn0qzKfUhOcIniuhv4vivKrtDmjpAJh/hCoMA2pWEN7UqUS4+rfDknsyFovMefqTA0w5nVI9eBu1M8ePHuwtfyAgIU7NZwLy49OP91D6Jx+Hx8LHYcJRKMRTubKCTOF51sdWGfpPV/1nqUu9N46nadcze
+  aws:region: eu-west-1
