@@ -36,14 +36,14 @@ def get(import_id: str) -> Optional[CollectionDTO]:
         raise RepositoryError(str(e))
 
 
-# def all() -> list[CollectionDTO]:
-#     """
-#     Gets the entire list of collections from the repository.
+def all() -> list[CollectionDTO]:
+    """
+    Gets the entire list of collections from the repository.
 
-#     :return list[CollectionDTO]: The list of collections.
-#     """
-#     with db_session.get_db() as db:
-#         return collection_repo.all(db)
+    :return list[CollectionDTO]: The list of collections.
+    """
+    with db_session.get_db() as db:
+        return collection_repo.all(db)
 
 
 # def search(search_term: str) -> list[CollectionDTO]:

@@ -1,46 +1,46 @@
 from typing import Optional
 from pytest import MonkeyPatch
 
+from sqlalchemy import exc
 from app.model.family import FamilyDTO
 from unit_tests.helpers.family import create_family_dto
 
 
-MISSING_ID = "A.0.0.0"
-VALID_ID = "A.0.0.1"
-FAIL_ID = "F.F.F.F"
-
-
-def mock_get_all_families(_):
-    return [create_family_dto("test")]
-
-
-def mock_get_family(_, import_id: str) -> Optional[FamilyDTO]:
-    if import_id == MISSING_ID:
-        return None
-    return create_family_dto(import_id)
-
-
-def mock_search_families(_, q: str) -> list[FamilyDTO]:
-    if q == "empty":
-        return []
-    else:
-        return [create_family_dto("search1")]
-
-
-def mock_update_family(_, data: FamilyDTO, __) -> bool:
-    return True if data.import_id != MISSING_ID else False
-
-
-def mock_create_family(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
-    if data.import_id != FAIL_ID:
-        return data
-
-
-def mock_delete_family(_, import_id: str) -> bool:
-    return import_id != MISSING_ID
-
-
 def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
+    family_repo.error = False
+    family_repo.throw_repository_error = False
+
+    def maybe_throw():
+        if family_repo.throw_repository_error:
+            raise exc.SQLAlchemyError("")
+
+    def mock_get_all_families(_):
+        return [create_family_dto("test")]
+
+    def mock_get_family(_, import_id: str) -> Optional[FamilyDTO]:
+        maybe_throw()
+        if not family_repo.error:
+            return create_family_dto(import_id)
+
+    def mock_search_families(_, q: str) -> list[FamilyDTO]:
+        maybe_throw()
+        if not family_repo.error:
+            return [create_family_dto("search1")]
+        return []
+
+    def mock_update_family(_, data: FamilyDTO, __) -> bool:
+        maybe_throw()
+        return not family_repo.error
+
+    def mock_create_family(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
+        maybe_throw()
+        if not family_repo.error:
+            return data
+
+    def mock_delete_family(_, import_id: str) -> bool:
+        maybe_throw()
+        return not family_repo.error
+
     monkeypatch.setattr(family_repo, "get", mock_get_family)
     mocker.spy(family_repo, "get")
 

@@ -7,7 +7,7 @@ from app.model.collection import CollectionDTO
 
 import app.service.collection as collection_service
 
-collectioin_router = r = APIRouter()
+collection_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ async def get_collection(
     Returns a specific collection given the import id.
 
     :param str import_id: Specified import_id.
-    :raises HTTPException: If the family is not found a 404 is returned.
+    :raises HTTPException: If the collection is not found a 404 is returned.
     :return CollectionDTO: returns a CollectionDTO of the collection found.
     """
     try:
@@ -41,34 +41,34 @@ async def get_collection(
     return collection
 
 
+@r.get(
+    "/collections",
+    response_model=list[CollectionDTO],
+)
+async def get_all_collections() -> list[CollectionDTO]:
+    """
+    Returns all collections
+
+    :return CollectionDTO: returns a CollectionDTO of the collection found.
+    """
+    return collection_service.all()
+
+
 # @r.get(
-#     "/families",
-#     response_model=list[FamilyDTO],
+#     "/collections/",
+#     response_model=list[CollectionDTO],
 # )
-# async def get_all_families() -> list[FamilyDTO]:
+# async def search_collection(q: str = "") -> list[CollectionDTO]:
 #     """
-#     Returns all families
-
-#     :return FamilyDTO: returns a FamilyDTO of the family found.
-#     """
-#     return family_service.all()
-
-
-# @r.get(
-#     "/families/",
-#     response_model=list[FamilyDTO],
-# )
-# async def search_family(q: str = "") -> list[FamilyDTO]:
-#     """
-#     Searches for families matching the "q" URL parameter.
+#     Searches for collections matching the "q" URL parameter.
 
 #     :param str q: The string to match, defaults to ""
 #     :raises HTTPException: If nothing found a 404 is returned.
-#     :return list[FamilyDTO]: A list of matching families.
+#     :return list[CollectionDTO]: A list of matching collections.
 #     """
-#     families = family_service.search(q)
-#     if families is None or len(families) == 0:
+#     collections = collection_service.search(q)
+#     if collections is None or len(collections) == 0:
 #         raise HTTPException(status_code=404,
-# detail=f"Families not found for term: {q}")
+# detail=f"collections not found for term: {q}")
 
-#     return families
+#     return collections
