@@ -3,10 +3,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.service.family as family_service
+import app.repository.app_user as app_user_repo
 import app.repository.family as family_repo
 import app.repository.geography as geography_repo
 import app.repository.metadata as metadata_repo
 import app.repository.organisation as organisation_repo
+
+from unit_tests.mocks.app_user_repo import mock_app_user_repo
 from unit_tests.mocks.family_repo import mock_family_repo
 from unit_tests.mocks.family_service import mock_family_service
 from unit_tests.mocks.geography_repo import mock_geography_repo
@@ -26,6 +29,13 @@ def metadata_repo_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_metadata_repo(metadata_repo, monkeypatch, mocker)
     yield metadata_repo
+
+
+@pytest.fixture
+def app_user_repo_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_app_user_repo(app_user_repo, monkeypatch, mocker)
+    yield app_user_repo
 
 
 @pytest.fixture
