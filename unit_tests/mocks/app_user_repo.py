@@ -8,6 +8,7 @@ import app.service.authentication as auth_service
 
 PLAIN_PASSWORD = "test-password"
 HASH_PASSWORD = auth_service.get_password_hash(PLAIN_PASSWORD)
+VALID_USERNAME = "bob@here.com"
 
 
 def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
@@ -19,7 +20,7 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_user_by_email(_, __) -> MaybeAppUser:
         if not app_user_repo.error:
             return AppUser(
-                email="bob@here.com",
+                email=VALID_USERNAME,
                 name="Bob",
                 hashed_password=HASH_PASSWORD,
                 is_superuser=True,
@@ -31,3 +32,4 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
         app_user_repo, "get_app_user_authorisation", mock_get_app_user_authorisation
     )
     mocker.spy(app_user_repo, "get_user_by_email")
+    mocker.spy(app_user_repo, "get_app_user_authorisation")

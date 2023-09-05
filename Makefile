@@ -20,7 +20,9 @@ build:
 	docker build -t navigator-admin-backend .
 
 unit_test: build
-	docker run --rm navigator-admin-backend pytest -vvv unit_tests
+	docker run --rm \
+	-e SECRET_KEY="secret_test_key" \
+	navigator-admin-backend pytest -vvv unit_tests
 
 setup_test_db:
 	@echo Setting up...

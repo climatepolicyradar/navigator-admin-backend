@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 )
 async def get_family(
     import_id: str,
+    # current_user=Depends(get_current_user),
 ) -> FamilyDTO:
     """
     Returns a specific family given the import id.
@@ -33,6 +34,7 @@ async def get_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
+    # enforce_superuser(current_user)
     try:
         family = family_service.get(import_id)
     except ValidationError as e:
