@@ -20,6 +20,7 @@ import app.service.token as token_service
 def test_token_encoded_and_decoded(email: str, is_superuser: bool, authorisation: dict):
     token = token_service.encode(email, is_superuser, authorisation)
     assert token is not None
+    assert len(token) > 200
     user = token_service.decode(token)
     assert user.email == email
     assert user.is_superuser == is_superuser
