@@ -1,5 +1,5 @@
 import logging
-from app.errors.validation_error import ValidationError
+from app.errors import ValidationError
 from app.model.general import Json
 from sqlalchemy.orm import Session
 import app.repository.metadata as metadata_repo

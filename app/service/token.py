@@ -2,7 +2,7 @@ import jwt
 import os
 from datetime import datetime, timedelta
 from typing import Any, Optional
-from app.errors.token_error import TokenError
+from app.errors import TokenError
 
 from app.model.jwt_user import JWTUser
 

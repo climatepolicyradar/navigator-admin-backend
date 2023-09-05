@@ -7,9 +7,9 @@ layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
 import logging
-from fastapi import APIRouter, HTTPException
-from app.errors.repository_error import RepositoryError
-from app.errors.validation_error import ValidationError
+from fastapi import APIRouter, Depends, HTTPException
+from app.api.api_v1.routers.auth import get_current_user, check_authorisation
+from app.errors import RepositoryError, ValidationError
 
 from app.model.family import FamilyDTO
 import app.service.family as family_service
@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 )
 async def get_family(
     import_id: str,
-    # current_user=Depends(get_current_user),
 ) -> FamilyDTO:
     """
     Returns a specific family given the import id.
@@ -34,7 +33,6 @@ async def get_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
-    # enforce_superuser(current_user)
     try:
         family = family_service.get(import_id)
     except ValidationError as e:
@@ -141,6 +139,7 @@ async def create_family(
 )
 async def delete_family(
     import_id: str,
+    current_user=Depends(get_current_user),
 ) -> None:
     """
     Deletes a specific family given the import id.
@@ -148,6 +147,7 @@ async def delete_family(
     :param str import_id: Specified import_id.
     :raises HTTPException: If the family is not found a 404 is returned.
     """
+    check_authorisation(current_user, delete_family.__name__)
     try:
         family_deleted = family_service.delete(import_id)
     except ValidationError as e:

@@ -5,7 +5,7 @@ This file hands off to the family repo, adding the dependency of the db (future)
 """
 import logging
 from typing import Optional
-from app.errors.repository_error import RepositoryError
+from app.errors import RepositoryError
 from app.model.family import FamilyDTO
 import app.repository.family as family_repo
 import app.db.session as db_session

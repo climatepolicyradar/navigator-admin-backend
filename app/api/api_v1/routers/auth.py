@@ -2,10 +2,10 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.errors.authentication_error import AuthenticationError
-from app.errors.repository_error import RepositoryError
+from app.errors import AuthenticationError, AuthorisationError, RepositoryError
 from app.model.jwt_user import JWTUser
 from app.service.authentication import authenticate_user
+import app.service.authorisation as auth_service
 import app.service.token as token_service
 
 auth_router = r = APIRouter()
@@ -19,11 +19,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> JWTUser:
     return token_service.decode(token)
 
 
-def enforce_superuser(user: JWTUser) -> None:
-    if not user.is_superuser:
+def check_authorisation(user: JWTUser, operation: str) -> None:
+    try:
+        auth_service.is_authorised(user, operation)
+    except AuthorisationError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="No authorisation for this operation",
+            detail=e.message,
             headers={"WWW-Authenticate": "Bearer"},
         )
 

@@ -100,14 +100,28 @@ def test_create_family_uses_service_404(client: TestClient, family_service_mock)
     assert family_service.create.call_count == 1
 
 
-def test_delete_family_uses_service_200(client: TestClient, family_service_mock):
-    response = client.delete("/api/v1/families/fam1")
+def test_delete_family_uses_service_200(
+    client: TestClient, family_service_mock, admin_user_header_token
+):
+    response = client.delete("/api/v1/families/fam1", headers=admin_user_header_token)
     assert response.status_code == 200
     assert family_service.delete.call_count == 1
 
 
-def test_delete_family_uses_service_404(client: TestClient, family_service_mock):
-    response = client.delete("/api/v1/families/missing")
+def test_delete_family_fails_if_not_admin(
+    client: TestClient, family_service_mock, user_header_token
+):
+    response = client.delete("/api/v1/families/fam1", headers=user_header_token)
+    assert response.status_code == 403
+    assert family_service.delete.call_count == 0
+
+
+def test_delete_family_uses_service_404(
+    client: TestClient, family_service_mock, admin_user_header_token
+):
+    response = client.delete(
+        "/api/v1/families/missing", headers=admin_user_header_token
+    )
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Family not deleted: missing"

@@ -3,8 +3,7 @@ from typing import cast
 from passlib.context import CryptContext
 
 import app.db.session as db_session
-from app.errors.authentication_error import AuthenticationError
-from app.errors.repository_error import RepositoryError
+from app.errors import AuthenticationError, RepositoryError
 import app.repository.app_user as app_user_repo
 import app.service.token as token_service
 

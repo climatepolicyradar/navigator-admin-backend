@@ -1,5 +1,5 @@
 import pytest
-from app.errors.validation_error import ValidationError
+from app.errors import ValidationError
 from app.service import id
 
 

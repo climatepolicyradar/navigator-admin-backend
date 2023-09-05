@@ -1,8 +1,10 @@
+from typing import Dict
 from app.main import app
 import pytest
 from fastapi.testclient import TestClient
 
 import app.service.family as family_service
+import app.service.token as token_service
 import app.repository.app_user as app_user_repo
 import app.repository.family as family_repo
 import app.repository.geography as geography_repo
@@ -64,3 +66,24 @@ def family_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_family_repo(family_repo, monkeypatch, mocker)
     yield family_repo
+
+
+@pytest.fixture
+def superuser_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("test@cpr.org", True, {})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("test@cpr.org", False, {"is_admin": False})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def admin_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("test@cpr.org", False, {"is_admin": True})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
