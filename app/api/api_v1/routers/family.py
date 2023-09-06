@@ -8,8 +8,7 @@ implemented directly accesses the "repository" layer.
 """
 import logging
 from fastapi import APIRouter, HTTPException
-from app.errors.repository_error import RepositoryError
-from app.errors.validation_error import ValidationError
+from app.errors import RepositoryError, ValidationError
 
 from app.model.family import FamilyDTO
 import app.service.family as family_service

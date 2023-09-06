@@ -1,6 +1,6 @@
 import re
 
-from app.errors.validation_error import ValidationError
+from app.errors import ValidationError
 
 _ID_ELEMENT = r"[a-zA-Z0-9]+([-_]?[a-zA-Z0-9]+)*"
 IMPORT_ID_MATCHER = re.compile(

@@ -1,3 +1,4 @@
+from typing import Dict
 import uuid
 from fastapi.testclient import TestClient
 import pytest
@@ -10,6 +11,7 @@ from app.main import app
 from integration_tests.mocks.bad_family_repo import mock_bad_family_repo
 import app.repository.family as family_repo
 from integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
+import app.service.token as token_service
 
 
 def get_test_db_url() -> str:
@@ -70,3 +72,24 @@ def rollback_family_repo(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_rollback_family_repo(family_repo, monkeypatch, mocker)
     yield family_repo
+
+
+@pytest.fixture
+def superuser_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("test@cpr.org", True, {})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("test@cpr.org", False, {"is_admin": False})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def admin_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("test@cpr.org", False, {"is_admin": True})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
