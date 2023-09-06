@@ -9,10 +9,10 @@ import app.service.family as family_service
 from unit_tests.mocks.family_service import create_family_dto
 
 
-def test_get_all_families_uses_service_200(client: TestClient, family_service_mock):
-    response = client.get(
-        "/api/v1/families",
-    )
+def test_get_all_families_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
+):
+    response = client.get("/api/v1/families", headers=user_header_token)
     assert response.status_code == 200
     data = response.json()
     assert type(data) is list
@@ -21,30 +21,30 @@ def test_get_all_families_uses_service_200(client: TestClient, family_service_mo
     assert family_service.all.call_count == 1
 
 
-def test_get_family_uses_service_200(client: TestClient, family_service_mock):
-    response = client.get(
-        "/api/v1/families/import_id",
-    )
+def test_get_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
+):
+    response = client.get("/api/v1/families/import_id", headers=user_header_token)
     assert response.status_code == 200
     data = response.json()
     assert data["import_id"] == "import_id"
     assert family_service.get.call_count == 1
 
 
-def test_get_family_uses_service_404(client: TestClient, family_service_mock):
-    response = client.get(
-        "/api/v1/families/missing",
-    )
+def test_get_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
+):
+    response = client.get("/api/v1/families/missing", headers=user_header_token)
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Family not found: missing"
     assert family_service.get.call_count == 1
 
 
-def test_search_family_uses_service_200(client: TestClient, family_service_mock):
-    response = client.get(
-        "/api/v1/families/?q=anything",
-    )
+def test_search_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
+):
+    response = client.get("/api/v1/families/?q=anything", headers=user_header_token)
     assert response.status_code == 200
     data = response.json()
     assert type(data) is list
@@ -53,47 +53,57 @@ def test_search_family_uses_service_200(client: TestClient, family_service_mock)
     assert family_service.search.call_count == 1
 
 
-def test_search_family_uses_service_404(client: TestClient, family_service_mock):
-    response = client.get(
-        "/api/v1/families/?q=empty",
-    )
+def test_search_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
+):
+    response = client.get("/api/v1/families/?q=empty", headers=user_header_token)
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Families not found for term: empty"
     assert family_service.search.call_count == 1
 
 
-def test_update_family_uses_service_200(client: TestClient, family_service_mock):
+def test_update_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
+):
     new_data = create_family_dto("fam1").dict()
-    response = client.put("/api/v1/families", json=new_data)
+    response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == 200
     data = response.json()
     assert data["import_id"] == "fam1"
     assert family_service.update.call_count == 1
 
 
-def test_update_family_uses_service_404(client: TestClient, family_service_mock):
+def test_update_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
+):
     new_data = create_family_dto("missing").dict()
-    response = client.put("/api/v1/families", json=new_data)
+    response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Family not updated: missing"
     assert family_service.update.call_count == 1
 
 
-def test_create_family_uses_service_200(client: TestClient, family_service_mock):
+def test_create_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
+):
     new_data = create_family_dto("fam1").dict()
-    response = client.post("/api/v1/families", json=new_data)
+    response = client.post("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == 200
     data = response.json()
     assert data["import_id"] == "fam1"
     assert family_service.create.call_count == 1
 
 
-def test_create_family_uses_service_404(client: TestClient, family_service_mock):
+def test_create_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
+):
     new_data: FamilyDTO = create_family_dto("fam1")
     new_data.import_id = "missing"
-    response = client.post("/api/v1/families", json=new_data.dict())
+    response = client.post(
+        "/api/v1/families", json=new_data.dict(), headers=user_header_token
+    )
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Family not created: missing"

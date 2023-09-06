@@ -69,7 +69,7 @@ def decode(token: str) -> JWTUser:
     if email is None:
         raise TokenError("Token did not contain an email")
 
-    authorisation: Optional[dict[str, Any]] = payload.get("authorisation")
+    authorisation: Optional[dict[str, Any]] = payload.get("authorisation", {})
 
     jwt_user = JWTUser(
         email=email,

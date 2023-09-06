@@ -1,9 +1,8 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.errors import AuthenticationError, AuthorisationError, RepositoryError
-from app.model.jwt_user import JWTUser
 from app.service.authentication import authenticate_user
 import app.service.authorisation as auth_service
 import app.service.token as token_service
@@ -15,13 +14,20 @@ _LOGGER = logging.getLogger(__file__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/tokens")
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> JWTUser:
-    return token_service.decode(token)
+def check_user_auth(request: Request, token: str = Depends(oauth2_scheme)) -> None:
+    """
+    Checks the current user (id'd by the token) is authorised for the request.
 
+    :param Request request: The request being made
+    :param str token: The token the user supplied, defaults to Depends(oauth2_scheme)
+    :raises HTTPException: Raised if the user is not authorised
+    """
+    user = token_service.decode(token)
+    entity = auth_service.path_to_entity(request.scope["path"])
+    operation = auth_service.http_method_to_operation(request.scope["method"])
 
-def check_authorisation(user: JWTUser, operation: str) -> None:
     try:
-        auth_service.is_authorised(user, operation)
+        auth_service.is_authorised(user, entity, operation)
     except AuthorisationError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

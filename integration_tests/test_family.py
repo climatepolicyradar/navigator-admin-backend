@@ -164,10 +164,11 @@ def _setup_db(test_db: Session):
 # --- GET ALL
 
 
-def test_get_all_families_200(client: TestClient, test_db: Session):
+def test_get_all_families_200(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     response = client.get(
         "/api/v1/families",
+        headers=user_header_token,
     )
     assert response.status_code == 200
     data = response.json()
@@ -187,10 +188,11 @@ def test_get_all_families_200(client: TestClient, test_db: Session):
 # --- GET
 
 
-def test_get_family_200(client: TestClient, test_db: Session):
+def test_get_family_200(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     response = client.get(
         "/api/v1/families/A.0.0.1",
+        headers=user_header_token,
     )
     assert response.status_code == 200
     data = response.json()
@@ -198,20 +200,22 @@ def test_get_family_200(client: TestClient, test_db: Session):
     assert data == EXPECTED_FAMILIES[0]
 
 
-def test_get_family_404(client: TestClient, test_db: Session):
+def test_get_family_404(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     response = client.get(
         "/api/v1/families/A.0.0.8",
+        headers=user_header_token,
     )
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Family not found: A.0.0.8"
 
 
-def test_get_family_400(client: TestClient, test_db: Session):
+def test_get_family_400(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     response = client.get(
         "/api/v1/families/A008",
+        headers=user_header_token,
     )
     assert response.status_code == 400
     data = response.json()
@@ -219,10 +223,13 @@ def test_get_family_400(client: TestClient, test_db: Session):
     assert data["detail"] == expected_msg
 
 
-def test_get_family_503(client: TestClient, test_db: Session, bad_family_repo):
+def test_get_family_503(
+    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+):
     _setup_db(test_db)
     response = client.get(
         "/api/v1/families/A.0.0.8",
+        headers=user_header_token,
     )
     assert response.status_code == 503
     data = response.json()
@@ -232,10 +239,11 @@ def test_get_family_503(client: TestClient, test_db: Session, bad_family_repo):
 # --- SEARCH
 
 
-def test_search_family_200(client: TestClient, test_db: Session):
+def test_search_family_200(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     response = client.get(
         "/api/v1/families/?q=orange",
+        headers=user_header_token,
     )
     assert response.status_code == 200
     data = response.json()
@@ -248,10 +256,11 @@ def test_search_family_200(client: TestClient, test_db: Session):
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_family_404(client: TestClient, test_db: Session):
+def test_search_family_404(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     response = client.get(
         "/api/v1/families/?q=chicken",
+        headers=user_header_token,
     )
     assert response.status_code == 404
     data = response.json()
@@ -261,7 +270,7 @@ def test_search_family_404(client: TestClient, test_db: Session):
 # --- UPDATE
 
 
-def test_update_family_200(client: TestClient, test_db: Session):
+def test_update_family_200(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.2",
@@ -272,7 +281,9 @@ def test_update_family_200(client: TestClient, test_db: Session):
         metadata={"color": "pink", "size": 0},
         slug="new-slug",
     )
-    response = client.put("/api/v1/families", json=new_family.dict())
+    response = client.put(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Updated Title"
@@ -293,10 +304,12 @@ def test_update_family_200(client: TestClient, test_db: Session):
     assert str(db_slug[0].name).startswith("updated-title")
 
 
-def test_update_family_idempotent_200(client: TestClient, test_db: Session):
+def test_update_family_idempotent_200(
+    client: TestClient, test_db: Session, user_header_token
+):
     _setup_db(test_db)
     family = EXPECTED_FAMILIES[1]
-    response = client.put("/api/v1/families", json=family)
+    response = client.put("/api/v1/families", json=family, headers=user_header_token)
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == EXPECTED_FAMILIES[1]["title"]
@@ -315,7 +328,7 @@ def test_update_family_idempotent_200(client: TestClient, test_db: Session):
 
 
 def test_update_family_rollback(
-    client: TestClient, test_db: Session, rollback_family_repo
+    client: TestClient, test_db: Session, rollback_family_repo, user_header_token
 ):
     _setup_db(test_db)
     new_family = create_family_dto(
@@ -324,7 +337,9 @@ def test_update_family_rollback(
         summary="just a test",
         metadata={"color": "pink", "size": 0},
     )
-    response = client.put("/api/v1/families", json=new_family.dict())
+    response = client.put(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 503
 
     db_family: Family = (
@@ -347,7 +362,7 @@ def test_update_family_rollback(
     assert db_meta[0].value == {"size": 4, "color": "green"}
 
 
-def test_update_family_404(client: TestClient, test_db: Session):
+def test_update_family_404(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.22",
@@ -355,13 +370,17 @@ def test_update_family_404(client: TestClient, test_db: Session):
         summary="just a test",
         metadata={"color": "pink", "size": 0},
     )
-    response = client.put("/api/v1/families", json=new_family.dict())
+    response = client.put(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Family not updated: A.0.0.22"
 
 
-def test_update_family_503(client: TestClient, test_db: Session, bad_family_repo):
+def test_update_family_503(
+    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.22",
@@ -369,14 +388,16 @@ def test_update_family_503(client: TestClient, test_db: Session, bad_family_repo
         summary="just a test",
         metadata={"color": "pink", "size": 0},
     )
-    response = client.put("/api/v1/families", json=new_family.dict())
+    response = client.put(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 503
     data = response.json()
     assert data["detail"] == "Bad Repo"
 
 
 def test_update_family__invalid_geo_400(
-    client: TestClient, test_db: Session, bad_family_repo
+    client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     _setup_db(test_db)
     new_family = create_family_dto(
@@ -386,23 +407,30 @@ def test_update_family__invalid_geo_400(
         metadata={"color": "pink", "size": 0},
     )
     new_family.geography = "UK"
-    response = client.put("/api/v1/families", json=new_family.dict())
+    response = client.put(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "The geography value UK is invalid!"
 
 
-def test_update_family_metadata_if_changed(client: TestClient, test_db: Session):
+def test_update_family_metadata_if_changed(
+    client: TestClient, test_db: Session, user_header_token
+):
     _setup_db(test_db)
     expected_meta = {"color": "pink", "size": 23}
     response = client.get(
         "/api/v1/families/A.0.0.2",
+        headers=user_header_token,
     )
     assert response.status_code == 200
     family_data = response.json()
     assert {"color": "green", "size": 4} == family_data["metadata"]
     family_data["metadata"] = expected_meta
-    response = client.put("/api/v1/families", json=family_data)
+    response = client.put(
+        "/api/v1/families", json=family_data, headers=user_header_token
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -419,7 +447,7 @@ def test_update_family_metadata_if_changed(client: TestClient, test_db: Session)
 # --- CREATE
 
 
-def test_create_family_200(client: TestClient, test_db: Session):
+def test_create_family_200(client: TestClient, test_db: Session, user_header_token):
     _setup_db(test_db)
     test_meta = {"color": "blue", "size": 888}
     new_family = create_family_dto(
@@ -428,7 +456,9 @@ def test_create_family_200(client: TestClient, test_db: Session):
         summary="test test test",
         metadata=test_meta,
     )
-    response = client.post("/api/v1/families", json=new_family.dict())
+    response = client.post(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Title"
@@ -446,7 +476,7 @@ def test_create_family_200(client: TestClient, test_db: Session):
 
 
 def test_create_family_rollback(
-    client: TestClient, test_db: Session, rollback_family_repo
+    client: TestClient, test_db: Session, rollback_family_repo, user_header_token
 ):
     _setup_db(test_db)
     new_family = create_family_dto(
@@ -455,7 +485,9 @@ def test_create_family_rollback(
         summary="test test test",
         metadata={"color": "pink", "size": 0},
     )
-    response = client.post("/api/v1/families", json=new_family.dict())
+    response = client.post(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 503
     actual_family = (
         test_db.query(Family).filter(Family.import_id == "A.0.0.9").one_or_none()
@@ -466,7 +498,9 @@ def test_create_family_rollback(
     assert len(db_slug) == 0
 
 
-def test_create_family_503(client: TestClient, test_db: Session, bad_family_repo):
+def test_create_family_503(
+    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.9",
@@ -474,13 +508,17 @@ def test_create_family_503(client: TestClient, test_db: Session, bad_family_repo
         summary="test test test",
         metadata={"color": "pink", "size": 0},
     )
-    response = client.post("/api/v1/families", json=new_family.dict())
+    response = client.post(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 503
     data = response.json()
     assert data["detail"] == "Bad Repo"
 
 
-def test_create_family__invalid_geo_400(client: TestClient, test_db: Session):
+def test_create_family__invalid_geo_400(
+    client: TestClient, test_db: Session, user_header_token
+):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.9",
@@ -488,13 +526,17 @@ def test_create_family__invalid_geo_400(client: TestClient, test_db: Session):
         summary="test test test",
     )
     new_family.geography = "UK"
-    response = client.post("/api/v1/families", json=new_family.dict())
+    response = client.post(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "The geography value UK is invalid!"
 
 
-def test_create_family__invalid_category_400(client: TestClient, test_db: Session):
+def test_create_family__invalid_category_400(
+    client: TestClient, test_db: Session, user_header_token
+):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.9",
@@ -502,13 +544,17 @@ def test_create_family__invalid_category_400(client: TestClient, test_db: Sessio
         summary="test test test",
     )
     new_family.category = "invalid"
-    response = client.post("/api/v1/families", json=new_family.dict())
+    response = client.post(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "Invalid is not a valid FamilyCategory"
 
 
-def test_create_family__invalid_org_400(client: TestClient, test_db: Session):
+def test_create_family__invalid_org_400(
+    client: TestClient, test_db: Session, user_header_token
+):
     _setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.9",
@@ -516,7 +562,9 @@ def test_create_family__invalid_org_400(client: TestClient, test_db: Session):
         summary="test test test",
     )
     new_family.organisation = "chicken"
-    response = client.post("/api/v1/families", json=new_family.dict())
+    response = client.post(
+        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+    )
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "The organisation name chicken is invalid!"
