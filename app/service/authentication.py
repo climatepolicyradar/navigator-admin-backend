@@ -1,6 +1,7 @@
 from typing import cast
 
 from passlib.context import CryptContext
+from sqlalchemy.exc import NoResultFound
 
 import app.db.session as db_session
 from app.errors import AuthenticationError, RepositoryError
@@ -43,7 +44,10 @@ def authenticate_user(email: str, password: str) -> str:
     """
 
     with db_session.get_db() as db:
-        user = app_user_repo.get_user_by_email(db, email)
+        try:
+            user = app_user_repo.get_user_by_email(db, email)
+        except NoResultFound:
+            user = None
 
         if user is None:
             raise RepositoryError(f"User not found for {email}")
