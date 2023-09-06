@@ -1,3 +1,4 @@
+from fastapi import status
 from fastapi.testclient import TestClient
 
 from unit_tests.mocks.app_user_repo import PLAIN_PASSWORD, VALID_USERNAME
@@ -10,7 +11,7 @@ def test_get_token(client: TestClient, app_user_repo_mock):
     }
 
     response = client.post("/api/tokens", data=login_data)
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert "access_token" in data.keys()
     assert len(data["access_token"]) > 200
@@ -27,7 +28,7 @@ def test_get_token_missing_user(client: TestClient, app_user_repo_mock):
     }
 
     response = client.post("/api/tokens", data=login_data)
-    assert response.status_code == 401
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     data = response.json()
     assert "detail" in data.keys()
     assert data["detail"] == "Incorrect username or password"
@@ -40,7 +41,7 @@ def test_get_token_wrong_password(client: TestClient, app_user_repo_mock):
     }
 
     response = client.post("/api/tokens", data=login_data)
-    assert response.status_code == 401
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     data = response.json()
     assert "detail" in data.keys()
     assert data["detail"] == "Incorrect username or password"
