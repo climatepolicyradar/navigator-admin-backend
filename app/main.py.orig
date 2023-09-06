@@ -1,0 +1,67 @@
+from fastapi_pagination import add_pagination
+from app.api.api_v1.routers.auth import check_user_auth
+from app.logging_config import DEFAULT_LOGGING, setup_json_logging
+<<<<<<< HEAD
+from app.api.api_v1.routers import families_router, collection_router
+from fastapi import FastAPI
+=======
+from app.api.api_v1.routers import families_router, auth_router
+from fastapi import Depends, FastAPI
+>>>>>>> main
+from fastapi_health import health
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+from app.service.health import is_database_online
+
+# TODO: Review this list of Origin exceptions.
+_ALLOW_ORIGIN_REGEX = (
+    r"http://localhost:3000|"
+    r"https://.+\.climatepolicyradar\.org|"
+    r"https://.+\.dev.climatepolicyradar\.org|"
+    r"https://.+\.sandbox\.climatepolicyradar\.org|"
+    r"https://climate-laws\.org|"
+    r"https://.+\.climate-laws\.org"
+)
+
+app = FastAPI(title="navigator-admin")
+setup_json_logging(app)
+add_pagination(app)
+<<<<<<< HEAD
+app.include_router(families_router, prefix="/api/v1", tags=["families"])
+app.include_router(collection_router, prefix="/api/v1", tags=["collections"])
+=======
+app.include_router(
+    families_router,
+    prefix="/api/v1",
+    tags=["families"],
+    dependencies=[Depends(check_user_auth)],
+)
+app.include_router(auth_router, prefix="/api", tags=["Authentication"])
+>>>>>>> main
+
+# Add CORS middleware to allow cross origin requests from any port
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=_ALLOW_ORIGIN_REGEX,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# add health endpoint
+app.add_api_route("/health", health([is_database_online]))
+
+
+@app.get("/api/v1", include_in_schema=False)
+async def root():
+    return {"message": "CPR Navigator Admin API v1"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8888,
+        log_config=DEFAULT_LOGGING,
+    )  # type: ignore

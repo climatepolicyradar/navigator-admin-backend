@@ -6,7 +6,7 @@ services for validation etc.
 """
 import logging
 from typing import Optional
-from app.errors.repository_error import RepositoryError
+from app.errors import RepositoryError
 from app.model.collection import CollectionDTO
 import app.repository.collection as collection_repo
 import app.db.session as db_session

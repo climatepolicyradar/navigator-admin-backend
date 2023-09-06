@@ -1,8 +1,7 @@
 """Endpoints for managing the Collection entity."""
 import logging
 from fastapi import APIRouter, HTTPException
-from app.errors.repository_error import RepositoryError
-from app.errors.validation_error import ValidationError
+from app.errors import RepositoryError, ValidationError
 from app.model.collection import CollectionDTO
 
 import app.service.collection as collection_service
