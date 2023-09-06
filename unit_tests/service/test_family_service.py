@@ -4,7 +4,7 @@ Tests the family service.
 Uses a family repo mock and ensures that the repo is called.
 """
 import pytest
-from app.errors.validation_error import ValidationError
+from app.errors import ValidationError
 import app.service.family as family_service
 from unit_tests.helpers.family import create_family_dto
 

@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import registry, sessionmaker, Session
 
 from app.config import SQLALCHEMY_DATABASE_URI
-from app.errors.repository_error import RepositoryError
+from app.errors import RepositoryError
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,

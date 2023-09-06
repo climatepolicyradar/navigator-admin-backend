@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.models.law_policy.family import FamilyOrganisation, Slug
 from app.db.models.law_policy.geography import Geography
 from app.db.models.law_policy.metadata import FamilyMetadata, MetadataOrganisation
-from app.errors.repository_error import RepositoryError
+from app.errors import RepositoryError
 from app.model.family import FamilyDTO
 from app.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound

@@ -1,7 +1,8 @@
 from fastapi_pagination import add_pagination
+from app.api.api_v1.routers.auth import check_user_auth
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
-from app.api.api_v1.routers import families_router, collection_router
-from fastapi import FastAPI
+from app.api.api_v1.routers import families_router, auth_router, collection_router
+from fastapi import FastAPI, Depends
 from fastapi_health import health
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -21,8 +22,21 @@ _ALLOW_ORIGIN_REGEX = (
 app = FastAPI(title="navigator-admin")
 setup_json_logging(app)
 add_pagination(app)
-app.include_router(families_router, prefix="/api/v1", tags=["families"])
-app.include_router(collection_router, prefix="/api/v1", tags=["collections"])
+app.include_router(
+    families_router,
+    prefix="/api/v1",
+    tags=["families"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    collection_router,
+    prefix="/api/v1",
+    tags=["collections"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(auth_router, prefix="/api", tags=["Authentication"])
 
 # Add CORS middleware to allow cross origin requests from any port
 app.add_middleware(

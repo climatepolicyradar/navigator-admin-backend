@@ -20,7 +20,9 @@ build:
 	docker build -t navigator-admin-backend .
 
 unit_test: build
-	docker run --rm navigator-admin-backend pytest -vvv unit_tests
+	docker run --rm \
+	-e SECRET_KEY="secret_test_key" \
+	navigator-admin-backend pytest -vvv unit_tests
 
 setup_test_db:
 	@echo Setting up...
@@ -48,6 +50,7 @@ integration_test: build
 		--name admin \
 		--network=test-network \
 		-e ADMIN_POSTGRES_HOST=test_db \
+		-e SECRET_KEY="secret_test_key" \
 		navigator-admin-backend \
 		pytest -vvv integration_tests
 	docker stop test_db

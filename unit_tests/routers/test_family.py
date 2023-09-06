@@ -3,219 +3,137 @@ Tests the routes for family management.
 
 This uses a service mock and ensures each endpoint calls into the service.
 """
+from fastapi import status
 from fastapi.testclient import TestClient
 from app.model.family import FamilyDTO
 import app.service.family as family_service
-from unit_tests.helpers.family import create_family_dto
+from unit_tests.mocks.family_service import create_family_dto
 
 
-# --- GET
-
-
-def test_get_all_families_returns_200(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_get_all_families_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "all")
-    response = client.get(
-        "/api/v1/families",
-    )
-    assert response.status_code == 200
+    response = client.get("/api/v1/families", headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert type(data) is list
     assert len(data) > 0
     assert data[0]["import_id"] == "test"
-    assert spy.call_count == 1
+    assert family_service.all.call_count == 1
 
 
-def test_get_family_returns_200(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_get_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "get")
-    response = client.get(
-        "/api/v1/families/A.0.0.1",
-    )
-    assert response.status_code == 200
+    response = client.get("/api/v1/families/import_id", headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["import_id"] == "A.0.0.1"
-    assert spy.call_count == 1
+    assert data["import_id"] == "import_id"
+    assert family_service.get.call_count == 1
 
 
-def test_get_family_returns_404(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_get_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "get")
-    family_repo_mock.error = True
-    response = client.get(
-        "/api/v1/families/A.0.0.1",
-    )
+    response = client.get("/api/v1/families/missing", headers=user_header_token)
     assert response.status_code == 404
     data = response.json()
-    assert data["detail"] == "Family not found: A.0.0.1"
-    assert spy.call_count == 1
+    assert data["detail"] == "Family not found: missing"
+    assert family_service.get.call_count == 1
 
 
-# --- SEARCH
-
-
-def test_search_family_returns_200(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_search_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "search")
-    response = client.get(
-        "/api/v1/families/?q=anything",
-    )
-    assert response.status_code == 200
+    response = client.get("/api/v1/families/?q=anything", headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert type(data) is list
     assert len(data) > 0
     assert data[0]["import_id"] == "search1"
-    assert spy.call_count == 1
+    assert family_service.search.call_count == 1
 
 
-def test_search_family_returns_404(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_search_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "search")
-    family_repo_mock.error = True
-    response = client.get(
-        "/api/v1/families/?q=empty",
-    )
+    response = client.get("/api/v1/families/?q=empty", headers=user_header_token)
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "Families not found for term: empty"
-    assert spy.call_count == 1
+    assert family_service.search.call_count == 1
 
 
-# --- UPDATE
-
-
-def test_update_family_returns_200(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_update_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "update")
-    new_data = create_family_dto("a.b.c.d").dict()
-    response = client.put("/api/v1/families", json=new_data)
-    assert response.status_code == 200
+    new_data = create_family_dto("fam1").dict()
+    response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["import_id"] == "a.b.c.d"
-    assert spy.call_count == 1
+    assert data["import_id"] == "fam1"
+    assert family_service.update.call_count == 1
 
 
-def test_update_family_returns_404(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_update_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "update")
-    family_repo_mock.error = True
-    new_data = create_family_dto("a.b.c.d").dict()
-    response = client.put("/api/v1/families", json=new_data)
+    new_data = create_family_dto("missing").dict()
+    response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == 404
     data = response.json()
-    assert data["detail"] == "Family not updated: a.b.c.d"
-    assert spy.call_count == 1
+    assert data["detail"] == "Family not updated: missing"
+    assert family_service.update.call_count == 1
 
 
-# --- CREATE
-
-
-def test_create_family_returns_200(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_create_family_uses_service_200(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "create")
-    new_data = create_family_dto("a.b.c.d").dict()
-    response = client.post("/api/v1/families", json=new_data)
-    assert response.status_code == 200
+    new_data = create_family_dto("fam1").dict()
+    response = client.post("/api/v1/families", json=new_data, headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["import_id"] == "a.b.c.d"
-    assert spy.call_count == 1
+    assert data["import_id"] == "fam1"
+    assert family_service.create.call_count == 1
 
 
-def test_create_family_returns_404(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_create_family_uses_service_404(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "create")
-    new_data: FamilyDTO = create_family_dto("a.b.c.d")
-    family_repo_mock.error = True
-    response = client.post("/api/v1/families", json=new_data.dict())
+    new_data: FamilyDTO = create_family_dto("fam1")
+    new_data.import_id = "missing"
+    response = client.post(
+        "/api/v1/families", json=new_data.dict(), headers=user_header_token
+    )
     assert response.status_code == 404
     data = response.json()
-    assert data["detail"] == "Family not created: a.b.c.d"
-    assert spy.call_count == 1
+    assert data["detail"] == "Family not created: missing"
+    assert family_service.create.call_count == 1
 
 
-# --- DELETE
-
-
-def test_delete_family_returns_200(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_delete_family_uses_service_200(
+    client: TestClient, family_service_mock, admin_user_header_token
 ):
-    spy = mocker.spy(family_service, "delete")
-    response = client.delete("/api/v1/families/a.b.c.d")
-    assert response.status_code == 200
-    assert spy.call_count == 1
+    response = client.delete("/api/v1/families/fam1", headers=admin_user_header_token)
+    assert response.status_code == status.HTTP_200_OK
+    assert family_service.delete.call_count == 1
 
 
-def test_delete_family_returns_404(
-    client: TestClient,
-    mocker,
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+def test_delete_family_fails_if_not_admin(
+    client: TestClient, family_service_mock, user_header_token
 ):
-    spy = mocker.spy(family_service, "delete")
-    family_repo_mock.error = True
-    response = client.delete("/api/v1/families/a.b.c.d")
+    response = client.delete("/api/v1/families/fam1", headers=user_header_token)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert family_service.delete.call_count == 0
+
+
+def test_delete_family_uses_service_404(
+    client: TestClient, family_service_mock, admin_user_header_token
+):
+    response = client.delete(
+        "/api/v1/families/missing", headers=admin_user_header_token
+    )
     assert response.status_code == 404
     data = response.json()
-    assert data["detail"] == "Family not deleted: a.b.c.d"
-    assert spy.call_count == 1
+    assert data["detail"] == "Family not deleted: missing"
+    assert family_service.delete.call_count == 1
