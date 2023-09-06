@@ -63,4 +63,5 @@ start: build
 	--name admin \
 	--network=test-network \
 	-e ADMIN_POSTGRES_HOST=test_db \
+	-e SECRET_KEY="secret_test_key" \
 	-d navigator-admin-backend
