@@ -2,7 +2,7 @@ config:
   admin_backend:apprunner_backend_max_concurrency: "1"
   admin_backend:apprunner_backend_max_instance_count: "5"
   admin_backend:apprunner_backend_min_instance_count: "2"
-  admin_backend:docker_tag: 0.0.9-beta
+  admin_backend:docker_tag: 0.0.10-beta
   admin_backend:ecr_uri:
     secure: AAABAJC89TGwi4joRyjuhull2xIYQDiMNCQX4B2HnwZpoUXTrswwJiMYhkIMuuYhMh6kXq67n3dPTd9QiDpqHOJQ1gWJpntv7UmDmC6pWXKLklLW87iX5z+by40ZZMJ0FOUoAg==
   admin_backend:rds_address:
@@ -13,6 +13,8 @@ config:
     secure: AAABAAKUI1n5vZWfUXpgxQK52jp6nJ8m4sfywtdrPDq8sB+D0+yo2pcyxFODwfZFhPu5+gOihxIypQQ9apwYMdHoq24=
   admin_backend:rds_username:
     secure: AAABAA5ksIyhZpxyOnXXuix11W9tcT0m9hcqV5BG7JGzhuQrNNjoeB/uhejx+sY=
+  admin_backend:secret_key:
+    secure: AAABAIizbJ4IiC3D0UvGRoNWJt1KNGj73YBBtGfUHHeX1WZIwg4WzrfORLcfl3gdCXe4VnCnvlQm0bn491ETzFnzOuQ=
   admin_backend:validation_account_id:
     secure: AAABABLsojJHl5ZBeqjrwE/yzA9SksStylWPGSNe9rdzwHBmt0x0WoYo0kM=
   admin_backend:vpc_connector_arn:

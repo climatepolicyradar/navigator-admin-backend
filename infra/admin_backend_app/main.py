@@ -111,12 +111,14 @@ def _create_backend_environment() -> dict[str, str]:
     rds_password = CONFIG.require("rds_password")
     rds_address = CONFIG.require("rds_address")
     rds_database = CONFIG.require("rds_database")
+    secret_key = CONFIG.require("secret_key")
 
     environment: dict[str, str] = {
-        "ADMIN_POSTGRES_USER" :  rds_username,
-        "ADMIN_POSTGRES_PASSWORD" :  rds_password,
-        "ADMIN_POSTGRES_HOST" :  rds_address,
-        "ADMIN_POSTGRES_DATABASE" : rds_database
+        "ADMIN_POSTGRES_USER": rds_username,
+        "ADMIN_POSTGRES_PASSWORD": rds_password,
+        "ADMIN_POSTGRES_HOST": rds_address,
+        "ADMIN_POSTGRES_DATABASE": rds_database,
+        "SECRET_KEY": secret_key,
     }
 
     return environment
@@ -150,7 +152,9 @@ def _create_apprunner_config() -> aws.apprunner.ServiceSourceConfigurationArgs:
     )
 
 
-def _create_backend_auto_scaling_config() -> aws.apprunner.AutoScalingConfigurationVersion:
+def _create_backend_auto_scaling_config() -> (
+    aws.apprunner.AutoScalingConfigurationVersion
+):
     # Create a scaling configuration based on config
     scaling_config = aws.apprunner.AutoScalingConfigurationVersion(
         f"{NAME_PREFIX}-scaling-cfg",
