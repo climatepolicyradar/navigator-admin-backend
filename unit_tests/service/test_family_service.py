@@ -18,7 +18,7 @@ def test_get_family_returns_family_if_exists(family_repo_mock):
 
 
 def test_get_family_returns_none_if_missing(family_repo_mock):
-    family_repo_mock.error = True
+    family_repo_mock.return_empty = True
     result = family_service.get("a.b.c.d")
     assert result is None
     assert family_repo_mock.get.call_count == 1
@@ -43,7 +43,7 @@ def test_search_families(family_repo_mock):
 
 
 def test_search_families_missing(family_repo_mock):
-    family_repo_mock.error = True
+    family_repo_mock.return_empty = True
     result = family_service.search("empty")
     assert result is not None
     assert len(result) == 0
@@ -60,7 +60,7 @@ def test_delete_family(family_repo_mock):
 
 
 def test_delete_family_missing(family_repo_mock):
-    family_repo_mock.error = True
+    family_repo_mock.return_empty = True
     ok = family_service.delete("a.b.c.d")
     assert not ok
     assert family_repo_mock.delete.call_count == 1
@@ -104,7 +104,7 @@ def test_update_family_missing(
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None
-    family_repo_mock.error = True
+    family_repo_mock.return_empty = True
 
     result = family_service.update(family)
     assert result is None
@@ -223,7 +223,7 @@ def test_create_family_repo_fails(
     metadata_repo_mock,
 ):
     new_family = create_family_dto(import_id="a.b.c.d")
-    family_repo_mock.error = True
+    family_repo_mock.return_empty = True
     family = family_service.create(new_family)
     assert family is None
     assert family_repo_mock.create.call_count == 1

@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from app.errors import ValidationError
-import app.repository.organisation as org_repo
+from app.repository import organisation_repo
 
 
 def validate(db: Session, org_name: str) -> int:
-    id = org_repo.get_id_from_name(db, org_name)
+    id = organisation_repo.get_id_from_name(db, org_name)
     if id is None:
         raise ValidationError(f"The organisation name {org_name} is invalid!")
     return id

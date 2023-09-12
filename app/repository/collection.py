@@ -17,6 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CollectionOrg = Tuple[Collection, Organisation]
 
+# __        _____ ____
+# \ \      / /_ _|  _ \
+#  \ \ /\ / / | || |_) |
+#   \ V  V /  | ||  __/
+#    \_/\_/  |___|_|
 
 # def _collection_org_from_dto(
 #     dto: CollectionDTO, geo_id: int, org_id

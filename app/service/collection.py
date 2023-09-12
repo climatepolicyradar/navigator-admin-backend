@@ -8,11 +8,17 @@ import logging
 from typing import Optional
 from app.errors import RepositoryError
 from app.model.collection import CollectionDTO
-import app.repository.collection as collection_repo
+from app.repository import collection_repo
 import app.db.session as db_session
 from sqlalchemy import exc
 
 from app.service import id
+
+# __        _____ ____
+# \ \      / /_ _|  _ \
+#  \ \ /\ / / | || |_) |
+#   \ V  V /  | ||  __/
+#    \_/\_/  |___|_|
 
 
 _LOGGER = logging.getLogger(__name__)

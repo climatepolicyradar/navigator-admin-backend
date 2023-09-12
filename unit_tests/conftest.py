@@ -5,13 +5,17 @@ from fastapi.testclient import TestClient
 
 import app.service.family as family_service
 import app.service.token as token_service
-import app.repository.app_user as app_user_repo
-import app.repository.family as family_repo
-import app.repository.geography as geography_repo
-import app.repository.metadata as metadata_repo
-import app.repository.organisation as organisation_repo
+from app.repository import (
+    family_repo,
+    geography_repo,
+    metadata_repo,
+    organisation_repo,
+    collection_repo,
+    app_user_repo,
+)
 
 from unit_tests.mocks.app_user_repo import mock_app_user_repo
+from unit_tests.mocks.collection_repo import mock_collection_repo
 from unit_tests.mocks.family_repo import mock_family_repo
 from unit_tests.mocks.family_service import mock_family_service
 from unit_tests.mocks.geography_repo import mock_geography_repo
@@ -24,6 +28,9 @@ def client():
     """Get a TestClient instance that reads/write to the test database."""
 
     yield TestClient(app)
+
+
+# ----- Mock repos
 
 
 @pytest.fixture
@@ -66,6 +73,16 @@ def family_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_family_repo(family_repo, monkeypatch, mocker)
     yield family_repo
+
+
+@pytest.fixture
+def collection_repo_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_collection_repo(collection_repo, monkeypatch, mocker)
+    yield collection_repo
+
+
+# ----- User tokens
 
 
 @pytest.fixture

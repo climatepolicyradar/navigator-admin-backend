@@ -7,7 +7,6 @@ import logging
 from typing import Optional
 from app.errors import RepositoryError
 from app.model.family import FamilyDTO
-import app.repository.family as family_repo
 import app.db.session as db_session
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -18,6 +17,7 @@ from app.service import category
 from app.service import organisation
 from app.service import metadata
 
+from app.repository import family_repo
 
 _LOGGER = logging.getLogger(__name__)
 

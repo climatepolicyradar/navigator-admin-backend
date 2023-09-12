@@ -7,7 +7,7 @@ from unit_tests.helpers.family import create_family_dto
 
 
 def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
-    family_repo.error = False
+    family_repo.return_empty = False
     family_repo.throw_repository_error = False
 
     def maybe_throw():
@@ -19,27 +19,27 @@ def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_get_family(_, import_id: str) -> Optional[FamilyDTO]:
         maybe_throw()
-        if not family_repo.error:
+        if not family_repo.return_empty:
             return create_family_dto(import_id)
 
     def mock_search_families(_, q: str) -> list[FamilyDTO]:
         maybe_throw()
-        if not family_repo.error:
+        if not family_repo.return_empty:
             return [create_family_dto("search1")]
         return []
 
     def mock_update_family(_, data: FamilyDTO, __) -> bool:
         maybe_throw()
-        return not family_repo.error
+        return not family_repo.return_empty
 
     def mock_create_family(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
         maybe_throw()
-        if not family_repo.error:
+        if not family_repo.return_empty:
             return data
 
     def mock_delete_family(_, import_id: str) -> bool:
         maybe_throw()
-        return not family_repo.error
+        return not family_repo.return_empty
 
     monkeypatch.setattr(family_repo, "get", mock_get_family)
     mocker.spy(family_repo, "get")
