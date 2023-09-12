@@ -31,7 +31,7 @@ def get(import_id: str) -> Optional[FamilyDTO]:
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The family found or None.
     """
-    id.validate(import_id)
+    validate_import_id(import_id)
     try:
         with db_session.get_db() as db:
             return family_repo.get(db, import_id)

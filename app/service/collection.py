@@ -17,13 +17,6 @@ from app.service import id
 from app.service import organisation
 
 
-# __        _____ ____
-# \ \      / /_ _|  _ \
-#  \ \ /\ / / | || |_) |
-#   \ V  V /  | ||  __/
-#    \_/\_/  |___|_|
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -36,7 +29,7 @@ def get(import_id: str) -> Optional[CollectionDTO]:
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[CollectionDTO]: The collection found or None.
     """
-    id.validate(import_id)
+    validate_import_id(import_id)
     try:
         with db_session.get_db() as db:
             return collection_repo.get(db, import_id)

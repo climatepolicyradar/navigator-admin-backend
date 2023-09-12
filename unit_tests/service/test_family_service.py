@@ -8,23 +8,24 @@ from app.errors import ValidationError
 import app.service.family as family_service
 from unit_tests.helpers.family import create_family_dto
 
+
 # --- GET
 
 
-def test_get_family_returns_family_if_exists(family_repo_mock):
+def test_family_get_returns_family_if_exists(family_repo_mock):
     result = family_service.get("a.b.c.d")
     assert result is not None
     assert family_repo_mock.get.call_count == 1
 
 
-def test_get_family_returns_none_if_missing(family_repo_mock):
+def test_family_get_returns_none_if_missing(family_repo_mock):
     family_repo_mock.return_empty = True
     result = family_service.get("a.b.c.d")
     assert result is None
     assert family_repo_mock.get.call_count == 1
 
 
-def test_get_family_raises_if_invalid_id(family_repo_mock):
+def test_family_get_raises_if_invalid_id(family_repo_mock):
     with pytest.raises(ValidationError) as e:
         family_service.get("a.b.c")
     expected_msg = "The import id a.b.c is invalid!"
