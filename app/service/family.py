@@ -61,6 +61,18 @@ def search(search_term: str) -> list[FamilyDTO]:
         return family_repo.search(db, search_term)
 
 
+def validate_import_id(import_id: str) -> None:
+    """
+    Validates the import id for a family.
+
+    TODO: add more validation
+
+    :param str import_id: import id to check.
+    :raises ValidationError: raised should the import_id be invalid.
+    """
+    id.validate(import_id)
+
+
 @db_session.with_transaction(__name__)
 def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
     """
@@ -71,11 +83,11 @@ def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
-    id.validate(family.import_id)
-    geo_id = geography.validate(db, family.geography)
+    validate_import_id(family.import_id)
     category.validate(family.category)
-    org_id = organisation.validate(db, family.organisation)
+    org_id = organisation.get_id(db, family.organisation)
     metadata.validate(db, org_id, family.metadata)
+    geo_id = geography.get_id(db, family.geography)
 
     if family_repo.update(db, family, geo_id):
         db.commit()
@@ -93,9 +105,9 @@ def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
     id.validate(family.import_id)
-    geo_id = geography.validate(db, family.geography)
+    geo_id = geography.get_id(db, family.geography)
     category.validate(family.category)
-    org_id = organisation.validate(db, family.organisation)
+    org_id = organisation.get_id(db, family.organisation)
     metadata.validate(db, org_id, family.metadata)
 
     return family_repo.create(db, family, geo_id, org_id)

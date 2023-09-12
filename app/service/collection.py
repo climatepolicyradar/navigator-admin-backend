@@ -11,8 +11,11 @@ from app.model.collection import CollectionDTO
 from app.repository import collection_repo
 import app.db.session as db_session
 from sqlalchemy import exc
+from sqlalchemy.orm import Session
 
 from app.service import id
+from app.service import organisation
+
 
 # __        _____ ____
 # \ \      / /_ _|  _ \
@@ -52,69 +55,79 @@ def all() -> list[CollectionDTO]:
         return collection_repo.all(db)
 
 
-# def search(search_term: str) -> list[CollectionDTO]:
-#     """
-#     Searches the title and descriptions of all the collections for the search term.
+def search(search_term: str) -> list[CollectionDTO]:
+    """
+    Searches the title and descriptions of all the collections for the search term.
 
-#     :param str search_term: Search pattern to match.
-#     :return list[CollectionDTO]: The list of collections matching the search term.
-#     """
-#     with db_session.get_db() as db:
-#         return collection_repo.search(db, search_term)
-
-
-# @db_session.with_transaction(__name__)
-# def update(collection: CollectionDTO, db: Session = db_session.get_db())
-# -> Optional[CollectionDTO]:
-#     """
-#     Updates a single collection with the values passed.
-
-#     :param CollectionDTO collection: The DTO with all the values to change (or keep).
-#     :raises RepositoryError: raised on a database error.
-#     :raises ValidationError: raised should the import_id be invalid.
-#     :return Optional[CollectionDTO]: The updated collection or None if not updated.
-#     """
-#     id.validate(collection.import_id)
-#     geo_id = geography.validate(db, collection.geography)
-#     category.validate(collection.category)
-#     org_id = organisation.validate(db, collection.organisation)
-#     metadata.validate(db, org_id, collection.metadata)
-
-#     if collection_repo.update(db, collection, geo_id):
-#         db.commit()
-#         return get(collection.import_id)
+    :param str search_term: Search pattern to match.
+    :return list[CollectionDTO]: The list of collections matching the search term.
+    """
+    with db_session.get_db() as db:
+        return collection_repo.search(db, search_term)
 
 
-# @db_session.with_transaction(__name__)
-# def create(collection: CollectionDTO, db: Session = db_session.get_db())
-# -> Optional[CollectionDTO]:
-#     """
-#     Creates a new collection with the values passed.
+def validate_import_id(import_id: str) -> None:
+    """
+    Validates the import id for a collection.
 
-#     :param CollectionDTO collection: The values for the new collection.
-#     :raises RepositoryError: raised on a database error
-#     :raises ValidationError: raised should the import_id be invalid.
-#     :return Optional[CollectionDTO]: The new created collection or
-# None if unsuccessful.
-#     """
-#     id.validate(collection.import_id)
-#     geo_id = geography.validate(db, collection.geography)
-#     category.validate(collection.category)
-#     org_id = organisation.validate(db, collection.organisation)
-#     metadata.validate(db, org_id, collection.metadata)
+    TODO: add more validation
 
-#     return collection_repo.create(db, collection, geo_id, org_id)
+    :param str import_id: import id to check.
+    :raises ValidationError: raised should the import_id be invalid.
+    """
+    id.validate(import_id)
 
 
-# @db_session.with_transaction(__name__)
-# def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
-#     """
-#     Deletes the collection specified by the import_id.
+@db_session.with_transaction(__name__)
+def update(
+    collection: CollectionDTO, db: Session = db_session.get_db()
+) -> Optional[CollectionDTO]:
+    """
+    Updates a single collection with the values passed.
 
-#     :param str import_id: The import_id of the collection to delete.
-#     :raises RepositoryError: raised on a database error.
-#     :raises ValidationError: raised should the import_id be invalid.
-#     :return bool: True if deleted else False.
-#     """
-#     id.validate(import_id)
-#     return collection_repo.delete(db, import_id)
+    :param CollectionDTO collection: The DTO with all the values to change (or keep).
+    :raises RepositoryError: raised on a database error.
+    :raises ValidationError: raised should the import_id be invalid.
+    :return Optional[CollectionDTO]: The updated collection or None if not updated.
+    """
+    validate_import_id(collection.import_id)
+
+    # TODO: implement changing of a collection's organisation
+    # org_id = organisation.get_id(db, collection.organisation)
+
+    if collection_repo.update(db, collection):
+        db.commit()
+        return get(collection.import_id)
+
+
+@db_session.with_transaction(__name__)
+def create(
+    collection: CollectionDTO, db: Session = db_session.get_db()
+) -> Optional[CollectionDTO]:
+    """
+        Creates a new collection with the values passed.
+
+        :param CollectionDTO collection: The values for the new collection.
+        :raises RepositoryError: raised on a database error
+        :raises ValidationError: raised should the import_id be invalid.
+        :return Optional[CollectionDTO]: The new created collection or
+    None if unsuccessful.
+    """
+    id.validate(collection.import_id)
+    org_id = organisation.get_id(db, collection.organisation)
+
+    return collection_repo.create(db, collection, org_id)
+
+
+@db_session.with_transaction(__name__)
+def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
+    """
+    Deletes the collection specified by the import_id.
+
+    :param str import_id: The import_id of the collection to delete.
+    :raises RepositoryError: raised on a database error.
+    :raises ValidationError: raised should the import_id be invalid.
+    :return bool: True if deleted else False.
+    """
+    id.validate(import_id)
+    return collection_repo.delete(db, import_id)
