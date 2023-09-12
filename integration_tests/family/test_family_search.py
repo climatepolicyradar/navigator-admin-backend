@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from integration_tests.family.family_helpers import setup_db
+from integration_tests.setup_db import setup_db
 
 
 def test_search_family(client: TestClient, test_db: Session, user_header_token):

@@ -3,7 +3,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 from app.db.models.law_policy.family import Family, Slug
 from app.db.models.law_policy.metadata import FamilyMetadata
-from integration_tests.family.family_helpers import setup_db
+from integration_tests.setup_db import setup_db
 from unit_tests.helpers.family import create_family_dto
 
 

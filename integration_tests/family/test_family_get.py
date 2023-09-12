@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from integration_tests.family.family_helpers import EXPECTED_FAMILIES, setup_db
+from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 
 
 # --- GET ALL

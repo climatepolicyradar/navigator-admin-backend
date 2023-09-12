@@ -54,18 +54,19 @@ def _get_query(db: Session) -> Query:
 
 def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionDTO:
     collection, org = co
-    families = (
+    db_families = (
         db.query(Family.import_id)
         .join(CollectionFamily, CollectionFamily.family_import_id == Family.import_id)
         .filter(CollectionFamily.collection_import_id == collection.import_id)
         .all()
     )
+    families = [cast(str, f[0]) for f in db_families]
     return CollectionDTO(
         import_id=str(collection.import_id),
         title=str(collection.title),
         description=str(collection.description),
         organisation=cast(str, org.name),
-        families=[cast(str, f) for f in families],
+        families=families,
     )
 
 
