@@ -1,7 +1,7 @@
 from fastapi_pagination import add_pagination
 from app.api.api_v1.routers.auth import check_user_auth
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
-from app.api.api_v1.routers import families_router, auth_router, collection_router
+from app.api.api_v1.routers import families_router, auth_router, collections_router
 from fastapi import FastAPI, Depends
 from fastapi_health import health
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,7 +30,7 @@ app.include_router(
 )
 
 app.include_router(
-    collection_router,
+    collections_router,
     prefix="/api/v1",
     tags=["collections"],
     dependencies=[Depends(check_user_auth)],

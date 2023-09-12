@@ -2,7 +2,11 @@ import pytest
 from app.errors import AuthenticationError, RepositoryError
 import app.service.authentication as auth_service
 import app.service.token as token_service
-from unit_tests.mocks.app_user_repo import HASH_PASSWORD, PLAIN_PASSWORD, VALID_USERNAME
+from unit_tests.mocks.repos.app_user_repo import (
+    HASH_PASSWORD,
+    PLAIN_PASSWORD,
+    VALID_USERNAME,
+)
 
 
 def test_password_hash_matches():

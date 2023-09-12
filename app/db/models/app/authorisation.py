@@ -22,9 +22,15 @@ HTTP_MAP_TO_OPERATION = {
 
 
 class AuthEntity(str, enum.Enum):
-    """An Entity that can be authorized"""
+    """
+    An Entity that can be authorized.
+
+    NOTE: At the moment these are the upper-case plural
+    version of the entity that is used in the url.
+    """
 
     FAMILY = "FAMILIES"
+    COLLECTION = "COLLECTIONS"
 
 
 class AuthAccess(str, enum.Enum):
@@ -44,5 +50,12 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.ADMIN,
-    }
+    },
+    # Collection
+    AuthEntity.COLLECTION: {
+        AuthOperation.CREATE: AuthAccess.USER,
+        AuthOperation.READ: AuthAccess.USER,
+        AuthOperation.UPDATE: AuthAccess.USER,
+        AuthOperation.DELETE: AuthAccess.ADMIN,
+    },
 }

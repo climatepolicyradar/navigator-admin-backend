@@ -1,7 +1,7 @@
 import pytest
 from app.errors import ValidationError
 import app.service.collection as collection_service
-from unit_tests.mocks.collection_repo import create_collection_dto
+from unit_tests.mocks.repos.collection_repo import create_collection_dto
 
 
 # --- GET

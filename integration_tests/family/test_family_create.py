@@ -19,7 +19,7 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
     response = client.post(
         "/api/v1/families", json=new_family.dict(), headers=user_header_token
     )
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["title"] == "Title"
     assert data["summary"] == "test test test"

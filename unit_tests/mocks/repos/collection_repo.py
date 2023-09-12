@@ -3,16 +3,7 @@ from pytest import MonkeyPatch
 
 from sqlalchemy import exc
 from app.model.collection import CollectionDTO
-
-
-def create_collection_dto(import_id: str) -> CollectionDTO:
-    return CollectionDTO(
-        import_id=import_id,
-        title="title",
-        description="description",
-        families=[],
-        organisation="org",
-    )
+from unit_tests.helpers.collection import create_collection_dto
 
 
 def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):

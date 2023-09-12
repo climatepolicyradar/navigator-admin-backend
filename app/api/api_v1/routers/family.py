@@ -115,10 +115,7 @@ async def update_family(
     return family
 
 
-@r.post(
-    "/families",
-    response_model=FamilyDTO,
-)
+@r.post("/families", response_model=FamilyDTO, status_code=status.HTTP_201_CREATED)
 async def create_family(
     new_family: FamilyDTO,
 ) -> FamilyDTO:
