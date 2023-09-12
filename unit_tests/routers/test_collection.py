@@ -60,7 +60,7 @@ def test_search_collection_uses_service_404(
     response = client.get("/api/v1/collections/?q=empty", headers=user_header_token)
     assert response.status_code == 404
     data = response.json()
-    assert data["detail"] == "collections not found for term: empty"
+    assert data["detail"] == "Collections not found for term: empty"
     assert collection_service_mock.search.call_count == 1
 
 

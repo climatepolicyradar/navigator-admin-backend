@@ -9,9 +9,10 @@ from sqlalchemy.orm import sessionmaker
 import app.db.session as db_session
 from app.main import app
 from integration_tests.mocks.bad_family_repo import mock_bad_family_repo
+from integration_tests.mocks.bad_collection_repo import mock_bad_collection_repo
 from integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
 import app.service.token as token_service
-from app.repository import family_repo
+from app.repository import family_repo, collection_repo
 
 
 def get_test_db_url() -> str:
@@ -65,6 +66,13 @@ def bad_family_repo(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_bad_family_repo(family_repo, monkeypatch, mocker)
     yield family_repo
+
+
+@pytest.fixture
+def bad_collection_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_bad_collection_repo(collection_repo, monkeypatch, mocker)
+    yield collection_repo
 
 
 @pytest.fixture

@@ -71,7 +71,7 @@ async def search_collection(q: str = "") -> list[CollectionDTO]:
     collections = collection_service.search(q)
     if collections is None or len(collections) == 0:
         raise HTTPException(
-            status_code=404, detail=f"collections not found for term: {q}"
+            status_code=404, detail=f"Collections not found for term: {q}"
         )
 
     return collections

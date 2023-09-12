@@ -82,14 +82,14 @@ def test_get_collection_400(client: TestClient, test_db: Session, user_header_to
     assert data["detail"] == expected_msg
 
 
-# def test_get_collection_503(
-#     client: TestClient, test_db: Session, bad_collection_repo, user_header_token
-# ):
-#     setup_db(test_db)
-#     response = client.get(
-#         "/api/v1/collections/A.0.0.8",
-#         headers=user_header_token,
-#     )
-#     assert response.status_code == 503
-#     data = response.json()
-#     assert data["detail"] == "Bad Repo"
+def test_get_collection_503(
+    client: TestClient, test_db: Session, bad_collection_repo, user_header_token
+):
+    setup_db(test_db)
+    response = client.get(
+        "/api/v1/collections/A.0.0.8",
+        headers=user_header_token,
+    )
+    assert response.status_code == 503
+    data = response.json()
+    assert data["detail"] == "Bad Repo"

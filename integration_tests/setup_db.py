@@ -70,7 +70,7 @@ EXPECTED_FAMILIES = [
 EXPECTED_COLLECTIONS = [
     {
         "import_id": "C.0.0.1",
-        "title": "Collection 1",
+        "title": "Collection 1 a very big collection",
         "description": "description one",
         "families": [],
         "organisation": "test_org",
@@ -114,7 +114,9 @@ def _setup_organisation(test_db: Session) -> int:
 def _setup_collection_data(test_db: Session, org_id: int):
     test_db.add(
         Collection(
-            import_id="C.0.0.1", title="Collection 1", description="description one"
+            import_id="C.0.0.1",
+            title="Collection 1 a very big collection",
+            description="description one",
         )
     )
 
