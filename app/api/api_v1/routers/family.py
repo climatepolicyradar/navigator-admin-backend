@@ -7,7 +7,7 @@ layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
 from app.model.family import FamilyDTO
@@ -35,12 +35,17 @@ async def get_family(
     try:
         family = family_service.get(import_id)
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
-        raise HTTPException(status_code=503, detail=e.message)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
 
     if family is None:
-        raise HTTPException(status_code=404, detail=f"Family not found: {import_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Family not found: {import_id}",
+        )
 
     return family
 
@@ -72,7 +77,10 @@ async def search_family(q: str = "") -> list[FamilyDTO]:
     """
     families = family_service.search(q)
     if families is None or len(families) == 0:
-        raise HTTPException(status_code=404, detail=f"Families not found for term: {q}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Families not found for term: {q}",
+        )
 
     return families
 
@@ -94,13 +102,15 @@ async def update_family(
     try:
         family = family_service.update(new_family)
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
-        raise HTTPException(status_code=503, detail=e.message)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
 
     if family is None:
         detail = f"Family not updated: {new_family.import_id}"
-        raise HTTPException(status_code=404, detail=detail)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return family
 
@@ -121,13 +131,16 @@ async def create_family(
     try:
         family = family_service.create(new_family)
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
-        raise HTTPException(status_code=503, detail=e.message)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
 
     if family is None:
         raise HTTPException(
-            status_code=404, detail=f"Family not created: {new_family.import_id}"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Family not created: {new_family.import_id}",
         )
 
     return family
@@ -148,9 +161,14 @@ async def delete_family(
     try:
         family_deleted = family_service.delete(import_id)
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
-        raise HTTPException(status_code=503, detail=e.message)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
 
     if not family_deleted:
-        raise HTTPException(status_code=404, detail=f"Family not deleted: {import_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Family not deleted: {import_id}",
+        )
