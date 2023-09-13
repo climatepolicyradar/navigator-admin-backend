@@ -2,9 +2,7 @@
 
 import logging
 from typing import Optional, Tuple, cast
-from uuid import uuid4
 
-from slugify import slugify
 from app.db.models.app.users import Organisation
 from app.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
@@ -19,13 +17,15 @@ from sqlalchemy_utils import escape_like
 from sqlalchemy import or_, update as db_update, delete as db_delete
 from sqlalchemy.orm import Query
 
+from app.repository.helpers import generate_slug
+
 
 _LOGGER = logging.getLogger(__name__)
 
 FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Organisation]
 
 
-def _fam_geo_meta_query(db: Session) -> Query:
+def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
@@ -41,7 +41,7 @@ def _fam_geo_meta_query(db: Session) -> Query:
 
 
 def _family_org_from_dto(
-    dto: FamilyDTO, geo_id: int, org_id
+    dto: FamilyDTO, geo_id: int, org_id: int
 ) -> Tuple[Family, Organisation]:
     return (
         Family(
@@ -83,27 +83,6 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyDTO
     )
 
 
-def _generate_slug(
-    title: str,
-    lookup: set[str],
-    attempts: int = 100,
-    suffix_length: int = 4,
-):
-    base = slugify(str(title))
-    # TODO: try to extend suffix length if attempts are exhausted
-    suffix = str(uuid4())[:suffix_length]
-    count = 0
-    while (slug := f"{base}_{suffix}") in lookup:
-        count += 1
-        suffix = str(uuid4())[:suffix_length]
-        if count > attempts:
-            raise RuntimeError(
-                f"Failed to generate a slug for {base} after {attempts} attempts."
-            )
-    lookup.add(slug)
-    return slug
-
-
 def _update_intention(db, family, geo_id, original_family):
     update_title = cast(str, original_family.title) != family.title
     update_basics = (
@@ -127,7 +106,7 @@ def all(db: Session) -> list[FamilyDTO]:
 
     :return Optional[FamilyResponse]: All of things
     """
-    family_geo_metas = _fam_geo_meta_query(db).all()
+    family_geo_metas = _get_query(db).all()
 
     if not family_geo_metas:
         return []
@@ -145,9 +124,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyDTO]:
     :return Optional[FamilyResponse]: A single family or nothing
     """
     try:
-        fam_geo_meta = (
-            _fam_geo_meta_query(db).filter(Family.import_id == import_id).one()
-        )
+        fam_geo_meta = _get_query(db).filter(Family.import_id == import_id).one()
     except NoResultFound as e:
         _LOGGER.error(e)
         return
@@ -164,7 +141,7 @@ def search(db: Session, search_term: str) -> list[FamilyDTO]:
     """
     term = f"%{escape_like(search_term)}%"
     search = or_(Family.title.ilike(term), Family.description.ilike(term))
-    found = _fam_geo_meta_query(db).filter(search).all()
+    found = _get_query(db).filter(search).all()
 
     return [_family_to_dto(db, f) for f in found]
 
@@ -176,7 +153,7 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> bool:
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
     :param int geo_id: a validated geography id
-    :return Optional[FamilyDTO]: The new values set or None if not found.
+    :return bool: True if new values were set otherwise false.
     """
     new_values = family.dict()
 
@@ -232,8 +209,7 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> bool:
     # update slug if title changed
     if update_title:
         db.flush()
-        lookup = set([cast(str, n) for n in db.query(Slug.name).all()])
-        name = _generate_slug(family.title, lookup)
+        name = generate_slug(db, family.title)
         new_slug = Slug(
             family_import_id=family.import_id,
             family_document_import_id=None,
@@ -253,6 +229,7 @@ def create(
 
     :param FamilyDTO family: the values for the new family
     :param int geo_id: a validated geography id
+    :param int org_id: a validated organisation id
     :return Optional[FamilyDTO]: the new family created
     """
     try:
@@ -264,12 +241,11 @@ def create(
         return
 
     # Add a slug
-    lookup = set([cast(str, n) for n in db.query(Slug.name).all()])
     db.add(
         Slug(
             family_import_id=family.import_id,
             family_document_import_id=None,
-            name=_generate_slug(family.title, lookup),
+            name=generate_slug(db, family.title),
         )
     )
 

@@ -1,14 +1,12 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
-
 from app.model.general import Json
 
 
 class FamilyDTO(BaseModel):
     """A JSON representation of a family."""
 
-    # TODO organisation: str
     import_id: str
     title: str
     summary: str

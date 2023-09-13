@@ -9,7 +9,7 @@ def test_geo_service_validate_raiseson_invalid_value(
 ):
     geography_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
-        result = geography_service.validate(None, "CHN")  # type: ignore
+        result = geography_service.get_id(None, "CHN")  # type: ignore
         assert result is None
 
     expected_msg = "The geography value CHN is invalid!"

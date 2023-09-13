@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from integration_tests.family.family_helpers import setup_db
+from integration_tests.setup_db import setup_db
 
 
 def test_search_family(client: TestClient, test_db: Session, user_header_token):
@@ -35,6 +35,6 @@ def test_search_family_404(client: TestClient, test_db: Session, user_header_tok
         "/api/v1/families/?q=chicken",
         headers=user_header_token,
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Families not found for term: chicken"

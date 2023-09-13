@@ -1,6 +1,12 @@
+from typing import cast
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.db.models.app.users import Organisation
+from app.db.models.law_policy.collection import (
+    Collection,
+    CollectionFamily,
+    CollectionOrganisation,
+)
 from app.db.models.law_policy.family import Family, FamilyCategory, FamilyOrganisation
 from app.db.models.law_policy.metadata import (
     FamilyMetadata,
@@ -24,7 +30,7 @@ EXPECTED_FAMILIES = [
         "published_date": None,
         "last_updated_date": None,
         "documents": [],
-        "collections": [],
+        "collections": ["C.0.0.2"],
     },
     {
         "import_id": "A.0.0.2",
@@ -56,7 +62,25 @@ EXPECTED_FAMILIES = [
         "published_date": None,
         "last_updated_date": None,
         "documents": [],
-        "collections": [],
+        "collections": ["C.0.0.2"],
+    },
+]
+
+
+EXPECTED_COLLECTIONS = [
+    {
+        "import_id": "C.0.0.1",
+        "title": "Collection 1 a very big collection",
+        "description": "description one",
+        "families": [],
+        "organisation": "test_org",
+    },
+    {
+        "import_id": "C.0.0.2",
+        "title": "Collection 2",
+        "description": "description two",
+        "families": ["A.0.0.1", "A.0.0.3"],
+        "organisation": "test_org",
     },
 ]
 
@@ -66,6 +90,60 @@ def setup_db(test_db: Session):
         query = text(file.read())
         test_db.execute(query)
 
+    org_id = _setup_organisation(test_db)
+
+    _setup_family_data(test_db, org_id)
+    test_db.commit()
+
+    _setup_collection_data(test_db, org_id)
+    test_db.commit()
+
+
+def _setup_organisation(test_db: Session) -> int:
+    # Now an organisation
+    org = Organisation(
+        name="test_org",
+        description="for testing",
+        organisation_type="test organisation",
+    )
+    test_db.add(org)
+    test_db.flush()
+    return cast(int, org.id)
+
+
+def _setup_collection_data(test_db: Session, org_id: int):
+    test_db.add(
+        Collection(
+            import_id="C.0.0.1",
+            title="Collection 1 a very big collection",
+            description="description one",
+        )
+    )
+
+    test_db.add(
+        Collection(
+            import_id="C.0.0.2", title="Collection 2", description="description two"
+        )
+    )
+
+    test_db.add(
+        CollectionOrganisation(collection_import_id="C.0.0.1", organisation_id=org_id)
+    )
+
+    test_db.add(
+        CollectionOrganisation(collection_import_id="C.0.0.2", organisation_id=org_id)
+    )
+
+    test_db.add(
+        CollectionFamily(collection_import_id="C.0.0.2", family_import_id="A.0.0.1")
+    )
+
+    test_db.add(
+        CollectionFamily(collection_import_id="C.0.0.2", family_import_id="A.0.0.3")
+    )
+
+
+def _setup_family_data(test_db: Session, org_id: int):
     FAMILY_1 = Family(
         import_id="A.0.0.1",
         title="apple",
@@ -94,17 +172,10 @@ def setup_db(test_db: Session):
     test_db.add(FAMILY_2)
     test_db.add(FAMILY_3)
 
-    # Now an organisation
-    org = Organisation(
-        name="test_org", description="for testing", organisation_type="testorg"
-    )
-    test_db.add(org)
-    test_db.flush()
-
     # Link the families to the org
-    test_db.add(FamilyOrganisation(family_import_id="A.0.0.1", organisation_id=org.id))
-    test_db.add(FamilyOrganisation(family_import_id="A.0.0.2", organisation_id=org.id))
-    test_db.add(FamilyOrganisation(family_import_id="A.0.0.3", organisation_id=org.id))
+    test_db.add(FamilyOrganisation(family_import_id="A.0.0.1", organisation_id=org_id))
+    test_db.add(FamilyOrganisation(family_import_id="A.0.0.2", organisation_id=org_id))
+    test_db.add(FamilyOrganisation(family_import_id="A.0.0.3", organisation_id=org_id))
 
     # Now a Taxonomy
     tax = MetadataTaxonomy(
@@ -124,7 +195,7 @@ def setup_db(test_db: Session):
     test_db.flush()
 
     # Now a MetadataOrganisation
-    mo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=org.id)
+    mo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=org_id)
     test_db.add(mo)
     test_db.flush()
 
@@ -150,5 +221,3 @@ def setup_db(test_db: Session):
             value={"color": "blue", "size": 100},
         )
     )
-
-    test_db.commit()

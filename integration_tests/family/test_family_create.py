@@ -3,7 +3,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 from app.db.models.law_policy.family import Family, Slug
 from app.db.models.law_policy.metadata import FamilyMetadata
-from integration_tests.family.family_helpers import setup_db
+from integration_tests.setup_db import setup_db
 from unit_tests.helpers.family import create_family_dto
 
 
@@ -19,7 +19,7 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
     response = client.post(
         "/api/v1/families", json=new_family.dict(), headers=user_header_token
     )
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["title"] == "Title"
     assert data["summary"] == "test test test"
@@ -35,7 +35,7 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
     assert metadata.value == test_meta
 
 
-def test_create_family_is_authed(client: TestClient, test_db: Session):
+def test_create_family_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
     test_meta = {"color": "blue", "size": 888}
     new_family = create_family_dto(
@@ -64,7 +64,7 @@ def test_create_family_rollback(
     response = client.post(
         "/api/v1/families", json=new_family.dict(), headers=user_header_token
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     actual_family = (
         test_db.query(Family).filter(Family.import_id == "A.0.0.9").one_or_none()
     )
@@ -72,9 +72,10 @@ def test_create_family_rollback(
     db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.9").all()
     # Ensure no slug was created
     assert len(db_slug) == 0
+    assert rollback_family_repo.create.call_count == 1
 
 
-def test_create_family_503(
+def test_create_family_when_db_error(
     client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     setup_db(test_db)
@@ -87,12 +88,13 @@ def test_create_family_503(
     response = client.post(
         "/api/v1/families", json=new_family.dict(), headers=user_header_token
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
+    assert bad_family_repo.create.call_count == 1
 
 
-def test_create_family__invalid_geo_400(
+def test_create_family_when_invalid_geo(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
@@ -110,7 +112,7 @@ def test_create_family__invalid_geo_400(
     assert data["detail"] == "The geography value UK is invalid!"
 
 
-def test_create_family__invalid_category_400(
+def test_create_family_when_invalid_category(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
@@ -128,7 +130,7 @@ def test_create_family__invalid_category_400(
     assert data["detail"] == "Invalid is not a valid FamilyCategory"
 
 
-def test_create_family__invalid_org_400(
+def test_create_family_when_invalid_org(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)

@@ -2,26 +2,26 @@ from typing import Optional
 from pytest import MonkeyPatch
 from app.errors import RepositoryError
 
-from app.model.family import FamilyDTO
+from app.model.collection import CollectionDTO
 
 
 def mock_get_all(_):
     raise RepositoryError("Bad Repo")
 
 
-def mock_get(_, import_id: str) -> Optional[FamilyDTO]:
+def mock_get(_, import_id: str) -> Optional[CollectionDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_search(_, q: str) -> list[FamilyDTO]:
+def mock_search(_, q: str) -> list[CollectionDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_update(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
+def mock_update(_, data: CollectionDTO) -> Optional[CollectionDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_create(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
+def mock_create(_, data: CollectionDTO, __) -> Optional[CollectionDTO]:
     raise RepositoryError("Bad Repo")
 
 
@@ -29,7 +29,7 @@ def mock_delete(_, import_id: str) -> bool:
     raise RepositoryError("Bad Repo")
 
 
-def mock_bad_family_repo(repo, monkeypatch: MonkeyPatch, mocker):
+def mock_bad_collection_repo(repo, monkeypatch: MonkeyPatch, mocker):
     monkeypatch.setattr(repo, "get", mock_get)
     mocker.spy(repo, "get")
 

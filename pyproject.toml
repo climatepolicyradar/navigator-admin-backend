@@ -60,6 +60,12 @@ line-length = 88
 target-version = ["py39"]
 exclude = "^/alembic/versions/"
 
+[tool.pyright]
+include = ["app", "unit_tests", "integration_tests"]
+exclude = [
+  "**/__pycache__",
+]
+
 [tool.ruff]
 select = ["E", "F", "D"]
 # Docstring Ignores:

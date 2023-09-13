@@ -5,7 +5,7 @@ from sqlalchemy.exc import NoResultFound
 
 import app.db.session as db_session
 from app.errors import AuthenticationError, RepositoryError
-import app.repository.app_user as app_user_repo
+from app.repository import app_user_repo
 import app.service.token as token_service
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
