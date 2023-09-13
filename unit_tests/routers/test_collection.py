@@ -36,7 +36,7 @@ def test_get_collection_uses_service_404(
     client: TestClient, collection_service_mock, user_header_token
 ):
     response = client.get("/api/v1/collections/missing", headers=user_header_token)
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Collection not found: missing"
     assert collection_service_mock.get.call_count == 1
@@ -58,7 +58,7 @@ def test_search_collection_uses_service_404(
     client: TestClient, collection_service_mock, user_header_token
 ):
     response = client.get("/api/v1/collections/?q=empty", headers=user_header_token)
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Collections not found for term: empty"
     assert collection_service_mock.search.call_count == 1
@@ -84,7 +84,7 @@ def test_update_collection_uses_service_404(
     response = client.put(
         "/api/v1/collections", json=new_data, headers=user_header_token
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Collection not updated: missing"
     assert collection_service_mock.update.call_count == 1
@@ -111,7 +111,7 @@ def test_create_collection_uses_service_404(
     response = client.post(
         "/api/v1/collections", json=new_data.dict(), headers=user_header_token
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Collection not created: missing"
     assert collection_service_mock.create.call_count == 1
@@ -141,7 +141,7 @@ def test_delete_collection_uses_service_404(
     response = client.delete(
         "/api/v1/collections/missing", headers=admin_user_header_token
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Collection not deleted: missing"
     assert collection_service_mock.delete.call_count == 1

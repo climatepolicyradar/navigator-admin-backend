@@ -21,7 +21,7 @@ def test_search_collection(client: TestClient, test_db: Session, user_header_tok
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_collection_is_authed(client: TestClient, test_db: Session):
+def test_search_collection_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.get(
         "/api/v1/collections/?q=orange",
@@ -29,7 +29,9 @@ def test_search_collection_is_authed(client: TestClient, test_db: Session):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_search_collection_404(client: TestClient, test_db: Session, user_header_token):
+def test_search_collection_when_nothing_found(
+    client: TestClient, test_db: Session, user_header_token
+):
     setup_db(test_db)
     response = client.get(
         "/api/v1/collections/?q=chicken",
@@ -38,3 +40,15 @@ def test_search_collection_404(client: TestClient, test_db: Session, user_header
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Collections not found for term: chicken"
+
+
+def test_search_collection_when_db_error(
+    client: TestClient, test_db: Session, bad_collection_repo, user_header_token
+):
+    setup_db(test_db)
+    response = client.get(
+        "/api/v1/collections/?q=chicken",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    assert bad_collection_repo.search.call_count == 1

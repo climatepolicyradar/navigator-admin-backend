@@ -51,7 +51,7 @@ def test_get_collection(client: TestClient, test_db: Session, user_header_token)
     assert data == EXPECTED_COLLECTIONS[0]
 
 
-def test_get_collection_is_authed(client: TestClient, test_db: Session):
+def test_get_collection_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.get(
         "/api/v1/collections/C.0.0.1",
@@ -59,30 +59,34 @@ def test_get_collection_is_authed(client: TestClient, test_db: Session):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_get_collection_404(client: TestClient, test_db: Session, user_header_token):
+def test_get_collection_when_not_found(
+    client: TestClient, test_db: Session, user_header_token
+):
     setup_db(test_db)
     response = client.get(
         "/api/v1/collections/C.0.0.8",
         headers=user_header_token,
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Collection not found: C.0.0.8"
 
 
-def test_get_collection_400(client: TestClient, test_db: Session, user_header_token):
+def test_get_collection_when_id_invalid(
+    client: TestClient, test_db: Session, user_header_token
+):
     setup_db(test_db)
     response = client.get(
         "/api/v1/collections/A008",
         headers=user_header_token,
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     expected_msg = "The import id A008 is invalid!"
     assert data["detail"] == expected_msg
 
 
-def test_get_collection_503(
+def test_get_collection_when_db_error(
     client: TestClient, test_db: Session, bad_collection_repo, user_header_token
 ):
     setup_db(test_db)
@@ -90,6 +94,6 @@ def test_get_collection_503(
         "/api/v1/collections/A.0.0.8",
         headers=user_header_token,
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"

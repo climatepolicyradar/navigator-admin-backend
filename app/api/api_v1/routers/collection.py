@@ -53,7 +53,12 @@ async def get_all_collections() -> list[CollectionDTO]:
 
     :return CollectionDTO: returns a CollectionDTO of the collection found.
     """
-    return collection_service.all()
+    try:
+        return collection_service.all()
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
 
 
 @r.get(
@@ -68,10 +73,17 @@ async def search_collection(q: str = "") -> list[CollectionDTO]:
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[CollectionDTO]: A list of matching collections.
     """
-    collections = collection_service.search(q)
+    try:
+        collections = collection_service.search(q)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
     if collections is None or len(collections) == 0:
         raise HTTPException(
-            status_code=404, detail=f"Collections not found for term: {q}"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Collections not found for term: {q}",
         )
 
     return collections
@@ -122,8 +134,10 @@ async def create_collection(
     try:
         collection = collection_service.create(new_collection)
     except ValidationError as e:
+        _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
+        _LOGGER.error(e.message)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )

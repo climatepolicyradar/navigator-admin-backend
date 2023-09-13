@@ -65,7 +65,7 @@ def test_get_family_404(client: TestClient, test_db: Session, user_header_token)
         "/api/v1/families/A.0.0.8",
         headers=user_header_token,
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Family not found: A.0.0.8"
 
@@ -90,6 +90,6 @@ def test_get_family_503(
         "/api/v1/families/A.0.0.8",
         headers=user_header_token,
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"

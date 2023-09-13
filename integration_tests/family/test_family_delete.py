@@ -30,7 +30,7 @@ def test_delete_family_rollback(
     response = client.delete(
         "/api/v1/families/A.0.0.2", headers=admin_user_header_token
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     n = test_db.query(Family).count()
     assert n == 3
 
@@ -42,7 +42,7 @@ def test_delete_family_404(
     response = client.delete(
         "/api/v1/families/A.0.0.22", headers=admin_user_header_token
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Family not deleted: A.0.0.22"
 
@@ -54,6 +54,6 @@ def test_delete_family_503(
     response = client.delete(
         "/api/v1/families/A.0.0.1", headers=admin_user_header_token
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"

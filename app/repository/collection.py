@@ -6,7 +6,7 @@ from typing import Optional, Tuple, cast
 from sqlalchemy.orm import Session
 from app.db.models.app.users import Organisation
 from app.db.models.law_policy.collection import CollectionFamily, CollectionOrganisation
-from app.db.models.law_policy.family import Family, Slug
+from app.db.models.law_policy.family import Family
 from app.errors import RepositoryError
 from app.model.collection import CollectionDTO
 from app.db.models.law_policy import Collection
@@ -16,7 +16,6 @@ from sqlalchemy.orm import Query
 from sqlalchemy import or_, update as db_update, delete as db_delete
 from sqlalchemy_utils import escape_like
 
-from app.repository.helpers import generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ CollectionOrg = Tuple[Collection, Organisation]
 
 def _collection_org_from_dto(
     dto: CollectionDTO, org_id: int
-) -> Tuple[Collection, Organisation]:
+) -> Tuple[Collection, CollectionOrganisation]:
     return (
         Collection(
             import_id=dto.import_id,
@@ -136,33 +135,18 @@ def update(db: Session, collection: CollectionDTO) -> bool:
         _LOGGER.error(f"Unable to find collection for update {collection}")
         return False
 
-    # We will need to update the slug if the title has changed
-    update_title = cast(str, original_collection.title) != collection.title
-
     result = db.execute(
         db_update(Collection)
         .where(Collection.import_id == collection.import_id)
         .values(
             title=new_values["title"],
-            description=new_values["summary"],
+            description=new_values["description"],
         )
     )
     if result.rowcount == 0:  # type: ignore
         msg = "Could not update collection fields: {collection}"
         _LOGGER.error(msg)
         raise RepositoryError(msg)
-
-    # update slug if title changed
-    if update_title:
-        db.flush()
-        name = generate_slug(db, collection.title)
-        new_slug = Slug(
-            collection_import_id=collection.import_id,
-            collection_document_import_id=None,
-            name=name,
-        )
-        db.add(new_slug)
-        _LOGGER.info(f"Added a new slug for {collection.import_id} of {new_slug.name}")
 
     return True
 
@@ -178,21 +162,14 @@ def create(
     :return Optional[CollectionDTO]: the new collection created
     """
     try:
-        new_collection, new_fam_org = _collection_org_from_dto(collection, org_id)
+        new_collection, collection_organisation = _collection_org_from_dto(
+            collection, org_id
+        )
         db.add(new_collection)
-        db.add(new_fam_org)
+        db.add(collection_organisation)
     except Exception as e:
         _LOGGER.error(e)
         return
-
-    # Add a slug
-    db.add(
-        Slug(
-            collection_import_id=collection.import_id,
-            collection_document_import_id=None,
-            name=generate_slug(db, collection.title),
-        )
-    )
 
     return collection
 
@@ -204,7 +181,16 @@ def delete(db: Session, import_id: str) -> bool:
     :param str import_id: The collection import id to delete.
     :return bool: True if deleted False if not.
     """
-    command = db_delete(Collection).where(Collection.import_id == import_id)
-    result = db.execute(command)
+    commands = [
+        db_delete(CollectionOrganisation).where(
+            CollectionOrganisation.collection_import_id == import_id
+        ),
+        db_delete(CollectionFamily).where(
+            CollectionFamily.collection_import_id == import_id
+        ),
+        db_delete(Collection).where(Collection.import_id == import_id),
+    ]
+    for c in commands:
+        result = db.execute(c)
 
     return result.rowcount > 0  # type: ignore

@@ -17,11 +17,11 @@ def mock_search(_, q: str) -> list[CollectionDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_update(_, data: CollectionDTO, __) -> Optional[CollectionDTO]:
+def mock_update(_, data: CollectionDTO) -> Optional[CollectionDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_create(_, data: CollectionDTO, __, ___) -> Optional[CollectionDTO]:
+def mock_create(_, data: CollectionDTO, __) -> Optional[CollectionDTO]:
     raise RepositoryError("Bad Repo")
 
 

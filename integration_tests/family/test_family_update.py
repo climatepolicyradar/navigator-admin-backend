@@ -92,7 +92,7 @@ def test_update_family_rollback(
     response = client.put(
         "/api/v1/families", json=new_family.dict(), headers=user_header_token
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
     db_family: Family = (
         test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
@@ -125,7 +125,7 @@ def test_update_family_404(client: TestClient, test_db: Session, user_header_tok
     response = client.put(
         "/api/v1/families", json=new_family.dict(), headers=user_header_token
     )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Family not updated: A.0.0.22"
 
@@ -143,7 +143,7 @@ def test_update_family_503(
     response = client.put(
         "/api/v1/families", json=new_family.dict(), headers=user_header_token
     )
-    assert response.status_code == 503
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
 
