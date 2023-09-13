@@ -28,7 +28,7 @@ def test_get_all_families(client: TestClient, test_db: Session, user_header_toke
     assert sdata[2] == EXPECTED_FAMILIES[2]
 
 
-def test_get_all_families_is_authed(client: TestClient, test_db: Session):
+def test_get_all_families_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.get(
         "/api/v1/families",
@@ -51,7 +51,7 @@ def test_get_family(client: TestClient, test_db: Session, user_header_token):
     assert data == EXPECTED_FAMILIES[0]
 
 
-def test_get_family_is_authed(client: TestClient, test_db: Session):
+def test_get_family_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.get(
         "/api/v1/families/A.0.0.1",
@@ -59,7 +59,9 @@ def test_get_family_is_authed(client: TestClient, test_db: Session):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_get_family_404(client: TestClient, test_db: Session, user_header_token):
+def test_get_family_when_not_found(
+    client: TestClient, test_db: Session, user_header_token
+):
     setup_db(test_db)
     response = client.get(
         "/api/v1/families/A.0.0.8",
@@ -70,7 +72,9 @@ def test_get_family_404(client: TestClient, test_db: Session, user_header_token)
     assert data["detail"] == "Family not found: A.0.0.8"
 
 
-def test_get_family_400(client: TestClient, test_db: Session, user_header_token):
+def test_get_family_when_invalid_id(
+    client: TestClient, test_db: Session, user_header_token
+):
     setup_db(test_db)
     response = client.get(
         "/api/v1/families/A008",
@@ -82,7 +86,7 @@ def test_get_family_400(client: TestClient, test_db: Session, user_header_token)
     assert data["detail"] == expected_msg
 
 
-def test_get_family_503(
+def test_get_family_when_db_error(
     client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     setup_db(test_db)

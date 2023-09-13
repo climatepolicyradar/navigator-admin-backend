@@ -32,7 +32,7 @@ def test_get_collection_uses_service_200(
     assert collection_service_mock.get.call_count == 1
 
 
-def test_get_collection_uses_service_404(
+def test_get_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     response = client.get("/api/v1/collections/missing", headers=user_header_token)
@@ -54,7 +54,7 @@ def test_search_collection_uses_service_200(
     assert collection_service_mock.search.call_count == 1
 
 
-def test_search_collection_uses_service_404(
+def test_search_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     response = client.get("/api/v1/collections/?q=empty", headers=user_header_token)
@@ -77,7 +77,7 @@ def test_update_collection_uses_service_200(
     assert collection_service_mock.update.call_count == 1
 
 
-def test_update_collection_uses_service_404(
+def test_update_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     new_data = create_collection_dto("missing").dict()
@@ -103,7 +103,7 @@ def test_create_collection_uses_service_200(
     assert collection_service_mock.create.call_count == 1
 
 
-def test_create_collection_uses_service_404(
+def test_create_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     new_data: CollectionDTO = create_collection_dto("fam1")
@@ -135,7 +135,7 @@ def test_delete_collection_fails_if_not_admin(
     assert collection_service_mock.delete.call_count == 0
 
 
-def test_delete_collection_uses_service_404(
+def test_delete_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, admin_user_header_token
 ):
     response = client.delete(

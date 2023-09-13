@@ -3,7 +3,7 @@ from typing import cast
 from passlib.context import CryptContext
 from sqlalchemy.exc import NoResultFound
 
-import app.db.session as db_session
+import app.clients.db.session as db_session
 from app.errors import AuthenticationError, RepositoryError
 from app.repository import app_user_repo
 import app.service.token as token_service

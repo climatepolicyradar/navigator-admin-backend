@@ -32,7 +32,7 @@ def test_get_family_uses_service_200(
     assert family_service_mock.get.call_count == 1
 
 
-def test_get_family_uses_service_404(
+def test_get_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
     response = client.get("/api/v1/families/missing", headers=user_header_token)
@@ -54,7 +54,7 @@ def test_search_family_uses_service_200(
     assert family_service_mock.search.call_count == 1
 
 
-def test_search_family_uses_service_404(
+def test_search_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
     response = client.get("/api/v1/families/?q=empty", headers=user_header_token)
@@ -75,7 +75,7 @@ def test_update_family_uses_service_200(
     assert family_service_mock.update.call_count == 1
 
 
-def test_update_family_uses_service_404(
+def test_update_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
     new_data = create_family_dto("missing").dict()
@@ -97,7 +97,7 @@ def test_create_family_uses_service_200(
     assert family_service_mock.create.call_count == 1
 
 
-def test_create_family_uses_service_404(
+def test_create_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
     new_data: FamilyDTO = create_family_dto("fam1")
@@ -127,7 +127,7 @@ def test_delete_family_fails_if_not_admin(
     assert family_service_mock.delete.call_count == 0
 
 
-def test_delete_family_uses_service_404(
+def test_delete_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, admin_user_header_token
 ):
     response = client.delete(

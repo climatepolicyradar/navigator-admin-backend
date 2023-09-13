@@ -4,12 +4,15 @@ import logging
 from typing import Optional, Tuple, cast
 
 from sqlalchemy.orm import Session
-from app.db.models.app.users import Organisation
-from app.db.models.law_policy.collection import CollectionFamily, CollectionOrganisation
-from app.db.models.law_policy.family import Family
+from app.clients.db.models.app.users import Organisation
+from app.clients.db.models.law_policy.collection import (
+    CollectionFamily,
+    CollectionOrganisation,
+)
+from app.clients.db.models.law_policy.family import Family
 from app.errors import RepositoryError
 from app.model.collection import CollectionDTO
-from app.db.models.law_policy import Collection
+from app.clients.db.models.law_policy import Collection
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Query
 

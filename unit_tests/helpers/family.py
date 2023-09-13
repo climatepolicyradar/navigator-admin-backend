@@ -1,5 +1,5 @@
 from typing import Optional
-from app.db.models.law_policy.family import FamilyCategory
+from app.clients.db.models.law_policy.family import FamilyCategory
 from app.model.family import FamilyDTO
 
 

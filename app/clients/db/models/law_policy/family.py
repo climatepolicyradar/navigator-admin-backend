@@ -6,9 +6,9 @@ import sqlalchemy as sa
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
-from app.db.models.app import Organisation
-from app.db.models.document import PhysicalDocument
-from app.db.session import Base
+from app.clients.db.models.app import Organisation
+from app.clients.db.models.document import PhysicalDocument
+from app.clients.db.session import Base
 from .geography import Geography
 
 

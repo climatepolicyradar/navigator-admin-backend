@@ -7,7 +7,7 @@ import logging
 from typing import Optional
 from app.errors import RepositoryError
 from app.model.family import FamilyDTO
-import app.db.session as db_session
+import app.clients.db.session as db_session
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 

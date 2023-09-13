@@ -21,7 +21,7 @@ def test_search_family(client: TestClient, test_db: Session, user_header_token):
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_family_is_authed(client: TestClient, test_db: Session):
+def test_search_family_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.get(
         "/api/v1/families/?q=orange",
@@ -29,7 +29,9 @@ def test_search_family_is_authed(client: TestClient, test_db: Session):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_search_family_404(client: TestClient, test_db: Session, user_header_token):
+def test_search_family_when_not_found(
+    client: TestClient, test_db: Session, user_header_token
+):
     setup_db(test_db)
     response = client.get(
         "/api/v1/families/?q=chicken",

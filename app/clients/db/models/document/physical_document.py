@@ -3,7 +3,7 @@ from typing import Sequence
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 
-from app.db.session import Base
+from app.clients.db.session import Base
 
 
 # TODO Our current process for updating languages in the database relies on all

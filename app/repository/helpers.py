@@ -5,7 +5,7 @@ from uuid import uuid4
 from slugify import slugify
 from sqlalchemy.orm import Session
 
-from app.db.models.law_policy.family import Slug
+from app.clients.db.models.law_policy.family import Slug
 
 
 def generate_slug(

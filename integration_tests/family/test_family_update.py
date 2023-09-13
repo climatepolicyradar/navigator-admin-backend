@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.db.models.law_policy.family import Family, FamilyCategory, Slug
-from app.db.models.law_policy.metadata import FamilyMetadata
+from app.clients.db.models.law_policy.family import Family, FamilyCategory, Slug
+from app.clients.db.models.law_policy.metadata import FamilyMetadata
 from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 from unit_tests.helpers.family import create_family_dto
 
@@ -41,7 +41,7 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
     assert str(db_slug[0].name).startswith("updated-title")
 
 
-def test_update_family_is_authed(client: TestClient, test_db: Session):
+def test_update_family_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.2",
@@ -114,7 +114,9 @@ def test_update_family_rollback(
     assert db_meta[0].value == {"size": 4, "color": "green"}
 
 
-def test_update_family_404(client: TestClient, test_db: Session, user_header_token):
+def test_update_family_when_not_found(
+    client: TestClient, test_db: Session, user_header_token
+):
     setup_db(test_db)
     new_family = create_family_dto(
         import_id="A.0.0.22",
@@ -130,7 +132,7 @@ def test_update_family_404(client: TestClient, test_db: Session, user_header_tok
     assert data["detail"] == "Family not updated: A.0.0.22"
 
 
-def test_update_family_503(
+def test_update_family_when_db_error(
     client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     setup_db(test_db)
@@ -148,7 +150,7 @@ def test_update_family_503(
     assert data["detail"] == "Bad Repo"
 
 
-def test_update_family__invalid_geo_400(
+def test_update_family__invalid_geo(
     client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     setup_db(test_db)
