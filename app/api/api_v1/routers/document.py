@@ -47,11 +47,17 @@ async def create_document(
         return document, None
 
     try:
-        upload_details = document_service.get_upload_details()
+        upload_details = document_service.get_upload_details(
+            upload_request.filename, upload_request.overwrite
+        )
+
+        upload_response = DocumentUploadResponse(
+            presigned_upload_url=upload_details[0], cdn_url=upload_details[1]
+        )
     except RepositoryError as e:
         _LOGGER.error(e.message)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
-    return document, upload_details
+    return document, upload_response

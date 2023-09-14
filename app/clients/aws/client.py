@@ -1,4 +1,5 @@
 import os
+from typing import Any
 import boto3
 import botocore.client
 
@@ -10,7 +11,7 @@ _AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 _AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 _SIGNATURE_VERSION = "s3v4"
 
-AWSClient = boto3.Session.client
+AWSClient = Any
 
 
 def _get_client_from_config(config: AWSConfig) -> AWSClient:
@@ -33,5 +34,4 @@ def get_s3_client() -> AWSClient:
         signature_version=_SIGNATURE_VERSION,
         region_name=_AWS_REGION,
     )
-
     return _get_client_from_config(config)
