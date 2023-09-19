@@ -16,6 +16,18 @@ There are three main layers to the application:
 Note, this split into responsibilities for separate entities, should the need arise to create a transaction (for example creating two separate entities atomically) - 
 then this is the responsibility of the service layer to manage the transaction.
 
+          Router
+             │
+             │
+             ▼
+          Service
+             │
+             │
+     ┌───────┴───────┐
+     │               │
+     ▼               ▼
+Repository ──────► Client
+                   (ext)
 ## Testing Strategy
 
 ### Unit tests

@@ -76,6 +76,7 @@ def all(db: Session) -> list[CollectionDTO]:
     """
     Returns all the collections.
 
+    :param db Session: the database connection
     :return Optional[CollectionResponse]: All of things
     """
     collections = _get_query(db).all()
@@ -92,6 +93,7 @@ def get(db: Session, import_id: str) -> Optional[CollectionDTO]:
     """
     Gets a single collection from the repository.
 
+    :param db Session: the database connection
     :param str import_id: The import_id of the collection
     :return Optional[CollectionResponse]: A single collection or nothing
     """
@@ -108,6 +110,7 @@ def search(db: Session, search_term: str) -> list[CollectionDTO]:
     """
     Gets a list of collections from the repository searching title and summary.
 
+    :param db Session: the database connection
     :param str search_term: Any search term to filter on title or summary
     :return Optional[list[CollectionResponse]]: A list of matches
     """
@@ -122,6 +125,7 @@ def update(db: Session, collection: CollectionDTO) -> bool:
     """
     Updates a single entry with the new values passed.
 
+    :param db Session: the database connection
     :param str import_id: The collection import id to change.
     :param CollectionDTO collection: The new values
     :return bool: True if new values were set otherwise false.
@@ -147,7 +151,7 @@ def update(db: Session, collection: CollectionDTO) -> bool:
         )
     )
     if result.rowcount == 0:  # type: ignore
-        msg = "Could not update collection fields: {collection}"
+        msg = f"Could not update collection fields: {collection}"
         _LOGGER.error(msg)
         raise RepositoryError(msg)
 
@@ -160,6 +164,7 @@ def create(
     """
     Creates a new collection.
 
+    :param db Session: the database connection
     :param CollectionDTO collection: the values for the new collection
     :param int org_id: a validated organisation id
     :return Optional[CollectionDTO]: the new collection created
@@ -181,6 +186,7 @@ def delete(db: Session, import_id: str) -> bool:
     """
     Deletes a single collection by the import id.
 
+    :param db Session: the database connection
     :param str import_id: The collection import id to delete.
     :return bool: True if deleted False if not.
     """
