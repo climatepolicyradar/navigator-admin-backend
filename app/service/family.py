@@ -6,7 +6,7 @@ This file hands off to the family repo, adding the dependency of the db (future)
 import logging
 from typing import Optional
 from app.errors import RepositoryError
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO, FamilyWriteDTO
 import app.clients.db.session as db_session
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -22,7 +22,7 @@ from app.repository import family_repo
 _LOGGER = logging.getLogger(__name__)
 
 
-def get(import_id: str) -> Optional[FamilyDTO]:
+def get(import_id: str) -> Optional[FamilyReadDTO]:
     """
     Gets a family given the import_id.
 
@@ -40,7 +40,7 @@ def get(import_id: str) -> Optional[FamilyDTO]:
         raise RepositoryError(str(e))
 
 
-def all() -> list[FamilyDTO]:
+def all() -> list[FamilyReadDTO]:
     """
     Gets the entire list of families from the repository.
 
@@ -50,7 +50,7 @@ def all() -> list[FamilyDTO]:
         return family_repo.all(db)
 
 
-def search(search_term: str) -> list[FamilyDTO]:
+def search(search_term: str) -> list[FamilyReadDTO]:
     """
     Searches the title and descriptions of all the Families for the search term.
 
@@ -74,7 +74,9 @@ def validate_import_id(import_id: str) -> None:
 
 
 @db_session.with_transaction(__name__)
-def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
+def update(
+    family: FamilyWriteDTO, db: Session = db_session.get_db()
+) -> Optional[FamilyReadDTO]:
     """
     Updates a single Family with the values passed.
 
@@ -95,7 +97,9 @@ def update(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
 
 
 @db_session.with_transaction(__name__)
-def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[FamilyDTO]:
+def create(
+    family: FamilyWriteDTO, db: Session = db_session.get_db()
+) -> Optional[FamilyReadDTO]:
     """
     Creates a new Family with the values passed.
 
@@ -110,7 +114,9 @@ def create(family: FamilyDTO, db: Session = db_session.get_db()) -> Optional[Fam
     org_id = organisation.get_id(db, family.organisation)
     metadata.validate(db, org_id, family.metadata)
 
-    return family_repo.create(db, family, geo_id, org_id)
+    if family_repo.create(db, family, geo_id, org_id):
+        db.commit()
+        return get(family.import_id)
 
 
 @db_session.with_transaction(__name__)

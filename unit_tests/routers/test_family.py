@@ -5,7 +5,7 @@ This uses a service mock and ensures each endpoint calls into the service.
 """
 from fastapi import status
 from fastapi.testclient import TestClient
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO
 
 from unit_tests.helpers.family import create_family_dto
 
@@ -100,7 +100,7 @@ def test_create_family_uses_service_200(
 def test_create_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
-    new_data: FamilyDTO = create_family_dto("fam1")
+    new_data: FamilyReadDTO = create_family_dto("fam1")
     new_data.import_id = "missing"
     response = client.post(
         "/api/v1/families", json=new_data.dict(), headers=user_header_token

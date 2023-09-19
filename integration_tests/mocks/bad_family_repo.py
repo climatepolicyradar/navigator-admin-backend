@@ -2,26 +2,26 @@ from typing import Optional
 from pytest import MonkeyPatch
 from app.errors import RepositoryError
 
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO
 
 
 def mock_get_all(_):
     raise RepositoryError("Bad Repo")
 
 
-def mock_get(_, import_id: str) -> Optional[FamilyDTO]:
+def mock_get(_, import_id: str) -> Optional[FamilyReadDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_search(_, q: str) -> list[FamilyDTO]:
+def mock_search(_, q: str) -> list[FamilyReadDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_update(_, data: FamilyDTO, __) -> Optional[FamilyDTO]:
+def mock_update(_, data: FamilyReadDTO, __) -> Optional[FamilyReadDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_create(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
+def mock_create(_, data: FamilyReadDTO, __, ___) -> Optional[FamilyReadDTO]:
     raise RepositoryError("Bad Repo")
 
 

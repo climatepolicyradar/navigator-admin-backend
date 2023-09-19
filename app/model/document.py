@@ -6,7 +6,7 @@ from app.clients.db.models.law_policy.family import (
 )
 
 
-class DocumentDTO(BaseModel):
+class DocumentReadDTO(BaseModel):
     """Representation of a Document."""
 
     # From FamilyDocument

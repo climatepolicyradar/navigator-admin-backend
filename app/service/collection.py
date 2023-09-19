@@ -7,7 +7,7 @@ services for validation etc.
 import logging
 from typing import Optional
 from app.errors import RepositoryError
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from app.repository import collection_repo
 import app.clients.db.session as db_session
 from sqlalchemy import exc
@@ -20,7 +20,7 @@ from app.service import organisation
 _LOGGER = logging.getLogger(__name__)
 
 
-def get(import_id: str) -> Optional[CollectionDTO]:
+def get(import_id: str) -> Optional[CollectionReadDTO]:
     """
     Gets a collection given the import_id.
 
@@ -38,7 +38,7 @@ def get(import_id: str) -> Optional[CollectionDTO]:
         raise RepositoryError(str(e))
 
 
-def all() -> list[CollectionDTO]:
+def all() -> list[CollectionReadDTO]:
     """
     Gets the entire list of collections from the repository.
 
@@ -48,7 +48,7 @@ def all() -> list[CollectionDTO]:
         return collection_repo.all(db)
 
 
-def search(search_term: str) -> list[CollectionDTO]:
+def search(search_term: str) -> list[CollectionReadDTO]:
     """
     Searches the title and descriptions of all the collections for the search term.
 
@@ -73,8 +73,8 @@ def validate_import_id(import_id: str) -> None:
 
 @db_session.with_transaction(__name__)
 def update(
-    collection: CollectionDTO, db: Session = db_session.get_db()
-) -> Optional[CollectionDTO]:
+    collection: CollectionWriteDTO, db: Session = db_session.get_db()
+) -> Optional[CollectionReadDTO]:
     """
     Updates a single collection with the values passed.
 
@@ -95,8 +95,8 @@ def update(
 
 @db_session.with_transaction(__name__)
 def create(
-    collection: CollectionDTO, db: Session = db_session.get_db()
-) -> Optional[CollectionDTO]:
+    collection: CollectionWriteDTO, db: Session = db_session.get_db()
+) -> Optional[CollectionReadDTO]:
     """
         Creates a new collection with the values passed.
 
@@ -109,7 +109,9 @@ def create(
     id.validate(collection.import_id)
     org_id = organisation.get_id(db, collection.organisation)
 
-    return collection_repo.create(db, collection, org_id)
+    if collection_repo.create(db, collection, org_id):
+        db.commit()
+        return get(collection.import_id)
 
 
 @db_session.with_transaction(__name__)

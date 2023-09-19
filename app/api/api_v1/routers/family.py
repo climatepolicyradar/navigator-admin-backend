@@ -10,7 +10,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO, FamilyWriteDTO
 import app.service.family as family_service
 
 families_router = r = APIRouter()
@@ -20,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 @r.get(
     "/families/{import_id}",
-    response_model=FamilyDTO,
+    response_model=FamilyReadDTO,
 )
 async def get_family(
     import_id: str,
-) -> FamilyDTO:
+) -> FamilyReadDTO:
     """
     Returns a specific family given the import id.
 
@@ -52,9 +52,9 @@ async def get_family(
 
 @r.get(
     "/families",
-    response_model=list[FamilyDTO],
+    response_model=list[FamilyReadDTO],
 )
-async def get_all_families() -> list[FamilyDTO]:
+async def get_all_families() -> list[FamilyReadDTO]:
     """
     Returns all families
 
@@ -65,9 +65,9 @@ async def get_all_families() -> list[FamilyDTO]:
 
 @r.get(
     "/families/",
-    response_model=list[FamilyDTO],
+    response_model=list[FamilyReadDTO],
 )
-async def search_family(q: str = "") -> list[FamilyDTO]:
+async def search_family(q: str = "") -> list[FamilyReadDTO]:
     """
     Searches for families matching the "q" URL parameter.
 
@@ -87,11 +87,11 @@ async def search_family(q: str = "") -> list[FamilyDTO]:
 
 @r.put(
     "/families",
-    response_model=FamilyDTO,
+    response_model=FamilyReadDTO,
 )
 async def update_family(
-    new_family: FamilyDTO,
-) -> FamilyDTO:
+    new_family: FamilyWriteDTO,
+) -> FamilyReadDTO:
     """
     Updates a specific family given the import id.
 
@@ -112,13 +112,14 @@ async def update_family(
         detail = f"Family not updated: {new_family.import_id}"
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
+    # TODO: Make a decision to return this here or a resource URL in the 201?
     return family
 
 
-@r.post("/families", response_model=FamilyDTO, status_code=status.HTTP_201_CREATED)
+@r.post("/families", response_model=FamilyReadDTO, status_code=status.HTTP_201_CREATED)
 async def create_family(
-    new_family: FamilyDTO,
-) -> FamilyDTO:
+    new_family: FamilyWriteDTO,
+) -> FamilyReadDTO:
     """
     Creates a specific family given the import id.
 

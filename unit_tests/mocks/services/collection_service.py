@@ -1,7 +1,7 @@
 from typing import Optional
 from pytest import MonkeyPatch
 
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from unit_tests.helpers.collection import create_collection_dto
 
 
@@ -9,27 +9,27 @@ def mock_get_all_collections():
     return [create_collection_dto("test")]
 
 
-def mock_get_collection(import_id: str) -> Optional[CollectionDTO]:
+def mock_get_collection(import_id: str) -> Optional[CollectionReadDTO]:
     if import_id == "missing":
         return None
     return create_collection_dto(import_id)
 
 
-def mock_search_collections(q: str) -> list[CollectionDTO]:
+def mock_search_collections(q: str) -> list[CollectionReadDTO]:
     if q == "empty":
         return []
     else:
         return [create_collection_dto("search1")]
 
 
-def mock_update_collection(data: CollectionDTO) -> Optional[CollectionDTO]:
+def mock_update_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
     if data.import_id != "missing":
-        return data
+        return create_collection_dto(data.import_id, data.title, data.description)
 
 
-def mock_create_collection(data: CollectionDTO) -> Optional[CollectionDTO]:
+def mock_create_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
     if data.import_id != "missing":
-        return data
+        return create_collection_dto(data.import_id, data.title, data.description)
 
 
 def mock_delete_collection(import_id: str) -> bool:

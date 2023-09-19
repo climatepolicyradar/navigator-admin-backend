@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 from sqlalchemy.exc import NoResultFound
 
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO
 
 
 def mock_rollback_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
@@ -10,13 +10,15 @@ def mock_rollback_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
     actual_create = family_repo.create
     actual_delete = family_repo.delete
 
-    def mock_update_family(db, data: FamilyDTO, geo_id: int) -> Optional[FamilyDTO]:
+    def mock_update_family(
+        db, data: FamilyReadDTO, geo_id: int
+    ) -> Optional[FamilyReadDTO]:
         actual_update(db, data, geo_id)
         raise NoResultFound()
 
     def mock_create_family(
-        db, data: FamilyDTO, geo_id: int, org_id: int
-    ) -> Optional[FamilyDTO]:
+        db, data: FamilyReadDTO, geo_id: int, org_id: int
+    ) -> Optional[FamilyReadDTO]:
         actual_create(db, data, geo_id, org_id)
         raise NoResultFound()
 

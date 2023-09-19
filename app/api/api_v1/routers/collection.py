@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 import app.service.collection as collection_service
 
 collections_router = r = APIRouter()
@@ -13,11 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 
 @r.get(
     "/collections/{import_id}",
-    response_model=CollectionDTO,
+    response_model=CollectionReadDTO,
 )
 async def get_collection(
     import_id: str,
-) -> CollectionDTO:
+) -> CollectionReadDTO:
     """
     Returns a specific collection given the import id.
 
@@ -45,9 +45,9 @@ async def get_collection(
 
 @r.get(
     "/collections",
-    response_model=list[CollectionDTO],
+    response_model=list[CollectionReadDTO],
 )
-async def get_all_collections() -> list[CollectionDTO]:
+async def get_all_collections() -> list[CollectionReadDTO]:
     """
     Returns all collections
 
@@ -63,9 +63,9 @@ async def get_all_collections() -> list[CollectionDTO]:
 
 @r.get(
     "/collections/",
-    response_model=list[CollectionDTO],
+    response_model=list[CollectionReadDTO],
 )
-async def search_collection(q: str = "") -> list[CollectionDTO]:
+async def search_collection(q: str = "") -> list[CollectionReadDTO]:
     """
     Searches for collections matching the "q" URL parameter.
 
@@ -91,11 +91,11 @@ async def search_collection(q: str = "") -> list[CollectionDTO]:
 
 @r.put(
     "/collections",
-    response_model=CollectionDTO,
+    response_model=CollectionReadDTO,
 )
 async def update_collection(
-    new_collection: CollectionDTO,
-) -> CollectionDTO:
+    new_collection: CollectionWriteDTO,
+) -> CollectionReadDTO:
     """
     Updates a specific collection given the import id.
 
@@ -120,11 +120,13 @@ async def update_collection(
 
 
 @r.post(
-    "/collections", response_model=CollectionDTO, status_code=status.HTTP_201_CREATED
+    "/collections",
+    response_model=CollectionWriteDTO,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_collection(
-    new_collection: CollectionDTO,
-) -> CollectionDTO:
+    new_collection: CollectionWriteDTO,
+) -> CollectionReadDTO:
     """
     Creates a specific collection given the import id.
 

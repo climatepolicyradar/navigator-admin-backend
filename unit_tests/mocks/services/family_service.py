@@ -1,7 +1,7 @@
 from typing import Optional
 from pytest import MonkeyPatch
 
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO, FamilyWriteDTO
 from unit_tests.helpers.family import create_family_dto
 
 
@@ -13,27 +13,43 @@ def mock_get_all_families():
     return [create_family_dto("test")]
 
 
-def mock_get_family(import_id: str) -> Optional[FamilyDTO]:
+def mock_get_family(import_id: str) -> Optional[FamilyReadDTO]:
     if import_id == "missing":
         return None
     return create_family_dto(import_id)
 
 
-def mock_search_families(q: str) -> list[FamilyDTO]:
+def mock_search_families(q: str) -> list[FamilyReadDTO]:
     if q == "empty":
         return []
     else:
         return [create_family_dto("search1")]
 
 
-def mock_update_family(data: FamilyDTO) -> Optional[FamilyDTO]:
+def mock_update_family(data: FamilyWriteDTO) -> Optional[FamilyReadDTO]:
     if data.import_id != "missing":
-        return data
+        return create_family_dto(
+            data.import_id,
+            data.title,
+            data.summary,
+            data.geography,
+            data.category,
+            data.metadata,
+            "slug",
+        )
 
 
-def mock_create_family(data: FamilyDTO) -> Optional[FamilyDTO]:
+def mock_create_family(data: FamilyWriteDTO) -> Optional[FamilyReadDTO]:
     if data.import_id != "missing":
-        return data
+        return create_family_dto(
+            data.import_id,
+            data.title,
+            data.summary,
+            data.geography,
+            data.category,
+            data.metadata,
+            "slug",
+        )
 
 
 def mock_delete_family(import_id: str) -> bool:

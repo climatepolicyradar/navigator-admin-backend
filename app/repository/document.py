@@ -10,7 +10,7 @@ from app.clients.db.models.law_policy.family import (
     Variant,
 )
 from app.errors import RepositoryError
-from app.model.document import DocumentDTO
+from app.model.document import DocumentReadDTO
 from app.clients.db.models.document.physical_document import (
     Language,
     LanguageSource,
@@ -41,9 +41,9 @@ def _get_query(db: Session) -> Query:
     )
 
 
-def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentDTO:
+def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
     fd, pd = doc_tuple
-    return DocumentDTO(
+    return DocumentReadDTO(
         import_id=cast(str, fd.import_id),
         family_import_id=cast(str, fd.family_import_id),
         variant_name=cast(Variant, fd.variant_name),
@@ -61,7 +61,7 @@ def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentDTO:
     )
 
 
-def _dto_to_family_document_dict(dto: DocumentDTO) -> dict:
+def _dto_to_family_document_dict(dto: DocumentReadDTO) -> dict:
     return {
         "family_import_id": dto.family_import_id,
         "physical_document_id": 0,
@@ -73,7 +73,7 @@ def _dto_to_family_document_dict(dto: DocumentDTO) -> dict:
     }
 
 
-def _document_tuple_from_dto(db: Session, dto: DocumentDTO) -> CreateObjects:
+def _document_tuple_from_dto(db: Session, dto: DocumentReadDTO) -> CreateObjects:
     slug = Slug(name="", document_import_id=0)
     language = PhysicalDocumentLanguage(
         language_id=db.query(Language.id)
@@ -97,7 +97,7 @@ def _document_tuple_from_dto(db: Session, dto: DocumentDTO) -> CreateObjects:
     return slug, language, docs
 
 
-def all(db: Session) -> list[DocumentDTO]:
+def all(db: Session) -> list[DocumentReadDTO]:
     """
     Returns all the documents.
 
@@ -114,7 +114,7 @@ def all(db: Session) -> list[DocumentDTO]:
     return result
 
 
-def get(db: Session, import_id: str) -> Optional[DocumentDTO]:
+def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     """
     Gets a single document from the repository.
 
@@ -131,7 +131,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentDTO]:
     return _document_to_dto(doc_tuple)
 
 
-def search(db: Session, search_term: str) -> list[DocumentDTO]:
+def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
     """
     Gets a list of documents from the repository searching title and summary.
 
@@ -146,7 +146,7 @@ def search(db: Session, search_term: str) -> list[DocumentDTO]:
     return [_document_to_dto(*d) for d in found]
 
 
-def update(db: Session, document: DocumentDTO) -> bool:
+def update(db: Session, document: DocumentReadDTO) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -185,7 +185,7 @@ def update(db: Session, document: DocumentDTO) -> bool:
     return True
 
 
-def create(db: Session, document: DocumentDTO) -> Optional[DocumentDTO]:
+def create(db: Session, document: DocumentReadDTO) -> Optional[DocumentReadDTO]:
     """
     Creates a new document.
 

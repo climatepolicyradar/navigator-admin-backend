@@ -13,7 +13,7 @@ from app.clients.db.models.law_policy.metadata import (
     MetadataOrganisation,
 )
 from app.errors import RepositoryError
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO, FamilyWriteDTO
 from app.clients.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
@@ -44,7 +44,7 @@ def _get_query(db: Session) -> Query:
 
 
 def _family_org_from_dto(
-    dto: FamilyDTO, geo_id: int, org_id: int
+    dto: FamilyWriteDTO, geo_id: int, org_id: int
 ) -> Tuple[Family, Organisation]:
     return (
         Family(
@@ -58,12 +58,12 @@ def _family_org_from_dto(
     )
 
 
-def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyDTO:
+def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyReadDTO:
     f = fam_geo_meta_org[0]
     geo_value = cast(str, fam_geo_meta_org[1].value)
     metadata = cast(dict, fam_geo_meta_org[2].value)
     org = cast(str, fam_geo_meta_org[3].name)
-    return FamilyDTO(
+    return FamilyReadDTO(
         import_id=str(f.import_id),
         title=str(f.title),
         summary=str(f.description),
@@ -103,7 +103,7 @@ def _update_intention(db, family, geo_id, original_family):
     return update_title, update_basics, update_metadata
 
 
-def all(db: Session) -> list[FamilyDTO]:
+def all(db: Session) -> list[FamilyReadDTO]:
     """
     Returns all the families.
 
@@ -119,7 +119,7 @@ def all(db: Session) -> list[FamilyDTO]:
     return result
 
 
-def get(db: Session, import_id: str) -> Optional[FamilyDTO]:
+def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     """
     Gets a single family from the repository.
 
@@ -135,7 +135,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyDTO]:
     return _family_to_dto(db, fam_geo_meta)
 
 
-def search(db: Session, search_term: str) -> list[FamilyDTO]:
+def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching title and summary.
 
@@ -149,7 +149,7 @@ def search(db: Session, search_term: str) -> list[FamilyDTO]:
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(db: Session, family: FamilyDTO, geo_id: int) -> bool:
+def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -224,16 +224,14 @@ def update(db: Session, family: FamilyDTO, geo_id: int) -> bool:
     return True
 
 
-def create(
-    db: Session, family: FamilyDTO, geo_id: int, org_id: int
-) -> Optional[FamilyDTO]:
+def create(db: Session, family: FamilyWriteDTO, geo_id: int, org_id: int) -> bool:
     """
     Creates a new family.
 
     :param FamilyDTO family: the values for the new family
     :param int geo_id: a validated geography id
     :param int org_id: a validated organisation id
-    :return Optional[FamilyDTO]: the new family created
+    :return bool: True if new Family was created otherwise False.
     """
     try:
         new_family, new_fam_org = _family_org_from_dto(family, geo_id, org_id)
@@ -241,7 +239,7 @@ def create(
         db.add(new_fam_org)
     except Exception as e:
         _LOGGER.error(e)
-        return
+        return False
 
     # Add a slug
     db.add(
@@ -268,7 +266,7 @@ def create(
             value=family.metadata,
         )
     )
-    return family
+    return True
 
 
 def delete(db: Session, import_id: str) -> bool:

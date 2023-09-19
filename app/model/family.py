@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from app.model.general import Json
 
 
-class FamilyDTO(BaseModel):
+class FamilyReadDTO(BaseModel):
     """A JSON representation of a family."""
 
     import_id: str
@@ -20,4 +20,16 @@ class FamilyDTO(BaseModel):
     last_updated_date: Optional[datetime]
     documents: list[str]
     collections: list[str]
+    organisation: str
+
+
+class FamilyWriteDTO(BaseModel):
+    """A JSON representation of a family for writing."""
+
+    import_id: str
+    title: str
+    summary: str
+    geography: str
+    category: str
+    metadata: Json
     organisation: str

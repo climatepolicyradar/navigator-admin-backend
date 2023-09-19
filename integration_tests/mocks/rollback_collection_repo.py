@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 from sqlalchemy.exc import NoResultFound
 
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO
 
 
 def mock_rollback_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
@@ -10,13 +10,15 @@ def mock_rollback_collection_repo(collection_repo, monkeypatch: MonkeyPatch, moc
     actual_create = collection_repo.create
     actual_delete = collection_repo.delete
 
-    def mock_update_collection(db, data: CollectionDTO) -> Optional[CollectionDTO]:
+    def mock_update_collection(
+        db, data: CollectionReadDTO
+    ) -> Optional[CollectionReadDTO]:
         actual_update(db, data)
         raise NoResultFound()
 
     def mock_create_collection(
-        db, data: CollectionDTO, org_id: int
-    ) -> Optional[CollectionDTO]:
+        db, data: CollectionReadDTO, org_id: int
+    ) -> Optional[CollectionReadDTO]:
         actual_create(db, data, org_id)
         raise NoResultFound()
 

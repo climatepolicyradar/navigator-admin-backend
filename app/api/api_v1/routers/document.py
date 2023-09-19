@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 from app.model.document import (
-    DocumentDTO,
+    DocumentReadDTO,
     DocumentUploadRequest,
     DocumentUploadResponse,
 )
@@ -16,10 +16,12 @@ document_router = r = APIRouter()
 _LOGGER = logging.getLogger(__name__)
 
 
-@r.post("/documents", response_model=DocumentDTO, status_code=status.HTTP_201_CREATED)
+@r.post(
+    "/documents", response_model=DocumentReadDTO, status_code=status.HTTP_201_CREATED
+)
 async def create_document(
-    new_document: DocumentDTO, upload_request: Optional[DocumentUploadRequest]
-) -> Tuple[DocumentDTO, Optional[DocumentUploadResponse]]:
+    new_document: DocumentReadDTO, upload_request: Optional[DocumentUploadRequest]
+) -> Tuple[DocumentReadDTO, Optional[DocumentUploadResponse]]:
     """
     Creates a specific document given the import id.
 

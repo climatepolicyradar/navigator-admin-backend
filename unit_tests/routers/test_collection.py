@@ -5,7 +5,7 @@ This uses a service mock and ensures each endpoint calls into the service.
 """
 from fastapi import status
 from fastapi.testclient import TestClient
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO
 
 from unit_tests.helpers.collection import create_collection_dto
 
@@ -106,7 +106,7 @@ def test_create_collection_uses_service_200(
 def test_create_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    new_data: CollectionDTO = create_collection_dto("fam1")
+    new_data: CollectionReadDTO = create_collection_dto("fam1")
     new_data.import_id = "missing"
     response = client.post(
         "/api/v1/collections", json=new_data.dict(), headers=user_header_token

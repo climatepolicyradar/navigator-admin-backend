@@ -1,6 +1,6 @@
 from typing import Optional
 from app.clients.db.models.law_policy.family import FamilyCategory
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO
 
 
 def create_family_dto(
@@ -8,13 +8,13 @@ def create_family_dto(
     title: str = "title",
     summary: str = "summary",
     geography: str = "CHN",
-    category: FamilyCategory = FamilyCategory.LEGISLATIVE,
+    category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     slug: str = "slug",
-) -> FamilyDTO:
+) -> FamilyReadDTO:
     if metadata is None:
         metadata = {}
-    return FamilyDTO(
+    return FamilyReadDTO(
         import_id=import_id,
         title=title,
         summary=summary,

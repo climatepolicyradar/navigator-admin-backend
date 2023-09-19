@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from sqlalchemy import exc
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO
 from unit_tests.helpers.collection import create_collection_dto
 
 
@@ -14,30 +14,29 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
         if collection_repo.throw_repository_error:
             raise exc.SQLAlchemyError("")
 
-    def mock_get_all(_) -> list[CollectionDTO]:
+    def mock_get_all(_) -> list[CollectionReadDTO]:
         return [
             create_collection_dto(import_id="id1"),
             create_collection_dto(import_id="id2"),
             create_collection_dto(import_id="id3"),
         ]
 
-    def mock_get(_, import_id: str) -> Optional[CollectionDTO]:
+    def mock_get(_, import_id: str) -> Optional[CollectionReadDTO]:
         return create_collection_dto(import_id=import_id)
 
-    def mock_search(_, q: str) -> list[CollectionDTO]:
+    def mock_search(_, q: str) -> list[CollectionReadDTO]:
         maybe_throw()
         if not collection_repo.return_empty:
             return [create_collection_dto("search1")]
         return []
 
-    def mock_update(_, data: CollectionDTO) -> bool:
+    def mock_update(_, data: CollectionReadDTO) -> bool:
         maybe_throw()
         return not collection_repo.return_empty
 
-    def mock_create(_, data: CollectionDTO, __) -> Optional[CollectionDTO]:
+    def mock_create(_, data: CollectionReadDTO, __) -> bool:
         maybe_throw()
-        if not collection_repo.return_empty:
-            return data
+        return not collection_repo.return_empty
 
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()

@@ -2,26 +2,26 @@ from typing import Optional
 from pytest import MonkeyPatch
 from app.errors import RepositoryError
 
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO
 
 
 def mock_get_all(_):
     raise RepositoryError("Bad Repo")
 
 
-def mock_get(_, import_id: str) -> Optional[CollectionDTO]:
+def mock_get(_, import_id: str) -> Optional[CollectionReadDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_search(_, q: str) -> list[CollectionDTO]:
+def mock_search(_, q: str) -> list[CollectionReadDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_update(_, data: CollectionDTO) -> Optional[CollectionDTO]:
+def mock_update(_, data: CollectionReadDTO) -> Optional[CollectionReadDTO]:
     raise RepositoryError("Bad Repo")
 
 
-def mock_create(_, data: CollectionDTO, __) -> Optional[CollectionDTO]:
+def mock_create(_, data: CollectionReadDTO, __) -> Optional[CollectionReadDTO]:
     raise RepositoryError("Bad Repo")
 
 

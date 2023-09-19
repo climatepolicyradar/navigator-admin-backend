@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from sqlalchemy import exc
-from app.model.family import FamilyDTO
+from app.model.family import FamilyReadDTO
 from unit_tests.helpers.family import create_family_dto
 
 
@@ -17,25 +17,24 @@ def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_all(_):
         return [create_family_dto("test")]
 
-    def mock_get(_, import_id: str) -> Optional[FamilyDTO]:
+    def mock_get(_, import_id: str) -> Optional[FamilyReadDTO]:
         maybe_throw()
         if not family_repo.return_empty:
             return create_family_dto(import_id)
 
-    def mock_search(_, q: str) -> list[FamilyDTO]:
+    def mock_search(_, q: str) -> list[FamilyReadDTO]:
         maybe_throw()
         if not family_repo.return_empty:
             return [create_family_dto("search1")]
         return []
 
-    def mock_update(_, data: FamilyDTO, __) -> bool:
+    def mock_update(_, data: FamilyReadDTO, __) -> bool:
         maybe_throw()
         return not family_repo.return_empty
 
-    def mock_create(_, data: FamilyDTO, __, ___) -> Optional[FamilyDTO]:
+    def mock_create(_, data: FamilyReadDTO, __, ___) -> bool:
         maybe_throw()
-        if not family_repo.return_empty:
-            return data
+        return not family_repo.return_empty
 
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()

@@ -11,7 +11,7 @@ from app.clients.db.models.law_policy.collection import (
 )
 from app.clients.db.models.law_policy.family import Family
 from app.errors import RepositoryError
-from app.model.collection import CollectionDTO
+from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from app.clients.db.models.law_policy import Collection
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Query
@@ -26,7 +26,7 @@ CollectionOrg = Tuple[Collection, Organisation]
 
 
 def _collection_org_from_dto(
-    dto: CollectionDTO, org_id: int
+    dto: CollectionWriteDTO, org_id: int
 ) -> Tuple[Collection, CollectionOrganisation]:
     return (
         Collection(
@@ -54,7 +54,7 @@ def _get_query(db: Session) -> Query:
     )
 
 
-def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionDTO:
+def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
     collection, org = co
     db_families = (
         db.query(Family.import_id)
@@ -63,7 +63,7 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionDTO:
         .all()
     )
     families = [cast(str, f[0]) for f in db_families]
-    return CollectionDTO(
+    return CollectionReadDTO(
         import_id=str(collection.import_id),
         title=str(collection.title),
         description=str(collection.description),
@@ -72,7 +72,7 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionDTO:
     )
 
 
-def all(db: Session) -> list[CollectionDTO]:
+def all(db: Session) -> list[CollectionReadDTO]:
     """
     Returns all the collections.
 
@@ -89,7 +89,7 @@ def all(db: Session) -> list[CollectionDTO]:
     return result
 
 
-def get(db: Session, import_id: str) -> Optional[CollectionDTO]:
+def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
     """
     Gets a single collection from the repository.
 
@@ -106,7 +106,7 @@ def get(db: Session, import_id: str) -> Optional[CollectionDTO]:
     return _collection_to_dto(db, collection_org)
 
 
-def search(db: Session, search_term: str) -> list[CollectionDTO]:
+def search(db: Session, search_term: str) -> list[CollectionReadDTO]:
     """
     Gets a list of collections from the repository searching title and summary.
 
@@ -121,7 +121,7 @@ def search(db: Session, search_term: str) -> list[CollectionDTO]:
     return [_collection_to_dto(db, f) for f in found]
 
 
-def update(db: Session, collection: CollectionDTO) -> bool:
+def update(db: Session, collection: CollectionWriteDTO) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -158,16 +158,14 @@ def update(db: Session, collection: CollectionDTO) -> bool:
     return True
 
 
-def create(
-    db: Session, collection: CollectionDTO, org_id: int
-) -> Optional[CollectionDTO]:
+def create(db: Session, collection: CollectionWriteDTO, org_id: int) -> bool:
     """
     Creates a new collection.
 
     :param db Session: the database connection
     :param CollectionDTO collection: the values for the new collection
     :param int org_id: a validated organisation id
-    :return Optional[CollectionDTO]: the new collection created
+    :return bool: True if new collection was created otherwise false.
     """
     try:
         new_collection, collection_organisation = _collection_org_from_dto(
@@ -177,9 +175,9 @@ def create(
         db.add(collection_organisation)
     except Exception as e:
         _LOGGER.error(e)
-        return
+        return False
 
-    return collection
+    return True
 
 
 def delete(db: Session, import_id: str) -> bool:
