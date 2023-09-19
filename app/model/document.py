@@ -3,9 +3,6 @@ from pydantic import BaseModel
 
 from app.clients.db.models.law_policy.family import (
     DocumentStatus,
-    FamilyDocumentRole,
-    FamilyDocumentType,
-    Variant,
 )
 
 
@@ -15,10 +12,10 @@ class DocumentDTO(BaseModel):
     # From FamilyDocument
     import_id: str
     family_import_id: str
-    variant_name: Variant
+    variant_name: str
     status: DocumentStatus
-    role: FamilyDocumentRole
-    type: FamilyDocumentType
+    role: str
+    type: str
     slug: str
     # From PhysicalDocument
     physical_id: int
