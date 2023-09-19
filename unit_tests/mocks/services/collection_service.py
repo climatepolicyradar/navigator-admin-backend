@@ -5,38 +5,33 @@ from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from unit_tests.helpers.collection import create_collection_dto
 
 
-def mock_get_all_collections():
-    return [create_collection_dto("test")]
-
-
-def mock_get_collection(import_id: str) -> Optional[CollectionReadDTO]:
-    if import_id == "missing":
-        return None
-    return create_collection_dto(import_id)
-
-
-def mock_search_collections(q: str) -> list[CollectionReadDTO]:
-    if q == "empty":
-        return []
-    else:
-        return [create_collection_dto("search1")]
-
-
-def mock_update_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
-    if data.import_id != "missing":
-        return create_collection_dto(data.import_id, data.title, data.description)
-
-
-def mock_create_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
-    if data.import_id != "missing":
-        return create_collection_dto(data.import_id, data.title, data.description)
-
-
-def mock_delete_collection(import_id: str) -> bool:
-    return import_id != "missing"
-
-
 def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker):
+    collection_service.missing = False
+
+    def mock_get_all_collections():
+        return [create_collection_dto("test")]
+
+    def mock_get_collection(import_id: str) -> Optional[CollectionReadDTO]:
+        if not collection_service.missing:
+            return create_collection_dto(import_id)
+
+    def mock_search_collections(q: str) -> list[CollectionReadDTO]:
+        if q == "empty":
+            return []
+        else:
+            return [create_collection_dto("search1")]
+
+    def mock_update_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
+        if not collection_service.missing:
+            return create_collection_dto(data.import_id, data.title, data.description)
+
+    def mock_create_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
+        if not collection_service.missing:
+            return create_collection_dto(data.import_id, data.title, data.description)
+
+    def mock_delete_collection(import_id: str) -> bool:
+        return not collection_service.missing
+
     monkeypatch.setattr(collection_service, "get", mock_get_collection)
     mocker.spy(collection_service, "get")
 

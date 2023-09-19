@@ -35,10 +35,11 @@ def test_get_collection_uses_service_200(
 def test_get_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    response = client.get("/api/v1/collections/missing", headers=user_header_token)
+    collection_service_mock.missing = True
+    response = client.get("/api/v1/collections/col1", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Collection not found: missing"
+    assert data["detail"] == "Collection not found: col1"
     assert collection_service_mock.get.call_count == 1
 
 
@@ -67,53 +68,54 @@ def test_search_collection_uses_service_when_not_found(
 def test_update_collection_uses_service_200(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    new_data = create_collection_dto("fam1").dict()
+    new_data = create_collection_dto("col1").dict()
     response = client.put(
         "/api/v1/collections", json=new_data, headers=user_header_token
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["import_id"] == "fam1"
+    assert data["import_id"] == "col1"
     assert collection_service_mock.update.call_count == 1
 
 
 def test_update_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    new_data = create_collection_dto("missing").dict()
+    collection_service_mock.missing = True
+    new_data = create_collection_dto("col1").dict()
     response = client.put(
         "/api/v1/collections", json=new_data, headers=user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Collection not updated: missing"
+    assert data["detail"] == "Collection not updated: col1"
     assert collection_service_mock.update.call_count == 1
 
 
 def test_create_collection_uses_service_200(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    new_data = create_collection_dto("fam1").dict()
+    new_data = create_collection_dto("col1").dict()
     response = client.post(
         "/api/v1/collections", json=new_data, headers=user_header_token
     )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
-    assert data["import_id"] == "fam1"
+    assert data["import_id"] == "col1"
     assert collection_service_mock.create.call_count == 1
 
 
 def test_create_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    new_data: CollectionReadDTO = create_collection_dto("fam1")
-    new_data.import_id = "missing"
+    collection_service_mock.missing = True
+    new_data: CollectionReadDTO = create_collection_dto("col1")
     response = client.post(
         "/api/v1/collections", json=new_data.dict(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Collection not created: missing"
+    assert data["detail"] == "Collection not created: col1"
     assert collection_service_mock.create.call_count == 1
 
 
@@ -121,7 +123,7 @@ def test_delete_collection_uses_service_200(
     client: TestClient, collection_service_mock, admin_user_header_token
 ):
     response = client.delete(
-        "/api/v1/collections/fam1", headers=admin_user_header_token
+        "/api/v1/collections/col1", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_200_OK
     assert collection_service_mock.delete.call_count == 1
@@ -130,7 +132,7 @@ def test_delete_collection_uses_service_200(
 def test_delete_collection_fails_if_not_admin(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    response = client.delete("/api/v1/collections/fam1", headers=user_header_token)
+    response = client.delete("/api/v1/collections/col1", headers=user_header_token)
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert collection_service_mock.delete.call_count == 0
 
@@ -138,10 +140,11 @@ def test_delete_collection_fails_if_not_admin(
 def test_delete_collection_uses_service_when_not_found(
     client: TestClient, collection_service_mock, admin_user_header_token
 ):
+    collection_service_mock.missing = True
     response = client.delete(
-        "/api/v1/collections/missing", headers=admin_user_header_token
+        "/api/v1/collections/col1", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Collection not deleted: missing"
+    assert data["detail"] == "Collection not deleted: col1"
     assert collection_service_mock.delete.call_count == 1

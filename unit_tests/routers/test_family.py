@@ -35,10 +35,11 @@ def test_get_family_uses_service_200(
 def test_get_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
-    response = client.get("/api/v1/families/missing", headers=user_header_token)
+    family_service_mock.missing = True
+    response = client.get("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Family not found: missing"
+    assert data["detail"] == "Family not found: fam1"
     assert family_service_mock.get.call_count == 1
 
 
@@ -78,11 +79,12 @@ def test_update_family_uses_service_200(
 def test_update_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
-    new_data = create_family_dto("missing").dict()
+    family_service_mock.missing = True
+    new_data = create_family_dto("fam1").dict()
     response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Family not updated: missing"
+    assert data["detail"] == "Family not updated: fam1"
     assert family_service_mock.update.call_count == 1
 
 
@@ -100,14 +102,14 @@ def test_create_family_uses_service_200(
 def test_create_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
+    family_service_mock.missing = True
     new_data: FamilyReadDTO = create_family_dto("fam1")
-    new_data.import_id = "missing"
     response = client.post(
         "/api/v1/families", json=new_data.dict(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Family not created: missing"
+    assert data["detail"] == "Family not created: fam1"
     assert family_service_mock.create.call_count == 1
 
 
@@ -130,10 +132,9 @@ def test_delete_family_fails_if_not_admin(
 def test_delete_family_uses_service_when_not_found(
     client: TestClient, family_service_mock, admin_user_header_token
 ):
-    response = client.delete(
-        "/api/v1/families/missing", headers=admin_user_header_token
-    )
+    family_service_mock.missing = True
+    response = client.delete("/api/v1/families/fam1", headers=admin_user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Family not deleted: missing"
+    assert data["detail"] == "Family not deleted: fam1"
     assert family_service_mock.delete.call_count == 1
