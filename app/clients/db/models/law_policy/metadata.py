@@ -1,9 +1,9 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-from app.db.models.app.users import Organisation
+from app.clients.db.models.app.users import Organisation
 from .family import Family
 
-from app.db.session import Base
+from app.clients.db.session import Base
 
 
 class MetadataTaxonomy(Base):

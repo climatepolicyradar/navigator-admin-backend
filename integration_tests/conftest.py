@@ -6,7 +6,7 @@ from app.config import SQLALCHEMY_DATABASE_URI
 from sqlalchemy_utils import create_database, database_exists, drop_database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import app.db.session as db_session
+import app.clients.db.session as db_session
 from app.main import app
 from integration_tests.mocks.bad_family_repo import mock_bad_family_repo
 from integration_tests.mocks.bad_collection_repo import mock_bad_collection_repo

@@ -1,14 +1,18 @@
 from typing import cast
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.db.models.app.users import Organisation
-from app.db.models.law_policy.collection import (
+from app.clients.db.models.app.users import Organisation
+from app.clients.db.models.law_policy.collection import (
     Collection,
     CollectionFamily,
     CollectionOrganisation,
 )
-from app.db.models.law_policy.family import Family, FamilyCategory, FamilyOrganisation
-from app.db.models.law_policy.metadata import (
+from app.clients.db.models.law_policy.family import (
+    Family,
+    FamilyCategory,
+    FamilyOrganisation,
+)
+from app.clients.db.models.law_policy.metadata import (
     FamilyMetadata,
     MetadataOrganisation,
     MetadataTaxonomy,

@@ -9,7 +9,7 @@ from typing import Optional
 from app.errors import RepositoryError
 from app.model.collection import CollectionDTO
 from app.repository import collection_repo
-import app.db.session as db_session
+import app.clients.db.session as db_session
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 

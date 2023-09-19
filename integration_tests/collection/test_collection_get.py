@@ -28,7 +28,9 @@ def test_get_all_collections(client: TestClient, test_db: Session, user_header_t
     assert sdata[1] == EXPECTED_COLLECTIONS[1]
 
 
-def test_get_all_collections_is_authed(client: TestClient, test_db: Session):
+def test_get_all_collections_when_not_authenticated(
+    client: TestClient, test_db: Session
+):
     setup_db(test_db)
     response = client.get(
         "/api/v1/collections",

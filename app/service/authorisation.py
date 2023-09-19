@@ -1,4 +1,4 @@
-from app.db.models.app.authorisation import (
+from app.clients.db.models.app.authorisation import (
     AUTH_TABLE,
     HTTP_MAP_TO_OPERATION,
     AuthAccess,

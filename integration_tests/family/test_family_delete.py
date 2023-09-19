@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.db.models.law_policy.family import Family
+from app.clients.db.models.law_policy.family import Family
 from integration_tests.setup_db import setup_db
 
 
@@ -15,7 +15,7 @@ def test_delete_family(client: TestClient, test_db: Session, admin_user_header_t
     assert n == 2
 
 
-def test_delete_family_is_authed(client: TestClient, test_db: Session):
+def test_delete_family_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.delete(
         "/api/v1/families/A.0.0.2",
@@ -35,7 +35,7 @@ def test_delete_family_rollback(
     assert n == 3
 
 
-def test_delete_family_404(
+def test_delete_family_when_not_found(
     client: TestClient, test_db: Session, admin_user_header_token
 ):
     setup_db(test_db)
@@ -47,7 +47,7 @@ def test_delete_family_404(
     assert data["detail"] == "Family not deleted: A.0.0.22"
 
 
-def test_delete_family_503(
+def test_delete_family_when_db_error(
     client: TestClient, test_db: Session, bad_family_repo, admin_user_header_token
 ):
     setup_db(test_db)

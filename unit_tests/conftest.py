@@ -5,9 +5,11 @@ Service mocks should only be used for router tests.
 """
 
 from typing import Dict
+from app.clients.aws.client import get_s3_client
 from app.main import app
 import pytest
 from fastapi.testclient import TestClient
+from moto import mock_s3
 
 import app.service.family as family_service
 import app.service.collection as collection_service
@@ -123,3 +125,33 @@ def admin_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("test@cpr.org", False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
+
+
+@pytest.fixture
+def s3_document_bucket_names() -> dict:
+    return {
+        "queue": "cpr-document-queue",
+    }
+
+
+@pytest.fixture
+def test_s3_client(s3_document_bucket_names):
+    bucket_names = s3_document_bucket_names.values()
+    region = "eu-west-2"
+
+    with mock_s3():
+        s3_client = get_s3_client()
+        for bucket in bucket_names:
+            s3_client.create_bucket(
+                Bucket=bucket,
+                CreateBucketConfiguration={"LocationConstraint": region},
+            )
+
+        # Test document in queue for action submission
+        s3_client.put_object(
+            Bucket=s3_document_bucket_names["queue"],
+            Key="test_document.pdf",
+            Body=bytes(1024),
+        )
+
+        yield s3_client

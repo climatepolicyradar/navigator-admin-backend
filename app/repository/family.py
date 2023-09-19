@@ -3,15 +3,18 @@
 import logging
 from typing import Optional, Tuple, cast
 
-from app.db.models.app.users import Organisation
-from app.db.models.law_policy.collection import CollectionFamily
+from app.clients.db.models.app.users import Organisation
+from app.clients.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
-from app.db.models.law_policy.family import FamilyOrganisation, Slug
-from app.db.models.law_policy.geography import Geography
-from app.db.models.law_policy.metadata import FamilyMetadata, MetadataOrganisation
+from app.clients.db.models.law_policy.family import FamilyOrganisation, Slug
+from app.clients.db.models.law_policy.geography import Geography
+from app.clients.db.models.law_policy.metadata import (
+    FamilyMetadata,
+    MetadataOrganisation,
+)
 from app.errors import RepositoryError
 from app.model.family import FamilyDTO
-from app.db.models.law_policy import Family
+from app.clients.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
 from sqlalchemy import or_, update as db_update, delete as db_delete
