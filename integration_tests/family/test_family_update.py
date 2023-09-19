@@ -56,7 +56,7 @@ def test_update_family_when_not_authenticated(client: TestClient, test_db: Sessi
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_update_family_idempotent_200(
+def test_update_family_idempotent_when_ok(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
