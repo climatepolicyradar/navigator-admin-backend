@@ -14,7 +14,9 @@ def test_create_collection(client: TestClient, test_db: Session, user_header_tok
         description="test test test",
     )
     response = client.post(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
@@ -37,7 +39,7 @@ def test_create_collection_when_not_authenticated(client: TestClient, test_db: S
     )
     response = client.post(
         "/api/v1/collections",
-        json=new_collection.dict(),
+        json=new_collection.model_dump(),
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -52,7 +54,9 @@ def test_create_collection_rollback(
         description="test test test",
     )
     response = client.post(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     actual_collection = (
@@ -74,7 +78,9 @@ def test_create_collection_when_db_error(
         description="test test test",
     )
     response = client.post(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
@@ -93,7 +99,9 @@ def test_create_collection_when_org_invalid(
     )
     new_collection.organisation = "chicken"
     response = client.post(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == 400
     data = response.json()

@@ -130,7 +130,7 @@ def update(db: Session, collection: CollectionWriteDTO) -> bool:
     :param CollectionDTO collection: The new values
     :return bool: True if new values were set otherwise false.
     """
-    new_values = collection.dict()
+    new_values = collection.model_dump()
 
     original_collection = (
         db.query(Collection)

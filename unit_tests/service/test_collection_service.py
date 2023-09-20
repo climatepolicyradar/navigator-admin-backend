@@ -1,7 +1,17 @@
 import pytest
 from app.errors import ValidationError
+from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 import app.service.collection as collection_service
 from unit_tests.mocks.repos.collection_repo import create_collection_dto
+
+
+def to_write_dto(dto: CollectionReadDTO) -> CollectionWriteDTO:
+    return CollectionWriteDTO(
+        import_id=dto.import_id,
+        title=dto.title,
+        description=dto.description,
+        organisation=dto.organisation,
+    )
 
 
 # --- GET
@@ -81,7 +91,7 @@ def test_update_collection(
     collection = collection_service.get("a.b.c.d")
     assert collection is not None
 
-    result = collection_service.update(collection)
+    result = collection_service.update(to_write_dto(collection))
     assert result is not None
     assert collection_repo_mock.update.call_count == 1
 
@@ -93,7 +103,7 @@ def test_update_collection_missing(
     assert collection is not None
     collection_repo_mock.return_empty = True
 
-    result = collection_service.update(collection)
+    result = collection_service.update(to_write_dto(collection))
     assert result is None
     assert collection_repo_mock.update.call_count == 1
 
@@ -106,7 +116,7 @@ def test_update_collection_raiseson_invalid_id(
     collection.import_id = "invalid"
 
     with pytest.raises(ValidationError) as e:
-        collection_service.update(collection)
+        collection_service.update(to_write_dto(collection))
     expected_msg = f"The import id {collection.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert collection_repo_mock.update.call_count == 0
@@ -120,7 +130,7 @@ def test_create_collection(
     organisation_repo_mock,
 ):
     new_collection = create_collection_dto(import_id="A.0.0.5")
-    collection = collection_service.create(new_collection)
+    collection = collection_service.create(to_write_dto(new_collection))
     assert collection is not None
     assert collection_repo_mock.create.call_count == 1
     # Ensure the collection service uses the org service to validate
@@ -133,7 +143,7 @@ def test_create_collection_repo_fails(
 ):
     new_collection = create_collection_dto(import_id="a.b.c.d")
     collection_repo_mock.return_empty = True
-    collection = collection_service.create(new_collection)
+    collection = collection_service.create(to_write_dto(new_collection))
     assert collection is None
     assert collection_repo_mock.create.call_count == 1
     # Ensure the collection service uses the geo service to validate
@@ -143,7 +153,7 @@ def test_create_collection_repo_fails(
 def test_create_collection_raiseson_invalid_id(collection_repo_mock):
     new_collection = create_collection_dto(import_id="invalid")
     with pytest.raises(ValidationError) as e:
-        collection_service.create(new_collection)
+        collection_service.create(to_write_dto(new_collection))
     expected_msg = f"The import id {new_collection.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert collection_repo_mock.create.call_count == 0

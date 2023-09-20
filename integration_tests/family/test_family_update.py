@@ -19,7 +19,7 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
         slug="new-slug",
     )
     response = client.put(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -52,7 +52,7 @@ def test_update_family_when_not_authenticated(client: TestClient, test_db: Sessi
         metadata={"color": "pink", "size": 0},
         slug="new-slug",
     )
-    response = client.put("/api/v1/families", json=new_family.dict())
+    response = client.put("/api/v1/families", json=new_family.model_dump())
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -90,7 +90,7 @@ def test_update_family_rollback(
         metadata={"color": "pink", "size": 0},
     )
     response = client.put(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
@@ -125,7 +125,7 @@ def test_update_family_when_not_found(
         metadata={"color": "pink", "size": 0},
     )
     response = client.put(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
@@ -143,7 +143,7 @@ def test_update_family_when_db_error(
         metadata={"color": "pink", "size": 0},
     )
     response = client.put(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
@@ -162,7 +162,7 @@ def test_update_family__invalid_geo(
     )
     new_family.geography = "UK"
     response = client.put(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == 400
     data = response.json()

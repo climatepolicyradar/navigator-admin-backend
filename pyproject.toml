@@ -6,9 +6,9 @@ authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = "^0.89.0"
+fastapi = "^0.103.0"
 fastapi-health = "^0.4.0"
-fastapi-pagination = { extras = ["sqlalchemy"], version = "^0.9.1" }
+fastapi-pagination = "^0.12.9"
 python-slugify = "^6.1.2"
 requests = "^2.28"
 requests-toolbelt = "^0.10.1"

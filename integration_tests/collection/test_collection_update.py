@@ -18,7 +18,9 @@ def test_update_collection(client: TestClient, test_db: Session, user_header_tok
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -49,7 +51,7 @@ def test_update_collection_when_not_authorised(client: TestClient, test_db: Sess
         title="Updated Title",
         description="just a test",
     )
-    response = client.put("/api/v1/collections", json=new_collection.dict())
+    response = client.put("/api/v1/collections", json=new_collection.model_dump())
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -84,7 +86,9 @@ def test_update_collection_rollback(
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
@@ -117,7 +121,9 @@ def test_update_collection_when_not_found(
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
@@ -134,7 +140,9 @@ def test_update_collection_when_db_error(
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections", json=new_collection.dict(), headers=user_header_token
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()

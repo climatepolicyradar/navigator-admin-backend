@@ -68,7 +68,7 @@ def test_search_collection_route_when_not_found(
 def test_update_collection_route_when_ok(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    new_data = create_collection_dto("col1").dict()
+    new_data = create_collection_dto("col1").model_dump()
     response = client.put(
         "/api/v1/collections", json=new_data, headers=user_header_token
     )
@@ -82,7 +82,7 @@ def test_update_collection_route_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     collection_service_mock.missing = True
-    new_data = create_collection_dto("col1").dict()
+    new_data = create_collection_dto("col1").model_dump()
     response = client.put(
         "/api/v1/collections", json=new_data, headers=user_header_token
     )
@@ -95,7 +95,7 @@ def test_update_collection_route_when_not_found(
 def test_create_collection_route_when_ok(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    new_data = create_collection_dto("col1").dict()
+    new_data = create_collection_dto("col1").model_dump()
     response = client.post(
         "/api/v1/collections", json=new_data, headers=user_header_token
     )
@@ -111,7 +111,7 @@ def test_create_collection_route_when_not_found(
     collection_service_mock.missing = True
     new_data: CollectionReadDTO = create_collection_dto("col1")
     response = client.post(
-        "/api/v1/collections", json=new_data.dict(), headers=user_header_token
+        "/api/v1/collections", json=new_data.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()

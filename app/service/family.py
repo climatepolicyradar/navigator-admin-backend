@@ -5,6 +5,8 @@ This file hands off to the family repo, adding the dependency of the db (future)
 """
 import logging
 from typing import Optional
+
+from pydantic import ConfigDict, validate_call
 from app.errors import RepositoryError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
 import app.clients.db.session as db_session
@@ -22,6 +24,7 @@ from app.repository import family_repo
 _LOGGER = logging.getLogger(__name__)
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def get(import_id: str) -> Optional[FamilyReadDTO]:
     """
     Gets a family given the import_id.
@@ -40,6 +43,7 @@ def get(import_id: str) -> Optional[FamilyReadDTO]:
         raise RepositoryError(str(e))
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def all() -> list[FamilyReadDTO]:
     """
     Gets the entire list of families from the repository.
@@ -50,6 +54,7 @@ def all() -> list[FamilyReadDTO]:
         return family_repo.all(db)
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(search_term: str) -> list[FamilyReadDTO]:
     """
     Searches the title and descriptions of all the Families for the search term.
@@ -61,6 +66,7 @@ def search(search_term: str) -> list[FamilyReadDTO]:
         return family_repo.search(db, search_term)
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def validate_import_id(import_id: str) -> None:
     """
     Validates the import id for a family.
@@ -74,6 +80,7 @@ def validate_import_id(import_id: str) -> None:
 
 
 @db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     family: FamilyWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[FamilyReadDTO]:
@@ -97,6 +104,7 @@ def update(
 
 
 @db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     family: FamilyWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[FamilyReadDTO]:
@@ -120,6 +128,7 @@ def create(
 
 
 @db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the Family specified by the import_id.

@@ -157,7 +157,7 @@ def update(db: Session, document: DocumentReadDTO) -> bool:
     """
     # TODO: Implement this:
 
-    # new_values = document.dict()
+    # new_values = document.model_dump()
 
     # original_document = (
     #     db.query(FamilyDocument)

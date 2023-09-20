@@ -68,7 +68,7 @@ def test_search_family_route_when_not_found(
 def test_update_family_route_when_ok(
     client: TestClient, family_service_mock, user_header_token
 ):
-    new_data = create_family_dto("fam1").dict()
+    new_data = create_family_dto("fam1").model_dump()
     response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -80,7 +80,7 @@ def test_update_family_route_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
     family_service_mock.missing = True
-    new_data = create_family_dto("fam1").dict()
+    new_data = create_family_dto("fam1").model_dump()
     response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
@@ -91,7 +91,7 @@ def test_update_family_route_when_not_found(
 def test_create_family_route_when_ok(
     client: TestClient, family_service_mock, user_header_token
 ):
-    new_data = create_family_dto("fam1").dict()
+    new_data = create_family_dto("fam1").model_dump()
     response = client.post("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
@@ -105,7 +105,7 @@ def test_create_family_route_when_not_found(
     family_service_mock.missing = True
     new_data: FamilyReadDTO = create_family_dto("fam1")
     response = client.post(
-        "/api/v1/families", json=new_data.dict(), headers=user_header_token
+        "/api/v1/families", json=new_data.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()

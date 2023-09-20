@@ -158,7 +158,7 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
     :param int geo_id: a validated geography id
     :return bool: True if new values were set otherwise false.
     """
-    new_values = family.dict()
+    new_values = family.model_dump()
 
     original_family = (
         db.query(Family).filter(Family.import_id == family.import_id).one_or_none()

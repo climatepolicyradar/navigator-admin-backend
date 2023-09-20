@@ -17,7 +17,7 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
         metadata=test_meta,
     )
     response = client.post(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
@@ -46,7 +46,7 @@ def test_create_family_when_not_authorised(client: TestClient, test_db: Session)
     )
     response = client.post(
         "/api/v1/families",
-        json=new_family.dict(),
+        json=new_family.model_dump(),
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -62,7 +62,7 @@ def test_create_family_rollback(
         metadata={"color": "pink", "size": 0},
     )
     response = client.post(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     actual_family = (
@@ -86,7 +86,7 @@ def test_create_family_when_db_error(
         metadata={"color": "pink", "size": 0},
     )
     response = client.post(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
@@ -105,7 +105,7 @@ def test_create_family_when_invalid_geo(
     )
     new_family.geography = "UK"
     response = client.post(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == 400
     data = response.json()
@@ -123,7 +123,7 @@ def test_create_family_when_invalid_category(
     )
     new_family.category = "invalid"
     response = client.post(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == 400
     data = response.json()
@@ -141,7 +141,7 @@ def test_create_family_when_invalid_org(
     )
     new_family.organisation = "chicken"
     response = client.post(
-        "/api/v1/families", json=new_family.dict(), headers=user_header_token
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == 400
     data = response.json()
