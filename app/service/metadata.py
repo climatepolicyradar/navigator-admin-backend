@@ -61,7 +61,7 @@ def _validate(schema: Json, data: Json) -> bool:
 
 
 def _validate_data(schema, data, valid_data_keys):
-    for key, value in data.items():
+    for key, values_list in data.items():
         # First check key is valid against those in the schema
         if key not in valid_data_keys:
             msg = f"Unknown '{key}' not in {valid_data_keys}"
@@ -70,6 +70,11 @@ def _validate_data(schema, data, valid_data_keys):
 
         key_schema = schema[key]
 
+        _validate_values(key_schema, key, values_list)
+
+
+def _validate_values(key_schema, key, values_list):
+    for value in values_list:
         allow_blanks = (
             True
             if KEY_ALLOW_BLANKS in key_schema and key_schema[KEY_ALLOW_BLANKS] is True
@@ -94,7 +99,9 @@ def _validate_data(schema, data, valid_data_keys):
 
         valid_values = key_schema[KEY_ALLOWED_VALUES]
         if value not in valid_values:
-            msg = f"Value '{value}' is not in the allowed list: {valid_values}"
+            msg = (
+                f"Value '{value}' for {key} is not in the allowed list: {valid_values}"
+            )
             _LOGGER.error(msg)
             raise ValidationError(msg)
 

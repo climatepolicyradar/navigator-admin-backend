@@ -27,7 +27,7 @@ EXPECTED_FAMILIES = [
         "geography": "South Asia",
         "category": "UNFCCC",
         "status": "Created",
-        "metadata": {"size": 3, "color": "red"},
+        "metadata": {"size": [3], "color": ["red"]},
         "organisation": "test_org",
         "slug": "",
         "events": [],
@@ -43,7 +43,7 @@ EXPECTED_FAMILIES = [
         "geography": "South Asia",
         "category": "UNFCCC",
         "status": "Created",
-        "metadata": {"size": 4, "color": "green"},
+        "metadata": {"size": [4], "color": ["green"]},
         "organisation": "test_org",
         "slug": "",
         "events": [],
@@ -59,7 +59,7 @@ EXPECTED_FAMILIES = [
         "geography": "South Asia",
         "category": "UNFCCC",
         "status": "Created",
-        "metadata": {"size": 100, "color": "blue"},
+        "metadata": {"size": [100], "color": ["blue"]},
         "organisation": "test_org",
         "slug": "",
         "events": [],
@@ -204,24 +204,11 @@ def _setup_family_data(test_db: Session, org_id: int):
     test_db.flush()
 
     # Now add the metadata onto the families
-    test_db.add(
-        FamilyMetadata(
-            family_import_id="A.0.0.1",
-            taxonomy_id=tax.id,
-            value={"color": "red", "size": 3},
+    for index in range(3):
+        test_db.add(
+            FamilyMetadata(
+                family_import_id=EXPECTED_FAMILIES[index]["import_id"],
+                taxonomy_id=tax.id,
+                value=EXPECTED_FAMILIES[index]["metadata"],
+            )
         )
-    )
-    test_db.add(
-        FamilyMetadata(
-            family_import_id="A.0.0.2",
-            taxonomy_id=tax.id,
-            value={"color": "green", "size": 4},
-        )
-    )
-    test_db.add(
-        FamilyMetadata(
-            family_import_id="A.0.0.3",
-            taxonomy_id=tax.id,
-            value={"color": "blue", "size": 100},
-        )
-    )

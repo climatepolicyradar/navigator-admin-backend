@@ -6,6 +6,8 @@ services for validation etc.
 """
 import logging
 from typing import Optional
+
+from pydantic import ConfigDict, validate_call
 from app.errors import RepositoryError
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from app.repository import collection_repo
@@ -20,6 +22,7 @@ from app.service import organisation
 _LOGGER = logging.getLogger(__name__)
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def get(import_id: str) -> Optional[CollectionReadDTO]:
     """
     Gets a collection given the import_id.
@@ -38,6 +41,7 @@ def get(import_id: str) -> Optional[CollectionReadDTO]:
         raise RepositoryError(str(e))
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def all() -> list[CollectionReadDTO]:
     """
     Gets the entire list of collections from the repository.
@@ -48,6 +52,7 @@ def all() -> list[CollectionReadDTO]:
         return collection_repo.all(db)
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(search_term: str) -> list[CollectionReadDTO]:
     """
     Searches the title and descriptions of all the collections for the search term.
@@ -59,6 +64,7 @@ def search(search_term: str) -> list[CollectionReadDTO]:
         return collection_repo.search(db, search_term)
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def validate_import_id(import_id: str) -> None:
     """
     Validates the import id for a collection.
@@ -72,6 +78,7 @@ def validate_import_id(import_id: str) -> None:
 
 
 @db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     collection: CollectionWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[CollectionReadDTO]:
@@ -94,6 +101,7 @@ def update(
 
 
 @db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     collection: CollectionWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[CollectionReadDTO]:
@@ -115,6 +123,7 @@ def create(
 
 
 @db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the collection specified by the import_id.

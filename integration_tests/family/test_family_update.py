@@ -15,7 +15,7 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
         slug="new-slug",
     )
     response = client.put(
@@ -49,7 +49,7 @@ def test_update_family_when_not_authenticated(client: TestClient, test_db: Sessi
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
         slug="new-slug",
     )
     response = client.put("/api/v1/families", json=new_family.model_dump())
@@ -87,7 +87,7 @@ def test_update_family_rollback(
         import_id="A.0.0.2",
         title="Updated Title",
         summary="just a test",
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -111,7 +111,7 @@ def test_update_family_rollback(
     )
     # Ensure no metadata was updated
     assert len(db_meta) == 1
-    assert db_meta[0].value == {"size": 4, "color": "green"}
+    assert db_meta[0].value == {"size": [4], "color": ["green"]}
 
 
 def test_update_family_when_not_found(
@@ -122,7 +122,7 @@ def test_update_family_when_not_found(
         import_id="A.0.0.22",
         title="Updated Title",
         summary="just a test",
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -140,7 +140,7 @@ def test_update_family_when_db_error(
         import_id="A.0.0.22",
         title="Updated Title",
         summary="just a test",
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -158,7 +158,7 @@ def test_update_family__invalid_geo(
         import_id="A.0.0.22",
         title="Updated Title",
         summary="just a test",
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
     )
     new_family.geography = "UK"
     response = client.put(
@@ -173,14 +173,14 @@ def test_update_family_metadata_if_changed(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    expected_meta = {"color": "pink", "size": 23}
+    expected_meta = {"color": ["pink"], "size": [23]}
     response = client.get(
         "/api/v1/families/A.0.0.2",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     family_data = response.json()
-    assert {"color": "green", "size": 4} == family_data["metadata"]
+    assert {"color": ["green"], "size": [4]} == family_data["metadata"]
     family_data["metadata"] = expected_meta
     response = client.put(
         "/api/v1/families", json=family_data, headers=user_header_token

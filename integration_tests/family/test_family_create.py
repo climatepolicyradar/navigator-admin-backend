@@ -9,7 +9,7 @@ from unit_tests.helpers.family import create_family_dto
 
 def test_create_family(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
-    test_meta = {"color": "blue", "size": 888}
+    test_meta = {"color": ["blue"], "size": [888]}
     new_family = create_family_dto(
         import_id="A.0.0.9",
         title="Title",
@@ -59,7 +59,7 @@ def test_create_family_rollback(
         import_id="A.0.0.9",
         title="Title",
         summary="test test test",
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -83,7 +83,7 @@ def test_create_family_when_db_error(
         import_id="A.0.0.9",
         title="Title",
         summary="test test test",
-        metadata={"color": "pink", "size": 0},
+        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
