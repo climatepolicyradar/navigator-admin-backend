@@ -71,7 +71,7 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
         category=str(f.family_category),
         status=str(f.family_status),
         metadata=metadata,
-        slug=str(f.slugs[0].name if len(f.slugs) > 0 else ""),
+        slug=str(f.slugs[-1].name if len(f.slugs) > 0 else ""),
         events=[str(e.import_id) for e in f.events],
         published_date=f.published_date,
         last_updated_date=f.last_updated_date,
@@ -281,6 +281,7 @@ def delete(db: Session, import_id: str) -> bool:
             FamilyOrganisation.family_import_id == import_id
         ),
         db_delete(FamilyMetadata).where(FamilyMetadata.family_import_id == import_id),
+        db_delete(Slug).where(Slug.family_import_id == import_id),
         db_delete(Family).where(Family.import_id == import_id),
     ]
     for c in commands:

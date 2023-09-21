@@ -6,6 +6,7 @@ from app.api.api_v1.routers import (
     auth_router,
     collections_router,
     document_router,
+    config_router,
 )
 from fastapi import FastAPI, Depends
 from fastapi_health import health
@@ -27,6 +28,13 @@ _ALLOW_ORIGIN_REGEX = (
 app = FastAPI(title="navigator-admin")
 setup_json_logging(app)
 add_pagination(app)
+
+app.include_router(
+    config_router,
+    prefix="/api/v1",
+    tags=["config"],
+    dependencies=[Depends(check_user_auth)],
+)
 
 app.include_router(
     families_router,

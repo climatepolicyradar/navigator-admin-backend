@@ -37,8 +37,8 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
     assert db_family.geography_id == 210
     assert db_family.family_category == "UNFCCC"
     db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
-    assert len(db_slug) == 1
-    assert str(db_slug[0].name).startswith("updated-title")
+    assert len(db_slug) == 2
+    assert str(db_slug[-1].name).startswith("updated-title")
 
 
 def test_update_family_when_not_authenticated(client: TestClient, test_db: Session):
@@ -101,8 +101,8 @@ def test_update_family_rollback(
     assert db_family.description != "just a test"
 
     db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
-    # Ensure no slug was created
-    assert len(db_slug) == 0
+    # Ensure no extra slug was created
+    assert len(db_slug) == 1
 
     db_meta = (
         test_db.query(FamilyMetadata)
