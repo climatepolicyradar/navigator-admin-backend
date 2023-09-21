@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, Request, status
+from app.model.config import ConfigReadDTO
 import app.service.config as config_service
 from app.errors import RepositoryError
 
@@ -9,8 +10,8 @@ config_router = r = APIRouter()
 _LOGGER = logging.getLogger(__file__)
 
 
-@r.get("/config")
-async def get_config(request: Request):
+@r.get("/config", response_model=ConfigReadDTO)
+async def get_config(request: Request) -> ConfigReadDTO:
     user = request.state.user
     _LOGGER.info(f"User {user.email} is getting config")
     try:
@@ -19,10 +20,4 @@ async def get_config(request: Request):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
-
-    if config is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Config not found"
-        )
-
     return config
