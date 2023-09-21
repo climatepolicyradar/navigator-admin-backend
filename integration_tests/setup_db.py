@@ -11,6 +11,7 @@ from app.clients.db.models.law_policy.family import (
     Family,
     FamilyCategory,
     FamilyOrganisation,
+    Slug,
 )
 from app.clients.db.models.law_policy.metadata import (
     FamilyMetadata,
@@ -18,6 +19,7 @@ from app.clients.db.models.law_policy.metadata import (
     MetadataTaxonomy,
 )
 
+# TODO: Change this to use the service.family.create - so we don't miss anything here
 
 EXPECTED_FAMILIES = [
     {
@@ -29,7 +31,7 @@ EXPECTED_FAMILIES = [
         "status": "Created",
         "metadata": {"size": [3], "color": ["red"]},
         "organisation": "test_org",
-        "slug": "",
+        "slug": "Slug1",
         "events": [],
         "published_date": None,
         "last_updated_date": None,
@@ -45,7 +47,7 @@ EXPECTED_FAMILIES = [
         "status": "Created",
         "metadata": {"size": [4], "color": ["green"]},
         "organisation": "test_org",
-        "slug": "",
+        "slug": "Slug2",
         "events": [],
         "published_date": None,
         "last_updated_date": None,
@@ -61,7 +63,7 @@ EXPECTED_FAMILIES = [
         "status": "Created",
         "metadata": {"size": [100], "color": ["blue"]},
         "organisation": "test_org",
-        "slug": "",
+        "slug": "Slug3",
         "events": [],
         "published_date": None,
         "last_updated_date": None,
@@ -210,5 +212,11 @@ def _setup_family_data(test_db: Session, org_id: int):
                 family_import_id=EXPECTED_FAMILIES[index]["import_id"],
                 taxonomy_id=tax.id,
                 value=EXPECTED_FAMILIES[index]["metadata"],
+            )
+        )
+        test_db.add(
+            Slug(
+                name=f"Slug{index+1}",
+                family_import_id=EXPECTED_FAMILIES[index]["import_id"],
             )
         )

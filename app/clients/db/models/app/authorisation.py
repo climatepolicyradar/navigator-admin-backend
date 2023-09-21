@@ -31,6 +31,7 @@ class AuthEntity(str, enum.Enum):
 
     FAMILY = "FAMILIES"
     COLLECTION = "COLLECTIONS"
+    CONFIG = "CONFIG"
 
 
 class AuthAccess(str, enum.Enum):
@@ -57,5 +58,8 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.ADMIN,
+    },
+    AuthEntity.CONFIG: {
+        AuthOperation.READ: AuthAccess.USER,
     },
 }

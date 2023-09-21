@@ -13,6 +13,9 @@ _LOGGER = logging.getLogger(__file__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/tokens")
 
+# TODO: I don't really like this - we should use maybe https://pypi.org/project/fastapi_auth_middleware/
+# PDCT-410
+
 
 def check_user_auth(request: Request, token: str = Depends(oauth2_scheme)) -> None:
     """
@@ -34,6 +37,8 @@ def check_user_auth(request: Request, token: str = Depends(oauth2_scheme)) -> No
             detail=e.message,
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    request.state.user = user
 
 
 @r.post("/tokens")

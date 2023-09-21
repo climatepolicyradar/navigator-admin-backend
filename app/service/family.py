@@ -139,4 +139,9 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
-    return family_repo.delete(db, import_id)
+    try:
+        return family_repo.delete(db, import_id)
+    except exc.SQLAlchemyError:
+        msg = f"Unable to delete family {import_id}"
+        _LOGGER.exception(msg)
+        raise RepositoryError(msg)
