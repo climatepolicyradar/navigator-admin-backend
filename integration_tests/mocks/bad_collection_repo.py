@@ -4,8 +4,8 @@ from app.errors import RepositoryError
 
 from app.model.collection import CollectionReadDTO
 
-def mock_bad_collection_repo(repo, monkeypatch: MonkeyPatch, mocker):
 
+def mock_bad_collection_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_all(_):
         raise RepositoryError("Bad Repo")
 

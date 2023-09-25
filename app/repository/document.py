@@ -31,13 +31,15 @@ from app.repository.helpers import generate_slug
 _LOGGER = logging.getLogger(__name__)
 
 DocumentTuple = Tuple[FamilyDocument, PhysicalDocument, Slug]
-CreateObjects = Tuple[Slug, PhysicalDocumentLanguage, DocumentTuple]
+CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
 
 
 def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of the query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
+
+    # FIXME: TODO: will this work with multiple slugs????
     return (
         db.query(FamilyDocument, PhysicalDocument, Slug)
         .filter(FamilyDocument.physical_document_id == PhysicalDocument.id)
@@ -78,7 +80,6 @@ def _dto_to_family_document_dict(dto: DocumentReadDTO) -> dict:
 
 
 def _document_tuple_from_dto(db: Session, dto: DocumentReadDTO) -> CreateObjects:
-    slug = Slug(name="", family_document_import_id=0)
     language = PhysicalDocumentLanguage(
         language_id=db.query(Language.id)
         .filter(Language.name == dto.user_language_name)
@@ -87,18 +88,16 @@ def _document_tuple_from_dto(db: Session, dto: DocumentReadDTO) -> CreateObjects
         source=LanguageSource.USER,
         visible=True,
     )
-    docs = (
-        FamilyDocument(**_dto_to_family_document_dict(dto)),
-        PhysicalDocument(
-            id=None,
-            title=dto.title,
-            md5_sum=dto.md5_sum,
-            cdn_object=dto.cdn_object,
-            source_url=dto.source_url,
-            content_type=dto.content_type,
-        ),
+    fam_doc = FamilyDocument(**_dto_to_family_document_dict(dto))
+    phys_doc = PhysicalDocument(
+        id=None,
+        title=dto.title,
+        md5_sum=dto.md5_sum,
+        cdn_object=dto.cdn_object,
+        source_url=dto.source_url,
+        content_type=dto.content_type,
     )
-    return slug, language, docs
+    return language, fam_doc, phys_doc
 
 
 def all(db: Session) -> list[DocumentReadDTO]:
@@ -199,8 +198,7 @@ def create(db: Session, document: DocumentReadDTO) -> Optional[DocumentReadDTO]:
     :return Optional[DocumentDTO]: the new document created
     """
     try:
-        slug, language, doc_tuple = _document_tuple_from_dto(db, document)
-        fd, pd = doc_tuple
+        language, fd, pd = _document_tuple_from_dto(db, document)
 
         db.add(pd)
         db.flush()
@@ -215,10 +213,12 @@ def create(db: Session, document: DocumentReadDTO) -> Optional[DocumentReadDTO]:
         db.flush()
 
         # Finally the slug
-        slug.family_document_import_id = fd.import_id
-        slug.name = generate_slug(db, document.title)
-
-        db.add(slug)
+        db.add(
+            Slug(
+                family_document_import_id=fd.import_id,
+                name=generate_slug(db, document.title),
+            )
+        )
     except Exception as e:
         _LOGGER.exception("Error when creating document!")
         raise RepositoryError(str(e))

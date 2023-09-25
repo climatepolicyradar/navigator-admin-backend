@@ -4,8 +4,8 @@ from app.errors import RepositoryError
 
 from app.model.document import DocumentReadDTO
 
-def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
 
+def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_all(_):
         raise RepositoryError("Bad Repo")
 

@@ -23,7 +23,10 @@ def create_document_dto(
         user_language_name="Ghotuo",
     )
 
+
 def create_document_write_dto(
     import_id: str, family_import_id="test.family.1.0", title: str = "title"
 ) -> DocumentWriteDTO:
-    return cast(DocumentWriteDTO, create_document_dto(import_id, family_import_id, title))
+    return cast(
+        DocumentWriteDTO, create_document_dto(import_id, family_import_id, title)
+    )

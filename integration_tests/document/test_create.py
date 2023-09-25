@@ -5,7 +5,7 @@ from app.clients.db.models.law_policy import FamilyDocument
 from app.clients.db.models.document import PhysicalDocument
 from app.clients.db.models.law_policy.family import Slug
 from integration_tests.setup_db import setup_db
-from unit_tests.helpers.document import create_document_write_dto 
+from unit_tests.helpers.document import create_document_write_dto
 
 
 def test_create_document(client: TestClient, test_db: Session, user_header_token):
@@ -25,17 +25,25 @@ def test_create_document(client: TestClient, test_db: Session, user_header_token
     assert data["title"] == "Title"
 
     actual_fd = (
-        test_db.query(FamilyDocument).filter(FamilyDocument.import_id == "D.0.0.9").one()
+        test_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "D.0.0.9")
+        .one()
     )
     assert actual_fd is not None
-    
+
     actual_pd = (
-        test_db.query(PhysicalDocument).filter(PhysicalDocument.id == actual_fd.physical_document_id).one()
+        test_db.query(PhysicalDocument)
+        .filter(PhysicalDocument.id == actual_fd.physical_document_id)
+        .one()
     )
     assert actual_pd is not None
     assert actual_pd.title == "Title"
 
-    slug = test_db.query(Slug).filter(Slug.family_document_import_id == actual_fd.import_id).one()
+    slug = (
+        test_db.query(Slug)
+        .filter(Slug.family_document_import_id == actual_fd.import_id)
+        .one()
+    )
     assert len(slug.name) == len("title") + 1 + 4
     assert slug.name.startswith("title")
 
