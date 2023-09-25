@@ -25,10 +25,12 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy import or_, update as db_update
 from sqlalchemy_utils import escape_like
 
+from app.repository.helpers import generate_slug
+
 
 _LOGGER = logging.getLogger(__name__)
 
-DocumentTuple = Tuple[FamilyDocument, PhysicalDocument]
+DocumentTuple = Tuple[FamilyDocument, PhysicalDocument, Slug]
 CreateObjects = Tuple[Slug, PhysicalDocumentLanguage, DocumentTuple]
 
 
@@ -36,13 +38,15 @@ def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of the query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
-    return db.query(FamilyDocument, PhysicalDocument).filter(
-        FamilyDocument.physical_document_id == PhysicalDocument.id,
+    return (
+        db.query(FamilyDocument, PhysicalDocument, Slug)
+        .filter(FamilyDocument.physical_document_id == PhysicalDocument.id)
+        .filter(Slug.family_document_import_id == FamilyDocument.import_id)
     )
 
 
 def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
-    fd, pd = doc_tuple
+    fd, pd, slug = doc_tuple
     return DocumentReadDTO(
         import_id=cast(str, fd.import_id),
         family_import_id=cast(str, fd.family_import_id),
@@ -50,7 +54,7 @@ def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
         status=cast(DocumentStatus, fd.document_status),
         role=cast(FamilyDocumentRole, fd.document_role),
         type=cast(FamilyDocumentType, fd.document_type),
-        slug=cast(str, fd.slugs[-1]),
+        slug=cast(str, slug.name),
         physical_id=cast(int, pd.id),
         title=cast(str, pd.title),
         md5_sum=cast(str, pd.md5_sum),
@@ -74,19 +78,19 @@ def _dto_to_family_document_dict(dto: DocumentReadDTO) -> dict:
 
 
 def _document_tuple_from_dto(db: Session, dto: DocumentReadDTO) -> CreateObjects:
-    slug = Slug(name="", document_import_id=0)
+    slug = Slug(name="", family_document_import_id=0)
     language = PhysicalDocumentLanguage(
         language_id=db.query(Language.id)
         .filter(Language.name == dto.user_language_name)
         .scalar(),
-        document_id=0,
+        document_id=None,
         source=LanguageSource.USER,
         visible=True,
     )
     docs = (
         FamilyDocument(**_dto_to_family_document_dict(dto)),
         PhysicalDocument(
-            id=0,
+            id=None,
             title=dto.title,
             md5_sum=dto.md5_sum,
             cdn_object=dto.cdn_object,
@@ -204,7 +208,7 @@ def create(db: Session, document: DocumentReadDTO) -> Optional[DocumentReadDTO]:
         # Update the FamilyDocument with the new PhysicalDocument id
         fd.physical_document_id = pd.id
         # Update the language link with the new PhysicalDocument id
-        language.physical_document_id = pd.id
+        language.document_id = pd.id
 
         db.add(fd)
         db.add(language)
@@ -212,10 +216,12 @@ def create(db: Session, document: DocumentReadDTO) -> Optional[DocumentReadDTO]:
 
         # Finally the slug
         slug.family_document_import_id = fd.import_id
+        slug.name = generate_slug(db, document.title)
+
         db.add(slug)
     except Exception as e:
-        _LOGGER.error(e)
-        return
+        _LOGGER.exception("Error when creating document!")
+        raise RepositoryError(str(e))
 
     return document
 
