@@ -132,8 +132,6 @@ def document_service_mock(monkeypatch, mocker):
     yield document_service
 
 
-
-
 @pytest.fixture
 def config_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""

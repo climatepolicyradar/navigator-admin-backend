@@ -13,11 +13,11 @@ def create_document_dto(
         role="role",
         type="type",
         slug="slug",
-        physical_id=1, 
+        physical_id=1,
         title=title,
         md5_sum="md5",
         cdn_object="cdn",
         source_url="source",
         content_type="content",
-        user_language_name="lang"
+        user_language_name="lang",
     )

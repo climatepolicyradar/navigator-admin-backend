@@ -27,7 +27,6 @@ def test_document_service_get_upload_details(test_s3_client):
     assert result[1] == "https://cdn.climatepolicyradar.org/path/file.ext"
 
 
-
 # --- GET
 
 
@@ -174,4 +173,3 @@ def test_create_raises_when_invalid_family_id(document_repo_mock):
     expected_msg = f"The import id {new_document.family_import_id} is invalid!"
     assert e.value.message == expected_msg
     assert document_repo_mock.create.call_count == 0
-

@@ -200,4 +200,3 @@ async def delete_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Document not deleted: {import_id}",
         )
-
