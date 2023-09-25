@@ -139,22 +139,24 @@ def test_update_raises_when_invalid_id(
 
 
 def test_create(
-    document_repo_mock,
+    document_repo_mock, family_repo_mock
 ):
     new_document = create_dto(import_id="A.0.0.5")
     document = doc_service.create(_to_write_dto(new_document))
     assert document is not None
     assert document_repo_mock.create.call_count == 1
+    assert family_repo_mock.get.call_count == 1
 
 
 def test_create_when_db_fails(
-    document_repo_mock,
+    document_repo_mock, family_repo_mock
 ):
     new_document = create_dto(import_id="a.b.c.d")
     document_repo_mock.return_empty = True
     document = doc_service.create(_to_write_dto(new_document))
     assert document is None
     assert document_repo_mock.create.call_count == 1
+    assert family_repo_mock.get.call_count == 1
 
 
 def test_create_raises_when_invalid_id(document_repo_mock):
