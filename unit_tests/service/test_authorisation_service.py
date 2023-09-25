@@ -13,7 +13,7 @@ def test_password_hash_matches():
     assert auth_service.verify_password(PLAIN_PASSWORD, HASH_PASSWORD) is True
 
 
-def test_auth_user_raises_when_no_user(
+def test_raises_when_user_not_found(
     app_user_repo_mock,
 ):
     app_user_repo_mock.error = True
@@ -24,7 +24,7 @@ def test_auth_user_raises_when_no_user(
     assert app_user_repo_mock.get_user_by_email.call_count == 1
 
 
-def test_auth_user_raises_when_no_match(
+def test_raises_when_incorrect_password(
     app_user_repo_mock,
 ):
     with pytest.raises(AuthenticationError) as e:
@@ -34,7 +34,7 @@ def test_auth_user_raises_when_no_match(
     assert app_user_repo_mock.get_user_by_email.call_count == 1
 
 
-def test_auth_user_raises_when_no_password(
+def test_raises_when_no_password(
     app_user_repo_mock,
 ):
     with pytest.raises(AuthenticationError) as e:
@@ -44,7 +44,7 @@ def test_auth_user_raises_when_no_password(
     assert app_user_repo_mock.get_user_by_email.call_count == 1
 
 
-def test_auth_user_can_auth(
+def test_can_auth(
     app_user_repo_mock,
 ):
     token = auth_service.authenticate_user(VALID_USERNAME, PLAIN_PASSWORD)

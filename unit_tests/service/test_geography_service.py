@@ -3,7 +3,7 @@ from app.errors import ValidationError
 import app.service.geography as geography_service
 
 
-def test_geo_service_validate_raiseson_invalid_value(
+def test_geo_service_validate_raises_when_invalid(
     organisation_repo_mock,
     geography_repo_mock,
 ):

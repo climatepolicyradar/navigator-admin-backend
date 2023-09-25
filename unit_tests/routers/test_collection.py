@@ -10,7 +10,7 @@ from app.model.collection import CollectionReadDTO
 from unit_tests.helpers.collection import create_collection_dto
 
 
-def test_get_all_collections_route_when_ok(
+def test_get_all_when_ok(
     client: TestClient, collection_service_mock, user_header_token
 ):
     response = client.get("/api/v1/collections", headers=user_header_token)
@@ -22,7 +22,7 @@ def test_get_all_collections_route_when_ok(
     assert collection_service_mock.all.call_count == 1
 
 
-def test_get_collection_route_when_ok(
+def test_get_when_ok(
     client: TestClient, collection_service_mock, user_header_token
 ):
     response = client.get("/api/v1/collections/import_id", headers=user_header_token)
@@ -32,7 +32,7 @@ def test_get_collection_route_when_ok(
     assert collection_service_mock.get.call_count == 1
 
 
-def test_get_collection_route_when_not_found(
+def test_get_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     collection_service_mock.missing = True
@@ -43,7 +43,7 @@ def test_get_collection_route_when_not_found(
     assert collection_service_mock.get.call_count == 1
 
 
-def test_search_collection_route_when_ok(
+def test_search_when_ok(
     client: TestClient, collection_service_mock, user_header_token
 ):
     response = client.get("/api/v1/collections/?q=anything", headers=user_header_token)
@@ -55,17 +55,18 @@ def test_search_collection_route_when_ok(
     assert collection_service_mock.search.call_count == 1
 
 
-def test_search_collection_route_when_not_found(
+def test_search_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
-    response = client.get("/api/v1/collections/?q=empty", headers=user_header_token)
+    collection_service_mock.missing = True
+    response = client.get("/api/v1/collections/?q=stuff", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Collections not found for term: empty"
+    assert data["detail"] == "Collections not found for term: stuff"
     assert collection_service_mock.search.call_count == 1
 
 
-def test_update_collection_route_when_ok(
+def test_update_when_ok(
     client: TestClient, collection_service_mock, user_header_token
 ):
     new_data = create_collection_dto("col1").model_dump()
@@ -78,7 +79,7 @@ def test_update_collection_route_when_ok(
     assert collection_service_mock.update.call_count == 1
 
 
-def test_update_collection_route_when_not_found(
+def test_update_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     collection_service_mock.missing = True
@@ -92,7 +93,7 @@ def test_update_collection_route_when_not_found(
     assert collection_service_mock.update.call_count == 1
 
 
-def test_create_collection_route_when_ok(
+def test_create_when_ok(
     client: TestClient, collection_service_mock, user_header_token
 ):
     new_data = create_collection_dto("col1").model_dump()
@@ -105,7 +106,7 @@ def test_create_collection_route_when_ok(
     assert collection_service_mock.create.call_count == 1
 
 
-def test_create_collection_route_when_not_found(
+def test_create_when_not_found(
     client: TestClient, collection_service_mock, user_header_token
 ):
     collection_service_mock.missing = True
@@ -119,7 +120,7 @@ def test_create_collection_route_when_not_found(
     assert collection_service_mock.create.call_count == 1
 
 
-def test_delete_collection_route_when_ok(
+def test_delete_when_ok(
     client: TestClient, collection_service_mock, admin_user_header_token
 ):
     response = client.delete(
@@ -137,7 +138,7 @@ def test_delete_collection_fails_if_not_admin(
     assert collection_service_mock.delete.call_count == 0
 
 
-def test_delete_collection_route_when_not_found(
+def test_delete_when_not_found(
     client: TestClient, collection_service_mock, admin_user_header_token
 ):
     collection_service_mock.missing = True
