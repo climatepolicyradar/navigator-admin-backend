@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 from app.model.document import (
     DocumentReadDTO,
+    DocumentWriteDTO,
 )
 
 import app.service.document as document_service
@@ -91,6 +92,36 @@ async def search_document(q: str = "") -> list[DocumentReadDTO]:
     return documents
 
 
+@r.put(
+    "/documents",
+    response_model=DocumentReadDTO,
+)
+async def update_document(
+    new_document: DocumentWriteDTO,
+) -> DocumentReadDTO:
+    """
+    Updates a specific document given the import id.
+
+    :param str import_id: Specified import_id.
+    :raises HTTPException: If the document is not found a 404 is returned.
+    :return DocumentDTO: returns a DocumentDTO of the document updated.
+    """
+    try:
+        document = document_service.update(new_document)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
+    if document is None:
+        detail = f"Document not updated: {new_document.import_id}"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+
+    return document
+
+
 @r.post(
     "/documents", response_model=DocumentReadDTO, status_code=status.HTTP_201_CREATED
 )
@@ -141,3 +172,32 @@ async def create_document(
     #     )
 
     return document
+
+
+@r.delete(
+    "/documents/{import_id}",
+)
+async def delete_document(
+    import_id: str,
+) -> None:
+    """
+    Deletes a specific document given the import id.
+
+    :param str import_id: Specified import_id.
+    :raises HTTPException: If the document is not found a 404 is returned.
+    """
+    try:
+        document_deleted = document_service.delete(import_id)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
+    if not document_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document not deleted: {import_id}",
+        )
+

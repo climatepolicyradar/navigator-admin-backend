@@ -9,7 +9,7 @@ import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.clients.db.session as db_session
 import app.service.family as family_service
-
+from app.service import id
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
@@ -116,6 +116,8 @@ def create(
         :return Optional[documentDTO]: The new created document or
     None if unsuccessful.
     """
+    # TODO: Generate the import id
+    id.validate(document.import_id)
     id.validate(document.family_import_id)
     # TODO - use the repo here and return our own error if family not existing
     family_service.get(document.family_import_id)

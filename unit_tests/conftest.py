@@ -13,6 +13,7 @@ from moto import mock_s3
 
 import app.service.family as family_service
 import app.service.collection as collection_service
+import app.service.document as document_service
 import app.service.config as config_service
 import app.service.token as token_service
 from app.repository import (
@@ -23,10 +24,12 @@ from app.repository import (
     collection_repo,
     app_user_repo,
     config_repo,
+    document_repo,
 )
 
 from unit_tests.mocks.repos.app_user_repo import mock_app_user_repo
 from unit_tests.mocks.repos.collection_repo import mock_collection_repo
+from unit_tests.mocks.repos.document_repo import mock_document_repo
 from unit_tests.mocks.repos.family_repo import mock_family_repo
 from unit_tests.mocks.repos.geography_repo import mock_geography_repo
 from unit_tests.mocks.repos.metadata_repo import mock_metadata_repo
@@ -35,6 +38,7 @@ from unit_tests.mocks.repos.config_repo import mock_config_repo
 
 from unit_tests.mocks.services.family_service import mock_family_service
 from unit_tests.mocks.services.collection_service import mock_collection_service
+from unit_tests.mocks.services.document_service import mock_document_service
 from unit_tests.mocks.services.config_service import mock_config_service
 
 
@@ -91,6 +95,13 @@ def collection_repo_mock(monkeypatch, mocker):
 
 
 @pytest.fixture
+def document_repo_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_document_repo(document_repo, monkeypatch, mocker)
+    yield document_repo
+
+
+@pytest.fixture
 def config_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_config_repo(config_repo, monkeypatch, mocker)
@@ -112,6 +123,15 @@ def collection_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_collection_service(collection_service, monkeypatch, mocker)
     yield collection_service
+
+
+@pytest.fixture
+def document_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_document_service(document_service, monkeypatch, mocker)
+    yield document_service
+
+
 
 
 @pytest.fixture
