@@ -17,7 +17,9 @@ import app.service.token as token_service
     "authorisation",
     [{}, {"e2": False}, {"e3": {"a": 1}}],
 )
-def test_ok_when_encoded_and_decoded(email: str, is_superuser: bool, authorisation: dict):
+def test_ok_when_encoded_and_decoded(
+    email: str, is_superuser: bool, authorisation: dict
+):
     token = token_service.encode(email, is_superuser, authorisation)
     assert token is not None
     assert len(token) > 200

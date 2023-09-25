@@ -10,9 +10,7 @@ from app.model.family import FamilyReadDTO
 from unit_tests.helpers.family import create_family_dto
 
 
-def test_get_all_when_ok(
-    client: TestClient, family_service_mock, user_header_token
-):
+def test_get_all_when_ok(client: TestClient, family_service_mock, user_header_token):
     response = client.get("/api/v1/families", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -22,9 +20,7 @@ def test_get_all_when_ok(
     assert family_service_mock.all.call_count == 1
 
 
-def test_get_when_ok(
-    client: TestClient, family_service_mock, user_header_token
-):
+def test_get_when_ok(client: TestClient, family_service_mock, user_header_token):
     response = client.get("/api/v1/families/import_id", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -32,9 +28,7 @@ def test_get_when_ok(
     assert family_service_mock.get.call_count == 1
 
 
-def test_get_when_not_found(
-    client: TestClient, family_service_mock, user_header_token
-):
+def test_get_when_not_found(client: TestClient, family_service_mock, user_header_token):
     family_service_mock.missing = True
     response = client.get("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -43,9 +37,7 @@ def test_get_when_not_found(
     assert family_service_mock.get.call_count == 1
 
 
-def test_search_when_ok(
-    client: TestClient, family_service_mock, user_header_token
-):
+def test_search_when_ok(client: TestClient, family_service_mock, user_header_token):
     response = client.get("/api/v1/families/?q=anything", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -65,9 +57,7 @@ def test_search_when_not_found(
     assert family_service_mock.search.call_count == 1
 
 
-def test_update_when_ok(
-    client: TestClient, family_service_mock, user_header_token
-):
+def test_update_when_ok(client: TestClient, family_service_mock, user_header_token):
     new_data = create_family_dto("fam1").model_dump()
     response = client.put("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
@@ -88,9 +78,7 @@ def test_update_when_not_found(
     assert family_service_mock.update.call_count == 1
 
 
-def test_create_when_ok(
-    client: TestClient, family_service_mock, user_header_token
-):
+def test_create_when_ok(client: TestClient, family_service_mock, user_header_token):
     new_data = create_family_dto("fam1").model_dump()
     response = client.post("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_201_CREATED

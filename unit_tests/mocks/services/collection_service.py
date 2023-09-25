@@ -14,7 +14,6 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         if collection_service.throw_repository_error:
             raise RepositoryError("bad repo")
 
-
     def mock_get_all_collections():
         maybe_throw()
         return [create_collection_dto("test")]

@@ -29,6 +29,9 @@ class DocumentReadDTO(BaseModel):
     # languages: list[]
 
 
+DocumentWriteDTO = DocumentReadDTO
+
+
 class DocumentUploadRequest(BaseModel):
     """Request for a document upload"""
 

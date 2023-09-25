@@ -22,9 +22,7 @@ def test_get_all_when_ok(
     assert collection_service_mock.all.call_count == 1
 
 
-def test_get_when_ok(
-    client: TestClient, collection_service_mock, user_header_token
-):
+def test_get_when_ok(client: TestClient, collection_service_mock, user_header_token):
     response = client.get("/api/v1/collections/import_id", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -43,9 +41,7 @@ def test_get_when_not_found(
     assert collection_service_mock.get.call_count == 1
 
 
-def test_search_when_ok(
-    client: TestClient, collection_service_mock, user_header_token
-):
+def test_search_when_ok(client: TestClient, collection_service_mock, user_header_token):
     response = client.get("/api/v1/collections/?q=anything", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -66,9 +62,7 @@ def test_search_when_not_found(
     assert collection_service_mock.search.call_count == 1
 
 
-def test_update_when_ok(
-    client: TestClient, collection_service_mock, user_header_token
-):
+def test_update_when_ok(client: TestClient, collection_service_mock, user_header_token):
     new_data = create_collection_dto("col1").model_dump()
     response = client.put(
         "/api/v1/collections", json=new_data, headers=user_header_token
@@ -93,9 +87,7 @@ def test_update_when_not_found(
     assert collection_service_mock.update.call_count == 1
 
 
-def test_create_when_ok(
-    client: TestClient, collection_service_mock, user_header_token
-):
+def test_create_when_ok(client: TestClient, collection_service_mock, user_header_token):
     new_data = create_collection_dto("col1").model_dump()
     response = client.post(
         "/api/v1/collections", json=new_data, headers=user_header_token
