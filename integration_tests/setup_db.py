@@ -2,14 +2,17 @@ from typing import cast
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.clients.db.models.app.users import Organisation
+from app.clients.db.models.document.physical_document import PhysicalDocument
 from app.clients.db.models.law_policy.collection import (
     Collection,
     CollectionFamily,
     CollectionOrganisation,
 )
 from app.clients.db.models.law_policy.family import (
+    DocumentStatus,
     Family,
     FamilyCategory,
+    FamilyDocument,
     FamilyOrganisation,
     Slug,
 )
@@ -67,7 +70,7 @@ EXPECTED_FAMILIES = [
         "events": [],
         "published_date": None,
         "last_updated_date": None,
-        "documents": [],
+        "documents": ["D.0.0.1", "D.0.0.2"],
         "collections": ["C.0.0.2"],
     },
 ]
@@ -102,6 +105,9 @@ def setup_db(test_db: Session):
     test_db.commit()
 
     _setup_collection_data(test_db, org_id)
+    test_db.commit()
+
+    _setup_document_data(test_db, "A.0.0.3")
     test_db.commit()
 
 
@@ -220,3 +226,46 @@ def _setup_family_data(test_db: Session, org_id: int):
                 family_import_id=EXPECTED_FAMILIES[index]["import_id"],
             )
         )
+
+
+def _setup_document_data(test_db: Session, family_id: str) -> None:
+    pd1 = PhysicalDocument(
+        id=None,
+        title="title1",
+        md5_sum="sum1",
+        cdn_object="obj1",
+        source_url="url1",
+        content_type="type1",
+    )
+    pd2 = PhysicalDocument(
+        id=None,
+        title="title2",
+        md5_sum="sum2",
+        cdn_object="obj2",
+        source_url="url2",
+        content_type="type2",
+    )
+    test_db.add(pd1)
+    test_db.add(pd2)
+    test_db.flush()
+
+    fd1 = FamilyDocument(
+        family_import_id=family_id,
+        physical_document_id=pd1.id,
+        import_id="D.0.0.1",
+        variant_name="Original Language",
+        document_status=DocumentStatus.CREATED,
+        document_type="Law",
+        document_role="MAIN",
+    )
+    fd2 = FamilyDocument(
+        family_import_id=family_id,
+        physical_document_id=pd2.id,
+        import_id="D.0.0.2",
+        variant_name="Original Language",
+        document_status=DocumentStatus.CREATED,
+        document_type="Law",
+        document_role="MAIN",
+    )
+    test_db.add(fd1)
+    test_db.add(fd2)

@@ -235,6 +235,14 @@ def delete(db: Session, import_id: str) -> bool:
     :return bool: True if deleted False if not.
     """
 
+    found = (
+        db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == import_id)
+        .one_or_none()
+    )
+    if found is None:
+        return False
+
     # TODO: Check the backend - I think when a document is delete the
     # actual information in the physical_document is "blanked".
 
