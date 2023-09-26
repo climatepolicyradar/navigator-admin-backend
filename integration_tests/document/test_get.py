@@ -2,16 +2,16 @@ from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
 
-from integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
+from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 
 
 # --- GET ALL
 
 
-def test_get_all_collections(client: TestClient, test_db: Session, user_header_token):
+def test_get_all_documents(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
     response = client.get(
-        "/api/v1/collections",
+        "/api/v1/documents",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
@@ -19,21 +19,19 @@ def test_get_all_collections(client: TestClient, test_db: Session, user_header_t
     assert type(data) is list
     assert len(data) == 2
     ids_found = set([f["import_id"] for f in data])
-    expected_ids = set(["C.0.0.1", "C.0.0.2"])
+    expected_ids = set(["D.0.0.1", "D.0.0.2"])
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
     sdata = sorted(data, key=lambda d: d["import_id"])
-    assert sdata[0] == EXPECTED_COLLECTIONS[0]
-    assert sdata[1] == EXPECTED_COLLECTIONS[1]
+    assert sdata[0] == EXPECTED_DOCUMENTS[0]
+    assert sdata[1] == EXPECTED_DOCUMENTS[1]
 
 
-def test_get_all_collections_when_not_authenticated(
-    client: TestClient, test_db: Session
-):
+def test_get_all_documents_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.get(
-        "/api/v1/collections",
+        "/api/v1/documents",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -41,45 +39,45 @@ def test_get_all_collections_when_not_authenticated(
 # --- GET
 
 
-def test_get_collection(client: TestClient, test_db: Session, user_header_token):
+def test_get_document(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
     response = client.get(
-        "/api/v1/collections/C.0.0.1",
+        "/api/v1/documents/D.0.0.1",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["import_id"] == "C.0.0.1"
-    assert data == EXPECTED_COLLECTIONS[0]
+    assert data["import_id"] == "D.0.0.1"
+    assert data == EXPECTED_DOCUMENTS[0]
 
 
-def test_get_collection_when_not_authenticated(client: TestClient, test_db: Session):
+def test_get_document_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     response = client.get(
-        "/api/v1/collections/C.0.0.1",
+        "/api/v1/documents/D.0.0.1",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_get_collection_when_not_found(
+def test_get_document_when_not_found(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
     response = client.get(
-        "/api/v1/collections/C.0.0.8",
+        "/api/v1/documents/D.0.0.8",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Collection not found: C.0.0.8"
+    assert data["detail"] == "Document not found: D.0.0.8"
 
 
-def test_get_collection_when_id_invalid(
+def test_get_document_when_id_invalid(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
     response = client.get(
-        "/api/v1/collections/A008",
+        "/api/v1/documents/A008",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -88,12 +86,12 @@ def test_get_collection_when_id_invalid(
     assert data["detail"] == expected_msg
 
 
-def test_get_collection_when_db_error(
-    client: TestClient, test_db: Session, bad_collection_repo, user_header_token
+def test_get_document_when_db_error(
+    client: TestClient, test_db: Session, bad_document_repo, user_header_token
 ):
     setup_db(test_db)
     response = client.get(
-        "/api/v1/collections/A.0.0.8",
+        "/api/v1/documents/A.0.0.8",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE

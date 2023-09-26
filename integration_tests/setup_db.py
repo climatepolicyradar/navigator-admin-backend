@@ -9,9 +9,7 @@ from app.clients.db.models.law_policy.collection import (
     CollectionOrganisation,
 )
 from app.clients.db.models.law_policy.family import (
-    DocumentStatus,
     Family,
-    FamilyCategory,
     FamilyDocument,
     FamilyOrganisation,
     Slug,
@@ -23,7 +21,7 @@ from app.clients.db.models.law_policy.metadata import (
 )
 
 # TODO: Change this to use the service.family.create - so we don't miss anything here
-
+EXPECTED_NUM_FAMILIES = 3
 EXPECTED_FAMILIES = [
     {
         "import_id": "A.0.0.1",
@@ -76,6 +74,7 @@ EXPECTED_FAMILIES = [
 ]
 
 
+EXPECTED_NUM_COLLECTIONS = 2
 EXPECTED_COLLECTIONS = [
     {
         "import_id": "C.0.0.1",
@@ -90,6 +89,42 @@ EXPECTED_COLLECTIONS = [
         "description": "description two",
         "families": ["A.0.0.1", "A.0.0.3"],
         "organisation": "test_org",
+    },
+]
+
+EXPECTED_NUM_DOCUMENTS = 2
+EXPECTED_DOCUMENTS = [
+    {
+        "import_id": "D.0.0.1",
+        "family_import_id": "A.0.0.3",
+        "variant_name": "Original Language",
+        "status": "Created",
+        "role": "MAIN",
+        "type": "Law",
+        "slug": "",
+        "physical_id": 1,
+        "title": "big title1",
+        "md5_sum": "sum1",
+        "cdn_object": "obj1",
+        "source_url": "source1",
+        "content_type": "application/pdf",
+        "user_language_name": "TODO",
+    },
+    {
+        "import_id": "D.0.0.2",
+        "family_import_id": "A.0.0.3",
+        "variant_name": "Original Language",
+        "status": "Created",
+        "role": "MAIN",
+        "type": "Law",
+        "slug": "",
+        "physical_id": 2,
+        "title": "title2",
+        "md5_sum": "sum2",
+        "cdn_object": "obj2",
+        "source_url": "source2",
+        "content_type": "application/pdf",
+        "user_language_name": "TODO",
     },
 ]
 
@@ -124,27 +159,21 @@ def _setup_organisation(test_db: Session) -> int:
 
 
 def _setup_collection_data(test_db: Session, org_id: int):
-    test_db.add(
-        Collection(
-            import_id="C.0.0.1",
-            title="Collection 1 a very big collection",
-            description="description one",
+    for index in range(EXPECTED_NUM_COLLECTIONS):
+        data = EXPECTED_COLLECTIONS[index]
+        test_db.add(
+            Collection(
+                import_id=data["import_id"],
+                title=data["title"],
+                description=data["description"],
+            )
         )
-    )
 
-    test_db.add(
-        Collection(
-            import_id="C.0.0.2", title="Collection 2", description="description two"
+        test_db.add(
+            CollectionOrganisation(
+                collection_import_id=data["import_id"], organisation_id=org_id
+            )
         )
-    )
-
-    test_db.add(
-        CollectionOrganisation(collection_import_id="C.0.0.1", organisation_id=org_id)
-    )
-
-    test_db.add(
-        CollectionOrganisation(collection_import_id="C.0.0.2", organisation_id=org_id)
-    )
 
     test_db.add(
         CollectionFamily(collection_import_id="C.0.0.2", family_import_id="A.0.0.1")
@@ -156,38 +185,24 @@ def _setup_collection_data(test_db: Session, org_id: int):
 
 
 def _setup_family_data(test_db: Session, org_id: int):
-    FAMILY_1 = Family(
-        import_id="A.0.0.1",
-        title="apple",
-        description="",
-        geography_id=1,
-        family_category=FamilyCategory.UNFCCC,
-    )
+    for index in range(EXPECTED_NUM_FAMILIES):
+        data = EXPECTED_FAMILIES[index]
+        test_db.add(
+            Family(
+                import_id=data["import_id"],
+                title=data["title"],
+                description=data["summary"],
+                geography_id=1,
+                family_category=data["category"],
+            )
+        )
 
-    FAMILY_2 = Family(
-        import_id="A.0.0.2",
-        title="apple orange banana",
-        description="",
-        geography_id=1,
-        family_category=FamilyCategory.UNFCCC,
-    )
-
-    FAMILY_3 = Family(
-        import_id="A.0.0.3",
-        title="title",
-        description="orange peas",
-        geography_id=1,
-        family_category=FamilyCategory.UNFCCC,
-    )
-
-    test_db.add(FAMILY_1)
-    test_db.add(FAMILY_2)
-    test_db.add(FAMILY_3)
-
-    # Link the families to the org
-    test_db.add(FamilyOrganisation(family_import_id="A.0.0.1", organisation_id=org_id))
-    test_db.add(FamilyOrganisation(family_import_id="A.0.0.2", organisation_id=org_id))
-    test_db.add(FamilyOrganisation(family_import_id="A.0.0.3", organisation_id=org_id))
+        # Link the families to the org
+        test_db.add(
+            FamilyOrganisation(
+                family_import_id=data["import_id"], organisation_id=org_id
+            )
+        )
 
     # Now a Taxonomy
     tax = MetadataTaxonomy(
@@ -212,60 +227,45 @@ def _setup_family_data(test_db: Session, org_id: int):
     test_db.flush()
 
     # Now add the metadata onto the families
-    for index in range(3):
+    for index in range(EXPECTED_NUM_FAMILIES):
+        data = EXPECTED_FAMILIES[index]
         test_db.add(
             FamilyMetadata(
-                family_import_id=EXPECTED_FAMILIES[index]["import_id"],
+                family_import_id=data["import_id"],
                 taxonomy_id=tax.id,
-                value=EXPECTED_FAMILIES[index]["metadata"],
+                value=data["metadata"],
             )
         )
         test_db.add(
             Slug(
                 name=f"Slug{index+1}",
-                family_import_id=EXPECTED_FAMILIES[index]["import_id"],
+                family_import_id=data["import_id"],
             )
         )
 
 
 def _setup_document_data(test_db: Session, family_id: str) -> None:
-    pd1 = PhysicalDocument(
-        id=None,
-        title="title1",
-        md5_sum="sum1",
-        cdn_object="obj1",
-        source_url="url1",
-        content_type="type1",
-    )
-    pd2 = PhysicalDocument(
-        id=None,
-        title="title2",
-        md5_sum="sum2",
-        cdn_object="obj2",
-        source_url="url2",
-        content_type="type2",
-    )
-    test_db.add(pd1)
-    test_db.add(pd2)
-    test_db.flush()
+    for index in range(EXPECTED_NUM_DOCUMENTS):
+        data = EXPECTED_DOCUMENTS[index]
+        pd = PhysicalDocument(
+            id=None,
+            title=data["title"],
+            md5_sum=data["md5_sum"],
+            cdn_object=data["cdn_object"],
+            source_url=data["source_url"],
+            content_type=data["content_type"],
+        )
+        test_db.add(pd)
+        test_db.flush()
 
-    fd1 = FamilyDocument(
-        family_import_id=family_id,
-        physical_document_id=pd1.id,
-        import_id="D.0.0.1",
-        variant_name="Original Language",
-        document_status=DocumentStatus.CREATED,
-        document_type="Law",
-        document_role="MAIN",
-    )
-    fd2 = FamilyDocument(
-        family_import_id=family_id,
-        physical_document_id=pd2.id,
-        import_id="D.0.0.2",
-        variant_name="Original Language",
-        document_status=DocumentStatus.CREATED,
-        document_type="Law",
-        document_role="MAIN",
-    )
-    test_db.add(fd1)
-    test_db.add(fd2)
+        fd = FamilyDocument(
+            family_import_id=family_id,
+            physical_document_id=pd.id,
+            import_id=data["import_id"],
+            variant_name=data["variant_name"],
+            document_status=data["status"],
+            document_type=data["type"],
+            document_role=data["role"],
+        )
+        test_db.add(fd)
+        test_db.flush()

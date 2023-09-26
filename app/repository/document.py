@@ -43,7 +43,11 @@ def _get_query(db: Session) -> Query:
     return (
         db.query(FamilyDocument, PhysicalDocument, Slug)
         .filter(FamilyDocument.physical_document_id == PhysicalDocument.id)
-        .filter(Slug.family_document_import_id == FamilyDocument.import_id)
+        .join(
+            Slug,
+            Slug.family_document_import_id == FamilyDocument.import_id,
+            isouter=True,
+        )
     )
 
 
@@ -56,7 +60,7 @@ def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
         status=cast(DocumentStatus, fd.document_status),
         role=cast(FamilyDocumentRole, fd.document_role),
         type=cast(FamilyDocumentType, fd.document_type),
-        slug=cast(str, slug.name),
+        slug=cast(str, slug.name) if slug is not None else "",
         physical_id=cast(int, pd.id),
         title=cast(str, pd.title),
         md5_sum=cast(str, pd.md5_sum),
@@ -146,7 +150,7 @@ def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
     search = or_(PhysicalDocument.title.ilike(term))
     found = _get_query(db).filter(search).all()
 
-    return [_document_to_dto(*d) for d in found]
+    return [_document_to_dto(d) for d in found]
 
 
 def update(db: Session, document: DocumentReadDTO) -> bool:
@@ -160,30 +164,41 @@ def update(db: Session, document: DocumentReadDTO) -> bool:
     """
     # TODO: Implement this:
 
-    # new_values = document.model_dump()
+    new_values = document.model_dump()
 
-    # original_document = (
-    #     db.query(FamilyDocument)
-    #     .filter(FamilyDocument.import_id == document.import_id)
-    #     .one_or_none()
-    # )
+    original_fd = (
+        db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == document.import_id)
+        .one_or_none()
+    )
 
-    # if original_document is None:  # Not found the document to update
-    #     _LOGGER.error(f"Unable to find document for update {document}")
-    #     return False
+    if original_fd is None:  # Not found the document to update
+        _LOGGER.error(f"Unable to find document for update {document.import_id}")
+        return False
 
-    # result = db.execute(
-    #     db_update(FamilyDocument)
-    #     .where(FamilyDocument.import_id == document.import_id)
-    #     .values(
-    #         title=new_values["title"],
-    #         description=new_values["description"],
-    #     )
-    # )
-    # if result.rowcount == 0:  # type: ignore
-    #     msg = f"Could not update document fields: {document}"
-    #     _LOGGER.error(msg)
-    #     raise RepositoryError(msg)
+    original_pd = (
+        db.query(PhysicalDocument)
+        .filter(PhysicalDocument.id == original_fd.physical_document_id)
+        .one_or_none()
+    )
+
+    if original_pd is None:  # Not found the document to update
+        _LOGGER.error(
+            f"Unable to find document for update {original_fd.physical_document_id}"
+        )
+        return False
+
+    result = db.execute(
+        db_update(PhysicalDocument)
+        .where(PhysicalDocument.id == original_pd.id)
+        .values(
+            title=new_values["title"],
+        )
+    )
+    if result.rowcount == 0:  # type: ignore
+        msg = f"Could not update document fields: {document}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
 
     return True
 

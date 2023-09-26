@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
 from app.clients.db.models.law_policy.collection import Collection
-from integration_tests.setup_db import setup_db
+from integration_tests.setup_db import EXPECTED_NUM_COLLECTIONS, setup_db
 
 
 def test_delete_collection(
@@ -14,7 +14,7 @@ def test_delete_collection(
     )
     assert response.status_code == status.HTTP_200_OK
     n = test_db.query(Collection).count()
-    assert n == 1
+    assert n == EXPECTED_NUM_COLLECTIONS - 1
 
 
 def test_delete_collection_when_not_authenticated(client: TestClient, test_db: Session):
@@ -37,7 +37,7 @@ def test_delete_collection_rollback(
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     n = test_db.query(Collection).count()
-    assert n == 2
+    assert n == EXPECTED_NUM_COLLECTIONS
     assert rollback_collection_repo.delete.call_count == 1
 
 
@@ -52,7 +52,7 @@ def test_delete_collection_when_not_found(
     data = response.json()
     assert data["detail"] == "Collection not deleted: C.0.0.22"
     n = test_db.query(Collection).count()
-    assert n == 2
+    assert n == EXPECTED_NUM_COLLECTIONS
 
 
 def test_delete_collection_when_db_error(

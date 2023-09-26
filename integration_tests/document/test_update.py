@@ -1,150 +1,137 @@
+from typing import Tuple
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy.collection import (
-    Collection,
-    CollectionFamily,
-    CollectionOrganisation,
-)
-from integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
-from unit_tests.helpers.collection import create_collection_dto
+from app.clients.db.models.document.physical_document import PhysicalDocument
+from app.clients.db.models.law_policy.family import FamilyDocument
+
+from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
+from unit_tests.helpers.document import create_document_dto
 
 
-def test_update_collection(client: TestClient, test_db: Session, user_header_token):
+def _get_doc_tuple(
+    test_db: Session, import_id: str
+) -> Tuple[FamilyDocument, PhysicalDocument]:
+    fd: FamilyDocument = (
+        test_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == import_id)
+        .one()
+    )
+    assert fd is not None
+
+    pd: PhysicalDocument = (
+        test_db.query(PhysicalDocument)
+        .filter(PhysicalDocument.id == fd.physical_document_id)
+        .one_or_none()
+    )
+    assert pd is not None
+
+    return fd, pd
+
+
+def test_update_document(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.2",
+    new_document = create_document_dto(
+        import_id="D.0.0.2",
+        family_import_id="A.0.0.3",
         title="Updated Title",
-        description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
-        json=new_collection.model_dump(),
+        "/api/v1/documents",
+        json=new_document.model_dump(),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["title"] == "Updated Title"
-    assert data["description"] == "just a test"
 
-    db_collection: Collection = (
-        test_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
-    )
-    assert db_collection.title == "Updated Title"
-    assert db_collection.description == "just a test"
-    families = test_db.query(CollectionFamily).filter(
-        CollectionFamily.collection_import_id == "C.0.0.2"
-    )
-    assert families.count() == 2
-    org: CollectionOrganisation = (
-        test_db.query(CollectionOrganisation)
-        .filter(CollectionOrganisation.collection_import_id == "C.0.0.2")
-        .one()
-    )
-    assert org is not None
+    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    assert pd.title == "Updated Title"
 
 
-def test_update_collection_when_not_authorised(client: TestClient, test_db: Session):
+def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="A.0.0.2",
+    new_document = create_document_dto(
+        import_id="D.0.0.2",
+        family_import_id="A.0.0.3",
         title="Updated Title",
-        description="just a test",
     )
-    response = client.put("/api/v1/collections", json=new_collection.model_dump())
+    response = client.put("/api/v1/documents", json=new_document.model_dump())
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_update_collection_idempotent(
+def test_update_document_idempotent(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    collection = EXPECTED_COLLECTIONS[1]
-    response = client.put(
-        "/api/v1/collections", json=collection, headers=user_header_token
-    )
+    document = EXPECTED_DOCUMENTS[1]
+    response = client.put("/api/v1/documents", json=document, headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
+
     data = response.json()
-    assert data["title"] == EXPECTED_COLLECTIONS[1]["title"]
-    assert data["description"] == EXPECTED_COLLECTIONS[1]["description"]
-    db_collection: Collection = (
-        test_db.query(Collection)
-        .filter(Collection.import_id == EXPECTED_COLLECTIONS[1]["import_id"])
-        .one()
-    )
-    assert db_collection.title == EXPECTED_COLLECTIONS[1]["title"]
-    assert db_collection.description == EXPECTED_COLLECTIONS[1]["description"]
+    assert data["title"] == EXPECTED_DOCUMENTS[1]["title"]
+
+    _, pd = _get_doc_tuple(test_db, EXPECTED_DOCUMENTS[1]["import_id"])
+    assert pd.title == EXPECTED_DOCUMENTS[1]["title"]
 
 
-def test_update_collection_rollback(
-    client: TestClient, test_db: Session, rollback_collection_repo, user_header_token
+def test_update_document_rollback(
+    client: TestClient, test_db: Session, rollback_document_repo, user_header_token
 ):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.2",
+    new_document = create_document_dto(
+        import_id="D.0.0.2",
+        family_import_id="A.0.0.3",
         title="Updated Title",
-        description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
-        json=new_collection.model_dump(),
+        "/api/v1/documents",
+        json=new_document.model_dump(),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
-    db_collection: Collection = (
-        test_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
-    )
-    assert db_collection.title != "Updated Title"
-    assert db_collection.description != "just a test"
+    _, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    assert pd.title != "Updated Title"
 
-    families = test_db.query(CollectionFamily).filter(
-        CollectionFamily.collection_import_id == "C.0.0.2"
-    )
-    assert families.count() == 2
-    org: CollectionOrganisation = (
-        test_db.query(CollectionOrganisation)
-        .filter(CollectionOrganisation.collection_import_id == "C.0.0.2")
-        .one()
-    )
-    assert org is not None
-    assert rollback_collection_repo.update.call_count == 1
+    assert rollback_document_repo.update.call_count == 1
 
 
-def test_update_collection_when_not_found(
+def test_update_document_when_not_found(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.22",
+    new_document = create_document_dto(
+        import_id="D.0.0.22",
+        family_import_id="A.0.0.3",
         title="Updated Title",
-        description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
-        json=new_collection.model_dump(),
+        "/api/v1/documents",
+        json=new_document.model_dump(),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Collection not updated: C.0.0.22"
+    assert data["detail"] == "Document not updated: D.0.0.22"
 
 
-def test_update_collection_when_db_error(
-    client: TestClient, test_db: Session, bad_collection_repo, user_header_token
+def test_update_document_when_db_error(
+    client: TestClient, test_db: Session, bad_document_repo, user_header_token
 ):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.2",
+
+    new_document = create_document_dto(
+        import_id="D.0.0.2",
+        family_import_id="A.0.0.3",
         title="Updated Title",
-        description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
-        json=new_collection.model_dump(),
+        "/api/v1/documents",
+        json=new_document.model_dump(),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
-    assert bad_collection_repo.update.call_count == 1
+    assert bad_document_repo.update.call_count == 1
