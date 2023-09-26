@@ -258,7 +258,7 @@ def test_create_raises_when_id_invalid(family_repo_mock):
     assert family_repo_mock.create.call_count == 0
 
 
-def test_create_raises_when_category_inavlid(family_repo_mock, geography_repo_mock):
+def test_create_raises_when_category_invalid(family_repo_mock, geography_repo_mock):
     new_family = create_family_dto(import_id="A.0.0.5")
     new_family.category = "invalid"
     with pytest.raises(ValidationError) as e:

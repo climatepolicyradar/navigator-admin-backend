@@ -13,9 +13,7 @@ def test_get_when_ok(client: TestClient, user_header_token, config_service_mock)
     assert config_service_mock.get.call_count == 1
 
 
-def test_get_when_db_error(
-    client: TestClient, user_header_token, config_service_mock
-):
+def test_get_when_db_error(client: TestClient, user_header_token, config_service_mock):
     config_service_mock.throw_repository_error = True
     response = client.get("/api/v1/config", headers=user_header_token)
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
