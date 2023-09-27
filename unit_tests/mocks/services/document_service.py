@@ -33,18 +33,16 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
     def mock_update_document(data: DocumentWriteDTO) -> Optional[DocumentReadDTO]:
         maybe_throw()
         if not document_service.missing:
-            return create_document_dto(
-                data.import_id, data.family_import_id, data.title
-            )
+            return create_document_dto(data.import_id, "family_import_id", data.title)
 
-    def mock_create_document(data: DocumentWriteDTO) -> Optional[DocumentReadDTO]:
+    def mock_create_document(data: DocumentReadDTO) -> Optional[DocumentReadDTO]:
         maybe_throw()
         if not document_service.missing:
             return create_document_dto(
                 data.import_id, data.family_import_id, data.title
             )
 
-    def mock_delete_document(import_id: str) -> bool:
+    def mock_delete_document(_) -> bool:
         maybe_throw()
         return not document_service.missing
 
