@@ -105,7 +105,7 @@ def update(
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    document: DocumentWriteDTO, db: Session = db_session.get_db()
+    document: DocumentReadDTO, db: Session = db_session.get_db()
 ) -> Optional[DocumentReadDTO]:
     """
         Creates a new document with the values passed.

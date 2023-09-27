@@ -29,7 +29,18 @@ class DocumentReadDTO(BaseModel):
     # languages: list[]
 
 
-DocumentWriteDTO = DocumentReadDTO
+class DocumentWriteDTO(BaseModel):
+    """Representation of a Document."""
+
+    # From FamilyDocument
+    import_id: str
+    variant_name: str
+    role: str
+    type: str
+    title: str
+    source_url: str
+    # TODO: Languages for a document
+    # languages: list[]
 
 
 class DocumentUploadRequest(BaseModel):

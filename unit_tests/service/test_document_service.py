@@ -1,4 +1,3 @@
-from typing import cast
 import pytest
 from app.model.document import DocumentReadDTO, DocumentWriteDTO
 import app.service.document as doc_service
@@ -7,7 +6,14 @@ from unit_tests.mocks.repos.document_repo import create_document_dto as create_d
 
 
 def _to_write_dto(dto: DocumentReadDTO) -> DocumentWriteDTO:
-    return cast(DocumentWriteDTO, dto)
+    return DocumentWriteDTO(
+        import_id=dto.import_id,
+        variant_name=dto.variant_name,
+        role=dto.role,
+        type=dto.type,
+        title=dto.title,
+        source_url=dto.source_url,
+    )
 
 
 def test_document_service_get_upload_details(test_s3_client):
@@ -140,7 +146,7 @@ def test_update_raises_when_invalid_id(
 
 def test_create(document_repo_mock, family_repo_mock):
     new_document = create_dto(import_id="A.0.0.5")
-    document = doc_service.create(_to_write_dto(new_document))
+    document = doc_service.create(new_document)
     assert document is not None
     assert document_repo_mock.create.call_count == 1
     assert family_repo_mock.get.call_count == 1
@@ -149,7 +155,7 @@ def test_create(document_repo_mock, family_repo_mock):
 def test_create_when_db_fails(document_repo_mock, family_repo_mock):
     new_document = create_dto(import_id="a.b.c.d")
     document_repo_mock.return_empty = True
-    document = doc_service.create(_to_write_dto(new_document))
+    document = doc_service.create(new_document)
     assert document is None
     assert document_repo_mock.create.call_count == 1
     assert family_repo_mock.get.call_count == 1
@@ -158,7 +164,7 @@ def test_create_when_db_fails(document_repo_mock, family_repo_mock):
 def test_create_raises_when_invalid_id(document_repo_mock):
     new_document = create_dto(import_id="invalid")
     with pytest.raises(ValidationError) as e:
-        doc_service.create(_to_write_dto(new_document))
+        doc_service.create(new_document)
     expected_msg = f"The import id {new_document.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert document_repo_mock.create.call_count == 0
@@ -167,7 +173,7 @@ def test_create_raises_when_invalid_id(document_repo_mock):
 def test_create_raises_when_invalid_family_id(document_repo_mock):
     new_document = create_dto(import_id="a.b.c.d", family_import_id="invalid family")
     with pytest.raises(ValidationError) as e:
-        doc_service.create(_to_write_dto(new_document))
+        doc_service.create(new_document)
     expected_msg = f"The import id {new_document.family_import_id} is invalid!"
     assert e.value.message == expected_msg
     assert document_repo_mock.create.call_count == 0

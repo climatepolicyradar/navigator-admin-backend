@@ -10,7 +10,7 @@ from app.clients.db.models.law_policy.family import (
     Variant,
 )
 from app.errors import RepositoryError
-from app.model.document import DocumentReadDTO
+from app.model.document import DocumentReadDTO, DocumentWriteDTO
 from app.clients.db.models.document.physical_document import (
     Language,
     LanguageSource,
@@ -153,7 +153,7 @@ def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
     return [_document_to_dto(d) for d in found]
 
 
-def update(db: Session, document: DocumentReadDTO) -> bool:
+def update(db: Session, document: DocumentWriteDTO) -> bool:
     """
     Updates a single entry with the new values passed.
 
