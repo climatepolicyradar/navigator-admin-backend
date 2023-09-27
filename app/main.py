@@ -22,7 +22,8 @@ _ALLOW_ORIGIN_REGEX = (
     r"https://.+\.dev.climatepolicyradar\.org|"
     r"https://.+\.sandbox\.climatepolicyradar\.org|"
     r"https://climate-laws\.org|"
-    r"https://.+\.climate-laws\.org"
+    r"https://.+\.climate-laws\.org|"
+    r"https://.+\.eu-west-1\.awsapprunner\.com"  # FIXME: TODO: Remove before release
 )
 
 app = FastAPI(title="navigator-admin")
