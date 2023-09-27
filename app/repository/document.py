@@ -188,18 +188,39 @@ def update(db: Session, document: DocumentWriteDTO) -> bool:
         )
         return False
 
-    result = db.execute(
+    update_slug = original_pd.title != new_values["title"]
+
+    commands = [
         db_update(PhysicalDocument)
         .where(PhysicalDocument.id == original_pd.id)
         .values(
             title=new_values["title"],
-        )
-    )
+            source_url=new_values["source_url"],
+        ),
+        db_update(FamilyDocument)
+        .where(FamilyDocument.import_id == original_fd.import_id)
+        .values(
+            variant_name=new_values["variant_name"],
+            document_role=new_values["role"],
+            document_type=new_values["type"],
+        ),
+    ]
+
+    for c in commands:
+        result = db.execute(c)
+
     if result.rowcount == 0:  # type: ignore
         msg = f"Could not update document fields: {document}"
         _LOGGER.error(msg)
         raise RepositoryError(msg)
 
+    if update_slug:
+        db.add(
+            Slug(
+                family_document_import_id=original_fd.import_id,
+                name=generate_slug(db, new_values["title"]),
+            )
+        )
     return True
 
 
