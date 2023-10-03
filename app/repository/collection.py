@@ -11,7 +11,7 @@ from app.clients.db.models.law_policy.collection import (
 )
 from app.clients.db.models.law_policy.family import Family
 from app.errors import RepositoryError
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import CollectionCreateDTO, CollectionReadDTO, CollectionWriteDTO
 from app.clients.db.models.law_policy import Collection
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Query
@@ -158,7 +158,7 @@ def update(db: Session, collection: CollectionWriteDTO) -> bool:
     return True
 
 
-def create(db: Session, collection: CollectionWriteDTO, org_id: int) -> bool:
+def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> bool:
     """
     Creates a new collection.
 

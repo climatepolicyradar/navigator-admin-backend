@@ -1,10 +1,4 @@
 
-bootstrap:
-	- pyenv deactivate
-	pyenv virtualenv 3.9 admin-backend
-	pyenv activate admin-backend
-	pip3 install poetry
-	poetry install
 
 git_hooks:
 	# Install git pre-commit hooks

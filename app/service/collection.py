@@ -9,7 +9,7 @@ from typing import Optional
 
 from pydantic import ConfigDict, validate_call
 from app.errors import RepositoryError
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import CollectionCreateDTO, CollectionReadDTO, CollectionWriteDTO
 from app.repository import collection_repo
 import app.clients.db.session as db_session
 from sqlalchemy import exc
@@ -103,8 +103,8 @@ def update(
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    collection: CollectionWriteDTO, db: Session = db_session.get_db()
-) -> Optional[CollectionReadDTO]:
+    collection: CollectionCreateDTO, db: Session = db_session.get_db()
+) -> Optional[CollectionCreateDTO]:
     """
         Creates a new collection with the values passed.
 

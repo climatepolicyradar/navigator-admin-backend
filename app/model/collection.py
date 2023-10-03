@@ -18,3 +18,6 @@ class CollectionWriteDTO(BaseModel):
     title: str
     description: str
     organisation: str
+
+
+CollectionCreateDTO = CollectionWriteDTO

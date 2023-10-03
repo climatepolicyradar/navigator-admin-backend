@@ -3,7 +3,11 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import (
+    CollectionCreateDTO,
+    CollectionReadDTO,
+    CollectionWriteDTO,
+)
 import app.service.collection as collection_service
 
 collections_router = r = APIRouter()
@@ -121,12 +125,12 @@ async def update_collection(
 
 @r.post(
     "/collections",
-    response_model=CollectionWriteDTO,
+    response_model=CollectionCreateDTO,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_collection(
-    new_collection: CollectionWriteDTO,
-) -> CollectionReadDTO:
+    new_collection: CollectionCreateDTO,
+) -> CollectionCreateDTO:
     """
     Creates a specific collection given the import id.
 
