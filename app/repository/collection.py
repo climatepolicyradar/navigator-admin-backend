@@ -201,3 +201,19 @@ def delete(db: Session, import_id: str) -> bool:
         result = db.execute(c)
 
     return result.rowcount > 0  # type: ignore
+
+
+def count(db: Session) -> Optional[int]:
+    """
+    Counts the number of collections in the repository.
+
+    :param db Session: the database connection
+    :return Optional[int]: The number of collections in the repository or none.
+    """
+    try:
+        n_collections = _get_query(db).count()
+    except Exception as e:
+        _LOGGER.error(e)
+        return
+
+    return n_collections

@@ -135,3 +135,18 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     """
     id.validate(import_id)
     return collection_repo.delete(db, import_id)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def count() -> Optional[int]:
+    """
+    Gets a count of collections from the repository.
+
+    :return Optional[int]: The number of collections in the repository or none.
+    """
+    try:
+        with db_session.get_db() as db:
+            return collection_repo.count(db)
+    except exc.SQLAlchemyError as e:
+        _LOGGER.error(e)
+        raise RepositoryError(str(e))
