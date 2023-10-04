@@ -22,7 +22,7 @@ def http_method_to_operation(method: str) -> AuthOperation:
     raise AuthorisationError(f"Unknown HTTP method {method}")
 
 
-def path_to_entity(path: str) -> AuthEndpoint:
+def path_to_endpoint(path: str) -> AuthEndpoint:
     """
     Converts an API path to an AuthEntity
 
