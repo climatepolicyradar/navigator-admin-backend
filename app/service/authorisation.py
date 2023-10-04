@@ -2,7 +2,7 @@ from app.clients.db.models.app.authorisation import (
     AUTH_TABLE,
     HTTP_MAP_TO_OPERATION,
     AuthAccess,
-    AuthEntity,
+    AuthEndpoint,
     AuthOperation,
 )
 from app.errors import AuthorisationError
@@ -22,7 +22,7 @@ def http_method_to_operation(method: str) -> AuthOperation:
     raise AuthorisationError(f"Unknown HTTP method {method}")
 
 
-def path_to_entity(path: str) -> AuthEntity:
+def path_to_endpoint(path: str) -> AuthEndpoint:
     """
     Converts an API path to an AuthEntity
 
@@ -30,7 +30,7 @@ def path_to_entity(path: str) -> AuthEntity:
     :return AuthEntity: The mapped AuthEntity
     """
     parts = [p.upper() for p in path.split("/")]
-    for e in AuthEntity:
+    for e in AuthEndpoint:
         if e.value in parts:
             return e
     raise AuthorisationError(f"Cannot get entity from path {path}")
@@ -60,7 +60,7 @@ def _get_user_access(user: JWTUser) -> AuthAccess:
     return AuthAccess.USER
 
 
-def is_authorised(user: JWTUser, entity: AuthEntity, op: AuthOperation) -> None:
+def is_authorised(user: JWTUser, entity: AuthEndpoint, op: AuthOperation) -> None:
     required_access = AUTH_TABLE[entity][op]
 
     if _has_access(required_access, _get_user_access(user)):

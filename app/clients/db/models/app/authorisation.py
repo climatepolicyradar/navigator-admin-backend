@@ -21,7 +21,7 @@ HTTP_MAP_TO_OPERATION = {
 }
 
 
-class AuthEntity(str, enum.Enum):
+class AuthEndpoint(str, enum.Enum):
     """
     An Entity that can be authorized.
 
@@ -33,6 +33,7 @@ class AuthEntity(str, enum.Enum):
     COLLECTION = "COLLECTIONS"
     DOCUMENT = "DOCUMENTS"
     CONFIG = "CONFIG"
+    ANALYTICS = "ANALYTICS"
 
 
 class AuthAccess(str, enum.Enum):
@@ -43,31 +44,39 @@ class AuthAccess(str, enum.Enum):
     SUPER = "SUPER"
 
 
-AuthMap = Mapping[AuthEntity, Mapping[AuthOperation, AuthAccess]]
+AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
 
 AUTH_TABLE: AuthMap = {
     # Family
-    AuthEntity.FAMILY: {
+    AuthEndpoint.FAMILY: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.ADMIN,
     },
     # Collection
-    AuthEntity.COLLECTION: {
+    AuthEndpoint.COLLECTION: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.ADMIN,
     },
     # Collection
-    AuthEntity.DOCUMENT: {
+    AuthEndpoint.DOCUMENT: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.ADMIN,
     },
-    AuthEntity.CONFIG: {
+    # Config
+    AuthEndpoint.CONFIG: {
         AuthOperation.READ: AuthAccess.USER,
+    },
+    # Analytics
+    AuthEndpoint.ANALYTICS: {
+        AuthOperation.CREATE: AuthAccess.USER,
+        AuthOperation.READ: AuthAccess.USER,
+        AuthOperation.UPDATE: AuthAccess.USER,
+        AuthOperation.DELETE: AuthAccess.ADMIN,
     },
 }

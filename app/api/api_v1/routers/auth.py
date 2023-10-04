@@ -26,7 +26,7 @@ def check_user_auth(request: Request, token: str = Depends(oauth2_scheme)) -> No
     :raises HTTPException: Raised if the user is not authorised
     """
     user = token_service.decode(token)
-    entity = auth_service.path_to_entity(request.scope["path"])
+    entity = auth_service.path_to_endpoint(request.scope["path"])
     operation = auth_service.http_method_to_operation(request.scope["method"])
 
     try:

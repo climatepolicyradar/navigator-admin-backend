@@ -1,3 +1,8 @@
+"""Main configuration for our FastAPI application routes for the admin service.
+
+Note: If you want to add a new endpoint, please make sure you update
+AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
+"""
 from fastapi_pagination import add_pagination
 from app.api.api_v1.routers.auth import check_user_auth
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
@@ -7,6 +12,7 @@ from app.api.api_v1.routers import (
     collections_router,
     document_router,
     config_router,
+    analytics_router,
 )
 from fastapi import FastAPI, Depends
 from fastapi_health import health
@@ -58,6 +64,12 @@ app.include_router(
     dependencies=[Depends(check_user_auth)],
 )
 
+app.include_router(
+    analytics_router,
+    prefix="/api/v1",
+    tags=["analytics"],
+    dependencies=[Depends(check_user_auth)],
+)
 
 app.include_router(auth_router, prefix="/api", tags=["Authentication"])
 
