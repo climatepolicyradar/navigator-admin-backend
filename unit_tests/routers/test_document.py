@@ -1,8 +1,10 @@
 from fastapi import status
 from fastapi.testclient import TestClient
-from app.model.document import DocumentReadDTO
 import app.service.document as document_service
-from unit_tests.helpers.document import create_document_dto
+from unit_tests.helpers.document import (
+    create_document_create_dto,
+    create_document_write_dto,
+)
 
 
 def test_get_all_when_ok(client: TestClient, user_header_token, document_service_mock):
@@ -56,7 +58,7 @@ def test_search_when_not_found(
 
 
 def test_update_when_ok(client: TestClient, document_service_mock, user_header_token):
-    new_data = create_document_dto("doc1").model_dump()
+    new_data = create_document_write_dto("doc1").model_dump()
     response = client.put("/api/v1/documents", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -68,7 +70,7 @@ def test_update_when_not_found(
     client: TestClient, document_service_mock, user_header_token
 ):
     document_service_mock.missing = True
-    new_data = create_document_dto("doc1").model_dump()
+    new_data = create_document_write_dto("doc1").model_dump()
     response = client.put("/api/v1/documents", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
@@ -77,27 +79,27 @@ def test_update_when_not_found(
 
 
 def test_create_when_ok(client: TestClient, document_service_mock, user_header_token):
-    new_data = create_document_dto("doc1").model_dump()
+    new_data = create_document_create_dto("doc1").model_dump()
     response = client.post(
         "/api/v1/documents", json=new_data, headers=user_header_token
     )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
-    assert data["import_id"] == "doc1"
+    assert data == "new.doc.id.0"
     assert document_service_mock.create.call_count == 1
 
 
-def test_create_when_not_found(
+def test_create_when_family_not_found(
     client: TestClient, document_service_mock, user_header_token
 ):
     document_service_mock.missing = True
-    new_data: DocumentReadDTO = create_document_dto("doc1")
+    new_data = create_document_create_dto("this_family")
     response = client.post(
         "/api/v1/documents", json=new_data.model_dump(), headers=user_header_token
     )
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "Document not created: doc1"
+    assert data["detail"] == "Could not find family for this_family"
     assert document_service_mock.create.call_count == 1
 
 

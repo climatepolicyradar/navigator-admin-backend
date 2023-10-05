@@ -1,3 +1,5 @@
+
+
 --
 -- PostgreSQL database dump
 --
@@ -8244,3 +8246,7 @@ INSERT INTO public.language (id, language_code, part1_code, part2_code, name) VA
 
 INSERT INTO public.variant (variant_name, description) VALUES ('Original Language', 'Original Language');
 INSERT INTO public.variant (variant_name, description) VALUES ('Translation', 'Translation');
+
+
+
+INSERT INTO public.entity_counter(id, description, prefix, counter) VALUES (1, 'CCLW', 'CCLW', 0);

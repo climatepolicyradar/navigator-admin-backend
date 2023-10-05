@@ -174,7 +174,7 @@ def test_update_raises_when_organisation_invalid(
     with pytest.raises(ValidationError) as e:
         family_service.update(to_write_dto(family))
 
-    expected_msg = "The organisation name test_org is invalid!"
+    expected_msg = "The organisation name CCLW is invalid!"
     assert e.value.message == expected_msg
     assert family_repo_mock.update.call_count == 0
 

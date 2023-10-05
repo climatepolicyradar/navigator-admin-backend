@@ -28,5 +28,5 @@ def create_family_dto(
         last_updated_date=None,
         documents=["doc1", "doc2"],
         collections=["col1", "col2"],
-        organisation="test_org",
+        organisation="CCLW",
     )

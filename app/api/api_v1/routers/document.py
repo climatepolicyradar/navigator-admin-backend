@@ -3,6 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 from app.model.document import (
+    DocumentCreateDTO,
     DocumentReadDTO,
     DocumentWriteDTO,
 )
@@ -122,20 +123,18 @@ async def update_document(
     return document
 
 
-@r.post(
-    "/documents", response_model=DocumentReadDTO, status_code=status.HTTP_201_CREATED
-)
+@r.post("/documents", response_model=str, status_code=status.HTTP_201_CREATED)
 async def create_document(
-    new_document: DocumentReadDTO,
-) -> DocumentReadDTO:
+    new_document: DocumentCreateDTO,
+) -> str:
     """
-    Creates a specific document given the import id.
+    Creates a specific document given the values in DocumentCreateDTO.
 
     :raises HTTPException: If the document is not found a 404 is returned.
-    :return DocumentDTO: returns a DocumentDTO of the new document.
+    :return str: returns a the import_id of the document created.
     """
     try:
-        document = document_service.create(new_document)
+        return document_service.create(new_document)
     except ValidationError as e:
         _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
@@ -143,12 +142,6 @@ async def create_document(
         _LOGGER.error(e.message)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
-        )
-
-    if document is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document not created: {new_document.import_id}",
         )
 
     # See PDCT-305
@@ -170,8 +163,6 @@ async def create_document(
     #     raise HTTPException(
     #         status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
     #     )
-
-    return document
 
 
 @r.delete(

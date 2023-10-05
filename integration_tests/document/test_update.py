@@ -7,7 +7,7 @@ from app.clients.db.models.law_policy.family import FamilyDocument, Slug
 from app.model.document import DocumentWriteDTO
 
 from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
-from unit_tests.helpers.document import create_document_dto
+from unit_tests.helpers.document import create_document_write_dto
 
 
 def _get_doc_tuple(
@@ -39,6 +39,7 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
         type="Annex",
         title="Updated Title",
         source_url="Updated Source",
+        user_language_name="Ghotuo",
     )
     response = client.put(
         "/api/v1/documents",
@@ -72,9 +73,8 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
 
 def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
-    new_document = create_document_dto(
+    new_document = create_document_write_dto(
         import_id="D.0.0.2",
-        family_import_id="A.0.0.3",
         title="Updated Title",
     )
     response = client.put("/api/v1/documents", json=new_document.model_dump())
@@ -100,9 +100,8 @@ def test_update_document_rollback(
     client: TestClient, test_db: Session, rollback_document_repo, user_header_token
 ):
     setup_db(test_db)
-    new_document = create_document_dto(
+    new_document = create_document_write_dto(
         import_id="D.0.0.2",
-        family_import_id="A.0.0.3",
         title="Updated Title",
     )
     response = client.put(
@@ -122,9 +121,8 @@ def test_update_document_when_not_found(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_document = create_document_dto(
+    new_document = create_document_write_dto(
         import_id="D.0.0.22",
-        family_import_id="A.0.0.3",
         title="Updated Title",
     )
     response = client.put(
@@ -142,9 +140,8 @@ def test_update_document_when_db_error(
 ):
     setup_db(test_db)
 
-    new_document = create_document_dto(
+    new_document = create_document_write_dto(
         import_id="D.0.0.2",
-        family_import_id="A.0.0.3",
         title="Updated Title",
     )
     response = client.put(
