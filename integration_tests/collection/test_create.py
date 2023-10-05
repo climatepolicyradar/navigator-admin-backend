@@ -9,7 +9,6 @@ from unit_tests.helpers.collection import create_write_collection_dto
 def test_create_collection(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
     new_collection = create_write_collection_dto(
-        import_id="C.0.0.9",
         title="Title",
         description="test test test",
     )
@@ -33,7 +32,6 @@ def test_create_collection(client: TestClient, test_db: Session, user_header_tok
 def test_create_collection_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     new_collection = create_write_collection_dto(
-        import_id="A.0.0.9",
         title="Title",
         description="test test test",
     )
@@ -49,7 +47,6 @@ def test_create_collection_rollback(
 ):
     setup_db(test_db)
     new_collection = create_write_collection_dto(
-        import_id="A.0.0.9",
         title="Title",
         description="test test test",
     )
@@ -73,7 +70,6 @@ def test_create_collection_when_db_error(
 ):
     setup_db(test_db)
     new_collection = create_write_collection_dto(
-        import_id="A.0.0.9",
         title="Title",
         description="test test test",
     )
@@ -93,7 +89,6 @@ def test_create_collection_when_org_invalid(
 ):
     setup_db(test_db)
     new_collection = create_write_collection_dto(
-        import_id="A.0.0.9",
         title="Title",
         description="test test test",
     )

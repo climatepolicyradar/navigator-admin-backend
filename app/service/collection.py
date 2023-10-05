@@ -84,24 +84,25 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    collection: CollectionWriteDTO, db: Session = db_session.get_db()
+    import_id: str, collection: CollectionWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[CollectionReadDTO]:
     """
     Updates a single collection with the values passed.
 
+    :param import_id str: The collection import_id to change.
     :param CollectionDTO collection: The DTO with all the values to change (or keep).
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[CollectionDTO]: The updated collection or None if not updated.
     """
-    validate_import_id(collection.import_id)
+    validate_import_id(import_id)
 
     # TODO: implement changing of a collection's organisation
     # org_id = organisation.get_id(db, collection.organisation)
 
-    if collection_repo.update(db, collection):
+    if collection_repo.update(db, import_id, collection):
         db.commit()
-        return get(collection.import_id)
+        return get(import_id)
 
 
 @db_session.with_transaction(__name__)
@@ -115,7 +116,6 @@ def create(collection: CollectionCreateDTO, db: Session = db_session.get_db()) -
     :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_id for the collection.
     """
-    id.validate(collection.import_id)
     org_id = organisation.get_id(db, collection.organisation)
 
     return collection_repo.create(db, collection, org_id)

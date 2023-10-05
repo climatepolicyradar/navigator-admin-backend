@@ -30,15 +30,19 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         else:
             return [create_collection_dto("search1")]
 
-    def mock_update_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
+    def mock_update_collection(
+        import_id: str, data: CollectionWriteDTO
+    ) -> Optional[CollectionReadDTO]:
         maybe_throw()
         if not collection_service.missing:
-            return create_collection_dto(data.import_id, data.title, data.description)
+            return create_collection_dto(import_id, data.title, data.description)
 
     def mock_create_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
         maybe_throw()
         if not collection_service.missing:
-            return create_collection_dto(data.import_id, data.title, data.description)
+            return create_collection_dto(
+                "test.new.collection.0", data.title, data.description
+            )
 
     def mock_delete_collection(import_id: str) -> bool:
         maybe_throw()

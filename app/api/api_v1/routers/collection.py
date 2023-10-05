@@ -94,10 +94,11 @@ async def search_collection(q: str = "") -> list[CollectionReadDTO]:
 
 
 @r.put(
-    "/collections",
+    "/collections/{import_id}",
     response_model=CollectionReadDTO,
 )
 async def update_collection(
+    import_id: str,
     new_collection: CollectionWriteDTO,
 ) -> CollectionReadDTO:
     """
@@ -108,7 +109,7 @@ async def update_collection(
     :return CollectionDTO: returns a CollectionDTO of the collection updated.
     """
     try:
-        collection = collection_service.update(new_collection)
+        collection = collection_service.update(import_id, new_collection)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -117,7 +118,7 @@ async def update_collection(
         )
 
     if collection is None:
-        detail = f"Collection not updated: {new_collection.import_id}"
+        detail = f"Collection not updated: {import_id}"
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return collection

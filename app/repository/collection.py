@@ -4,6 +4,7 @@ import logging
 from typing import Optional, Tuple, cast
 
 from sqlalchemy.orm import Session
+from sqlalchemy import Column
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
 from app.clients.db.models.law_policy.collection import (
@@ -12,7 +13,11 @@ from app.clients.db.models.law_policy.collection import (
 )
 from app.clients.db.models.law_policy.family import Family
 from app.errors import RepositoryError
-from app.model.collection import CollectionCreateDTO, CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import (
+    CollectionCreateDTO,
+    CollectionReadDTO,
+    CollectionWriteDTO,
+)
 from app.clients.db.models.law_policy import Collection
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Query
@@ -37,9 +42,7 @@ def _collection_org_from_dto(
             title=dto.title,
             description=dto.description,
         ),
-        CollectionOrganisation(
-            collection_import_id="", organisation_id=org_id
-        ),
+        CollectionOrganisation(collection_import_id="", organisation_id=org_id),
     )
 
 
@@ -124,7 +127,7 @@ def search(db: Session, search_term: str) -> list[CollectionReadDTO]:
     return [_collection_to_dto(db, f) for f in found]
 
 
-def update(db: Session, collection: CollectionWriteDTO) -> bool:
+def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -136,9 +139,7 @@ def update(db: Session, collection: CollectionWriteDTO) -> bool:
     new_values = collection.model_dump()
 
     original_collection = (
-        db.query(Collection)
-        .filter(Collection.import_id == collection.import_id)
-        .one_or_none()
+        db.query(Collection).filter(Collection.import_id == import_id).one_or_none()
     )
 
     if original_collection is None:  # Not found the collection to update
@@ -147,7 +148,7 @@ def update(db: Session, collection: CollectionWriteDTO) -> bool:
 
     result = db.execute(
         db_update(Collection)
-        .where(Collection.import_id == collection.import_id)
+        .where(Collection.import_id == import_id)
         .values(
             title=new_values["title"],
             description=new_values["description"],
@@ -174,15 +175,19 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
         new_collection, collection_organisation = _collection_org_from_dto(
             collection, org_id
         )
-        new_collection.import_id = generate_import_id(db, CountedEntity.Collection, org_id)
+        new_collection.import_id = cast(
+            Column, generate_import_id(db, CountedEntity.Collection, org_id)
+        )
         db.add(new_collection)
         db.add(collection_organisation)
         db.flush()
     except Exception as e:
         _LOGGER.error(e)
-        raise RepositoryError(f"Could not create the collection {collection.description}")
+        raise RepositoryError(
+            f"Could not create the collection {collection.description}"
+        )
 
-    return new_collection.import_id
+    return cast(str, new_collection.import_id)
 
 
 def delete(db: Session, import_id: str) -> bool:
