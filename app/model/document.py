@@ -33,7 +33,6 @@ class DocumentWriteDTO(BaseModel):
     """Representation of a Document."""
 
     # From FamilyDocument
-    import_id: str
     variant_name: str
     role: str
     type: str

@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 from app.errors import RepositoryError
 
-from app.model.document import DocumentReadDTO
+from app.model.document import DocumentCreateDTO, DocumentReadDTO
 
 
 def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
@@ -15,10 +15,10 @@ def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_search(_, q: str) -> list[DocumentReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_update(_, data: DocumentReadDTO) -> Optional[DocumentReadDTO]:
+    def mock_update(_, import_id, data: DocumentReadDTO) -> Optional[DocumentReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_create(_, data: DocumentReadDTO) -> Optional[DocumentReadDTO]:
+    def mock_create(_, data: DocumentCreateDTO) -> Optional[DocumentReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_delete(_, import_id: str) -> bool:

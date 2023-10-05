@@ -94,10 +94,11 @@ async def search_document(q: str = "") -> list[DocumentReadDTO]:
 
 
 @r.put(
-    "/documents",
+    "/documents/{import_id}",
     response_model=DocumentReadDTO,
 )
 async def update_document(
+    import_id: str,
     new_document: DocumentWriteDTO,
 ) -> DocumentReadDTO:
     """
@@ -108,7 +109,7 @@ async def update_document(
     :return DocumentDTO: returns a DocumentDTO of the document updated.
     """
     try:
-        document = document_service.update(new_document)
+        document = document_service.update(import_id, new_document)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -117,7 +118,7 @@ async def update_document(
         )
 
     if document is None:
-        detail = f"Document not updated: {new_document.import_id}"
+        detail = f"Document not updated: {import_id}"
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return document

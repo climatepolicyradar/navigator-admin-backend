@@ -82,7 +82,7 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    document: DocumentWriteDTO, db: Session = db_session.get_db()
+    import_id: str, document: DocumentWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[DocumentReadDTO]:
     """
     Updates a single document with the values passed.
@@ -92,14 +92,14 @@ def update(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[documentDTO]: The updated document or None if not updated.
     """
-    validate_import_id(document.import_id)
+    validate_import_id(import_id)
 
     # TODO: implement changing of a document's organisation
     # org_id = organisation.get_id(db, document.organisation)
 
-    if document_repo.update(db, document):
+    if document_repo.update(db, import_id, document):
         db.commit()
-        return get(document.import_id)
+        return get(import_id)
 
 
 @db_session.with_transaction(__name__)
