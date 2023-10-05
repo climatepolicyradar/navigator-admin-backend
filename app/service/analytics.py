@@ -34,6 +34,11 @@ def summary() -> Optional[SummaryDTO]:
             n_documents = document_repo.count(db)
             n_events = 0
 
+        if any(
+            item is None for item in [n_collections, n_families, n_documents, n_events]
+        ):
+            return
+
         return SummaryDTO(
             n_documents=n_documents,
             n_families=n_families,

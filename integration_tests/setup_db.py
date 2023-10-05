@@ -128,6 +128,14 @@ EXPECTED_DOCUMENTS = [
     },
 ]
 
+EXPECTED_ANALYTICS_SUMMARY_KEYS = ["n_documents", "n_families", "n_collections", "n_events"]
+EXPECTED_ANALYTICS_SUMMARY = {
+    "n_documents": EXPECTED_NUM_DOCUMENTS,
+    "n_families": EXPECTED_NUM_FAMILIES,
+    "n_collections": EXPECTED_NUM_COLLECTIONS,
+    "n_events": 0,
+}
+
 
 def setup_db(test_db: Session):
     with open("integration_tests/default-data.sql") as file:
