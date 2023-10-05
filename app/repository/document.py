@@ -3,7 +3,7 @@ import logging
 from typing import Optional, cast
 from sqlalchemy.orm import Session, Query
 from sqlalchemy import Column
-from app.clients.db.models.app.counters import CountedEntity, EntityCounter
+from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.law_policy.family import (
     DocumentStatus,
     FamilyDocumentRole,
@@ -27,7 +27,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy import or_, update as db_update
 from sqlalchemy_utils import escape_like
 
-from app.repository.helpers import generate_slug
+from app.repository.helpers import generate_import_id, generate_slug
 from app.repository import family as family_repo
 
 
@@ -151,7 +151,7 @@ def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
     return [_document_to_dto(d) for d in found]
 
 
-def update(db: Session, document: DocumentWriteDTO) -> bool:
+def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -166,12 +166,12 @@ def update(db: Session, document: DocumentWriteDTO) -> bool:
 
     original_fd = (
         db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == document.import_id)
+        .filter(FamilyDocument.import_id == import_id)
         .one_or_none()
     )
 
     if original_fd is None:  # Not found the document to update
-        _LOGGER.error(f"Unable to find document for update {document.import_id}")
+        _LOGGER.error(f"Unable to find document for update {import_id}")
         return False
 
     original_pd = (
@@ -250,11 +250,10 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
                 f"Cannot find counter to generate id for {family_doc.family_import_id}"
             )
 
-        counter: EntityCounter = (
-            db.query(EntityCounter).filter(EntityCounter.prefix == org.name).one()
-        )
+        org_name = cast(str, org.name)
+
         family_doc.import_id = cast(
-            Column, counter.create_import_id(CountedEntity.Document)
+            Column, generate_import_id(db, CountedEntity.Document, org_name)
         )
 
         # Add the new document and its language link

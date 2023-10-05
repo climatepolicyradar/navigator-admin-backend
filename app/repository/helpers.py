@@ -1,9 +1,11 @@
 """Helper functions for repos"""
 
-from typing import cast
+from typing import Union, cast
 from uuid import uuid4
 from slugify import slugify
 from sqlalchemy.orm import Session
+from app.clients.db.models.app.counters import CountedEntity, EntityCounter
+from app.clients.db.models.app.users import Organisation
 
 from app.clients.db.models.law_policy.family import Slug
 
@@ -40,3 +42,28 @@ def generate_slug(
             )
     lookup.add(slug)
     return slug
+
+
+def generate_import_id(
+    db: Session, entity_type: CountedEntity, org: Union[str, int]
+) -> str:
+    """
+    Generates an import_id given the parameters.
+
+    If the org id is supplied the name is queried for to find the counter.
+
+    :param Session db: the database session
+    :param CountedEntity entity_type: the entity to be counted
+    :param Union[str, int] org: the organisation id or name.
+    :return str: the generated import_id
+    """
+
+    if type(org) == str:
+        org_name = org
+    else:
+        org_name = db.query(Organisation.name).filter(Organisation.id == org)
+
+    counter: EntityCounter = (
+        db.query(EntityCounter).filter(EntityCounter.prefix == org_name).one()
+    )
+    return counter.create_import_id(entity_type)

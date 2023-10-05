@@ -16,9 +16,8 @@ def create_document_create_dto(
     )
 
 
-def create_document_write_dto(import_id: str, title: str = "title") -> DocumentWriteDTO:
+def create_document_write_dto(title: str = "title") -> DocumentWriteDTO:
     return DocumentWriteDTO(
-        import_id=import_id,
         variant_name="Original Language",
         role="MAIN",
         type="Law",

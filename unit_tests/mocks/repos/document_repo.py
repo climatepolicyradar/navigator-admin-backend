@@ -32,7 +32,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
             return [create_document_read_dto("search1")]
         return []
 
-    def mock_update(_, data: DocumentReadDTO) -> bool:
+    def mock_update(_, import_id: str, data: DocumentReadDTO) -> bool:
         maybe_throw()
         return not document_repo.return_empty
 

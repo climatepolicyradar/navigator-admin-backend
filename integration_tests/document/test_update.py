@@ -33,7 +33,6 @@ def _get_doc_tuple(
 def test_update_document(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
     new_document = DocumentWriteDTO(
-        import_id="D.0.0.2",
         variant_name="Translation",
         role="SUMMARY",
         type="Annex",
@@ -42,7 +41,7 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
         user_language_name="Ghotuo",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
@@ -74,10 +73,9 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
 def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
     new_document = create_document_write_dto(
-        import_id="D.0.0.2",
         title="Updated Title",
     )
-    response = client.put("/api/v1/documents", json=new_document.model_dump())
+    response = client.put("/api/v1/documents/D.0.0.2", json=new_document.model_dump())
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -86,7 +84,11 @@ def test_update_document_idempotent(
 ):
     setup_db(test_db)
     document = EXPECTED_DOCUMENTS[1]
-    response = client.put("/api/v1/documents", json=document, headers=user_header_token)
+    response = client.put(
+        f"/api/v1/documents/{document['import_id']}",
+        json=document,
+        headers=user_header_token,
+    )
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
@@ -101,11 +103,10 @@ def test_update_document_rollback(
 ):
     setup_db(test_db)
     new_document = create_document_write_dto(
-        import_id="D.0.0.2",
         title="Updated Title",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
@@ -122,11 +123,10 @@ def test_update_document_when_not_found(
 ):
     setup_db(test_db)
     new_document = create_document_write_dto(
-        import_id="D.0.0.22",
         title="Updated Title",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.22",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
@@ -141,11 +141,10 @@ def test_update_document_when_db_error(
     setup_db(test_db)
 
     new_document = create_document_write_dto(
-        import_id="D.0.0.2",
         title="Updated Title",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
