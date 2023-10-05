@@ -107,6 +107,7 @@ def all(db: Session) -> list[FamilyReadDTO]:
     """
     Returns all the families.
 
+    :param db Session: the database connection
     :return Optional[FamilyResponse]: All of things
     """
     family_geo_metas = _get_query(db).all()
@@ -123,6 +124,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     """
     Gets a single family from the repository.
 
+    :param db Session: the database connection
     :param str import_id: The import_id of the family
     :return Optional[FamilyResponse]: A single family or nothing
     """
@@ -139,6 +141,7 @@ def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching title and summary.
 
+    :param db Session: the database connection
     :param str search_term: Any search term to filter on title or summary
     :return Optional[list[FamilyResponse]]: A list of matches
     """
@@ -153,6 +156,7 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
     """
     Updates a single entry with the new values passed.
 
+    :param db Session: the database connection
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
     :param int geo_id: a validated geography id
@@ -228,6 +232,7 @@ def create(db: Session, family: FamilyWriteDTO, geo_id: int, org_id: int) -> boo
     """
     Creates a new family.
 
+    :param db Session: the database connection
     :param FamilyDTO family: the values for the new family
     :param int geo_id: a validated geography id
     :param int org_id: a validated organisation id
@@ -273,6 +278,7 @@ def delete(db: Session, import_id: str) -> bool:
     """
     Deletes a single family by the import id.
 
+    :param db Session: the database connection
     :param str import_id: The family import id to delete.
     :return bool: True if deleted False if not.
     """
@@ -288,3 +294,19 @@ def delete(db: Session, import_id: str) -> bool:
         result = db.execute(c)
 
     return result.rowcount > 0  # type: ignore
+
+
+def get_organisation(db: Session, family_import_id: str) -> Optional[Organisation]:
+    """
+    Gets the owning organisation of a family.
+
+    :param db Session: the database connection
+    :param str family_import_id: The family import_id in question
+    :return Optional[Organisation]: Any associated organisation
+    """
+    family_org = db.query(FamilyOrganisation).filter(
+        FamilyOrganisation.family_import_id == family_import_id
+    )
+
+    # TODO - can this be improved - we get warnings on integration tests ?
+    return db.query(Organisation).select_from(family_org).one_or_none()

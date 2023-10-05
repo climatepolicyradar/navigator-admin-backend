@@ -9,7 +9,7 @@ def create_collection_dto(
         title=title,
         description=description,
         families=[],
-        organisation="test_org",
+        organisation="CCLW",
     )
 
 
@@ -20,5 +20,5 @@ def create_write_collection_dto(
         import_id=import_id,
         title=title,
         description=description,
-        organisation="test_org",
+        organisation="CCLW",
     )

@@ -1,8 +1,8 @@
 import pytest
 from app.model.document import DocumentReadDTO, DocumentWriteDTO
 import app.service.document as doc_service
-from app.errors import ValidationError
-from unit_tests.mocks.repos.document_repo import create_document_dto as create_dto
+from app.errors import RepositoryError, ValidationError
+from unit_tests.helpers.document import create_document_create_dto
 
 
 def _to_write_dto(dto: DocumentReadDTO) -> DocumentWriteDTO:
@@ -13,6 +13,7 @@ def _to_write_dto(dto: DocumentReadDTO) -> DocumentWriteDTO:
         type=dto.type,
         title=dto.title,
         source_url=dto.source_url,
+        user_language_name=dto.user_language_name,
     )
 
 
@@ -145,7 +146,7 @@ def test_update_raises_when_invalid_id(
 
 
 def test_create(document_repo_mock, family_repo_mock):
-    new_document = create_dto(import_id="A.0.0.5")
+    new_document = create_document_create_dto()
     document = doc_service.create(new_document)
     assert document is not None
     assert document_repo_mock.create.call_count == 1
@@ -153,25 +154,17 @@ def test_create(document_repo_mock, family_repo_mock):
 
 
 def test_create_when_db_fails(document_repo_mock, family_repo_mock):
-    new_document = create_dto(import_id="a.b.c.d")
+    new_document = create_document_create_dto()
     document_repo_mock.return_empty = True
-    document = doc_service.create(new_document)
-    assert document is None
+
+    with pytest.raises(RepositoryError):
+        doc_service.create(new_document)
     assert document_repo_mock.create.call_count == 1
     assert family_repo_mock.get.call_count == 1
 
 
-def test_create_raises_when_invalid_id(document_repo_mock):
-    new_document = create_dto(import_id="invalid")
-    with pytest.raises(ValidationError) as e:
-        doc_service.create(new_document)
-    expected_msg = f"The import id {new_document.import_id} is invalid!"
-    assert e.value.message == expected_msg
-    assert document_repo_mock.create.call_count == 0
-
-
 def test_create_raises_when_invalid_family_id(document_repo_mock):
-    new_document = create_dto(import_id="a.b.c.d", family_import_id="invalid family")
+    new_document = create_document_create_dto(family_import_id="invalid family")
     with pytest.raises(ValidationError) as e:
         doc_service.create(new_document)
     expected_msg = f"The import id {new_document.family_import_id} is invalid!"

@@ -2,6 +2,8 @@ from typing import Tuple
 import logging
 from typing import Optional, cast
 from sqlalchemy.orm import Session, Query
+from sqlalchemy import Column
+from app.clients.db.models.app.counters import CountedEntity, EntityCounter
 from app.clients.db.models.law_policy.family import (
     DocumentStatus,
     FamilyDocumentRole,
@@ -9,8 +11,8 @@ from app.clients.db.models.law_policy.family import (
     Slug,
     Variant,
 )
-from app.errors import RepositoryError
-from app.model.document import DocumentReadDTO, DocumentWriteDTO
+from app.errors import RepositoryError, ValidationError
+from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.clients.db.models.document.physical_document import (
     Language,
     LanguageSource,
@@ -26,6 +28,7 @@ from sqlalchemy import or_, update as db_update
 from sqlalchemy_utils import escape_like
 
 from app.repository.helpers import generate_slug
+from app.repository import family as family_repo
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,19 +74,17 @@ def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
     )
 
 
-def _dto_to_family_document_dict(dto: DocumentReadDTO) -> dict:
+def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
     return {
         "family_import_id": dto.family_import_id,
         "physical_document_id": 0,
-        "import_id": dto.import_id,
         "variant_name": dto.variant_name,
-        "document_status": dto.status,
         "document_type": dto.type,
         "document_role": dto.role,
     }
 
 
-def _document_tuple_from_dto(db: Session, dto: DocumentReadDTO) -> CreateObjects:
+def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjects:
     language = PhysicalDocumentLanguage(
         language_id=db.query(Language.id)
         .filter(Language.name == dto.user_language_name)
@@ -96,10 +97,7 @@ def _document_tuple_from_dto(db: Session, dto: DocumentReadDTO) -> CreateObjects
     phys_doc = PhysicalDocument(
         id=None,
         title=dto.title,
-        md5_sum=dto.md5_sum,
-        cdn_object=dto.cdn_object,
         source_url=dto.source_url,
-        content_type=dto.content_type,
     )
     return language, fam_doc, phys_doc
 
@@ -224,34 +222,50 @@ def update(db: Session, document: DocumentWriteDTO) -> bool:
     return True
 
 
-def create(db: Session, document: DocumentReadDTO) -> Optional[DocumentReadDTO]:
+def create(db: Session, document: DocumentCreateDTO) -> str:
     """
     Creates a new document.
 
     :param db Session: the database connection
     :param DocumentDTO document: the values for the new document
     :param int org_id: a validated organisation id
-    :return Optional[DocumentDTO]: the new document created
+    :return str: The import id
     """
     try:
-        language, fd, pd = _document_tuple_from_dto(db, document)
+        language, family_doc, phys_doc = _document_tuple_from_dto(db, document)
 
-        db.add(pd)
+        db.add(phys_doc)
         db.flush()
 
         # Update the FamilyDocument with the new PhysicalDocument id
-        fd.physical_document_id = pd.id
-        # Update the language link with the new PhysicalDocument id
-        language.document_id = pd.id
+        family_doc.physical_document_id = phys_doc.id
 
-        db.add(fd)
+        # Add the language link with the new PhysicalDocument id
+        language.document_id = phys_doc.id
+
+        # Generate the import_id for the new document
+        org = family_repo.get_organisation(db, cast(str, family_doc.family_import_id))
+        if org is None:
+            raise ValidationError(
+                f"Cannot find counter to generate id for {family_doc.family_import_id}"
+            )
+
+        counter: EntityCounter = (
+            db.query(EntityCounter).filter(EntityCounter.prefix == org.name).one()
+        )
+        family_doc.import_id = cast(
+            Column, counter.create_import_id(CountedEntity.Document)
+        )
+
+        # Add the new document and its language link
+        db.add(family_doc)
         db.add(language)
         db.flush()
 
         # Finally the slug
         db.add(
             Slug(
-                family_document_import_id=fd.import_id,
+                family_document_import_id=family_doc.import_id,
                 name=generate_slug(db, document.title),
             )
         )
@@ -259,7 +273,7 @@ def create(db: Session, document: DocumentReadDTO) -> Optional[DocumentReadDTO]:
         _LOGGER.exception("Error when creating document!")
         raise RepositoryError(str(e))
 
-    return document
+    return cast(str, family_doc.import_id)
 
 
 def delete(db: Session, import_id: str) -> bool:
