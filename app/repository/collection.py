@@ -4,6 +4,7 @@ import logging
 from typing import Optional, Tuple, cast
 
 from sqlalchemy.orm import Session
+from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
 from app.clients.db.models.law_policy.collection import (
     CollectionFamily,
@@ -11,13 +12,15 @@ from app.clients.db.models.law_policy.collection import (
 )
 from app.clients.db.models.law_policy.family import Family
 from app.errors import RepositoryError
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import CollectionCreateDTO, CollectionReadDTO, CollectionWriteDTO
 from app.clients.db.models.law_policy import Collection
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Query
 
 from sqlalchemy import or_, update as db_update, delete as db_delete
 from sqlalchemy_utils import escape_like
+
+from app.repository.helpers import generate_import_id
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,16 +29,16 @@ CollectionOrg = Tuple[Collection, Organisation]
 
 
 def _collection_org_from_dto(
-    dto: CollectionWriteDTO, org_id: int
+    dto: CollectionCreateDTO, org_id: int
 ) -> Tuple[Collection, CollectionOrganisation]:
     return (
         Collection(
-            import_id=dto.import_id,
+            import_id="",
             title=dto.title,
             description=dto.description,
         ),
         CollectionOrganisation(
-            collection_import_id=dto.import_id, organisation_id=org_id
+            collection_import_id="", organisation_id=org_id
         ),
     )
 
@@ -158,7 +161,7 @@ def update(db: Session, collection: CollectionWriteDTO) -> bool:
     return True
 
 
-def create(db: Session, collection: CollectionWriteDTO, org_id: int) -> bool:
+def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
     """
     Creates a new collection.
 
@@ -171,13 +174,15 @@ def create(db: Session, collection: CollectionWriteDTO, org_id: int) -> bool:
         new_collection, collection_organisation = _collection_org_from_dto(
             collection, org_id
         )
+        new_collection.import_id = generate_import_id(db, CountedEntity.Collection, org_id)
         db.add(new_collection)
         db.add(collection_organisation)
+        db.flush()
     except Exception as e:
         _LOGGER.error(e)
-        return False
+        raise RepositoryError(f"Could not create the collection {collection.description}")
 
-    return True
+    return new_collection.import_id
 
 
 def delete(db: Session, import_id: str) -> bool:
