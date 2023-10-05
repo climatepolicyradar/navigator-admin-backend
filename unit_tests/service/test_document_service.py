@@ -7,7 +7,6 @@ from unit_tests.helpers.document import create_document_create_dto
 
 def _to_write_dto(dto: DocumentReadDTO) -> DocumentWriteDTO:
     return DocumentWriteDTO(
-        import_id=dto.import_id,
         variant_name=dto.variant_name,
         role=dto.role,
         type=dto.type,
@@ -111,7 +110,7 @@ def test_update(
     document = doc_service.get("a.b.c.d")
     assert document is not None
 
-    result = doc_service.update(_to_write_dto(document))
+    result = doc_service.update(document.import_id, _to_write_dto(document))
     assert result is not None
     assert document_repo_mock.update.call_count == 1
 
@@ -123,7 +122,7 @@ def test_update_when_missing(
     assert document is not None
     document_repo_mock.return_empty = True
 
-    result = doc_service.update(_to_write_dto(document))
+    result = doc_service.update(document.import_id, _to_write_dto(document))
     assert result is None
     assert document_repo_mock.update.call_count == 1
 
@@ -136,7 +135,7 @@ def test_update_raises_when_invalid_id(
     document.import_id = "invalid"
 
     with pytest.raises(ValidationError) as e:
-        doc_service.update(_to_write_dto(document))
+        doc_service.update(document.import_id, _to_write_dto(document))
     expected_msg = f"The import id {document.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert document_repo_mock.update.call_count == 0
