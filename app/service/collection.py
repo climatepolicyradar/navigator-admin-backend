@@ -9,7 +9,11 @@ from typing import Optional
 
 from pydantic import ConfigDict, validate_call
 from app.errors import RepositoryError
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import (
+    CollectionCreateDTO,
+    CollectionReadDTO,
+    CollectionWriteDTO,
+)
 from app.repository import collection_repo
 import app.clients.db.session as db_session
 from sqlalchemy import exc
@@ -102,24 +106,19 @@ def update(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(
-    collection: CollectionWriteDTO, db: Session = db_session.get_db()
-) -> Optional[CollectionReadDTO]:
+def create(collection: CollectionCreateDTO, db: Session = db_session.get_db()) -> str:
     """
-        Creates a new collection with the values passed.
+    Creates a new collection with the values passed.
 
-        :param CollectionDTO collection: The values for the new collection.
-        :raises RepositoryError: raised on a database error
-        :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[CollectionDTO]: The new created collection or
-    None if unsuccessful.
+    :param CollectionDTO collection: The values for the new collection.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return str: The new import_id for the collection.
     """
     id.validate(collection.import_id)
     org_id = organisation.get_id(db, collection.organisation)
 
-    if collection_repo.create(db, collection, org_id):
-        db.commit()
-        return get(collection.import_id)
+    return collection_repo.create(db, collection, org_id)
 
 
 @db_session.with_transaction(__name__)
