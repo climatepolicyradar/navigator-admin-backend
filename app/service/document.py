@@ -141,3 +141,18 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     """
     id.validate(import_id)
     return document_repo.delete(db, import_id)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def count() -> Optional[int]:
+    """
+    Gets a count of documents from the repository.
+
+    :return Optional[int]: The number of documents in the repository or none.
+    """
+    try:
+        with db_session.get_db() as db:
+            return document_repo.count(db)
+    except exc.SQLAlchemyError as e:
+        _LOGGER.error(e)
+        raise RepositoryError(str(e))

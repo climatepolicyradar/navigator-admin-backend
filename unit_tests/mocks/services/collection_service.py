@@ -47,6 +47,12 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         maybe_throw()
         return not collection_service.missing
 
+    def mock_count_collection() -> Optional[int]:
+        maybe_throw()
+        if collection_service.missing:
+            return None
+        return 11
+
     monkeypatch.setattr(collection_service, "get", mock_get_collection)
     mocker.spy(collection_service, "get")
 
@@ -64,3 +70,6 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
 
     monkeypatch.setattr(collection_service, "delete", mock_delete_collection)
     mocker.spy(collection_service, "delete")
+
+    monkeypatch.setattr(collection_service, "count", mock_count_collection)
+    mocker.spy(collection_service, "count")

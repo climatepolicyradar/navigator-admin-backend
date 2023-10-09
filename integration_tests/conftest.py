@@ -8,9 +8,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import app.clients.db.session as db_session
 from app.main import app
-from integration_tests.mocks.bad_family_repo import mock_bad_family_repo
-from integration_tests.mocks.bad_collection_repo import mock_bad_collection_repo
-from integration_tests.mocks.bad_document_repo import mock_bad_document_repo
+from integration_tests.mocks.bad_family_repo import (
+    mock_bad_family_repo,
+    mock_family_count_none,
+)
+from integration_tests.mocks.bad_collection_repo import (
+    mock_bad_collection_repo,
+    mock_collection_count_none,
+)
+from integration_tests.mocks.bad_document_repo import (
+    mock_bad_document_repo,
+    mock_document_count_none,
+)
 from integration_tests.mocks.rollback_collection_repo import (
     mock_rollback_collection_repo,
 )
@@ -86,6 +95,35 @@ def bad_collection_repo(monkeypatch, mocker):
 def bad_document_repo(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_bad_document_repo(document_repo, monkeypatch, mocker)
+    yield document_repo
+
+
+# @pytest.fixture
+# def collection_count_none(monkeypatch, mocker):
+#     """Mocks the service for a single test."""
+#     mock_document_count_none(document_repo, monkeypatch, mocker)
+#     mock_family_count_none(family_repo, monkeypatch, mocker)
+#     mock_collection_count_none(collection_repo, monkeypatch, mocker)
+
+
+@pytest.fixture
+def collection_count_none(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_collection_count_none(collection_repo, monkeypatch, mocker)
+    yield collection_repo
+
+
+@pytest.fixture
+def family_repo_count_none(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_family_count_none(family_repo, monkeypatch, mocker)
+    yield family_repo
+
+
+@pytest.fixture
+def document_count_none(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_document_count_none(document_repo, monkeypatch, mocker)
     yield document_repo
 
 

@@ -1,6 +1,10 @@
 """Endpoints for managing the Analytics service."""
 import logging
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
+from app.errors import RepositoryError
+
+import app.service.analytics as analytics_service
+from app.model.analytics import SummaryDTO
 
 analytics_router = r = APIRouter()
 
@@ -9,18 +13,26 @@ _LOGGER = logging.getLogger(__name__)
 
 @r.get(
     "/analytics/summary",
-    response_model=dict[str, int],
+    response_model=SummaryDTO,
 )
-async def get_analytics_summary() -> dict[str, int]:
+async def get_analytics_summary() -> SummaryDTO:
     """
     Returns an analytics summary.
 
     :return dict[str, int]: returns a dictionary of the summarised analytics
     data in key (str): value (int) form.
     """
-    return {
-        "n_documents": 1000,
-        "n_families": 800,
-        "n_collections": 10,
-        "n_events": 50,
-    }
+    try:
+        summary_dto = analytics_service.summary()
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
+    if any(summary_value is None for _, summary_value in summary_dto):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Analytics summary not found",
+        )
+
+    return summary_dto

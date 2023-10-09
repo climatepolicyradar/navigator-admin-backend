@@ -12,7 +12,7 @@ def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
 
     def maybe_throw():
         if family_repo.throw_repository_error:
-            raise exc.SQLAlchemyError("")
+            raise exc.SQLAlchemyError("bad repo")
 
     def mock_get_all(_):
         return [create_family_dto("test")]
@@ -40,6 +40,12 @@ def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not family_repo.return_empty
 
+    def mock_get_count(_) -> Optional[int]:
+        maybe_throw()
+        if not family_repo.return_empty:
+            return 22
+        return
+
     monkeypatch.setattr(family_repo, "get", mock_get)
     mocker.spy(family_repo, "get")
 
@@ -57,3 +63,6 @@ def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(family_repo, "delete", mock_delete)
     mocker.spy(family_repo, "delete")
+
+    monkeypatch.setattr(family_repo, "count", mock_get_count)
+    mocker.spy(family_repo, "count")

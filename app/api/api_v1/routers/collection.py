@@ -1,5 +1,6 @@
 """Endpoints for managing the Collection entity."""
 import logging
+from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
