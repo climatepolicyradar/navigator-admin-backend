@@ -2,7 +2,6 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from sqlalchemy import exc
-from app.errors import RepositoryError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO
 from unit_tests.helpers.document import create_document_read_dto
 
@@ -32,15 +31,17 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
             return [create_document_read_dto("search1")]
         return []
 
-    def mock_update(_, import_id: str, data: DocumentReadDTO) -> bool:
+    def mock_update(_, import_id: str, data: DocumentReadDTO) -> DocumentReadDTO:
         maybe_throw()
-        return not document_repo.return_empty
+        if document_repo.return_empty:
+            raise exc.NoResultFound()
+        return create_document_read_dto("a.b.c.d")
 
     def mock_create(_, data: DocumentCreateDTO) -> str:
         maybe_throw()
         if document_repo.return_empty:
-            raise RepositoryError("testing error")
-        return "test.new.doc.0  "
+            raise exc.NoResultFound()
+        return "test.new.doc.0"
 
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()

@@ -97,9 +97,14 @@ def update(
     # TODO: implement changing of a document's organisation
     # org_id = organisation.get_id(db, document.organisation)
 
-    if document_repo.update(db, import_id, document):
-        db.commit()
-        return get(import_id)
+    try:
+        if document_repo.update(db, import_id, document):
+            db.commit()
+            return get(import_id)
+
+    except exc.SQLAlchemyError:
+        _LOGGER.exception(f"While updating document {import_id}")
+        raise RepositoryError(f"Error when updating document {import_id}")
 
 
 @db_session.with_transaction(__name__)

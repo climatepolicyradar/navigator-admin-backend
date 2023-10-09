@@ -4,7 +4,11 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import (
+    CollectionReadDTO,
+    CollectionWriteDTO,
+    CollectionCreateDTO,
+)
 import app.service.collection as collection_service
 
 collections_router = r = APIRouter()
@@ -91,10 +95,11 @@ async def search_collection(q: str = "") -> list[CollectionReadDTO]:
 
 
 @r.put(
-    "/collections",
+    "/collections/{import_id}",
     response_model=CollectionReadDTO,
 )
 async def update_collection(
+    import_id: str,
     new_collection: CollectionWriteDTO,
 ) -> CollectionReadDTO:
     """
@@ -105,7 +110,7 @@ async def update_collection(
     :return CollectionDTO: returns a CollectionDTO of the collection updated.
     """
     try:
-        collection = collection_service.update(new_collection)
+        collection = collection_service.update(import_id, new_collection)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -114,7 +119,7 @@ async def update_collection(
         )
 
     if collection is None:
-        detail = f"Collection not updated: {new_collection.import_id}"
+        detail = f"Collection not updated: {import_id}"
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return collection
@@ -122,20 +127,20 @@ async def update_collection(
 
 @r.post(
     "/collections",
-    response_model=CollectionWriteDTO,
+    response_model=str,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_collection(
-    new_collection: CollectionWriteDTO,
-) -> CollectionReadDTO:
+    new_collection: CollectionCreateDTO,
+) -> str:
     """
     Creates a specific collection given the import id.
 
     :raises HTTPException: If the collection is not found a 404 is returned.
-    :return CollectionDTO: returns a CollectionDTO of the new collection.
+    :return str: returns the import_id of the new collection.
     """
     try:
-        collection = collection_service.create(new_collection)
+        return collection_service.create(new_collection)
     except ValidationError as e:
         _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
@@ -144,14 +149,6 @@ async def create_collection(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
-
-    if collection is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Collection not created: {new_collection.import_id}",
-        )
-
-    return collection
 
 
 @r.delete(

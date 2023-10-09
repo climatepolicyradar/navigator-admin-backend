@@ -9,7 +9,11 @@ from typing import Optional
 
 from pydantic import ConfigDict, validate_call
 from app.errors import RepositoryError
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import (
+    CollectionCreateDTO,
+    CollectionReadDTO,
+    CollectionWriteDTO,
+)
 from app.repository import collection_repo
 import app.clients.db.session as db_session
 from sqlalchemy import exc
@@ -36,9 +40,9 @@ def get(import_id: str) -> Optional[CollectionReadDTO]:
     try:
         with db_session.get_db() as db:
             return collection_repo.get(db, import_id)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
+    except exc.SQLAlchemyError:
+        _LOGGER.exception(f"When getting collection {import_id}")
+        raise RepositoryError(f"Error when getting collection {import_id}")
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -48,8 +52,12 @@ def all() -> list[CollectionReadDTO]:
 
     :return list[CollectionDTO]: The list of collections.
     """
-    with db_session.get_db() as db:
-        return collection_repo.all(db)
+    try:
+        with db_session.get_db() as db:
+            return collection_repo.all(db)
+    except exc.SQLAlchemyError:
+        _LOGGER.exception("When getting all collections")
+        raise RepositoryError("Error when getting all collection")
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -60,8 +68,12 @@ def search(search_term: str) -> list[CollectionReadDTO]:
     :param str search_term: Search pattern to match.
     :return list[CollectionDTO]: The list of collections matching the search term.
     """
-    with db_session.get_db() as db:
-        return collection_repo.search(db, search_term)
+    try:
+        with db_session.get_db() as db:
+            return collection_repo.search(db, search_term)
+    except exc.SQLAlchemyError:
+        _LOGGER.exception(f"When searching for collections with '{search_term}'")
+        raise RepositoryError(f"When searching for collections with '{search_term}'")
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -80,46 +92,53 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    collection: CollectionWriteDTO, db: Session = db_session.get_db()
+    import_id: str, collection: CollectionWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[CollectionReadDTO]:
     """
     Updates a single collection with the values passed.
 
+    :param import_id str: The collection import_id to change.
     :param CollectionDTO collection: The DTO with all the values to change (or keep).
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[CollectionDTO]: The updated collection or None if not updated.
     """
-    validate_import_id(collection.import_id)
 
     # TODO: implement changing of a collection's organisation
     # org_id = organisation.get_id(db, collection.organisation)
 
-    if collection_repo.update(db, collection):
-        db.commit()
-        return get(collection.import_id)
+    validate_import_id(import_id)
+    try:
+        with db_session.get_db() as db:
+            if collection_repo.update(db, import_id, collection):
+                db.commit()
+                return get(import_id)
+    except exc.SQLAlchemyError:
+        _LOGGER.exception(f"When updating collection '{import_id}'")
+        raise RepositoryError(f"Error when updating collection '{import_id}'")
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(
-    collection: CollectionWriteDTO, db: Session = db_session.get_db()
-) -> Optional[CollectionReadDTO]:
+def create(collection: CollectionCreateDTO, db: Session = db_session.get_db()) -> str:
     """
-        Creates a new collection with the values passed.
+    Creates a new collection with the values passed.
 
-        :param CollectionDTO collection: The values for the new collection.
-        :raises RepositoryError: raised on a database error
-        :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[CollectionDTO]: The new created collection or
-    None if unsuccessful.
+    :param CollectionDTO collection: The values for the new collection.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return str: The new import_id for the collection.
     """
-    id.validate(collection.import_id)
-    org_id = organisation.get_id(db, collection.organisation)
+    try:
+        org_id = organisation.get_id(db, collection.organisation)
 
-    if collection_repo.create(db, collection, org_id):
-        db.commit()
-        return get(collection.import_id)
+        return collection_repo.create(db, collection, org_id)
+
+    except exc.SQLAlchemyError:
+        _LOGGER.exception(f"When creating collection '{collection.description}'")
+        raise RepositoryError(
+            f"Error when creating collection '{collection.description}'"
+        )
 
 
 @db_session.with_transaction(__name__)

@@ -3,7 +3,7 @@ from pytest import MonkeyPatch
 from app.errors import RepositoryError
 
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
-from unit_tests.helpers.collection import create_collection_dto
+from unit_tests.helpers.collection import create_collection_read_dto
 
 
 def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker):
@@ -16,29 +16,32 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
 
     def mock_get_all_collections():
         maybe_throw()
-        return [create_collection_dto("test")]
+        return [create_collection_read_dto("test")]
 
     def mock_get_collection(import_id: str) -> Optional[CollectionReadDTO]:
         maybe_throw()
         if not collection_service.missing:
-            return create_collection_dto(import_id)
+            return create_collection_read_dto(import_id)
 
     def mock_search_collections(q: str) -> list[CollectionReadDTO]:
         maybe_throw()
         if collection_service.missing:
             return []
         else:
-            return [create_collection_dto("search1")]
+            return [create_collection_read_dto("search1")]
 
-    def mock_update_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
+    def mock_update_collection(
+        import_id: str, data: CollectionWriteDTO
+    ) -> Optional[CollectionReadDTO]:
         maybe_throw()
         if not collection_service.missing:
-            return create_collection_dto(data.import_id, data.title, data.description)
+            return create_collection_read_dto(import_id, data.title, data.description)
 
-    def mock_create_collection(data: CollectionWriteDTO) -> Optional[CollectionReadDTO]:
+    # TODO: Think: Is this return value correct?
+    def mock_create_collection(data: CollectionWriteDTO) -> Optional[str]:
         maybe_throw()
         if not collection_service.missing:
-            return create_collection_dto(data.import_id, data.title, data.description)
+            return "test.new.collection.0"
 
     def mock_delete_collection(import_id: str) -> bool:
         maybe_throw()

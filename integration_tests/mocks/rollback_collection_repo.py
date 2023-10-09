@@ -11,9 +11,9 @@ def mock_rollback_collection_repo(collection_repo, monkeypatch: MonkeyPatch, moc
     actual_delete = collection_repo.delete
 
     def mock_update_collection(
-        db, data: CollectionReadDTO
+        db, import_id: str, data: CollectionReadDTO
     ) -> Optional[CollectionReadDTO]:
-        actual_update(db, data)
+        actual_update(db, import_id, data)
         raise NoResultFound()
 
     def mock_create_collection(

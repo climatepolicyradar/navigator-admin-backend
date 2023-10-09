@@ -1,7 +1,11 @@
-from app.model.collection import CollectionReadDTO, CollectionWriteDTO
+from app.model.collection import (
+    CollectionReadDTO,
+    CollectionWriteDTO,
+    CollectionCreateDTO,
+)
 
 
-def create_collection_dto(
+def create_collection_read_dto(
     import_id: str, title: str = "title", description="description"
 ) -> CollectionReadDTO:
     return CollectionReadDTO(
@@ -13,11 +17,20 @@ def create_collection_dto(
     )
 
 
-def create_write_collection_dto(
-    import_id: str, title: str = "title", description="description"
+def create_collection_write_dto(
+    title: str = "title", description="description"
 ) -> CollectionWriteDTO:
     return CollectionWriteDTO(
-        import_id=import_id,
+        title=title,
+        description=description,
+        organisation="CCLW",
+    )
+
+
+def create_collection_create_dto(
+    title: str = "title", description="description"
+) -> CollectionCreateDTO:
+    return CollectionCreateDTO(
         title=title,
         description=description,
         organisation="CCLW",

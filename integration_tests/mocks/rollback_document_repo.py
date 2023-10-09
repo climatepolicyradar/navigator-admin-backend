@@ -12,7 +12,7 @@ def mock_rollback_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker)
 
     def mock_update_document(
         db, import_id: str, data: DocumentReadDTO
-    ) -> Optional[DocumentReadDTO]:
+    ) -> DocumentReadDTO:
         actual_update(db, import_id, data)
         raise NoResultFound()
 

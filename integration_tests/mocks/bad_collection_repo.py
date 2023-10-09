@@ -15,7 +15,9 @@ def mock_bad_collection_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_search(_, q: str) -> list[CollectionReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_update(_, data: CollectionReadDTO) -> Optional[CollectionReadDTO]:
+    def mock_update(
+        _, import_id: str, data: CollectionReadDTO
+    ) -> Optional[CollectionReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_create(_, data: CollectionReadDTO, __) -> Optional[CollectionReadDTO]:
