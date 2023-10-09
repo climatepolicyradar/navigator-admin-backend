@@ -3,7 +3,7 @@ from pytest import MonkeyPatch
 
 from sqlalchemy import exc
 from app.model.collection import CollectionReadDTO
-from unit_tests.helpers.collection import create_collection_dto
+from unit_tests.helpers.collection import create_collection_read_dto
 
 
 def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
@@ -16,27 +16,31 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_get_all(_) -> list[CollectionReadDTO]:
         return [
-            create_collection_dto(import_id="id1"),
-            create_collection_dto(import_id="id2"),
-            create_collection_dto(import_id="id3"),
+            create_collection_read_dto(import_id="id1"),
+            create_collection_read_dto(import_id="id2"),
+            create_collection_read_dto(import_id="id3"),
         ]
 
     def mock_get(_, import_id: str) -> Optional[CollectionReadDTO]:
-        return create_collection_dto(import_id=import_id)
+        return create_collection_read_dto(import_id=import_id)
 
     def mock_search(_, q: str) -> list[CollectionReadDTO]:
         maybe_throw()
         if not collection_repo.return_empty:
-            return [create_collection_dto("search1")]
+            return [create_collection_read_dto("search1")]
         return []
 
-    def mock_update(_, data: CollectionReadDTO) -> bool:
+    def mock_update(_, import_id: str, data: CollectionReadDTO) -> CollectionReadDTO:
         maybe_throw()
-        return not collection_repo.return_empty
+        if collection_repo.return_empty:
+            raise exc.NoResultFound()
+        return create_collection_read_dto("a.b.c.d")
 
-    def mock_create(_, data: CollectionReadDTO, __) -> bool:
+    def mock_create(_, data: CollectionReadDTO, __) -> str:
         maybe_throw()
-        return not collection_repo.return_empty
+        if collection_repo.return_empty:
+            raise exc.NoResultFound()
+        return "test.new.collection.0"
 
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()

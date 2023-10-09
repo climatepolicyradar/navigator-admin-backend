@@ -179,6 +179,8 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
             Column, generate_import_id(db, CountedEntity.Collection, org_id)
         )
         db.add(new_collection)
+
+        collection_organisation.collection_import_id = new_collection.import_id
         db.add(collection_organisation)
         db.flush()
     except Exception as e:

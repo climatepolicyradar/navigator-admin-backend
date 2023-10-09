@@ -7,18 +7,17 @@ from app.clients.db.models.law_policy.collection import (
     CollectionOrganisation,
 )
 from integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
-from unit_tests.helpers.collection import create_collection_dto
+from unit_tests.helpers.collection import create_collection_write_dto
 
 
 def test_update_collection(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.2",
+    new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
+        "/api/v1/collections/C.0.0.2",
         json=new_collection.model_dump(),
         headers=user_header_token,
     )
@@ -46,12 +45,13 @@ def test_update_collection(client: TestClient, test_db: Session, user_header_tok
 
 def test_update_collection_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="A.0.0.2",
+    new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
     )
-    response = client.put("/api/v1/collections", json=new_collection.model_dump())
+    response = client.put(
+        "/api/v1/collections/C.0.0.2", json=new_collection.model_dump()
+    )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -61,7 +61,9 @@ def test_update_collection_idempotent(
     setup_db(test_db)
     collection = EXPECTED_COLLECTIONS[1]
     response = client.put(
-        "/api/v1/collections", json=collection, headers=user_header_token
+        f"/api/v1/collections/{collection['import_id']}",
+        json=collection,
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -80,13 +82,12 @@ def test_update_collection_rollback(
     client: TestClient, test_db: Session, rollback_collection_repo, user_header_token
 ):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.2",
+    new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
+        "/api/v1/collections/C.0.0.2",
         json=new_collection.model_dump(),
         headers=user_header_token,
     )
@@ -115,13 +116,12 @@ def test_update_collection_when_not_found(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.22",
+    new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
+        "/api/v1/collections/C.0.0.22",
         json=new_collection.model_dump(),
         headers=user_header_token,
     )
@@ -134,13 +134,12 @@ def test_update_collection_when_db_error(
     client: TestClient, test_db: Session, bad_collection_repo, user_header_token
 ):
     setup_db(test_db)
-    new_collection = create_collection_dto(
-        import_id="C.0.0.2",
+    new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
     )
     response = client.put(
-        "/api/v1/collections",
+        "/api/v1/collections/C.0.0.2",
         json=new_collection.model_dump(),
         headers=user_header_token,
     )

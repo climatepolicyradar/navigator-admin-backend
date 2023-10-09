@@ -122,8 +122,9 @@ def test_update_when_missing(
     assert document is not None
     document_repo_mock.return_empty = True
 
-    result = doc_service.update(document.import_id, _to_write_dto(document))
-    assert result is None
+    with pytest.raises(RepositoryError) as e:
+        doc_service.update(document.import_id, _to_write_dto(document))
+    assert e.value.message == "Error when updating document a.b.c.d"
     assert document_repo_mock.update.call_count == 1
 
 
