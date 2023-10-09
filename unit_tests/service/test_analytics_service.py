@@ -38,7 +38,7 @@ def test_summary(collection_repo_mock, document_repo_mock, family_repo_mock):
     assert result is not None
     assert result.n_events == 0
 
-    # Ensure the analytics service uses the collection service to validate
+    # Ensure the analytics service uses the other services to validate.
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -51,7 +51,7 @@ def test_summary_returns_none(
     result = analytics_service.summary()
     assert result == expected_analytics_summary(expected_collections=None)
 
-    # Ensure the analytics service uses the collection service to validate
+    # Ensure the analytics service uses the other services to validate.
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -64,7 +64,7 @@ def test_summary_raises_if_db_error(
     with pytest.raises(RepositoryError) as e:
         analytics_service.summary()
 
-    # Ensure the analytics service uses the collection service to validate
+    # Ensure the analytics service uses the other services to validate.
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 0
     assert family_repo_mock.count.call_count == 0
