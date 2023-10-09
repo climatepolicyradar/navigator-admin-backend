@@ -23,16 +23,16 @@ async def get_analytics_summary() -> SummaryDTO:
     data in key (str): value (int) form.
     """
     try:
-        summary = analytics_service.summary()
+        summary_dto = analytics_service.summary()
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
-    if summary is None:
+    if any(summary_value is None for _, summary_value in summary_dto):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Analytics summary not found",
         )
 
-    return summary
+    return summary_dto

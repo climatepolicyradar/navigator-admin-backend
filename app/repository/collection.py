@@ -89,6 +89,22 @@ def all(db: Session) -> list[CollectionReadDTO]:
     return result
 
 
+# def count(db: Session) -> Optional[int]:
+#     """
+#     Counts the number of collections in the repository.
+
+#     :param db Session: the database connection
+#     :return Optional[int]: The number of collections in the repository or none.
+#     """
+#     try:
+#         n_collections = _get_query(db).count()
+#     except Exception as e:
+#         _LOGGER.error(e)
+#         return
+
+#     return n_collections
+
+
 def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
     """
     Gets a single collection from the repository.

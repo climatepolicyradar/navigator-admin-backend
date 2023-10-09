@@ -5,9 +5,6 @@ This uses a service mock and ensures each endpoint calls into the service.
 """
 from fastapi import status
 from fastapi.testclient import TestClient
-from app.model.analytics import SummaryDTO
-
-from unit_tests.helpers.analytics import create_summary_dto
 
 
 def test_get_all_when_ok(client: TestClient, analytics_service_mock, user_header_token):
@@ -31,7 +28,7 @@ def test_get_when_ok(client: TestClient, analytics_service_mock, user_header_tok
 def test_get_when_not_found(
     client: TestClient, analytics_service_mock, user_header_token
 ):
-    analytics_service_mock.missing = True
+    analytics_service_mock.return_empty = True
     response = client.get("/api/v1/analytics/summary", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()

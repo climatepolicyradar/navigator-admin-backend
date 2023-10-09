@@ -1,3 +1,4 @@
+from typing import Optional
 import pytest
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
@@ -13,12 +14,17 @@ from unit_tests.helpers.analytics import (
 )
 
 
-def expected_analytics_summary() -> SummaryDTO:
+def expected_analytics_summary(
+    expected_docs: Optional[int] = EXPECTED_NUM_DOCUMENTS,
+    expected_families: Optional[int] = EXPECTED_NUM_FAMILIES,
+    expected_collections: Optional[int] = EXPECTED_NUM_COLLECTIONS,
+    expected_events: Optional[int] = EXPECTED_NUM_EVENTS,
+) -> SummaryDTO:
     return create_summary_dto(
-        n_documents=EXPECTED_NUM_DOCUMENTS,
-        n_families=EXPECTED_NUM_FAMILIES,
-        n_collections=EXPECTED_NUM_COLLECTIONS,
-        n_events=EXPECTED_NUM_EVENTS,
+        n_documents=expected_docs,
+        n_families=expected_families,
+        n_collections=expected_collections,
+        n_events=expected_events,
     )
 
 
@@ -32,6 +38,7 @@ def test_summary(collection_repo_mock, document_repo_mock, family_repo_mock):
     assert result is not None
     assert result.n_events == 0
 
+    # Ensure the analytics service uses the collection service to validate
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -42,9 +49,9 @@ def test_summary_returns_none(
 ):
     collection_repo_mock.return_empty = True
     result = analytics_service.summary()
+    assert result == expected_analytics_summary(expected_collections=None)
 
-    assert result is None
-
+    # Ensure the analytics service uses the collection service to validate
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -57,6 +64,7 @@ def test_summary_raises_if_db_error(
     with pytest.raises(RepositoryError) as e:
         analytics_service.summary()
 
+    # Ensure the analytics service uses the collection service to validate
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 0
     assert family_repo_mock.count.call_count == 0

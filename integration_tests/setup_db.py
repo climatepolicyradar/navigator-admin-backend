@@ -128,7 +128,12 @@ EXPECTED_DOCUMENTS = [
     },
 ]
 
-EXPECTED_ANALYTICS_SUMMARY_KEYS = ["n_documents", "n_families", "n_collections", "n_events"]
+EXPECTED_ANALYTICS_SUMMARY_KEYS = [
+    "n_documents",
+    "n_families",
+    "n_collections",
+    "n_events",
+]
 EXPECTED_ANALYTICS_SUMMARY = {
     "n_documents": EXPECTED_NUM_DOCUMENTS,
     "n_families": EXPECTED_NUM_FAMILIES,
@@ -137,7 +142,7 @@ EXPECTED_ANALYTICS_SUMMARY = {
 }
 
 
-def setup_db(test_db: Session):
+def setup_db(test_db: Session, configure_empty: bool = False):
     with open("integration_tests/default-data.sql") as file:
         query = text(file.read())
         test_db.execute(query)
@@ -147,7 +152,7 @@ def setup_db(test_db: Session):
     _setup_family_data(test_db, org_id)
     test_db.commit()
 
-    _setup_collection_data(test_db, org_id)
+    _setup_collection_data(test_db, org_id, configure_empty)
     test_db.commit()
 
     _setup_document_data(test_db, "A.0.0.3")
@@ -166,7 +171,14 @@ def _setup_organisation(test_db: Session) -> int:
     return cast(int, org.id)
 
 
-def _setup_collection_data(test_db: Session, org_id: int):
+def _setup_collection_data(
+    test_db: Session,
+    org_id: int,
+    configure_empty: bool = False,
+) -> None:
+    if configure_empty is True:
+        return None
+
     for index in range(EXPECTED_NUM_COLLECTIONS):
         data = EXPECTED_COLLECTIONS[index]
         test_db.add(
@@ -192,7 +204,14 @@ def _setup_collection_data(test_db: Session, org_id: int):
     )
 
 
-def _setup_family_data(test_db: Session, org_id: int):
+def _setup_family_data(
+    test_db: Session,
+    org_id: int,
+    configure_empty: bool = False,
+) -> None:
+    if configure_empty is True:
+        return None
+
     for index in range(EXPECTED_NUM_FAMILIES):
         data = EXPECTED_FAMILIES[index]
         test_db.add(
@@ -252,7 +271,14 @@ def _setup_family_data(test_db: Session, org_id: int):
         )
 
 
-def _setup_document_data(test_db: Session, family_id: str) -> None:
+def _setup_document_data(
+    test_db: Session,
+    family_id: str,
+    configure_empty: bool = False,
+) -> None:
+    if configure_empty is True:
+        return None
+
     for index in range(EXPECTED_NUM_DOCUMENTS):
         data = EXPECTED_DOCUMENTS[index]
         pd = PhysicalDocument(

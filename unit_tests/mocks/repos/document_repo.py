@@ -13,7 +13,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
 
     def maybe_throw():
         if document_repo.throw_repository_error:
-            raise exc.SQLAlchemyError("")
+            raise exc.SQLAlchemyError("bad repo")
 
     def mock_get_all(_) -> list[DocumentReadDTO]:
         values = []

@@ -1,5 +1,5 @@
 import pytest
-from app.errors import ValidationError
+from app.errors import ValidationError, RepositoryError
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 import app.service.collection as collection_service
 from unit_tests.mocks.repos.collection_repo import create_collection_dto as create_dto
@@ -157,3 +157,29 @@ def test_create_raises_when_invalid_id(collection_repo_mock):
     expected_msg = f"The import id {new_collection.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert collection_repo_mock.create.call_count == 0
+
+
+# --- COUNT
+
+
+def test_count(collection_repo_mock):
+    result = collection_service.count()
+    assert result is not None
+    assert collection_repo_mock.count.call_count == 1
+
+
+def test_count_returns_none(collection_repo_mock):
+    collection_repo_mock.return_empty = True
+    result = collection_service.count()
+    assert result is None
+    assert collection_repo_mock.count.call_count == 1
+
+
+def test_count_raises_if_db_error(collection_repo_mock):
+    collection_repo_mock.throw_repository_error = True
+    with pytest.raises(RepositoryError) as e:
+        collection_service.count()
+
+    expected_msg = "bad repo"
+    assert e.value.message == expected_msg
+    assert collection_repo_mock.count.call_count == 1

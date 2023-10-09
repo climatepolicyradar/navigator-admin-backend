@@ -12,7 +12,7 @@ def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
 
     def maybe_throw():
         if family_repo.throw_repository_error:
-            raise exc.SQLAlchemyError("")
+            raise exc.SQLAlchemyError("bad repo")
 
     def mock_get_all(_):
         return [create_family_dto("test")]
