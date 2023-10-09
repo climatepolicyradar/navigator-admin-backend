@@ -16,6 +16,7 @@ import app.service.collection as collection_service
 import app.service.document as document_service
 import app.service.config as config_service
 import app.service.token as token_service
+import app.service.analytics as analytics_service
 from app.repository import (
     family_repo,
     geography_repo,
@@ -40,6 +41,7 @@ from unit_tests.mocks.services.family_service import mock_family_service
 from unit_tests.mocks.services.collection_service import mock_collection_service
 from unit_tests.mocks.services.document_service import mock_document_service
 from unit_tests.mocks.services.config_service import mock_config_service
+from unit_tests.mocks.services.analytics_service import mock_analytics_service
 
 
 @pytest.fixture
@@ -137,6 +139,13 @@ def config_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_config_service(config_service, monkeypatch, mocker)
     yield config_service
+
+
+@pytest.fixture
+def analytics_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_analytics_service(analytics_service, monkeypatch, mocker)
+    yield analytics_service
 
 
 # ----- User tokens

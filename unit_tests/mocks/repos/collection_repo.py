@@ -42,6 +42,12 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not collection_repo.return_empty
 
+    def mock_get_count(_) -> Optional[int]:
+        maybe_throw()
+        if not collection_repo.return_empty:
+            return 11
+        return
+
     monkeypatch.setattr(collection_repo, "get", mock_get)
     mocker.spy(collection_repo, "get")
 
@@ -59,3 +65,6 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(collection_repo, "delete", mock_delete)
     mocker.spy(collection_repo, "delete")
+
+    monkeypatch.setattr(collection_repo, "count", mock_get_count)
+    mocker.spy(collection_repo, "count")
