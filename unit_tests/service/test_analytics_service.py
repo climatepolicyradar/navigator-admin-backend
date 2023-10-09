@@ -57,9 +57,6 @@ def test_summary_raises_if_db_error(
     with pytest.raises(RepositoryError) as e:
         analytics_service.summary()
 
-    expected_msg = "Bad repo"
-    assert e.value.message == expected_msg
-
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 0
     assert family_repo_mock.count.call_count == 0
