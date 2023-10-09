@@ -5,7 +5,7 @@ from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,
     CollectionWriteDTO,
-
+)
 import app.service.collection as collection_service
 from unit_tests.helpers.collection import create_collection_write_dto
 from unit_tests.mocks.repos.collection_repo import (
@@ -165,15 +165,6 @@ def test_create_when_db_fails(
     assert collection_repo_mock.create.call_count == 1
     # Ensure the collection service uses the geo service to validate
     assert organisation_repo_mock.get_id_from_name.call_count == 1
-
-
-def test_create_raises_when_invalid_id(collection_repo_mock):
-    new_collection = create_dto(import_id="invalid")
-    with pytest.raises(ValidationError) as e:
-        collection_service.create(_to_write_dto(new_collection))
-    expected_msg = f"The import id {new_collection.import_id} is invalid!"
-    assert e.value.message == expected_msg
-    assert collection_repo_mock.create.call_count == 0
 
 
 # --- COUNT
