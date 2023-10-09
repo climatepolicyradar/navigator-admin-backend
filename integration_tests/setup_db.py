@@ -31,7 +31,7 @@ EXPECTED_FAMILIES = [
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [3], "color": ["red"]},
-        "organisation": "test_org",
+        "organisation": "CCLW",
         "slug": "Slug1",
         "events": [],
         "published_date": None,
@@ -47,7 +47,7 @@ EXPECTED_FAMILIES = [
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [4], "color": ["green"]},
-        "organisation": "test_org",
+        "organisation": "CCLW",
         "slug": "Slug2",
         "events": [],
         "published_date": None,
@@ -63,7 +63,7 @@ EXPECTED_FAMILIES = [
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [100], "color": ["blue"]},
-        "organisation": "test_org",
+        "organisation": "CCLW",
         "slug": "Slug3",
         "events": [],
         "published_date": None,
@@ -81,14 +81,14 @@ EXPECTED_COLLECTIONS = [
         "title": "Collection 1 a very big collection",
         "description": "description one",
         "families": [],
-        "organisation": "test_org",
+        "organisation": "CCLW",
     },
     {
         "import_id": "C.0.0.2",
         "title": "Collection 2",
         "description": "description two",
         "families": ["A.0.0.1", "A.0.0.3"],
-        "organisation": "test_org",
+        "organisation": "CCLW",
     },
 ]
 
@@ -157,7 +157,7 @@ def setup_db(test_db: Session):
 def _setup_organisation(test_db: Session) -> int:
     # Now an organisation
     org = Organisation(
-        name="test_org",
+        name="CCLW",
         description="for testing",
         organisation_type="test organisation",
     )

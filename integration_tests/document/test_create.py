@@ -5,30 +5,25 @@ from app.clients.db.models.law_policy import FamilyDocument
 from app.clients.db.models.document import PhysicalDocument
 from app.clients.db.models.law_policy.family import Slug
 from integration_tests.setup_db import setup_db
-from unit_tests.helpers.document import create_document_write_dto
+from unit_tests.helpers.document import create_document_create_dto
 
 
 def test_create_document(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
-    new_document = create_document_write_dto(
-        import_id="D.0.0.9",
-        family_import_id="A.0.0.1",
-        title="Title",
-    )
+    new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
-    assert data["title"] == "Title"
-
+    created_import_id = response.json()
     actual_fd = (
         test_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "D.0.0.9")
+        .filter(FamilyDocument.import_id == created_import_id)
         .one()
     )
+
     assert actual_fd is not None
 
     actual_pd = (
@@ -50,11 +45,7 @@ def test_create_document(client: TestClient, test_db: Session, user_header_token
 
 def test_create_document_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
-    new_document = create_document_write_dto(
-        import_id="A.0.0.9",
-        family_import_id="A.0.0.1",
-        title="Title",
-    )
+    new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
         json=new_document.model_dump(),
@@ -66,11 +57,7 @@ def test_create_document_rollback(
     client: TestClient, test_db: Session, rollback_document_repo, user_header_token
 ):
     setup_db(test_db)
-    new_document = create_document_write_dto(
-        import_id="A.0.0.9",
-        family_import_id="A.0.0.1",
-        title="Title",
-    )
+    new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
         json=new_document.model_dump(),
@@ -90,11 +77,7 @@ def test_create_document_when_db_error(
     client: TestClient, test_db: Session, bad_document_repo, user_header_token
 ):
     setup_db(test_db)
-    new_document = create_document_write_dto(
-        import_id="A.0.0.9",
-        family_import_id="A.0.0.1",
-        title="Title",
-    )
+    new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
         json=new_document.model_dump(),
@@ -110,9 +93,22 @@ def test_create_document_when_family_invalid(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_document = create_document_write_dto(
-        import_id="A.0.0.9",
-        family_import_id="A.0.100",
+    new_document = create_document_create_dto(title="Title", family_import_id="invalid")
+    response = client.post(
+        "/api/v1/documents",
+        json=new_document.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["detail"] == "The import id invalid is invalid!"
+
+
+def test_create_document_when_family_missing(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = create_document_create_dto(
         title="Title",
     )
     response = client.post(
@@ -122,21 +118,6 @@ def test_create_document_when_family_invalid(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "The import id A.0.100 is invalid!"
-
-
-def test_create_document_when_family_missing(
-    client: TestClient, test_db: Session, user_header_token
-):
-    setup_db(test_db)
-    new_document = create_document_write_dto(
-        import_id="A.0.0.9",
-        family_import_id="A.0.0.100",
-        title="Title",
+    assert (
+        data["detail"] == f"Could not find family for {new_document.family_import_id}"
     )
-    response = client.post(
-        "/api/v1/documents",
-        json=new_document.model_dump(),
-        headers=user_header_token,
-    )
-    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE

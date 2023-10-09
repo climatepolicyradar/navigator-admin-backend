@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 from sqlalchemy.exc import NoResultFound
 
-from app.model.document import DocumentReadDTO
+from app.model.document import DocumentCreateDTO, DocumentReadDTO
 
 
 def mock_rollback_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
@@ -10,11 +10,13 @@ def mock_rollback_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker)
     actual_create = document_repo.create
     actual_delete = document_repo.delete
 
-    def mock_update_document(db, data: DocumentReadDTO) -> Optional[DocumentReadDTO]:
-        actual_update(db, data)
+    def mock_update_document(
+        db, import_id: str, data: DocumentReadDTO
+    ) -> Optional[DocumentReadDTO]:
+        actual_update(db, import_id, data)
         raise NoResultFound()
 
-    def mock_create_document(db, data: DocumentReadDTO) -> Optional[DocumentReadDTO]:
+    def mock_create_document(db, data: DocumentCreateDTO) -> Optional[DocumentReadDTO]:
         actual_create(db, data)
         raise NoResultFound()
 

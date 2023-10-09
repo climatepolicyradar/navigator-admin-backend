@@ -33,12 +33,27 @@ class DocumentWriteDTO(BaseModel):
     """Representation of a Document."""
 
     # From FamilyDocument
-    import_id: str
     variant_name: str
     role: str
     type: str
     title: str
     source_url: str
+    user_language_name: str
+    # TODO: Languages for a document
+    # languages: list[]
+
+
+class DocumentCreateDTO(BaseModel):
+    """Representation of a Document."""
+
+    # From FamilyDocument
+    family_import_id: str
+    variant_name: str
+    role: str
+    type: str
+    title: str
+    source_url: str
+    user_language_name: str
     # TODO: Languages for a document
     # languages: list[]
 

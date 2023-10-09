@@ -7,7 +7,7 @@ from app.clients.db.models.law_policy.family import FamilyDocument, Slug
 from app.model.document import DocumentWriteDTO
 
 from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
-from unit_tests.helpers.document import create_document_dto
+from unit_tests.helpers.document import create_document_write_dto
 
 
 def _get_doc_tuple(
@@ -33,15 +33,15 @@ def _get_doc_tuple(
 def test_update_document(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
     new_document = DocumentWriteDTO(
-        import_id="D.0.0.2",
         variant_name="Translation",
         role="SUMMARY",
         type="Annex",
         title="Updated Title",
         source_url="Updated Source",
+        user_language_name="Ghotuo",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
@@ -72,12 +72,10 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
 
 def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
-    new_document = create_document_dto(
-        import_id="D.0.0.2",
-        family_import_id="A.0.0.3",
+    new_document = create_document_write_dto(
         title="Updated Title",
     )
-    response = client.put("/api/v1/documents", json=new_document.model_dump())
+    response = client.put("/api/v1/documents/D.0.0.2", json=new_document.model_dump())
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -86,7 +84,11 @@ def test_update_document_idempotent(
 ):
     setup_db(test_db)
     document = EXPECTED_DOCUMENTS[1]
-    response = client.put("/api/v1/documents", json=document, headers=user_header_token)
+    response = client.put(
+        f"/api/v1/documents/{document['import_id']}",
+        json=document,
+        headers=user_header_token,
+    )
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
@@ -100,13 +102,11 @@ def test_update_document_rollback(
     client: TestClient, test_db: Session, rollback_document_repo, user_header_token
 ):
     setup_db(test_db)
-    new_document = create_document_dto(
-        import_id="D.0.0.2",
-        family_import_id="A.0.0.3",
+    new_document = create_document_write_dto(
         title="Updated Title",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
@@ -122,13 +122,11 @@ def test_update_document_when_not_found(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_document = create_document_dto(
-        import_id="D.0.0.22",
-        family_import_id="A.0.0.3",
+    new_document = create_document_write_dto(
         title="Updated Title",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.22",
         json=new_document.model_dump(),
         headers=user_header_token,
     )
@@ -142,13 +140,11 @@ def test_update_document_when_db_error(
 ):
     setup_db(test_db)
 
-    new_document = create_document_dto(
-        import_id="D.0.0.2",
-        family_import_id="A.0.0.3",
+    new_document = create_document_write_dto(
         title="Updated Title",
     )
     response = client.put(
-        "/api/v1/documents",
+        "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(),
         headers=user_header_token,
     )

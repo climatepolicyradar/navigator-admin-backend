@@ -2,8 +2,9 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from sqlalchemy import exc
-from app.model.document import DocumentReadDTO
-from unit_tests.helpers.document import create_document_dto
+from app.errors import RepositoryError
+from app.model.document import DocumentCreateDTO, DocumentReadDTO
+from unit_tests.helpers.document import create_document_read_dto
 
 
 def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
@@ -15,28 +16,31 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
             raise exc.SQLAlchemyError("")
 
     def mock_get_all(_) -> list[DocumentReadDTO]:
-        return [
-            create_document_dto(import_id="id1"),
-            create_document_dto(import_id="id2"),
-            create_document_dto(import_id="id3"),
-        ]
+        values = []
+        for x in range(3):
+            dto = create_document_read_dto(import_id=f"id{x}")
+            values.append(dto)
+        return values
 
     def mock_get(_, import_id: str) -> Optional[DocumentReadDTO]:
-        return create_document_dto(import_id=import_id)
+        dto = create_document_read_dto(import_id)
+        return dto
 
     def mock_search(_, q: str) -> list[DocumentReadDTO]:
         maybe_throw()
         if not document_repo.return_empty:
-            return [create_document_dto("search1")]
+            return [create_document_read_dto("search1")]
         return []
 
-    def mock_update(_, data: DocumentReadDTO) -> bool:
+    def mock_update(_, import_id: str, data: DocumentReadDTO) -> bool:
         maybe_throw()
         return not document_repo.return_empty
 
-    def mock_create(_, data: DocumentReadDTO) -> bool:
+    def mock_create(_, data: DocumentCreateDTO) -> str:
         maybe_throw()
-        return not document_repo.return_empty
+        if document_repo.return_empty:
+            raise RepositoryError("testing error")
+        return "test.new.doc.0  "
 
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()
