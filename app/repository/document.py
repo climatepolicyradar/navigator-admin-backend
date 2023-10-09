@@ -306,3 +306,19 @@ def delete(db: Session, import_id: str) -> bool:
         raise RepositoryError(msg)
 
     return True
+
+
+def count(db: Session) -> Optional[int]:
+    """
+    Counts the number of documents in the repository.
+
+    :param db Session: the database connection
+    :return Optional[int]: The number of documents in the repository or none.
+    """
+    try:
+        n_documents = _get_query(db).count()
+    except NoResultFound as e:
+        _LOGGER.error(e)
+        return
+
+    return n_documents

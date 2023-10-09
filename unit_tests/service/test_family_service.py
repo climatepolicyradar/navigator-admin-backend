@@ -4,7 +4,7 @@ Tests the family service.
 Uses a family repo mock and ensures that the repo is called.
 """
 import pytest
-from app.errors import ValidationError
+from app.errors import ValidationError, RepositoryError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
 import app.service.family as family_service
 from unit_tests.helpers.family import create_family_dto
@@ -266,3 +266,29 @@ def test_create_raises_when_category_invalid(family_repo_mock, geography_repo_mo
     expected_msg = "Invalid is not a valid FamilyCategory"
     assert e.value.message == expected_msg
     assert family_repo_mock.create.call_count == 0
+
+
+# --- COUNT
+
+
+def test_count(family_repo_mock):
+    result = family_service.count()
+    assert result is not None
+    assert family_repo_mock.count.call_count == 1
+
+
+def test_count_returns_none(family_repo_mock):
+    family_repo_mock.return_empty = True
+    result = family_service.count()
+    assert result is None
+    assert family_repo_mock.count.call_count == 1
+
+
+def test_count_raises_if_db_error(family_repo_mock):
+    family_repo_mock.throw_repository_error = True
+    with pytest.raises(RepositoryError) as e:
+        family_service.count()
+
+    expected_msg = "bad repo"
+    assert e.value.message == expected_msg
+    assert family_repo_mock.count.call_count == 1

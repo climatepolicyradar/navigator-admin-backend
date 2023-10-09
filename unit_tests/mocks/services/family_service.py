@@ -1,5 +1,6 @@
 from typing import Optional
 from pytest import MonkeyPatch
+from app.errors import RepositoryError
 
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
 from unit_tests.helpers.family import create_family_dto
@@ -7,6 +8,11 @@ from unit_tests.helpers.family import create_family_dto
 
 def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     family_service.missing = False
+    family_service.throw_repository_error = False
+
+    def maybe_throw():
+        if family_service.throw_repository_error:
+            raise RepositoryError("bad repo")
 
     def mock_get_all_families():
         return [create_family_dto("test")]
@@ -48,6 +54,12 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_delete_family(import_id: str) -> bool:
         return not family_service.missing
 
+    def mock_count_collection() -> Optional[int]:
+        maybe_throw()
+        if family_service.missing:
+            return None
+        return 22
+
     monkeypatch.setattr(family_service, "get", mock_get_family)
     mocker.spy(family_service, "get")
 
@@ -65,3 +77,6 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(family_service, "delete", mock_delete_family)
     mocker.spy(family_service, "delete")
+
+    monkeypatch.setattr(family_service, "count", mock_count_collection)
+    mocker.spy(family_service, "count")

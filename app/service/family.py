@@ -145,3 +145,19 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
         msg = f"Unable to delete family {import_id}"
         _LOGGER.exception(msg)
         raise RepositoryError(msg)
+    return family_repo.delete(db, import_id)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def count() -> Optional[int]:
+    """
+    Gets a count of families from the repository.
+
+    :return Optional[int]: The number of families in the repository or none.
+    """
+    try:
+        with db_session.get_db() as db:
+            return family_repo.count(db)
+    except exc.SQLAlchemyError as e:
+        _LOGGER.error(e)
+        raise RepositoryError(str(e))

@@ -310,3 +310,19 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
 
     # TODO - can this be improved - we get warnings on integration tests ?
     return db.query(Organisation).select_from(family_org).one_or_none()
+
+
+def count(db: Session) -> Optional[int]:
+    """
+    Counts the number of families in the repository.
+
+    :param db Session: the database connection
+    :return Optional[int]: The number of families in the repository or none.
+    """
+    try:
+        n_families = _get_query(db).count()
+    except NoResultFound as e:
+        _LOGGER.error(e)
+        return
+
+    return n_families
