@@ -13,9 +13,9 @@ def get_user_by_email(db: Session, email: str) -> MaybeAppUser:
 def get_app_user_authorisation(
     db: Session, app_user: AppUser
 ) -> list[Tuple[OrganisationUser, Organisation]]:
-    return (
+    query = (
         db.query(OrganisationUser, Organisation)
         .filter(OrganisationUser.appuser_email == app_user.email)
         .join(Organisation, Organisation.id == OrganisationUser.organisation_id)
-        .all()
     )
+    return [(r[0], r[1]) for r in query.all()]

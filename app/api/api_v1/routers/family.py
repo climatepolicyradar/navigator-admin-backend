@@ -76,7 +76,7 @@ async def search_family(q: str = "") -> list[FamilyReadDTO]:
     :return list[FamilyDTO]: A list of matching families.
     """
     families = family_service.search(q)
-    if families is None or len(families) == 0:
+    if len(families) == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Families not found for term: {q}",
