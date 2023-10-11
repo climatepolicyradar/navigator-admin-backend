@@ -26,10 +26,18 @@ class FamilyReadDTO(BaseModel):
 class FamilyWriteDTO(BaseModel):
     """A JSON representation of a family for writing."""
 
-    import_id: str
     title: str
     summary: str
     geography: str
     category: str
     metadata: Json
-    organisation: str
+
+
+class FamilyCreateDTO(BaseModel):
+    """A JSON representation of a family for creating."""
+
+    title: str
+    summary: str
+    geography: str
+    category: str
+    metadata: Json
