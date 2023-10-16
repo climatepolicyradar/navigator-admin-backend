@@ -3,9 +3,11 @@
 #
 # It is your responsibility to set the SUPERUER_xxx vars.
 #
-set -x
-#export TEST_URL=https://m2bv8pdzts.eu-west-1.awsapprunner.com
+
 export TEST_URL=http://localhost:8888
+
+# This file should default to lcoalhost but here is the staging endpoint:
+#export TEST_URL=https://m2bv8pdzts.eu-west-1.awsapprunner.com
 
 get_token() {
     curl -s \
