@@ -12,18 +12,18 @@ class DocumentReadDTO(BaseModel):
     # From FamilyDocument
     import_id: str
     family_import_id: str
-    variant_name: str
+    variant_name: Optional[str]
     status: DocumentStatus
-    role: str
-    type: str
+    role: Optional[str]
+    type: Optional[str]
     slug: str
     # From PhysicalDocument
     physical_id: int
     title: str
-    md5_sum: str
-    cdn_object: str
-    source_url: str
-    content_type: str
+    md5_sum: Optional[str]
+    cdn_object: Optional[str]
+    source_url: Optional[str]
+    content_type: Optional[str]
     user_language_name: str
     # TODO: Languages for a document
     # languages: list[]
