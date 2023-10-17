@@ -1277,6 +1277,50 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
+-- Name: entity_counter; Type: TABLE; Schema: public; Owner: navigator
+--
+
+CREATE TABLE public.entity_counter (
+    id integer NOT NULL,
+    description character varying NOT NULL,
+    prefix character varying NOT NULL,
+    counter integer,
+    CONSTRAINT ck_entity_counter__prefix_allowed_orgs CHECK (((prefix)::text = ANY ((ARRAY['CCLW'::character varying, 'UNFCCC'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.entity_counter OWNER TO navigator;
+
+--
+-- Name: entity_counter_id_seq; Type: SEQUENCE; Schema: public; Owner: navigator
+--
+
+CREATE SEQUENCE public.entity_counter_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.entity_counter_id_seq OWNER TO navigator;
+
+--
+-- Name: entity_counter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: navigator
+--
+
+ALTER SEQUENCE public.entity_counter_id_seq OWNED BY public.entity_counter.id;
+
+
+--
+-- Name: entity_counter id; Type: DEFAULT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.entity_counter ALTER COLUMN id SET DEFAULT nextval('public.entity_counter_id_seq'::regclass);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
