@@ -45,4 +45,4 @@ class FamilyCreateDTO(BaseModel):
     category: str
     metadata: Json
     # slug: not included as this is generated from title
-    organisation: str  # FIXME: should this be the org of the current user?
+    organisation: str  # FIXME: https://linear.app/climate-policy-radar/issue/PDCT-494

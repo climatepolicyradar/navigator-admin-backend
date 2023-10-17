@@ -247,7 +247,9 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     """
     try:
         new_family, new_fam_org = _family_org_from_dto(family, geo_id, org_id)
-        org_name = "CCLW"  # FIXME: Get this from current logged in user
+        org_name = (
+            "CCLW"  # FIXME: https://linear.app/climate-policy-radar/issue/PDCT-494
+        )
 
         new_family.import_id = cast(
             Column, generate_import_id(db, CountedEntity.Family, org_name)
