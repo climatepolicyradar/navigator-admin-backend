@@ -3,7 +3,6 @@ import pytest
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
 import app.service.analytics as analytics_service
-from sqlalchemy import exc
 
 from unit_tests.helpers.analytics import (
     create_summary_dto,
@@ -61,7 +60,7 @@ def test_summary_raises_if_db_error(
     collection_repo_mock, document_repo_mock, family_repo_mock
 ):
     collection_repo_mock.throw_repository_error = True
-    with pytest.raises(RepositoryError) as e:
+    with pytest.raises(RepositoryError):
         analytics_service.summary()
 
     # Ensure the analytics service uses the other services to validate.

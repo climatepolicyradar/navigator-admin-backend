@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional, Tuple, cast
+from app.clients.db.models.app.counters import CountedEntity
 
 from app.clients.db.models.app.users import Organisation
 from app.clients.db.models.law_policy.collection import CollectionFamily
@@ -13,14 +14,14 @@ from app.clients.db.models.law_policy.metadata import (
     MetadataOrganisation,
 )
 from app.errors import RepositoryError
-from app.model.family import FamilyReadDTO, FamilyWriteDTO
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.clients.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
-from sqlalchemy import or_, update as db_update, delete as db_delete
+from sqlalchemy import Column, or_, update as db_update, delete as db_delete
 from sqlalchemy.orm import Query
 
-from app.repository.helpers import generate_slug
+from app.repository.helpers import generate_import_id, generate_slug
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,17 +45,17 @@ def _get_query(db: Session) -> Query:
 
 
 def _family_org_from_dto(
-    dto: FamilyWriteDTO, geo_id: int, org_id: int
+    dto: FamilyCreateDTO, geo_id: int, org_id: int
 ) -> Tuple[Family, Organisation]:
     return (
         Family(
-            import_id=dto.import_id,
+            import_id="",
             title=dto.title,
             description=dto.summary,
             geography_id=geo_id,
             family_category=dto.category,
         ),
-        FamilyOrganisation(family_import_id=dto.import_id, organisation_id=org_id),
+        FamilyOrganisation(family_import_id="", organisation_id=org_id),
     )
 
 
@@ -86,7 +87,13 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
     )
 
 
-def _update_intention(db, family, geo_id, original_family):
+def _update_intention(
+    db: Session,
+    import_id: str,
+    family: FamilyWriteDTO,
+    geo_id: int,
+    original_family: Family,
+):
     update_title = cast(str, original_family.title) != family.title
     update_basics = (
         update_title
@@ -96,7 +103,7 @@ def _update_intention(db, family, geo_id, original_family):
     )
     existing_metadata = (
         db.query(FamilyMetadata)
-        .filter(FamilyMetadata.family_import_id == family.import_id)
+        .filter(FamilyMetadata.family_import_id == import_id)
         .one()
     )
     update_metadata = existing_metadata.value != family.metadata
@@ -152,7 +159,7 @@ def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
+def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -165,7 +172,7 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
     new_values = family.model_dump()
 
     original_family = (
-        db.query(Family).filter(Family.import_id == family.import_id).one_or_none()
+        db.query(Family).filter(Family.import_id == import_id).one_or_none()
     )
 
     if original_family is None:  # Not found the family to update
@@ -174,7 +181,7 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
 
     # Now figure out the intention of the request:
     update_title, update_basics, update_metadata = _update_intention(
-        db, family, geo_id, original_family
+        db, import_id, family, geo_id, original_family
     )
 
     # Return if nothing to do
@@ -185,7 +192,7 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
     if update_basics:
         result = db.execute(
             db_update(Family)
-            .where(Family.import_id == family.import_id)
+            .where(Family.import_id == import_id)
             .values(
                 title=new_values["title"],
                 description=new_values["summary"],
@@ -202,13 +209,13 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
     if update_metadata:
         md_result = db.execute(
             db_update(FamilyMetadata)
-            .where(FamilyMetadata.family_import_id == family.import_id)
+            .where(FamilyMetadata.family_import_id == import_id)
             .values(value=family.metadata)
         )
         if md_result.rowcount == 0:  # type: ignore
             msg = (
                 "Could not update the metadata for family: "
-                + f"{family.import_id} to {family.metadata}"
+                + f"{import_id} to {family.metadata}"
             )
             _LOGGER.error(msg)
             raise RepositoryError(msg)
@@ -218,17 +225,17 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
         db.flush()
         name = generate_slug(db, family.title)
         new_slug = Slug(
-            family_import_id=family.import_id,
+            family_import_id=import_id,
             family_document_import_id=None,
             name=name,
         )
         db.add(new_slug)
-        _LOGGER.info(f"Added a new slug for {family.import_id} of {new_slug.name}")
+        _LOGGER.info(f"Added a new slug for {import_id} of {new_slug.name}")
 
     return True
 
 
-def create(db: Session, family: FamilyWriteDTO, geo_id: int, org_id: int) -> bool:
+def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> str:
     """
     Creates a new family.
 
@@ -240,16 +247,26 @@ def create(db: Session, family: FamilyWriteDTO, geo_id: int, org_id: int) -> boo
     """
     try:
         new_family, new_fam_org = _family_org_from_dto(family, geo_id, org_id)
+        org_name = (
+            "CCLW"  # FIXME: https://linear.app/climate-policy-radar/issue/PDCT-494
+        )
+
+        new_family.import_id = cast(
+            Column, generate_import_id(db, CountedEntity.Family, org_name)
+        )
+        new_fam_org.family_import_id = new_family.import_id
+
         db.add(new_family)
         db.add(new_fam_org)
-    except Exception as e:
-        _LOGGER.error(e)
-        return False
+        db.flush()
+    except:
+        _LOGGER.exception("Error trying to create Family")
+        raise
 
     # Add a slug
     db.add(
         Slug(
-            family_import_id=family.import_id,
+            family_import_id=new_family.import_id,
             family_document_import_id=None,
             name=generate_slug(db, family.title),
         )
@@ -271,7 +288,7 @@ def create(db: Session, family: FamilyWriteDTO, geo_id: int, org_id: int) -> boo
             value=family.metadata,
         )
     )
-    return True
+    return cast(str, new_family.import_id)
 
 
 def delete(db: Session, import_id: str) -> bool:

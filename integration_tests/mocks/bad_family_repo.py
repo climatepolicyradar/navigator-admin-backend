@@ -15,7 +15,9 @@ def mock_bad_family_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_search(_, q: str) -> list[FamilyReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_update(_, data: FamilyReadDTO, __) -> Optional[FamilyReadDTO]:
+    def mock_update(
+        _, import_id: str, data: FamilyReadDTO, __
+    ) -> Optional[FamilyReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_create(_, data: FamilyReadDTO, __, ___) -> Optional[FamilyReadDTO]:

@@ -12,7 +12,6 @@ from app.model.analytics import SummaryDTO
 import app.service.collection as collection_service
 import app.service.document as document_service
 import app.service.family as family_service
-import app.clients.db.session as db_session
 from sqlalchemy import exc
 
 
