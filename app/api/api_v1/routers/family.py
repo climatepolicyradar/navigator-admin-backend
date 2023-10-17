@@ -10,7 +10,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
-from app.model.family import FamilyReadDTO, FamilyWriteDTO
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 import app.service.family as family_service
 
 families_router = r = APIRouter()
@@ -118,7 +118,7 @@ async def update_family(
 
 @r.post("/families", response_model=FamilyReadDTO, status_code=status.HTTP_201_CREATED)
 async def create_family(
-    new_family: FamilyWriteDTO,
+    new_family: FamilyCreateDTO,
 ) -> FamilyReadDTO:
     """
     Creates a specific family given the import id.

@@ -7,8 +7,8 @@ import logging
 from typing import Optional
 
 from pydantic import ConfigDict, validate_call
-from app.errors import RepositoryError
-from app.model.family import FamilyReadDTO, FamilyWriteDTO
+from app.errors import RepositoryError, ValidationError
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 import app.clients.db.session as db_session
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -82,7 +82,7 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    family: FamilyWriteDTO, db: Session = db_session.get_db()
+    family_dto: FamilyWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[FamilyReadDTO]:
     """
     Updates a single Family with the values passed.
@@ -92,21 +92,31 @@ def update(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
-    validate_import_id(family.import_id)
-    category.validate(family.category)
-    org_id = organisation.get_id(db, family.organisation)
-    metadata.validate(db, org_id, family.metadata)
-    geo_id = geography.get_id(db, family.geography)
+    # Validate import_id
+    validate_import_id(family_dto.import_id)
+    # Validate category
+    category.validate(family_dto.category)
 
-    if family_repo.update(db, family, geo_id):
+    # Get family we're going to update
+    family = get(family_dto.import_id)
+    if family is None:
+        raise ValidationError(f"Could not find family {family_dto.import_id}")
+
+    # Validate metadata
+    org_id = organisation.get_id(db, family.organisation)
+    metadata.validate(db, org_id, family_dto.metadata)
+
+    geo_id = geography.get_id(db, family_dto.geography)
+
+    if family_repo.update(db, family_dto, geo_id):
         db.commit()
-        return get(family.import_id)
+        return get(family_dto.import_id)
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    family: FamilyWriteDTO, db: Session = db_session.get_db()
+    family: FamilyCreateDTO, db: Session = db_session.get_db()
 ) -> Optional[FamilyReadDTO]:
     """
     Creates a new Family with the values passed.

@@ -13,7 +13,7 @@ from app.clients.db.models.law_policy.metadata import (
     MetadataOrganisation,
 )
 from app.errors import RepositoryError
-from app.model.family import FamilyReadDTO, FamilyWriteDTO
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.clients.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
@@ -44,7 +44,7 @@ def _get_query(db: Session) -> Query:
 
 
 def _family_org_from_dto(
-    dto: FamilyWriteDTO, geo_id: int, org_id: int
+    dto: FamilyCreateDTO, geo_id: int, org_id: int
 ) -> Tuple[Family, Organisation]:
     return (
         Family(
@@ -228,7 +228,7 @@ def update(db: Session, family: FamilyWriteDTO, geo_id: int) -> bool:
     return True
 
 
-def create(db: Session, family: FamilyWriteDTO, geo_id: int, org_id: int) -> bool:
+def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> bool:
     """
     Creates a new family.
 

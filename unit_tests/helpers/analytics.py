@@ -1,3 +1,4 @@
+from typing import Optional
 from app.model.analytics import SummaryDTO
 
 # ANALYTICS SUMMARY
@@ -8,7 +9,10 @@ EXPECTED_NUM_EVENTS = 0
 
 
 def create_summary_dto(
-    n_documents: int, n_families: int, n_collections: int, n_events: int = 0
+    n_documents: Optional[int],
+    n_families: Optional[int],
+    n_collections: Optional[int],
+    n_events: Optional[int] = 0,
 ) -> SummaryDTO:
     return SummaryDTO(
         n_documents=n_documents,

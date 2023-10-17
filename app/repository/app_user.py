@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, cast
 from sqlalchemy.orm import Session
 
 from app.clients.db.models.app.users import AppUser, Organisation, OrganisationUser
@@ -13,9 +13,11 @@ def get_user_by_email(db: Session, email: str) -> MaybeAppUser:
 def get_app_user_authorisation(
     db: Session, app_user: AppUser
 ) -> list[Tuple[OrganisationUser, Organisation]]:
-    return (
+    result = (
         db.query(OrganisationUser, Organisation)
         .filter(OrganisationUser.appuser_email == app_user.email)
         .join(Organisation, Organisation.id == OrganisationUser.organisation_id)
         .all()
     )
+
+    return cast(list[Tuple[OrganisationUser, Organisation]], result)
