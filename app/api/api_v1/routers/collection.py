@@ -1,6 +1,5 @@
 """Endpoints for managing the Collection entity."""
 import logging
-from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError, ValidationError
 
@@ -85,7 +84,7 @@ async def search_collection(q: str = "") -> list[CollectionReadDTO]:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
-    if collections is None or len(collections) == 0:
+    if len(collections) == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collections not found for term: {q}",
