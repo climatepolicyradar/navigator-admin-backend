@@ -84,7 +84,7 @@ async def search_document(q: str = "") -> list[DocumentReadDTO]:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
-    if documents is None or len(documents) == 0:
+    if len(documents) == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Documents not found for term: {q}",
