@@ -5,14 +5,23 @@ Uses a family repo mock and ensures that the repo is called.
 """
 import pytest
 from app.errors import ValidationError, RepositoryError
-from app.model.family import FamilyReadDTO, FamilyWriteDTO
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 import app.service.family as family_service
 from unit_tests.helpers.family import create_family_dto
 
 
 def to_write_dto(dto: FamilyReadDTO) -> FamilyWriteDTO:
     return FamilyWriteDTO(
-        import_id=dto.import_id,
+        title=dto.title,
+        summary=dto.summary,
+        geography=dto.geography,
+        category=dto.category,
+        metadata=dto.metadata,
+    )
+
+
+def to_create_dto(dto: FamilyReadDTO) -> FamilyCreateDTO:
+    return FamilyCreateDTO(
         title=dto.title,
         summary=dto.summary,
         geography=dto.geography,
@@ -101,7 +110,7 @@ def test_update(
     family = family_service.get("a.b.c.d")
     assert family is not None
 
-    result = family_service.update(to_write_dto(family))
+    result = family_service.update("a.b.c.d", to_write_dto(family))
     assert result is not None
     assert family_repo_mock.update.call_count == 1
     # Ensure the family service uses the geo service to validate
@@ -120,7 +129,7 @@ def test_update_when_missing(
     assert family is not None
     family_repo_mock.return_empty = True
 
-    result = family_service.update(to_write_dto(family))
+    result = family_service.update("a.b.c.d", to_write_dto(family))
     assert result is None
     assert family_repo_mock.update.call_count == 1
     # Ensure the family service uses the geo service to validate
@@ -138,7 +147,7 @@ def test_update_raises_when_id_invalid(
     family.import_id = "invalid"
 
     with pytest.raises(ValidationError) as e:
-        family_service.update(to_write_dto(family))
+        family_service.update("a.b.c.d", to_write_dto(family))
     expected_msg = f"The import id {family.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert family_repo_mock.update.call_count == 0
@@ -155,7 +164,7 @@ def test_update_raises_when_category_invalid(
     family.category = "invalid"
 
     with pytest.raises(ValidationError) as e:
-        family_service.update(to_write_dto(family))
+        family_service.update("a.b.c.d", to_write_dto(family))
     expected_msg = "Invalid is not a valid FamilyCategory"
     assert e.value.message == expected_msg
     assert family_repo_mock.update.call_count == 0
@@ -172,7 +181,7 @@ def test_update_raises_when_organisation_invalid(
     organisation_repo_mock.error = True
 
     with pytest.raises(ValidationError) as e:
-        family_service.update(to_write_dto(family))
+        family_service.update("a.b.c.d", to_write_dto(family))
 
     expected_msg = "The organisation name CCLW is invalid!"
     assert e.value.message == expected_msg
@@ -190,7 +199,7 @@ def test_update_family_raises_when_geography_invalid(
     geography_repo_mock.error = True
 
     with pytest.raises(ValidationError) as e:
-        family_service.update(to_write_dto(family))
+        family_service.update("a.b.c.d", to_write_dto(family))
     expected_msg = "The geography value CHN is invalid!"
     assert e.value.message == expected_msg
     assert family_repo_mock.update.call_count == 0
@@ -207,7 +216,7 @@ def test_update_family_raises_when_metadata_invalid(
     family.metadata = {"invalid": True}
     metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
-        family_service.update(to_write_dto(family))
+        family_service.update("a.b.c.d", to_write_dto(family))
     expected_msg = "Organisation 1 has no Taxonomy defined!"
     assert e.value.message == expected_msg
     assert family_repo_mock.update.call_count == 0
@@ -223,7 +232,7 @@ def test_create(
     metadata_repo_mock,
 ):
     new_family = create_family_dto(import_id="A.0.0.5")
-    family = family_service.create(to_write_dto(new_family))
+    family = family_service.create(to_create_dto(new_family))
     assert family is not None
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
@@ -240,7 +249,7 @@ def test_create_repo_fails(
 ):
     new_family = create_family_dto(import_id="a.b.c.d")
     family_repo_mock.return_empty = True
-    family = family_service.create(to_write_dto(new_family))
+    family = family_service.create(to_create_dto(new_family))
     assert family is None
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
@@ -252,7 +261,7 @@ def test_create_repo_fails(
 def test_create_raises_when_id_invalid(family_repo_mock):
     new_family = create_family_dto(import_id="invalid")
     with pytest.raises(ValidationError) as e:
-        family_service.create(to_write_dto(new_family))
+        family_service.create(to_create_dto(new_family))
     expected_msg = f"The import id {new_family.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert family_repo_mock.create.call_count == 0
@@ -262,7 +271,7 @@ def test_create_raises_when_category_invalid(family_repo_mock, geography_repo_mo
     new_family = create_family_dto(import_id="A.0.0.5")
     new_family.category = "invalid"
     with pytest.raises(ValidationError) as e:
-        family_service.create(to_write_dto(new_family))
+        family_service.create(to_create_dto(new_family))
     expected_msg = "Invalid is not a valid FamilyCategory"
     assert e.value.message == expected_msg
     assert family_repo_mock.create.call_count == 0

@@ -86,10 +86,11 @@ async def search_family(q: str = "") -> list[FamilyReadDTO]:
 
 
 @r.put(
-    "/families",
+    "/families/{import_id}",
     response_model=FamilyReadDTO,
 )
 async def update_family(
+    import_id: str,
     new_family: FamilyWriteDTO,
 ) -> FamilyReadDTO:
     """
@@ -100,7 +101,7 @@ async def update_family(
     :return FamilyDTO: returns a FamilyDTO of the family updated.
     """
     try:
-        family = family_service.update(new_family)
+        family = family_service.update(import_id, new_family)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -109,17 +110,17 @@ async def update_family(
         )
 
     if family is None:
-        detail = f"Family not updated: {new_family.import_id}"
+        detail = f"Family not updated: {import_id}"
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     # TODO: Make a decision to return this here or a resource URL in the 201?
     return family
 
 
-@r.post("/families", response_model=FamilyReadDTO, status_code=status.HTTP_201_CREATED)
+@r.post("/families", response_model=str, status_code=status.HTTP_201_CREATED)
 async def create_family(
     new_family: FamilyCreateDTO,
-) -> FamilyReadDTO:
+) -> str:
     """
     Creates a specific family given the import id.
 
@@ -138,7 +139,7 @@ async def create_family(
     if family is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Family not created: {new_family.import_id}",
+            detail=f"Family not created: {new_family}",
         )
 
     return family

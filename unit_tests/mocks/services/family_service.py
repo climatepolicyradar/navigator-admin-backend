@@ -30,7 +30,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_update_family(data: FamilyWriteDTO) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
             return create_family_dto(
-                data.import_id,
+                "updated-import-id",
                 data.title,
                 data.summary,
                 data.geography,
@@ -42,7 +42,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_create_family(data: FamilyWriteDTO) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
             return create_family_dto(
-                data.import_id,
+                "new-import-id",
                 data.title,
                 data.summary,
                 data.geography,

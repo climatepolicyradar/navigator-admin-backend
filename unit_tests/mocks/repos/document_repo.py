@@ -46,7 +46,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()
         return not document_repo.return_empty
-    
+
     def mock_get_count(_) -> Optional[int]:
         maybe_throw()
         if not document_repo.return_empty:
@@ -70,6 +70,6 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(document_repo, "delete", mock_delete)
     mocker.spy(document_repo, "delete")
-    
+
     monkeypatch.setattr(document_repo, "count", mock_get_count)
     mocker.spy(document_repo, "count")

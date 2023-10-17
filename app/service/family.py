@@ -82,7 +82,7 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    family_dto: FamilyWriteDTO, db: Session = db_session.get_db()
+    import_id: str, family_dto: FamilyWriteDTO, db: Session = db_session.get_db()
 ) -> Optional[FamilyReadDTO]:
     """
     Updates a single Family with the values passed.
@@ -93,14 +93,14 @@ def update(
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
     # Validate import_id
-    validate_import_id(family_dto.import_id)
+    validate_import_id(import_id)
     # Validate category
     category.validate(family_dto.category)
 
     # Get family we're going to update
-    family = get(family_dto.import_id)
+    family = get(import_id)
     if family is None:
-        raise ValidationError(f"Could not find family {family_dto.import_id}")
+        raise ValidationError(f"Could not find family {import_id}")
 
     # Validate metadata
     org_id = organisation.get_id(db, family.organisation)
@@ -108,16 +108,14 @@ def update(
 
     geo_id = geography.get_id(db, family_dto.geography)
 
-    if family_repo.update(db, family_dto, geo_id):
+    if family_repo.update(db, import_id, family_dto, geo_id):
         db.commit()
-        return get(family_dto.import_id)
+        return get(import_id)
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(
-    family: FamilyCreateDTO, db: Session = db_session.get_db()
-) -> Optional[FamilyReadDTO]:
+def create(family: FamilyCreateDTO, db: Session = db_session.get_db()) -> str:
     """
     Creates a new Family with the values passed.
 
@@ -126,15 +124,15 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
-    id.validate(family.import_id)
+    # Validate geography
     geo_id = geography.get_id(db, family.geography)
+    # Validate category
     category.validate(family.category)
+    # Validate organisation
     org_id = organisation.get_id(db, family.organisation)
     metadata.validate(db, org_id, family.metadata)
 
-    if family_repo.create(db, family, geo_id, org_id):
-        db.commit()
-        return get(family.import_id)
+    return family_repo.create(db, family, geo_id, org_id)
 
 
 @db_session.with_transaction(__name__)
