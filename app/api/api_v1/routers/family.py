@@ -136,12 +136,6 @@ async def create_family(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
-    if family is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Family not created: {new_family}",
-        )
-
     return family
 
 

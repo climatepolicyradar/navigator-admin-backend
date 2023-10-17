@@ -27,10 +27,12 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
         else:
             return [create_family_dto("search1")]
 
-    def mock_update_family(data: FamilyWriteDTO) -> Optional[FamilyReadDTO]:
+    def mock_update_family(
+        import_id: str, data: FamilyWriteDTO
+    ) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
             return create_family_dto(
-                "updated-import-id",
+                import_id,
                 data.title,
                 data.summary,
                 data.geography,
@@ -39,17 +41,10 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
                 "slug",
             )
 
-    def mock_create_family(data: FamilyWriteDTO) -> Optional[FamilyReadDTO]:
-        if not family_service.missing:
-            return create_family_dto(
-                "new-import-id",
-                data.title,
-                data.summary,
-                data.geography,
-                data.category,
-                data.metadata,
-                "slug",
-            )
+    def mock_create_family(data: FamilyWriteDTO) -> str:
+        if family_service.missing:
+            raise RepositoryError("bad-db")
+        return "new-import-id"
 
     def mock_delete_family(import_id: str) -> bool:
         return not family_service.missing

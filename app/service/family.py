@@ -97,6 +97,9 @@ def update(
     # Validate category
     category.validate(family_dto.category)
 
+    # Validate geography
+    geo_id = geography.get_id(db, family_dto.geography)
+
     # Get family we're going to update
     family = get(import_id)
     if family is None:
@@ -105,8 +108,6 @@ def update(
     # Validate metadata
     org_id = organisation.get_id(db, family.organisation)
     metadata.validate(db, org_id, family_dto.metadata)
-
-    geo_id = geography.get_id(db, family_dto.geography)
 
     if family_repo.update(db, import_id, family_dto, geo_id):
         db.commit()

@@ -129,11 +129,11 @@ def test_update_when_missing(
     assert family is not None
     family_repo_mock.return_empty = True
 
-    result = family_service.update("a.b.c.d", to_write_dto(family))
-    assert result is None
-    assert family_repo_mock.update.call_count == 1
-    # Ensure the family service uses the geo service to validate
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    with pytest.raises(ValidationError) as e:
+        family_service.update("a.b.c.d", to_write_dto(family))
+
+    assert family_repo_mock.update.call_count == 0
+    assert e.value.message == "Could not find family a.b.c.d"
 
 
 def test_update_raises_when_id_invalid(
@@ -147,7 +147,7 @@ def test_update_raises_when_id_invalid(
     family.import_id = "invalid"
 
     with pytest.raises(ValidationError) as e:
-        family_service.update("a.b.c.d", to_write_dto(family))
+        family_service.update(family.import_id, to_write_dto(family))
     expected_msg = f"The import id {family.import_id} is invalid!"
     assert e.value.message == expected_msg
     assert family_repo_mock.update.call_count == 0
@@ -250,21 +250,12 @@ def test_create_repo_fails(
     new_family = create_family_dto(import_id="a.b.c.d")
     family_repo_mock.return_empty = True
     family = family_service.create(to_create_dto(new_family))
-    assert family is None
+    assert family is False
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
-
-
-def test_create_raises_when_id_invalid(family_repo_mock):
-    new_family = create_family_dto(import_id="invalid")
-    with pytest.raises(ValidationError) as e:
-        family_service.create(to_create_dto(new_family))
-    expected_msg = f"The import id {new_family.import_id} is invalid!"
-    assert e.value.message == expected_msg
-    assert family_repo_mock.create.call_count == 0
 
 
 def test_create_raises_when_category_invalid(family_repo_mock, geography_repo_mock):

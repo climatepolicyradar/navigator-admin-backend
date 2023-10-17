@@ -87,7 +87,13 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
     )
 
 
-def _update_intention(db, family, geo_id, original_family):
+def _update_intention(
+    db: Session,
+    import_id: str,
+    family: FamilyWriteDTO,
+    geo_id: int,
+    original_family: Family,
+):
     update_title = cast(str, original_family.title) != family.title
     update_basics = (
         update_title
@@ -97,7 +103,7 @@ def _update_intention(db, family, geo_id, original_family):
     )
     existing_metadata = (
         db.query(FamilyMetadata)
-        .filter(FamilyMetadata.family_import_id == family.import_id)
+        .filter(FamilyMetadata.family_import_id == import_id)
         .one()
     )
     update_metadata = existing_metadata.value != family.metadata
@@ -175,7 +181,7 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
 
     # Now figure out the intention of the request:
     update_title, update_basics, update_metadata = _update_intention(
-        db, family, geo_id, original_family
+        db, import_id, family, geo_id, original_family
     )
 
     # Return if nothing to do
