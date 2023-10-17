@@ -34,6 +34,7 @@ class AuthEndpoint(str, enum.Enum):
     DOCUMENT = "DOCUMENTS"
     CONFIG = "CONFIG"
     ANALYTICS = "ANALYTICS"
+    EVENT = "EVENTS"
 
 
 class AuthAccess(str, enum.Enum):
@@ -74,6 +75,10 @@ AUTH_TABLE: AuthMap = {
     },
     # Analytics
     AuthEndpoint.ANALYTICS: {
+        AuthOperation.READ: AuthAccess.USER,
+    },
+    # Event
+    AuthEndpoint.EVENT: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,

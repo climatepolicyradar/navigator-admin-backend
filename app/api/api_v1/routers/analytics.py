@@ -32,7 +32,7 @@ async def get_analytics_summary() -> SummaryDTO:
     if any(summary_value is None for _, summary_value in summary_dto):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Analytics summary not found",
+            detail="Analytics summary not found",
         )
 
     return summary_dto
