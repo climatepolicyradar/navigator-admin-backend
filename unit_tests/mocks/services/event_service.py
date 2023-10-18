@@ -1,8 +1,8 @@
 from typing import Optional
 from pytest import MonkeyPatch
-from app.errors import RepositoryError
+from app.errors import RepositoryError, ValidationError
 
-from app.model.event import EventReadDTO
+from app.model.event import EventCreateDTO, EventReadDTO
 from unit_tests.helpers.event import create_event_read_dto
 
 
@@ -30,6 +30,13 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         else:
             return [create_event_read_dto("search1")]
 
+    def mock_create_document(data: EventCreateDTO) -> str:
+        maybe_throw()
+        if not event_service.missing:
+            return "new.event.id.0"
+
+        raise ValidationError(f"Could not find family for {data.family_import_id}")
+
     def mock_count_collection() -> Optional[int]:
         maybe_throw()
         if event_service.missing:
@@ -44,6 +51,9 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(event_service, "search", mock_search_documents)
     mocker.spy(event_service, "search")
+
+    monkeypatch.setattr(event_service, "create", mock_create_document)
+    mocker.spy(event_service, "create")
 
     monkeypatch.setattr(event_service, "count", mock_count_collection)
     mocker.spy(event_service, "count")

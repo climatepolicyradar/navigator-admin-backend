@@ -35,6 +35,7 @@ from integration_tests.mocks.rollback_document_repo import (
     mock_rollback_document_repo,
 )
 from integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
+from integration_tests.mocks.rollback_event_repo import mock_rollback_event_repo
 
 
 def get_test_db_url() -> str:
@@ -158,6 +159,13 @@ def rollback_document_repo(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_rollback_document_repo(document_repo, monkeypatch, mocker)
     yield document_repo
+
+
+@pytest.fixture
+def rollback_event_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_rollback_event_repo(event_repo, monkeypatch, mocker)
+    yield event_repo
 
 
 @pytest.fixture

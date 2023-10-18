@@ -347,7 +347,7 @@ def _setup_event_data(
     configure_empty: bool = False,
 ) -> None:
     """
-    TODO: Need to test events associated with a family document.
+    TODO: Need to test events associated with family documents.
 
     family_document_import_id=data["family_document_import_id"],
     """

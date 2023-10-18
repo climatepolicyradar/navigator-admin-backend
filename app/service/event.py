@@ -3,11 +3,13 @@ from typing import Optional
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
+from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.event as event_repo
-from app.errors import RepositoryError
-from app.model.event import EventReadDTO
+import app.service.family as family_service
+from app.errors import RepositoryError, ValidationError
+from app.model.event import EventCreateDTO, EventReadDTO
 from app.service import id
 
 
@@ -71,6 +73,29 @@ def validate_import_id(import_id: str) -> None:
     :raises ValidationError: raised should the import_id be invalid.
     """
     id.validate(import_id)
+
+
+@db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
+    """
+        Creates a new document with the values passed.
+
+        :param documentDTO document: The values for the new document.
+        :raises RepositoryError: raised on a database error
+        :raises ValidationError: raised should the import_id be invalid.
+        :return Optional[documentDTO]: The new created document or
+    None if unsuccessful.
+    """
+    id.validate(event.family_import_id)
+
+    family = family_service.get(event.family_import_id)
+    if family is None:
+        raise ValidationError(
+            f"Could not find family when creating event for {event.family_import_id}"
+        )
+
+    return event_repo.create(db, event)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

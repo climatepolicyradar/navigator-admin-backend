@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 from app.errors import RepositoryError
 
-from app.model.event import EventReadDTO
+from app.model.event import EventCreateDTO, EventReadDTO
 
 
 def mock_bad_event_repo(repo, monkeypatch: MonkeyPatch, mocker):
@@ -13,6 +13,9 @@ def mock_bad_event_repo(repo, monkeypatch: MonkeyPatch, mocker):
         raise RepositoryError("Bad Repo")
 
     def mock_search(_, q: str) -> list[EventReadDTO]:
+        raise RepositoryError("Bad Repo")
+
+    def mock_create(_, data: EventCreateDTO) -> Optional[EventReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_get_count(_) -> Optional[int]:
@@ -26,6 +29,9 @@ def mock_bad_event_repo(repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(repo, "search", mock_search)
     mocker.spy(repo, "search")
+
+    monkeypatch.setattr(repo, "create", mock_create)
+    mocker.spy(repo, "create")
 
     monkeypatch.setattr(repo, "count", mock_get_count)
     mocker.spy(repo, "count")

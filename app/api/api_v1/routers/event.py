@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 
 import app.service.event as event_service
 from app.errors import RepositoryError, ValidationError
-from app.model.event import EventReadDTO
+from app.model.event import EventCreateDTO, EventReadDTO
 
 event_router = r = APIRouter()
 
@@ -89,3 +89,30 @@ async def get_event(import_id: str) -> EventReadDTO:
         )
 
     return event
+
+
+@r.post("/events", response_model=str, status_code=status.HTTP_201_CREATED)
+async def create_document(
+    new_event: EventCreateDTO,
+) -> str:
+    """
+    Creates a specific event given the values in EventCreateDTO.
+
+    :raises HTTPException: If a validation error occurs, a 400 is
+        returned.
+    :raises HTTPException: If an SQL alchemy database error occurs, a
+        503 is returned.
+    :return str: returns a the import_id of the event created.
+    """
+    try:
+        return event_service.create(new_event)
+
+    except ValidationError as e:
+        _LOGGER.error(e.message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+
+    except RepositoryError as e:
+        _LOGGER.error(e.message)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
