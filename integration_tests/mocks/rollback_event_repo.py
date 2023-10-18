@@ -7,27 +7,11 @@ from app.model.event import EventCreateDTO, EventReadDTO
 
 
 def mock_rollback_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
-    # actual_update = event_repo.update
     actual_create = event_repo.create
-    # actual_delete = event_repo.delete
-
-    # def mock_update_document(db, import_id: str, data: EventReadDTO) -> EventReadDTO:
-    #     actual_update(db, import_id, data)
-    #     raise NoResultFound()
 
     def mock_create_document(db, data: EventCreateDTO) -> Optional[EventReadDTO]:
         actual_create(db, data)
         raise NoResultFound()
 
-    # def mock_delete_document(db, import_id: str) -> bool:
-    #     actual_delete(db, import_id)
-    #     raise NoResultFound()
-
-    # monkeypatch.setattr(event_repo, "update", mock_update_document)
-    # mocker.spy(event_repo, "update")
-
     monkeypatch.setattr(event_repo, "create", mock_create_document)
     mocker.spy(event_repo, "create")
-
-    # monkeypatch.setattr(event_repo, "delete", mock_delete_document)
-    # mocker.spy(event_repo, "delete")
