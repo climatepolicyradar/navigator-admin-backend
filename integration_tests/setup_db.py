@@ -346,6 +346,11 @@ def _setup_event_data(
     family_id: str,
     configure_empty: bool = False,
 ) -> None:
+    """
+    TODO: Need to test events associated with family documents.
+
+    family_document_import_id=data["family_document_import_id"],
+    """
     if configure_empty is True:
         return None
 
@@ -357,7 +362,6 @@ def _setup_event_data(
             date=data["date"],
             event_type_name=data["event_type_value"],
             family_import_id=data["family_import_id"],
-            # family_document_import_id=data["family_document_import_id"],
             status=data["event_status"],
         )
         test_db.add(fe)
