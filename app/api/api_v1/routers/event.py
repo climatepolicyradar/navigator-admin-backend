@@ -45,7 +45,12 @@ async def search_event(q: str = "") -> list[EventReadDTO]:
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[EventDTO]: A list of matching events.
     """
-    events_found = event_service.search(q)
+    try:
+        events_found = event_service.search(q)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
 
     if not events_found:
         raise HTTPException(

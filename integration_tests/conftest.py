@@ -1,13 +1,17 @@
-from typing import Dict
 import uuid
-from fastapi.testclient import TestClient
+from typing import Dict
+
 import pytest
+from fastapi.testclient import TestClient
 from app.config import SQLALCHEMY_DATABASE_URI
 from sqlalchemy_utils import create_database, database_exists, drop_database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 import app.clients.db.session as db_session
+import app.service.token as token_service
 from app.main import app
+from app.repository import family_repo, collection_repo, document_repo, event_repo
 from integration_tests.mocks.bad_family_repo import (
     mock_bad_family_repo,
     mock_family_count_none,
@@ -20,6 +24,10 @@ from integration_tests.mocks.bad_document_repo import (
     mock_bad_document_repo,
     mock_document_count_none,
 )
+from integration_tests.mocks.bad_event_repo import (
+    mock_bad_event_repo,
+    mock_event_count_none,
+)
 from integration_tests.mocks.rollback_collection_repo import (
     mock_rollback_collection_repo,
 )
@@ -27,8 +35,6 @@ from integration_tests.mocks.rollback_document_repo import (
     mock_rollback_document_repo,
 )
 from integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
-import app.service.token as token_service
-from app.repository import family_repo, collection_repo, document_repo
 
 
 def get_test_db_url() -> str:
@@ -98,12 +104,11 @@ def bad_document_repo(monkeypatch, mocker):
     yield document_repo
 
 
-# @pytest.fixture
-# def collection_count_none(monkeypatch, mocker):
-#     """Mocks the service for a single test."""
-#     mock_document_count_none(document_repo, monkeypatch, mocker)
-#     mock_family_count_none(family_repo, monkeypatch, mocker)
-#     mock_collection_count_none(collection_repo, monkeypatch, mocker)
+@pytest.fixture
+def bad_event_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_bad_event_repo(event_repo, monkeypatch, mocker)
+    yield event_repo
 
 
 @pytest.fixture
@@ -125,6 +130,13 @@ def document_count_none(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_document_count_none(document_repo, monkeypatch, mocker)
     yield document_repo
+
+
+@pytest.fixture
+def event_count_none(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_event_count_none(event_repo, monkeypatch, mocker)
+    yield event_repo
 
 
 @pytest.fixture

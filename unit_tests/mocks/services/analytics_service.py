@@ -20,14 +20,14 @@ def mock_analytics_service(analytics_service, monkeypatch: MonkeyPatch, mocker):
                 n_documents=33,
                 n_families=22,
                 n_collections=None,
-                n_events=0,
+                n_events=5,
             )
 
         return create_summary_dto(
             n_documents=33,
             n_families=22,
             n_collections=11,
-            n_events=0,
+            n_events=5,
         )
 
     monkeypatch.setattr(analytics_service, "summary", mock_get_summary)

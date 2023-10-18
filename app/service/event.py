@@ -45,7 +45,7 @@ def all() -> list[EventReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(search_term: str) -> list[EventReadDTO]:
+def search(search_term: str) -> Optional[list[EventReadDTO]]:
     """
     Search for all family events that match a search term.
 
@@ -53,8 +53,8 @@ def search(search_term: str) -> list[EventReadDTO]:
     search term.
 
     :param str search_term: Search pattern to match.
-    :return list[EventReadDTO]: The list of events that match the search
-        term.
+    :return Optional[list[EventReadDTO]] The list of events that match
+        the search term or none.
     """
     with db_session.get_db() as db:
         return event_repo.search(db, search_term)

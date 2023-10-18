@@ -9,8 +9,10 @@ from app.clients.db.models.law_policy.collection import (
     CollectionOrganisation,
 )
 from app.clients.db.models.law_policy.family import (
+    EventStatus,
     Family,
     FamilyDocument,
+    FamilyEvent,
     FamilyOrganisation,
     Slug,
 )
@@ -33,9 +35,9 @@ EXPECTED_FAMILIES = [
         "metadata": {"size": [3], "color": ["red"]},
         "organisation": "CCLW",
         "slug": "Slug1",
-        "events": [],
-        "published_date": None,
-        "last_updated_date": None,
+        "events": ["E.0.0.1", "E.0.0.2"],
+        "published_date": "2018-12-24T04:59:31Z",
+        "last_updated_date": "2020-12-24T04:59:31Z",
         "documents": [],
         "collections": ["C.0.0.2"],
     },
@@ -65,9 +67,9 @@ EXPECTED_FAMILIES = [
         "metadata": {"size": [100], "color": ["blue"]},
         "organisation": "CCLW",
         "slug": "Slug3",
-        "events": [],
-        "published_date": None,
-        "last_updated_date": None,
+        "events": ["E.0.0.3"],
+        "published_date": "2018-12-24T04:59:33Z",
+        "last_updated_date": "2018-12-24T04:59:33Z",
         "documents": ["D.0.0.1", "D.0.0.2"],
         "collections": ["C.0.0.2"],
     },
@@ -128,6 +130,37 @@ EXPECTED_DOCUMENTS = [
     },
 ]
 
+EXPECTED_NUM_EVENTS = 3
+EXPECTED_EVENTS = [
+    {
+        "import_id": "E.0.0.1",
+        "event_title": "bananas title1",
+        "date": "2018-12-24T04:59:31Z",
+        "event_type_value": "Passed/Approved",
+        "family_import_id": "A.0.0.1",
+        "family_document_import_id": None,
+        "event_status": EventStatus.OK,
+    },
+    {
+        "import_id": "E.0.0.2",
+        "event_title": "cabbages title2",
+        "date": "2020-12-24T04:59:31Z",
+        "event_type_value": "Amended",
+        "family_import_id": "A.0.0.1",
+        "family_document_import_id": None,
+        "event_status": EventStatus.OK,
+    },
+    {
+        "import_id": "E.0.0.3",
+        "event_title": "cabbages title3",
+        "date": "2018-12-24T04:59:33Z",
+        "event_type_value": "Amended",
+        "family_import_id": "A.0.0.3",
+        "family_document_import_id": None,
+        "event_status": EventStatus.OK,
+    },
+]
+
 EXPECTED_ANALYTICS_SUMMARY_KEYS = [
     "n_documents",
     "n_families",
@@ -138,7 +171,7 @@ EXPECTED_ANALYTICS_SUMMARY = {
     "n_documents": EXPECTED_NUM_DOCUMENTS,
     "n_families": EXPECTED_NUM_FAMILIES,
     "n_collections": EXPECTED_NUM_COLLECTIONS,
-    "n_events": 0,
+    "n_events": EXPECTED_NUM_EVENTS,
 }
 
 
@@ -156,6 +189,9 @@ def setup_db(test_db: Session, configure_empty: bool = False):
     test_db.commit()
 
     _setup_document_data(test_db, "A.0.0.3")
+    test_db.commit()
+
+    _setup_event_data(test_db, "A.0.0.3")
     test_db.commit()
 
 
@@ -302,4 +338,27 @@ def _setup_document_data(
             document_role=data["role"],
         )
         test_db.add(fd)
+        test_db.flush()
+
+
+def _setup_event_data(
+    test_db: Session,
+    family_id: str,
+    configure_empty: bool = False,
+) -> None:
+    if configure_empty is True:
+        return None
+
+    for index in range(EXPECTED_NUM_EVENTS):
+        data = EXPECTED_EVENTS[index]
+        fe = FamilyEvent(
+            import_id=data["import_id"],
+            title=data["event_title"],
+            date=data["date"],
+            event_type_name=data["event_type_value"],
+            family_import_id=data["family_import_id"],
+            # family_document_import_id=data["family_document_import_id"],
+            status=data["event_status"],
+        )
+        test_db.add(fe)
         test_db.flush()

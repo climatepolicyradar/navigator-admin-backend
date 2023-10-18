@@ -44,7 +44,6 @@ def test_get_analytics_summary(client: TestClient, test_db: Session, user_header
     assert type(data) is dict
     assert list(data.keys()) == EXPECTED_ANALYTICS_SUMMARY_KEYS
 
-    assert data["n_events"] == 0
     assert dict(sorted(data.items())) == dict(
         sorted(EXPECTED_ANALYTICS_SUMMARY.items())
     )
@@ -64,7 +63,6 @@ def test_get_analytics_summary_when_not_found(
     client: TestClient, test_db: Session, collection_count_none, user_header_token
 ):
     setup_db(test_db, configure_empty=True)
-    # setup_db(test_db)
     response = client.get(
         "/api/v1/analytics/summary",
         headers=user_header_token,

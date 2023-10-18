@@ -93,18 +93,24 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
     return _event_to_dto(db, family_event_meta)
 
 
-def search(db: Session, search_term: str) -> list[EventReadDTO]:
+def search(db: Session, search_term: str) -> Optional[list[EventReadDTO]]:
     """
     Get family events matching a search term on the event title or type.
 
     :param db Session: The database connection.
     :param str search_term: Any search term to filter on the event title
         or event type name.
-    :return list[EventReadDTO]: A list of matching family events.
+    :return Optional[list[EventReadDTO]]: A list of matching family
+        events or none.
     """
     term = f"%{escape_like(search_term)}%"
     search = or_(FamilyEvent.title.ilike(term), FamilyEvent.event_type_name.ilike(term))
-    found = _get_query(db).filter(search).all()
+
+    try:
+        found = _get_query(db).filter(search).all()
+    except NoResultFound as e:
+        _LOGGER.error(e)
+        return
 
     if not found:
         return []
