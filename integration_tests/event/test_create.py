@@ -1,3 +1,4 @@
+from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
@@ -13,13 +14,9 @@ def test_create_event(client: TestClient, test_db: Session, user_header_token):
     new_event = create_event_create_dto(
         title="some event title", family_import_id="A.0.0.1"
     )
-    # new_event.date = cast(str, new_event.date)
-
-    print((new_event.family_import_id))
-    # print(new_event.date)
     response = client.post(
         "/api/v1/events",
-        json=new_event.model_dump(),
+        json=jsonable_encoder(new_event),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -49,7 +46,7 @@ def test_create_event_when_not_authenticated(client: TestClient, test_db: Sessio
     )
     response = client.post(
         "/api/v1/events",
-        json=new_event.model_dump(),
+        json=jsonable_encoder(new_event),
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -63,7 +60,7 @@ def test_create_event_rollback(
     )
     response = client.post(
         "/api/v1/events",
-        json=new_event.model_dump(),
+        json=jsonable_encoder(new_event),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -83,7 +80,7 @@ def test_create_event_when_db_error(
     new_event = create_event_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/events",
-        json=new_event.model_dump(),
+        json=jsonable_encoder(new_event),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -101,7 +98,7 @@ def test_create_event_when_family_invalid(
     )
     response = client.post(
         "/api/v1/events",
-        json=new_event.model_dump(),
+        json=jsonable_encoder(new_event),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -118,7 +115,7 @@ def test_create_event_when_family_missing(
     )
     response = client.post(
         "/api/v1/events",
-        json=new_event.model_dump(),
+        json=jsonable_encoder(new_event),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST

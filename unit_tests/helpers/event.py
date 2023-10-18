@@ -1,5 +1,6 @@
 from app.clients.db.models.law_policy.family import EventStatus
 from app.model.event import EventCreateDTO, EventReadDTO
+
 from datetime import datetime, timezone
 
 
@@ -22,8 +23,7 @@ def create_event_create_dto(
 ) -> EventCreateDTO:
     return EventCreateDTO(
         event_title=title,
-        date="2018-12-24T04:59:33Z",
-        # date=datetime.now(timezone.utc),  # "2018-12-24T04:59:33Z",
+        date=datetime.now(timezone.utc),
         event_type_value="Passed/Approved",
         family_import_id=family_import_id,
         family_document_import_id=None,

@@ -65,7 +65,7 @@ def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
     return {
         "family_import_id": dto.family_import_id,
         "family_document_import_id": dto.family_document_import_id,
-        "date": dto.date,  # .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "date": dto.date,
         "title": dto.event_title,
         "event_type_name": dto.event_type_value,
         "status": dto.event_status,

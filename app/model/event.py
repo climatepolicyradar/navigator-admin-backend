@@ -1,6 +1,6 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel
-from typing import Optional, Union
 
 from app.clients.db.models.law_policy.family import (
     EventStatus,
@@ -37,9 +37,9 @@ class EventCreateDTO(BaseModel):
 
     # From FamilyEvent
     event_title: str
-    date: Union[str, datetime]
+    date: datetime
     event_type_value: str
-    event_status: EventStatus  # do we need this?
+    event_status: EventStatus
 
     # From FamilyDocument
     family_import_id: str
