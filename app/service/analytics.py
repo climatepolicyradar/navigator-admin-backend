@@ -7,12 +7,14 @@ the count of available entities.
 import logging
 
 from pydantic import ConfigDict, validate_call
+from sqlalchemy import exc
+
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
 import app.service.collection as collection_service
 import app.service.document as document_service
 import app.service.family as family_service
-from sqlalchemy import exc
+import app.service.event as event_service
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +31,7 @@ def summary() -> SummaryDTO:
         n_collections = collection_service.count()
         n_families = family_service.count()
         n_documents = document_service.count()
-        n_events = 0
+        n_events = event_service.count()
 
         return SummaryDTO(
             n_documents=n_documents,

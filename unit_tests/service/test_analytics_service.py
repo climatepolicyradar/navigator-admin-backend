@@ -1,5 +1,7 @@
 from typing import Optional
+
 import pytest
+
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
 import app.service.analytics as analytics_service
@@ -30,21 +32,23 @@ def expected_analytics_summary(
 # --- GET SUMMARY
 
 
-def test_summary(collection_repo_mock, document_repo_mock, family_repo_mock):
+def test_summary(
+    collection_repo_mock, document_repo_mock, family_repo_mock, event_repo_mock
+):
     result = analytics_service.summary()
     assert result == expected_analytics_summary()
 
     assert result is not None
-    assert result.n_events == 0
 
     # Ensure the analytics service uses the other services to validate.
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
+    assert event_repo_mock.count.call_count == 1
 
 
 def test_summary_returns_none(
-    collection_repo_mock, document_repo_mock, family_repo_mock
+    collection_repo_mock, document_repo_mock, family_repo_mock, event_repo_mock
 ):
     collection_repo_mock.return_empty = True
     result = analytics_service.summary()
@@ -54,10 +58,11 @@ def test_summary_returns_none(
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
+    assert event_repo_mock.count.call_count == 1
 
 
 def test_summary_raises_if_db_error(
-    collection_repo_mock, document_repo_mock, family_repo_mock
+    collection_repo_mock, document_repo_mock, family_repo_mock, event_repo_mock
 ):
     collection_repo_mock.throw_repository_error = True
     with pytest.raises(RepositoryError):
@@ -67,3 +72,4 @@ def test_summary_raises_if_db_error(
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 0
     assert family_repo_mock.count.call_count == 0
+    assert event_repo_mock.count.call_count == 0

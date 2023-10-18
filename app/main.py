@@ -14,6 +14,7 @@ from app.api.api_v1.routers import (
     document_router,
     config_router,
     analytics_router,
+    event_router,
 )
 from fastapi import FastAPI, Depends
 from fastapi_health import health
@@ -69,6 +70,13 @@ app.include_router(
     analytics_router,
     prefix="/api/v1",
     tags=["analytics"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    event_router,
+    prefix="/api/v1",
+    tags=["events"],
     dependencies=[Depends(check_user_auth)],
 )
 

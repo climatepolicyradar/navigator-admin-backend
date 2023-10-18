@@ -7,6 +7,7 @@ import app.repository.document as document_repo
 import app.repository.app_user as app_user_repo
 import app.clients.aws.s3bucket as s3bucket_repo
 import app.repository.config as config_repo
+import app.repository.event as event_repo
 from app.repository.protocols import FamilyRepo
 
 family_repo: FamilyRepo
