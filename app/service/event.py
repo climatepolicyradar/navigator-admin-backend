@@ -91,7 +91,9 @@ def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
 
     family = family_service.get(event.family_import_id)
     if family is None:
-        raise ValidationError(f"Could not find event for {event.family_import_id}")
+        raise ValidationError(
+            f"Could not find family when creating event for {event.family_import_id}"
+        )
 
     return event_repo.create(db, event)
 
