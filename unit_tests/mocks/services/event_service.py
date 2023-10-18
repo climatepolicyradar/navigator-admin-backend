@@ -34,7 +34,7 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         if event_service.missing:
             return None
-        return 33
+        return 5
 
     monkeypatch.setattr(event_service, "get", mock_get_document)
     mocker.spy(event_service, "get")
