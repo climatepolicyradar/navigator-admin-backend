@@ -5,14 +5,14 @@ from app.model.analytics import SummaryDTO
 EXPECTED_NUM_DOCUMENTS = 33
 EXPECTED_NUM_FAMILIES = 22
 EXPECTED_NUM_COLLECTIONS = 11
-EXPECTED_NUM_EVENTS = 0
+EXPECTED_NUM_EVENTS = 5
 
 
 def create_summary_dto(
     n_documents: Optional[int],
     n_families: Optional[int],
     n_collections: Optional[int],
-    n_events: Optional[int] = 0,
+    n_events: Optional[int],
 ) -> SummaryDTO:
     return SummaryDTO(
         n_documents=n_documents,
