@@ -51,6 +51,8 @@ class DocumentCreateDTO(BaseModel):
     variant_name: str
     role: str
     type: str
+
+    # From PhysicalDocument
     title: str
     source_url: str
     user_language_name: str
