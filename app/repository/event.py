@@ -68,7 +68,7 @@ def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
         "date": dto.date,
         "title": dto.event_title,
         "event_type_name": dto.event_type_value,
-        "status": dto.event_status,
+        "status": EventStatus.OK,
     }
 
 
