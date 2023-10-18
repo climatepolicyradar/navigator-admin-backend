@@ -4,22 +4,22 @@ from sqlalchemy.orm import Session
 from app.clients.db.models.law_policy.family import Family, FamilyCategory, Slug
 from app.clients.db.models.law_policy.metadata import FamilyMetadata
 from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
-from unit_tests.helpers.family import create_family_dto
+from unit_tests.helpers.family import create_family_write_dto
 
 
 def test_update_family(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.2",
+    new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
         metadata={"color": ["pink"], "size": [0]},
-        slug="new-slug",
     )
     response = client.put(
-        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+        "/api/v1/families/A.0.0.2",
+        json=new_family.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -43,16 +43,14 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
 
 def test_update_family_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.2",
+    new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
         metadata={"color": ["pink"], "size": [0]},
-        slug="new-slug",
     )
-    response = client.put("/api/v1/families", json=new_family.model_dump())
+    response = client.put("/api/v1/families/A.0.0.2", json=new_family.model_dump())
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -61,7 +59,11 @@ def test_update_family_idempotent_when_ok(
 ):
     setup_db(test_db)
     family = EXPECTED_FAMILIES[1]
-    response = client.put("/api/v1/families", json=family, headers=user_header_token)
+    response = client.put(
+        f"/api/v1/families/{family['import_id']}",
+        json=family,
+        headers=user_header_token,
+    )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["title"] == EXPECTED_FAMILIES[1]["title"]
@@ -83,14 +85,15 @@ def test_update_family_rollback(
     client: TestClient, test_db: Session, rollback_family_repo, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.2",
+    new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
         metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
-        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+        "/api/v1/families/A.0.0.2",
+        json=new_family.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
@@ -118,32 +121,34 @@ def test_update_family_when_not_found(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.22",
+    new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
         metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
-        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+        "/api/v1/families/A.0.0.22",
+        json=new_family.model_dump(),
+        headers=user_header_token,
     )
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "Family not updated: A.0.0.22"
+    assert data["detail"] == "Could not find family A.0.0.22"
 
 
 def test_update_family_when_db_error(
     client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.22",
+    new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
         metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
-        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+        "/api/v1/families/A.0.0.22",
+        json=new_family.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
@@ -154,15 +159,16 @@ def test_update_family__invalid_geo(
     client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.22",
+    new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
         metadata={"color": ["pink"], "size": [0]},
     )
     new_family.geography = "UK"
     response = client.put(
-        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+        "/api/v1/families/A.0.0.22",
+        json=new_family.model_dump(),
+        headers=user_header_token,
     )
     assert response.status_code == 400
     data = response.json()
@@ -183,7 +189,7 @@ def test_update_family_metadata_if_changed(
     assert {"color": ["green"], "size": [4]} == family_data["metadata"]
     family_data["metadata"] = expected_meta
     response = client.put(
-        "/api/v1/families", json=family_data, headers=user_header_token
+        "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
     )
 
     assert response.status_code == status.HTTP_200_OK

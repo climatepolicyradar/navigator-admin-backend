@@ -11,9 +11,9 @@ def mock_rollback_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
     actual_delete = family_repo.delete
 
     def mock_update_family(
-        db, data: FamilyReadDTO, geo_id: int
+        db, import_id: str, data: FamilyReadDTO, geo_id: int
     ) -> Optional[FamilyReadDTO]:
-        actual_update(db, data, geo_id)
+        actual_update(db, import_id, data, geo_id)
         raise NoResultFound()
 
     def mock_create_family(

@@ -26,10 +26,23 @@ class FamilyReadDTO(BaseModel):
 class FamilyWriteDTO(BaseModel):
     """A JSON representation of a family for writing."""
 
-    import_id: str
+    # import_id: not included as this is in the request path
     title: str
     summary: str
     geography: str
     category: str
     metadata: Json
-    organisation: str
+    # organisation: not included as once created is immutable
+
+
+class FamilyCreateDTO(BaseModel):
+    """A JSON representation of a family for creating."""
+
+    # import_id: not included as generated
+    title: str
+    summary: str
+    geography: str
+    category: str
+    metadata: Json
+    # slug: not included as this is generated from title
+    organisation: str  # FIXME: https://linear.app/climate-policy-radar/issue/PDCT-494

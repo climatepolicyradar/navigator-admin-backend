@@ -4,14 +4,13 @@ from sqlalchemy.orm import Session
 from app.clients.db.models.law_policy.family import Family, Slug
 from app.clients.db.models.law_policy.metadata import FamilyMetadata
 from integration_tests.setup_db import setup_db
-from unit_tests.helpers.family import create_family_dto
+from unit_tests.helpers.family import create_family_create_dto
 
 
 def test_create_family(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
     test_meta = {"color": ["blue"], "size": [888]}
-    new_family = create_family_dto(
-        import_id="A.0.0.9",
+    new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
         metadata=test_meta,
@@ -20,15 +19,15 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
-    assert data["title"] == "Title"
-    assert data["summary"] == "test test test"
-    actual_family = test_db.query(Family).filter(Family.import_id == "A.0.0.9").one()
+    import_id = response.json()
+    assert import_id == "CCLW.family.i00000001.n0000"
+    actual_family = test_db.query(Family).filter(Family.import_id == import_id).one()
+
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
     metadata = (
         test_db.query(FamilyMetadata)
-        .filter(FamilyMetadata.family_import_id == "A.0.0.9")
+        .filter(FamilyMetadata.family_import_id == import_id)
         .one()
     )
     assert metadata.value is not None
@@ -38,8 +37,7 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
 def test_create_family_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
     test_meta = {"color": "blue", "size": 888}
-    new_family = create_family_dto(
-        import_id="A.0.0.9",
+    new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
         metadata=test_meta,
@@ -55,8 +53,7 @@ def test_create_family_rollback(
     client: TestClient, test_db: Session, rollback_family_repo, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.9",
+    new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
         metadata={"color": ["pink"], "size": [0]},
@@ -79,8 +76,7 @@ def test_create_family_when_db_error(
     client: TestClient, test_db: Session, bad_family_repo, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.9",
+    new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
         metadata={"color": ["pink"], "size": [0]},
@@ -98,8 +94,7 @@ def test_create_family_when_invalid_geo(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.9",
+    new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
     )
@@ -116,8 +111,7 @@ def test_create_family_when_invalid_category(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.9",
+    new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
     )
@@ -134,8 +128,7 @@ def test_create_family_when_invalid_org(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    new_family = create_family_dto(
-        import_id="A.0.0.9",
+    new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
     )
