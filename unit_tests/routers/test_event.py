@@ -1,4 +1,5 @@
 from fastapi import status
+from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 import app.service.event as event_service
 
@@ -58,7 +59,9 @@ def test_search_when_not_found(
 
 def test_create_when_ok(client: TestClient, event_service_mock, user_header_token):
     new_data = create_event_create_dto("event1").model_dump()
-    response = client.post("/api/v1/events", json=new_data, headers=user_header_token)
+    response = client.post(
+        "/api/v1/events", json=jsonable_encoder(new_data), headers=user_header_token
+    )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data == "new.event.id.0"
@@ -71,7 +74,7 @@ def test_create_when_family_not_found(
     event_service_mock.missing = True
     new_data = create_event_create_dto("this_family")
     response = client.post(
-        "/api/v1/events", json=new_data.model_dump(), headers=user_header_token
+        "/api/v1/events", json=jsonable_encoder(new_data), headers=user_header_token
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
