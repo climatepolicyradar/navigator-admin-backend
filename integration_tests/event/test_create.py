@@ -120,4 +120,7 @@ def test_create_event_when_family_missing(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == f"Could not find event for {new_event.family_import_id}"
+    assert (
+        data["detail"]
+        == f"Could not find family when creating event for {new_event.family_import_id}"
+    )
