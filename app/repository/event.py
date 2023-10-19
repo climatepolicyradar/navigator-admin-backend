@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, cast
 
-from sqlalchemy import or_, Column
+from sqlalchemy import or_, Column, update as db_update
 from sqlalchemy.orm import Query, Session
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
@@ -16,8 +16,8 @@ from app.clients.db.models.law_policy import (
     Family,
     FamilyDocument,
 )
-from app.errors import ValidationError
-from app.model.event import EventCreateDTO, EventReadDTO
+from app.errors import ValidationError, RepositoryError
+from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id
 
@@ -108,7 +108,7 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
     except NoResultFound as e:
         _LOGGER.error(e)
         return
-
+    _LOGGER.warning(_event_to_dto(family_event_meta))
     return _event_to_dto(family_event_meta)
 
 
@@ -170,6 +170,48 @@ def create(db: Session, event: EventCreateDTO) -> str:
         raise
 
     return cast(str, new_family_event.import_id)
+
+
+def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
+    """
+    Updates a single entry with the new values passed.
+
+    :param db Session: the database connection
+    :param str import_id: The event import id to change.
+    :param DocumentDTO event: The new values
+    :return bool: True if new values were set otherwise false.
+    """
+    _LOGGER.warning("hit update event repo")
+    new_values = event.model_dump()
+    _LOGGER.warning(f"new_values: {new_values['date']}")
+
+    original_fe = (
+        db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
+    )
+
+    if original_fe is None:  # Not found the event to update
+        _LOGGER.error(f"Unable to find event for update {import_id}")
+        return False
+
+    _LOGGER.warning(f"date: {original_fe.date}")
+    # update_slug = original_pd.title != new_values["title"]
+
+    result = db.execute(
+        db_update(FamilyEvent)
+        .where(FamilyEvent.import_id == original_fe.import_id)
+        .values(
+            title=new_values["event_title"],
+            event_type_name=new_values["event_type_value"],
+            date=new_values["date"],
+        )
+    )
+
+    if result.rowcount == 0:  # type: ignore
+        msg = f"Could not update event fields: {event}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+
+    return True
 
 
 def count(db: Session) -> Optional[int]:

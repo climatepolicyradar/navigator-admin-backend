@@ -9,7 +9,7 @@ import app.clients.db.session as db_session
 import app.repository.event as event_repo
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
-from app.model.event import EventCreateDTO, EventReadDTO
+from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.service import id
 
 
@@ -79,12 +79,12 @@ def validate_import_id(import_id: str) -> None:
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
     """
-        Creates a new document with the values passed.
+        Creates a new event with the values passed.
 
-        :param documentDTO document: The values for the new document.
+        :param eventDTO event: The values for the new event.
         :raises RepositoryError: raised on a database error
         :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[documentDTO]: The new created document or
+        :return Optional[eventDTO]: The new created event or
     None if unsuccessful.
     """
     id.validate(event.family_import_id)
@@ -96,6 +96,35 @@ def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
         )
 
     return event_repo.create(db, event)
+
+
+@db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def update(
+    import_id: str, event: EventWriteDTO, db: Session = db_session.get_db()
+) -> Optional[EventReadDTO]:
+    """
+    Updates a single event with the values passed.
+
+    :param EventWriteDTO event: The DTO with all the values to change (or keep).
+    :raises RepositoryError: raised on a database error.
+    :raises ValidationError: raised should the import_id be invalid.
+    :return Optional[EventReadDTO]: The updated event or None if not updated.
+    """
+    _LOGGER.warning("hit update event service")
+    validate_import_id(import_id)
+
+    # TODO: implement changing of a event's organisation
+    # org_id = organisation.get_id(db, event.organisation)
+
+    try:
+        if event_repo.update(db, import_id, event):
+            db.commit()
+            return get(import_id)
+
+    except exc.SQLAlchemyError:
+        _LOGGER.exception(f"While updating event {import_id}")
+        raise RepositoryError(f"Error when updating event {import_id}")
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
