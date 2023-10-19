@@ -17,3 +17,18 @@ def test_get_config(client: TestClient, test_db: Session, user_header_token):
     assert "geographies" in keys
     assert "taxonomies" in keys
     assert "languages" in keys
+    assert "document" in keys
+    assert "event" in keys
+
+    # Now sanity check the data
+    assert data["geographies"][1]["node"]["slug"] == "europe-central-asia"
+
+    assert "CCLW" in data["taxonomies"].keys()
+
+    assert "aaa" in data["languages"].keys()
+
+    assert "AMENDMENT" in data["document"]["roles"]
+    assert "Action Plan" in data["document"]["types"]
+    assert "Translation" in data["document"]["variants"]
+
+    assert "Appealed" in data["event"]["types"]
