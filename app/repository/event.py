@@ -223,9 +223,6 @@ def delete(db: Session, import_id: str) -> bool:
     if found is None:
         return False
 
-    # TODO: Check the backend - I think when a document is delete the
-    # actual information in the physical_document is "blanked".
-
     result = db.execute(
         db_update(FamilyEvent)
         .where(FamilyEvent.import_id == import_id)
