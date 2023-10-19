@@ -123,6 +123,21 @@ def update(
         raise RepositoryError(f"Error when updating event {import_id}")
 
 
+@db_session.with_transaction(__name__)
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
+    """
+    Deletes the event specified by the import_id.
+
+    :param str import_id: The import_id of the event to delete.
+    :raises RepositoryError: raised on a database error.
+    :raises ValidationError: raised should the import_id be invalid.
+    :return bool: True if deleted else False.
+    """
+    id.validate(import_id)
+    return event_repo.delete(db, import_id)
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def count() -> Optional[int]:
     """

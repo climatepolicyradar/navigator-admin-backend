@@ -177,7 +177,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
 
     :param db Session: the database connection
     :param str import_id: The event import id to change.
-    :param DocumentDTO event: The new values
+    :param EventDTO event: The new values
     :return bool: True if new values were set otherwise false.
     """
     new_values = event.model_dump()
@@ -202,6 +202,37 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
 
     if result.rowcount == 0:  # type: ignore
         msg = f"Could not update event fields: {event}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+
+    return True
+
+
+def delete(db: Session, import_id: str) -> bool:
+    """
+    Deletes a single event by the import id.
+
+    :param db Session: the database connection
+    :param str import_id: The event import id to delete.
+    :return bool: True if deleted False if not.
+    """
+
+    found = (
+        db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
+    )
+    if found is None:
+        return False
+
+    # TODO: Check the backend - I think when a document is delete the
+    # actual information in the physical_document is "blanked".
+
+    result = db.execute(
+        db_update(FamilyEvent)
+        .where(FamilyEvent.import_id == import_id)
+        .values(status=EventStatus.DELETED)
+    )
+    if result.rowcount == 0:  # type: ignore
+        msg = f"Could not delete event : {import_id}"
         _LOGGER.error(msg)
         raise RepositoryError(msg)
 
