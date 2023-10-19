@@ -10,6 +10,8 @@ def test_get_when_ok(client: TestClient, user_header_token, config_service_mock)
     assert "geographies" in keys
     assert "taxonomies" in keys
     assert "languages" in keys
+    assert "event" in keys
+    assert "document" in keys
     assert config_service_mock.get.call_count == 1
 
 
