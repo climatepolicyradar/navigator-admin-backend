@@ -205,6 +205,7 @@ class EventStatus(BaseModelEnum):
     # case we will need to validate, remove unnecessary duplicates & create new
     # events through a data cleaning exercise.
     DUPLICATED = "Duplicated"
+    DELETED = "Deleted"
 
 
 class FamilyEventType(Base):
