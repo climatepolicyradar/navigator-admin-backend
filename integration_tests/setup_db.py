@@ -203,6 +203,13 @@ def _setup_organisation(test_db: Session) -> int:
         organisation_type="test organisation",
     )
     test_db.add(org)
+    test_db.add(
+        Organisation(
+            name="Another org",
+            description="because we will have more than one org",
+            organisation_type="test",
+        )
+    )
     test_db.flush()
     return cast(int, org.id)
 

@@ -321,12 +321,14 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
     :param str family_import_id: The family import_id in question
     :return Optional[Organisation]: Any associated organisation
     """
-    family_org = db.query(FamilyOrganisation).filter(
-        FamilyOrganisation.family_import_id == family_import_id
-    )
 
-    # TODO - can this be improved - we get warnings on integration tests ?
-    return db.query(Organisation).select_from(family_org).one_or_none()
+    return (
+        db.query(Organisation)
+        .join(FamilyOrganisation, FamilyOrganisation.organisation_id == Organisation.id)
+        .filter(FamilyOrganisation.family_import_id == family_import_id)
+        .group_by(Organisation.id)
+        .one()
+    )
 
 
 def count(db: Session) -> Optional[int]:
