@@ -43,6 +43,10 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
             raise exc.NoResultFound()
         return create_event_read_dto("a.b.c.d")
 
+    def mock_delete(_, import_id: str) -> bool:
+        maybe_throw()
+        return not event_repo.return_empty
+
     def mock_get_count(_) -> Optional[int]:
         maybe_throw()
         if not event_repo.return_empty:
@@ -63,6 +67,9 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(event_repo, "update", mock_update)
     mocker.spy(event_repo, "update")
+
+    monkeypatch.setattr(event_repo, "delete", mock_delete)
+    mocker.spy(event_repo, "delete")
 
     monkeypatch.setattr(event_repo, "count", mock_get_count)
     mocker.spy(event_repo, "count")

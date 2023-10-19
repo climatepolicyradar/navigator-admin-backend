@@ -46,6 +46,10 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
                 import_id, "family_import_id", data.event_title
             )
 
+    def mock_delete_event(_) -> bool:
+        maybe_throw()
+        return not event_service.missing
+
     def mock_count_event() -> Optional[int]:
         maybe_throw()
         if event_service.missing:
@@ -66,6 +70,9 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(event_service, "update", mock_update_event)
     mocker.spy(event_service, "update")
+
+    monkeypatch.setattr(event_service, "delete", mock_delete_event)
+    mocker.spy(event_service, "delete")
 
     monkeypatch.setattr(event_service, "count", mock_count_event)
     mocker.spy(event_service, "count")
