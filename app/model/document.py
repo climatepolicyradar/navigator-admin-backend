@@ -25,8 +25,6 @@ class DocumentReadDTO(BaseModel):
     source_url: Optional[str]
     content_type: Optional[str]
     user_language_name: str
-    # TODO: Languages for a document
-    # languages: list[]
 
 
 class DocumentWriteDTO(BaseModel):
@@ -39,8 +37,6 @@ class DocumentWriteDTO(BaseModel):
     title: str
     source_url: Optional[str]
     user_language_name: str
-    # TODO: Languages for a document
-    # languages: list[]
 
 
 class DocumentCreateDTO(BaseModel):
@@ -56,8 +52,6 @@ class DocumentCreateDTO(BaseModel):
     title: str
     source_url: str
     user_language_name: str
-    # TODO: Languages for a document
-    # languages: list[]
 
 
 class DocumentUploadRequest(BaseModel):

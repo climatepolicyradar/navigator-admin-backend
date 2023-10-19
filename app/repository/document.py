@@ -33,7 +33,7 @@ from app.repository import family as family_repo
 
 _LOGGER = logging.getLogger(__name__)
 
-DocumentTuple = Tuple[FamilyDocument, PhysicalDocument, Slug]
+DocumentTuple = Tuple[FamilyDocument, PhysicalDocument, Slug, PhysicalDocumentLanguage]
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
 
 
@@ -44,26 +44,23 @@ def _get_query(db: Session) -> Query:
 
     # FIXME: TODO: will this work with multiple slugs????
     return (
-        db.query(FamilyDocument, PhysicalDocument, Slug, PhysicalDocumentLanguage, Language)
+        db.query(FamilyDocument, PhysicalDocument, Slug, PhysicalDocumentLanguage)
         .filter(FamilyDocument.physical_document_id == PhysicalDocument.id)
+        .join(
+            PhysicalDocumentLanguage,
+            PhysicalDocumentLanguage.document_id == PhysicalDocument.id,
+            isouter=True,
+        )
         .join(
             Slug,
             Slug.family_document_import_id == FamilyDocument.import_id,
             isouter=True,
         )
-        .join(
-            PhysicalDocumentLanguage, 
-            PhysicalDocumentLanguage.document_id == PhysicalDocument.id
-        )
-        .join(
-            Language, 
-            Language.id == PhysicalDocumentLanguage.language_id
-        )
     )
 
 
 def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
-    fd, pd, slug = doc_tuple
+    fd, pd, slug, lang_link = doc_tuple
 
     return DocumentReadDTO(
         import_id=cast(str, fd.import_id),
@@ -79,7 +76,7 @@ def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
         cdn_object=cast(str, pd.cdn_object),
         source_url=cast(str, pd.source_url),
         content_type=cast(str, pd.content_type),
-        user_language_name=cast(str, fd.)
+        user_language_name=cast(str, lang_link.language.name),
     )
 
 
