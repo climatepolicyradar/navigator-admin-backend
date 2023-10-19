@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 
 import app.service.event as event_service
 from app.errors import RepositoryError, ValidationError
-from app.model.event import EventCreateDTO, EventReadDTO
+from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 
 event_router = r = APIRouter()
 
@@ -92,7 +92,7 @@ async def get_event(import_id: str) -> EventReadDTO:
 
 
 @r.post("/events", response_model=str, status_code=status.HTTP_201_CREATED)
-async def create_document(
+async def create_event(
     new_event: EventCreateDTO,
 ) -> str:
     """
@@ -116,3 +116,34 @@ async def create_document(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+
+
+@r.put(
+    "/events/{import_id}",
+    response_model=EventReadDTO,
+)
+async def update_event(
+    import_id: str,
+    new_event: EventWriteDTO,
+) -> EventReadDTO:
+    """
+    Updates a specific event given the import id.
+
+    :param str import_id: Specified import_id.
+    :raises HTTPException: If the event is not found a 404 is returned.
+    :return EventDTO: returns a EventDTO of the event updated.
+    """
+    try:
+        event = event_service.update(import_id, new_event)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
+    if event is None:
+        detail = f"Event not updated: {import_id}"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+
+    return event

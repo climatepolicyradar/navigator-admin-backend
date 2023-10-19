@@ -2,7 +2,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from sqlalchemy import exc
-from app.model.event import EventCreateDTO, EventReadDTO
+from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from unit_tests.helpers.event import create_event_read_dto
 
 
@@ -37,6 +37,12 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
             raise exc.NoResultFound()
         return "test.new.event.0"
 
+    def mock_update(_, import_id: str, data: EventWriteDTO) -> EventReadDTO:
+        maybe_throw()
+        if event_repo.return_empty:
+            raise exc.NoResultFound()
+        return create_event_read_dto("a.b.c.d")
+
     def mock_get_count(_) -> Optional[int]:
         maybe_throw()
         if not event_repo.return_empty:
@@ -54,6 +60,9 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(event_repo, "create", mock_create)
     mocker.spy(event_repo, "create")
+
+    monkeypatch.setattr(event_repo, "update", mock_update)
+    mocker.spy(event_repo, "update")
 
     monkeypatch.setattr(event_repo, "count", mock_get_count)
     mocker.spy(event_repo, "count")
