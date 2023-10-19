@@ -322,7 +322,6 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
     :return Optional[Organisation]: Any associated organisation
     """
 
-    # TODO - can this be improved - we get warnings on integration tests ?
     return (
         db.query(Organisation)
         .join(FamilyOrganisation, FamilyOrganisation.organisation_id == Organisation.id)
