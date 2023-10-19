@@ -108,7 +108,6 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
     except NoResultFound as e:
         _LOGGER.error(e)
         return
-    _LOGGER.warning(_event_to_dto(family_event_meta))
     return _event_to_dto(family_event_meta)
 
 
@@ -181,9 +180,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
     :param DocumentDTO event: The new values
     :return bool: True if new values were set otherwise false.
     """
-    _LOGGER.warning("hit update event repo")
     new_values = event.model_dump()
-    _LOGGER.warning(f"new_values: {new_values['date']}")
 
     original_fe = (
         db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
@@ -192,9 +189,6 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
     if original_fe is None:  # Not found the event to update
         _LOGGER.error(f"Unable to find event for update {import_id}")
         return False
-
-    _LOGGER.warning(f"date: {original_fe.date}")
-    # update_slug = original_pd.title != new_values["title"]
 
     result = db.execute(
         db_update(FamilyEvent)

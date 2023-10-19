@@ -111,11 +111,7 @@ def update(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[EventReadDTO]: The updated event or None if not updated.
     """
-    _LOGGER.warning("hit update event service")
     validate_import_id(import_id)
-
-    # TODO: implement changing of a event's organisation
-    # org_id = organisation.get_id(db, event.organisation)
 
     try:
         if event_repo.update(db, import_id, event):

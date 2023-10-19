@@ -133,7 +133,6 @@ async def update_event(
     :raises HTTPException: If the event is not found a 404 is returned.
     :return EventDTO: returns a EventDTO of the event updated.
     """
-    _LOGGER.warning("hit update event endpoint")
     try:
         event = event_service.update(import_id, new_event)
     except ValidationError as e:
