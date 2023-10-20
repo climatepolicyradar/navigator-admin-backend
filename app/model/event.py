@@ -2,9 +2,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 
-from app.clients.db.models.law_policy.family import (
-    EventStatus,
-)
+from app.clients.db.models.law_policy.family import EventStatus
 
 
 class EventReadDTO(BaseModel):
@@ -44,3 +42,19 @@ class EventCreateDTO(BaseModel):
     # From FamilyDocument
     family_import_id: str
     family_document_import_id: Optional[str] = None
+
+
+class EventWriteDTO(BaseModel):
+    """
+    JSON Representation of the DTO for writing an event.
+
+    The following fields are immutable:
+    - family_import_id
+    - import_id
+    - family_document_import_id
+    - event_status
+    """
+
+    event_title: str
+    date: datetime
+    event_type_value: str

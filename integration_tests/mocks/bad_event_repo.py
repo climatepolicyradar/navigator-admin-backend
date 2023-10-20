@@ -18,6 +18,9 @@ def mock_bad_event_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_create(_, data: EventCreateDTO) -> Optional[EventReadDTO]:
         raise RepositoryError("Bad Repo")
 
+    def mock_update(_, import_id, data: EventReadDTO) -> Optional[EventReadDTO]:
+        raise RepositoryError("Bad Repo")
+
     def mock_get_count(_) -> Optional[int]:
         raise RepositoryError("Bad Repo")
 
@@ -32,6 +35,9 @@ def mock_bad_event_repo(repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(repo, "create", mock_create)
     mocker.spy(repo, "create")
+
+    monkeypatch.setattr(repo, "update", mock_update)
+    mocker.spy(repo, "update")
 
     monkeypatch.setattr(repo, "count", mock_get_count)
     mocker.spy(repo, "count")
