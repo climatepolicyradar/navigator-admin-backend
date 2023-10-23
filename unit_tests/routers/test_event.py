@@ -1,8 +1,9 @@
+import pytest
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
-import app.service.event as event_service
 
+import app.service.event as event_service
 from unit_tests.helpers.event import (
     create_event_create_dto,
     create_event_write_dto,
@@ -119,6 +120,7 @@ def test_delete_when_ok(
     assert event_service_mock.delete.call_count == 1
 
 
+@pytest.mark.skip(reason="No admin user for MVP")
 def test_delete_event_fails_if_not_admin(
     client: TestClient, event_service_mock, user_header_token
 ):

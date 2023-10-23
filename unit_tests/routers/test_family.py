@@ -3,6 +3,7 @@ Tests the routes for family management.
 
 This uses a service mock and ensures each endpoint calls into the service.
 """
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
@@ -98,6 +99,7 @@ def test_delete_when_ok(
     assert family_service_mock.delete.call_count == 1
 
 
+@pytest.mark.skip(reason="No admin user for MVP")
 def test_delete_fails_when_not_admin(
     client: TestClient, family_service_mock, user_header_token
 ):

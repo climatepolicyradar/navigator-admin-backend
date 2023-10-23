@@ -1,5 +1,7 @@
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+
 import app.service.document as document_service
 from unit_tests.helpers.document import (
     create_document_create_dto,
@@ -115,6 +117,7 @@ def test_delete_when_ok(
     assert document_service_mock.delete.call_count == 1
 
 
+@pytest.mark.skip(reason="No admin user for MVP")
 def test_delete_document_fails_if_not_admin(
     client: TestClient, document_service_mock, user_header_token
 ):
