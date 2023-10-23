@@ -83,9 +83,18 @@ def test_update_document_idempotent(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    document = EXPECTED_DOCUMENTS[1]
+    doc = EXPECTED_DOCUMENTS[1]
+    document = {
+        "variant_name": doc["variant_name"],
+        "role": doc["role"],
+        "type": doc["type"],
+        "title": doc["title"],
+        "source_url": doc["source_url"],
+        "user_language_name": doc["user_language_name"],
+    }
+
     response = client.put(
-        f"/api/v1/documents/{document['import_id']}",
+        f"/api/v1/documents/{doc['import_id']}",
         json=document,
         headers=user_header_token,
     )

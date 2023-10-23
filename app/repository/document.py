@@ -1,15 +1,10 @@
 from typing import Tuple
 import logging
 from typing import Optional, cast
-from sqlalchemy.orm import Session, Query
-from sqlalchemy import Column
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.law_policy.family import (
     DocumentStatus,
-    FamilyDocumentRole,
-    FamilyDocumentType,
     Slug,
-    Variant,
 )
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
@@ -22,10 +17,13 @@ from app.clients.db.models.document.physical_document import (
 from app.clients.db.models.law_policy import (
     FamilyDocument,
 )
-from sqlalchemy.exc import NoResultFound
 
-from sqlalchemy import or_, update as db_update
+from sqlalchemy import Column, or_, and_, update as db_update
 from sqlalchemy_utils import escape_like
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Session, Query, aliased
+from sqlalchemy.sql.functions import concat
+from sqlalchemy import func
 
 from app.repository.helpers import generate_import_id, generate_slug
 from app.repository import family as family_repo
@@ -33,51 +31,96 @@ from app.repository import family as family_repo
 
 _LOGGER = logging.getLogger(__name__)
 
-DocumentTuple = Tuple[FamilyDocument, PhysicalDocument, Slug, PhysicalDocumentLanguage]
+# DocumentTuple = Tuple[
+# FamilyDocument, PhysicalDocument, Slug, PhysicalDocumentLanguage]
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
 
 
 def _get_query(db: Session) -> Query:
-    # NOTE: SqlAlchemy will make a complete hash of the query generation
-    #       if columns are used in the query() call. Therefore, entire
-    #       objects are returned.
+    lang_model = aliased(Language)
+    lang_user = aliased(Language)
+    pdl_model = aliased(PhysicalDocumentLanguage)
+    pdl_user = aliased(PhysicalDocumentLanguage)
 
-    # FIXME: TODO: will this work with multiple slugs????
+    sq_slug = (
+        db.query(
+            func.string_agg(Slug.name, ",").label("name"),
+            Slug.family_document_import_id.label("doc_id"),
+        )
+        .group_by(Slug.family_document_import_id)
+        .subquery()
+    )
+
     return (
-        db.query(FamilyDocument, PhysicalDocument, Slug, PhysicalDocumentLanguage)
+        db.query(
+            FamilyDocument.import_id.label("import_id"),
+            FamilyDocument.family_import_id.label("family_import_id"),
+            FamilyDocument.variant_name.label("variant_name"),
+            FamilyDocument.document_status.label("status"),
+            FamilyDocument.document_role.label("role"),
+            FamilyDocument.document_type.label("type"),
+            concat(sq_slug.c.name).label("slug"),
+            PhysicalDocument.id.label("physical_id"),
+            PhysicalDocument.title.label("title"),
+            PhysicalDocument.md5_sum.label("md5_sum"),
+            PhysicalDocument.cdn_object.label("cdn_object"),
+            PhysicalDocument.source_url.label("source_url"),
+            PhysicalDocument.content_type.label("content_type"),
+            lang_user.name.label("user_language_name"),
+            lang_model.name.label("calc_language_name"),
+        )
+        .select_from(FamilyDocument, PhysicalDocument)
         .filter(FamilyDocument.physical_document_id == PhysicalDocument.id)
+        .join(sq_slug, sq_slug.c.doc_id == FamilyDocument.import_id, isouter=True)
         .join(
-            PhysicalDocumentLanguage,
-            PhysicalDocumentLanguage.document_id == PhysicalDocument.id,
+            pdl_user,
+            and_(
+                PhysicalDocument.id == pdl_user.document_id,
+                pdl_user.source == LanguageSource.USER,
+            ),
             isouter=True,
         )
         .join(
-            Slug,
-            Slug.family_document_import_id == FamilyDocument.import_id,
+            lang_user,
+            lang_user.id == pdl_user.language_id,
             isouter=True,
         )
+        .join(
+            pdl_model,
+            and_(
+                PhysicalDocument.id == pdl_model.document_id,
+                pdl_model.source == LanguageSource.MODEL,
+            ),
+            isouter=True,
+        )
+        .join(
+            lang_model,
+            lang_model.id == pdl_model.language_id,
+            isouter=True,
+        )
+        .distinct(FamilyDocument.import_id)
     )
 
 
-def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
-    fd, pd, slug, lang_link = doc_tuple
+# def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
+#     fd, pd, slug, lang_link = doc_tuple
 
-    return DocumentReadDTO(
-        import_id=cast(str, fd.import_id),
-        family_import_id=cast(str, fd.family_import_id),
-        variant_name=cast(Variant, fd.variant_name),
-        status=cast(DocumentStatus, fd.document_status),
-        role=cast(FamilyDocumentRole, fd.document_role),
-        type=cast(FamilyDocumentType, fd.document_type),
-        slug=cast(str, slug.name) if slug is not None else "",
-        physical_id=cast(int, pd.id),
-        title=cast(str, pd.title),
-        md5_sum=cast(str, pd.md5_sum),
-        cdn_object=cast(str, pd.cdn_object),
-        source_url=cast(str, pd.source_url),
-        content_type=cast(str, pd.content_type),
-        user_language_name=cast(str, lang_link.language.name),
-    )
+#     return DocumentReadDTO(
+#         import_id=cast(str, fd.import_id),
+#         family_import_id=cast(str, fd.family_import_id),
+#         variant_name=cast(Variant, fd.variant_name),
+#         status=cast(DocumentStatus, fd.document_status),
+#         role=cast(FamilyDocumentRole, fd.document_role),
+#         type=cast(FamilyDocumentType, fd.document_type),
+#         slug=cast(str, slug.name) if slug is not None else "",
+#         physical_id=cast(int, pd.id),
+#         title=cast(str, pd.title),
+#         md5_sum=cast(str, pd.md5_sum),
+#         cdn_object=cast(str, pd.cdn_object),
+#         source_url=cast(str, pd.source_url),
+#         content_type=cast(str, pd.content_type),
+#         user_language_name=cast(str, lang_link.language.name),
+#     )
 
 
 def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
@@ -115,14 +158,12 @@ def all(db: Session) -> list[DocumentReadDTO]:
     :param db Session: the database connection
     :return Optional[DocumentResponse]: All of things
     """
-    doc_tuples = _get_query(db).all()
+    result = _get_query(db).all()
 
-    if not doc_tuples:
+    if not result:
         return []
 
-    result = [_document_to_dto(d) for d in doc_tuples]
-
-    return result
+    return [DocumentReadDTO(**dict(r)) for r in result]
 
 
 def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
@@ -134,12 +175,12 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     :return Optional[DocumentResponse]: A single document or nothing
     """
     try:
-        doc_tuple = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
+        result = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
     except NoResultFound as e:
         _LOGGER.error(e)
         return
 
-    return _document_to_dto(doc_tuple)
+    return DocumentReadDTO(**dict(result))
 
 
 def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
@@ -152,9 +193,9 @@ def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
     """
     term = f"%{escape_like(search_term)}%"
     search = or_(PhysicalDocument.title.ilike(term))
-    found = _get_query(db).filter(search).all()
+    result = _get_query(db).filter(search).all()
 
-    return [_document_to_dto(d) for d in found]
+    return [DocumentReadDTO(**dict(r)) for r in result]
 
 
 def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
@@ -166,7 +207,6 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
     :param DocumentDTO document: The new values
     :return bool: True if new values were set otherwise false.
     """
-    # TODO: Implement this:
 
     new_values = document.model_dump()
 
@@ -322,7 +362,7 @@ def count(db: Session) -> Optional[int]:
     :return Optional[int]: The number of documents in the repository or none.
     """
     try:
-        n_documents = _get_query(db).count()
+        n_documents = db.query(FamilyDocument).count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

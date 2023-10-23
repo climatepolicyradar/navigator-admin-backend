@@ -110,7 +110,8 @@ EXPECTED_DOCUMENTS = [
         "cdn_object": "obj1",
         "source_url": "source1",
         "content_type": "application/pdf",
-        "user_language_name": "TODO",
+        "user_language_name": None,
+        "calc_language_name": None,
     },
     {
         "import_id": "D.0.0.2",
@@ -126,7 +127,8 @@ EXPECTED_DOCUMENTS = [
         "cdn_object": "obj2",
         "source_url": "source2",
         "content_type": "application/pdf",
-        "user_language_name": "TODO",
+        "user_language_name": None,
+        "calc_language_name": None,
     },
 ]
 
@@ -180,6 +182,10 @@ def setup_db(test_db: Session, configure_empty: bool = False):
         query = text(file.read())
         test_db.execute(query)
 
+    setup_test_data(test_db, configure_empty)
+
+
+def setup_test_data(test_db: Session, configure_empty: bool = False):
     org_id = _setup_organisation(test_db)
 
     _setup_family_data(test_db, org_id)
