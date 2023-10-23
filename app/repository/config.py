@@ -1,15 +1,21 @@
 import logging
-from typing import Any
+from typing import Any, Optional
 from sqlalchemy.orm import Session
 from app.clients.db.models.app.users import Organisation
 from app.clients.db.models.document.physical_document import Language
+from app.clients.db.models.law_policy.family import (
+    FamilyDocumentRole,
+    FamilyDocumentType,
+    FamilyEventType,
+    Variant,
+)
 from app.clients.db.models.law_policy.geography import Geography
 from app.clients.db.models.law_policy.metadata import (
     MetadataOrganisation,
     MetadataTaxonomy,
 )
 from app.clients.db.session import AnyModel
-from app.model.config import ConfigReadDTO, TaxonomyData
+from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,14 +47,16 @@ def _tree_table_to_json(
     return json_out
 
 
-def _get_organisation_taxonomy_by_name(db: Session, org_name: str) -> TaxonomyData:
+def _get_organisation_taxonomy_by_name(
+    db: Session, org_name: str
+) -> Optional[TaxonomyData]:
     """
     Returns the TaxonomyConfig for the named organisation
 
     :param Session db: connection to the database
     :return TaxonomyConfig: the TaxonomyConfig from the db
     """
-    return (
+    metadata = (
         db.query(MetadataTaxonomy.valid_metadata)
         .join(
             MetadataOrganisation,
@@ -56,8 +64,10 @@ def _get_organisation_taxonomy_by_name(db: Session, org_name: str) -> TaxonomyDa
         )
         .join(Organisation, Organisation.id == MetadataOrganisation.organisation_id)
         .filter_by(name=org_name)
-        .one()[0]
+        .one_or_none()
     )
+    if metadata is not None:
+        return metadata[0]
 
 
 def get(db: Session) -> ConfigReadDTO:
@@ -68,13 +78,50 @@ def get(db: Session) -> ConfigReadDTO:
     :return ConfigReadDTO: The config data
     """
 
-    # TODO: Return the event types too
     geographies = _tree_table_to_json(table=Geography, db=db)
-    taxonomies = {
-        org.name: _get_organisation_taxonomy_by_name(db=db, org_name=org.name)
-        for org in db.query(Organisation).all()
-    }
+    taxonomies = {}
+
+    # Be resilient to an organisation not having a taxonomy
+    for org in db.query(Organisation).all():
+        tax = _get_organisation_taxonomy_by_name(db=db, org_name=org.name)
+        if tax is not None:
+            taxonomies[org.name] = tax
+
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
+
+    # Now Document config
+    doc_config = DocumentConfig(
+        roles=[
+            doc_role.name
+            for doc_role in db.query(FamilyDocumentRole)
+            .order_by(FamilyDocumentRole.name)
+            .all()
+        ],
+        types=[
+            doc_type.name
+            for doc_type in db.query(FamilyDocumentType)
+            .order_by(FamilyDocumentType.name)
+            .all()
+        ],
+        variants=[
+            variant.variant_name
+            for variant in db.query(Variant).order_by(Variant.variant_name).all()
+        ],
+    )
+
+    # Now Event config
+    event_config = EventConfig(
+        types=[
+            event_type.name
+            for event_type in db.query(FamilyEventType)
+            .order_by(FamilyEventType.name)
+            .all()
+        ]
+    )
     return ConfigReadDTO(
-        geographies=geographies, taxonomies=taxonomies, languages=languages
+        geographies=geographies,
+        taxonomies=taxonomies,
+        languages=languages,
+        document=doc_config,
+        event=event_config,
     )
