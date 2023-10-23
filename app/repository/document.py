@@ -31,8 +31,6 @@ from app.repository import family as family_repo
 
 _LOGGER = logging.getLogger(__name__)
 
-# DocumentTuple = Tuple[
-# FamilyDocument, PhysicalDocument, Slug, PhysicalDocumentLanguage]
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
 
 
@@ -100,27 +98,6 @@ def _get_query(db: Session) -> Query:
         )
         .distinct(FamilyDocument.import_id)
     )
-
-
-# def _document_to_dto(doc_tuple: DocumentTuple) -> DocumentReadDTO:
-#     fd, pd, slug, lang_link = doc_tuple
-
-#     return DocumentReadDTO(
-#         import_id=cast(str, fd.import_id),
-#         family_import_id=cast(str, fd.family_import_id),
-#         variant_name=cast(Variant, fd.variant_name),
-#         status=cast(DocumentStatus, fd.document_status),
-#         role=cast(FamilyDocumentRole, fd.document_role),
-#         type=cast(FamilyDocumentType, fd.document_type),
-#         slug=cast(str, slug.name) if slug is not None else "",
-#         physical_id=cast(int, pd.id),
-#         title=cast(str, pd.title),
-#         md5_sum=cast(str, pd.md5_sum),
-#         cdn_object=cast(str, pd.cdn_object),
-#         source_url=cast(str, pd.source_url),
-#         content_type=cast(str, pd.content_type),
-#         user_language_name=cast(str, lang_link.language.name),
-#     )
 
 
 def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:

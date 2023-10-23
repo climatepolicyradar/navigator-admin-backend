@@ -2,7 +2,11 @@ from typing import cast
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.clients.db.models.app.users import Organisation
-from app.clients.db.models.document.physical_document import PhysicalDocument
+from app.clients.db.models.document.physical_document import (
+    LanguageSource,
+    PhysicalDocument,
+    PhysicalDocumentLanguage,
+)
 from app.clients.db.models.law_policy.collection import (
     Collection,
     CollectionFamily,
@@ -110,8 +114,8 @@ EXPECTED_DOCUMENTS = [
         "cdn_object": "obj1",
         "source_url": "source1",
         "content_type": "application/pdf",
-        "user_language_name": None,
-        "calc_language_name": None,
+        "user_language_name": "English",
+        "calc_language_name": "Spanish",
     },
     {
         "import_id": "D.0.0.2",
@@ -328,6 +332,7 @@ def _setup_document_data(
     if configure_empty is True:
         return None
 
+    phys_docs = []
     for index in range(EXPECTED_NUM_DOCUMENTS):
         data = EXPECTED_DOCUMENTS[index]
         pd = PhysicalDocument(
@@ -340,6 +345,7 @@ def _setup_document_data(
         )
         test_db.add(pd)
         test_db.flush()
+        phys_docs.append(pd.id)
 
         fd = FamilyDocument(
             family_import_id=family_id,
@@ -352,6 +358,19 @@ def _setup_document_data(
         )
         test_db.add(fd)
         test_db.flush()
+
+    # Setup english as user language for first document
+    test_db.add(
+        PhysicalDocumentLanguage(
+            language_id=1826, document_id=phys_docs[0], source=LanguageSource.USER
+        )
+    )
+    test_db.add(
+        PhysicalDocumentLanguage(
+            language_id=5991, document_id=phys_docs[0], source=LanguageSource.MODEL
+        )
+    )
+    test_db.flush()
 
 
 def _setup_event_data(
