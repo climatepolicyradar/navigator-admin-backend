@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, cast
 
-from sqlalchemy import or_, Column, update as db_update
+from sqlalchemy import or_, Column, update as db_update, delete as db_delete
 from sqlalchemy.orm import Query, Session
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
@@ -221,12 +221,11 @@ def delete(db: Session, import_id: str) -> bool:
         db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
     )
     if found is None:
+        _LOGGER.error(f"Event with id {import_id} not found")
         return False
 
     result = db.execute(
-        db_update(FamilyEvent)
-        .where(FamilyEvent.import_id == import_id)
-        .values(status=EventStatus.DELETED)
+        db_delete(FamilyEvent).where(FamilyEvent.import_id == import_id)
     )
     if result.rowcount == 0:  # type: ignore
         msg = f"Could not delete event : {import_id}"

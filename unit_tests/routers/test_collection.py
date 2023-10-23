@@ -3,8 +3,10 @@ Tests the routes for collection management.
 
 This uses a service mock and ensures each endpoint calls into the service.
 """
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+
 from unit_tests.helpers.collection import (
     create_collection_write_dto,
 )
@@ -108,6 +110,7 @@ def test_delete_when_ok(
     assert collection_service_mock.delete.call_count == 1
 
 
+@pytest.mark.skip(reason="No admin user for MVP")
 def test_delete_collection_fails_if_not_admin(
     client: TestClient, collection_service_mock, user_header_token
 ):
