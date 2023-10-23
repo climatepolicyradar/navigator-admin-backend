@@ -2,7 +2,11 @@ from typing import Tuple
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.clients.db.models.document.physical_document import PhysicalDocument
+from app.clients.db.models.document.physical_document import (
+    LanguageSource,
+    PhysicalDocument,
+    PhysicalDocumentLanguage,
+)
 from app.clients.db.models.law_policy.family import FamilyDocument, Slug
 from app.model.document import DocumentWriteDTO
 
@@ -53,6 +57,8 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "Updated Source"
+    assert data["slug"].startswith("updated-title")
+    assert data["user_language_name"] == "Ghotuo"
 
     fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
@@ -61,6 +67,15 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
     assert fd.document_type == "Annex"
     assert pd.title == "Updated Title"
     assert pd.source_url == "Updated Source"
+
+    # Check the user language in the db
+    lang = (
+        test_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one()
+    )
+    assert lang.language_id == 1
 
     # Check slug is updated too
     slugs = (
@@ -83,9 +98,18 @@ def test_update_document_idempotent(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    document = EXPECTED_DOCUMENTS[1]
+    doc = EXPECTED_DOCUMENTS[1]
+    document = {
+        "variant_name": doc["variant_name"],
+        "role": doc["role"],
+        "type": doc["type"],
+        "title": doc["title"],
+        "source_url": doc["source_url"],
+        "user_language_name": doc["user_language_name"],
+    }
+
     response = client.put(
-        f"/api/v1/documents/{document['import_id']}",
+        f"/api/v1/documents/{doc['import_id']}",
         json=document,
         headers=user_header_token,
     )
