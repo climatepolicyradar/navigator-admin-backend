@@ -10,14 +10,12 @@ def test_delete_event(client: TestClient, test_db: Session, admin_user_header_to
     setup_db(test_db)
     response = client.delete("/api/v1/events/E.0.0.2", headers=admin_user_header_token)
     assert response.status_code == status.HTTP_200_OK
-    assert test_db.query(FamilyEvent).count() == 3
+    assert test_db.query(FamilyEvent).count() == 2
     assert (
-        test_db.query(FamilyEvent)
-        .filter(FamilyEvent.status == EventStatus.DELETED)
-        .count()
-        == 1
+        test_db.query(FamilyEvent).filter(FamilyEvent.import_id == "E.0.0.2").count()
+        == 0
     )
-    assert test_db.query(FamilyEvent).count() == 3
+    assert test_db.query(FamilyEvent).count() == 2
 
 
 def test_delete_event_when_not_authenticated(
@@ -51,10 +49,8 @@ def test_delete_event_rollback(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     assert test_db.query(FamilyEvent).count() == 3
     assert (
-        test_db.query(FamilyEvent)
-        .filter(FamilyEvent.status == EventStatus.DELETED)
-        .count()
-        == 0
+        test_db.query(FamilyEvent).filter(FamilyEvent.import_id == "E.0.0.2").count()
+        == 1
     )
     assert test_db.query(FamilyEvent).count() == 3
     assert rollback_event_repo.delete.call_count == 1
@@ -70,9 +66,7 @@ def test_delete_event_when_not_found(
     assert data["detail"] == "Event not deleted: E.0.0.22"
     assert test_db.query(FamilyEvent).count() == 3
     assert (
-        test_db.query(FamilyEvent)
-        .filter(FamilyEvent.status == EventStatus.DELETED)
-        .count()
+        test_db.query(FamilyEvent).filter(FamilyEvent.import_id == "E.0.0.22").count()
         == 0
     )
     assert test_db.query(FamilyEvent).count() == 3
