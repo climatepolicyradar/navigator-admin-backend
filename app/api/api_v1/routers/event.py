@@ -147,3 +147,31 @@ async def update_event(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return event
+
+
+@r.delete(
+    "/events/{import_id}",
+)
+async def delete_event(
+    import_id: str,
+) -> None:
+    """
+    Deletes a specific event given the import id.
+
+    :param str import_id: Specified import_id.
+    :raises HTTPException: If the event is not found a 404 is returned.
+    """
+    try:
+        event_deleted = event_service.delete(import_id)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
+    if not event_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event not deleted: {import_id}",
+        )
