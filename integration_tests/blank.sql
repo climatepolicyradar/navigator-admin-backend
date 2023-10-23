@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.8 (Debian 14.8-1.pgdg120+1)
--- Dumped by pg_dump version 15.3 (Ubuntu 15.3-0ubuntu0.23.04.1)
+-- Dumped from database version 14.7
+-- Dumped by pg_dump version 15.4 (Ubuntu 15.4-0ubuntu0.23.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -76,6 +76,18 @@ CREATE TYPE public.familystatus AS ENUM (
 
 ALTER TYPE public.familystatus OWNER TO navigator;
 
+--
+-- Name: languagesource; Type: TYPE; Schema: public; Owner: navigator
+--
+
+CREATE TYPE public.languagesource AS ENUM (
+    'USER',
+    'MODEL'
+);
+
+
+ALTER TYPE public.languagesource OWNER TO navigator;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -141,6 +153,43 @@ CREATE TABLE public.collection_organisation (
 
 
 ALTER TABLE public.collection_organisation OWNER TO navigator;
+
+--
+-- Name: entity_counter; Type: TABLE; Schema: public; Owner: navigator
+--
+
+CREATE TABLE public.entity_counter (
+    id integer NOT NULL,
+    description character varying NOT NULL,
+    prefix character varying NOT NULL,
+    counter integer,
+    CONSTRAINT ck_entity_counter__prefix_allowed_orgs CHECK (((prefix)::text = ANY ((ARRAY['CCLW'::character varying, 'UNFCCC'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.entity_counter OWNER TO navigator;
+
+--
+-- Name: entity_counter_id_seq; Type: SEQUENCE; Schema: public; Owner: navigator
+--
+
+CREATE SEQUENCE public.entity_counter_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.entity_counter_id_seq OWNER TO navigator;
+
+--
+-- Name: entity_counter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: navigator
+--
+
+ALTER SEQUENCE public.entity_counter_id_seq OWNED BY public.entity_counter.id;
+
 
 --
 -- Name: family; Type: TABLE; Schema: public; Owner: navigator
@@ -301,7 +350,7 @@ ALTER SEQUENCE public.geo_statistics_id_seq OWNED BY public.geo_statistics.id;
 
 CREATE TABLE public.geography (
     id integer NOT NULL,
-    display_value text NOT NULL,
+    display_value text,
     value text,
     type text,
     parent_id integer,
@@ -512,7 +561,9 @@ ALTER SEQUENCE public.physical_document_id_seq OWNED BY public.physical_document
 
 CREATE TABLE public.physical_document_language (
     language_id integer NOT NULL,
-    document_id integer NOT NULL
+    document_id integer NOT NULL,
+    source public.languagesource DEFAULT 'MODEL'::public.languagesource NOT NULL,
+    visible boolean DEFAULT false NOT NULL
 );
 
 
@@ -543,6 +594,13 @@ CREATE TABLE public.variant (
 
 
 ALTER TABLE public.variant OWNER TO navigator;
+
+--
+-- Name: entity_counter id; Type: DEFAULT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.entity_counter ALTER COLUMN id SET DEFAULT nextval('public.entity_counter_id_seq'::regclass);
+
 
 --
 -- Name: geo_statistics id; Type: DEFAULT; Schema: public; Owner: navigator
@@ -587,246 +645,19 @@ ALTER TABLE ONLY public.physical_document ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.alembic_version (version_num) FROM stdin;
-0017
-\.
-
-
---
--- Data for Name: app_user; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.app_user (email, name, hashed_password, is_superuser) FROM stdin;
-\.
-
-
---
--- Data for Name: collection; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.collection (import_id, title, description) FROM stdin;
-\.
-
-
---
--- Data for Name: collection_family; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.collection_family (collection_import_id, family_import_id) FROM stdin;
-\.
-
-
---
--- Data for Name: collection_organisation; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.collection_organisation (collection_import_id, organisation_id) FROM stdin;
-\.
-
-
---
--- Data for Name: family; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family (title, import_id, description, geography_id, family_category) FROM stdin;
-\.
-
-
---
--- Data for Name: family_document; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family_document (family_import_id, physical_document_id, import_id, variant_name, document_status, document_type, document_role) FROM stdin;
-\.
-
-
---
--- Data for Name: family_document_role; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family_document_role (name, description) FROM stdin;
-\.
-
-
---
--- Data for Name: family_document_type; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family_document_type (name, description) FROM stdin;
-\.
-
-
---
--- Data for Name: family_event; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family_event (import_id, title, date, event_type_name, family_import_id, family_document_import_id, status) FROM stdin;
-\.
-
-
---
--- Data for Name: family_event_type; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family_event_type (name, description) FROM stdin;
-\.
-
-
---
--- Data for Name: family_metadata; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family_metadata (family_import_id, taxonomy_id, value) FROM stdin;
-\.
-
-
---
--- Data for Name: family_organisation; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.family_organisation (family_import_id, organisation_id) FROM stdin;
-\.
-
-
---
--- Data for Name: geo_statistics; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.geo_statistics (id, name, geography_id, legislative_process, federal, federal_details, political_groups, global_emissions_percent, climate_risk_index, worldbank_income_group, visibility_status) FROM stdin;
-\.
-
-
---
--- Data for Name: geography; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.geography (id, display_value, value, type, parent_id, slug) FROM stdin;
-\.
-
-
---
--- Data for Name: language; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.language (id, language_code, part1_code, part2_code, name) FROM stdin;
-\.
-
-
---
--- Data for Name: metadata_organisation; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.metadata_organisation (taxonomy_id, organisation_id) FROM stdin;
-\.
-
-
---
--- Data for Name: metadata_taxonomy; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.metadata_taxonomy (id, description, valid_metadata) FROM stdin;
-\.
-
-
---
--- Data for Name: organisation; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.organisation (id, name, description, organisation_type) FROM stdin;
-\.
-
-
---
--- Data for Name: organisation_admin; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.organisation_admin (appuser_email, organisation_id, job_title, is_active, is_admin) FROM stdin;
-\.
-
-
---
--- Data for Name: physical_document; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.physical_document (id, title, md5_sum, source_url, content_type, cdn_object) FROM stdin;
-\.
-
-
---
--- Data for Name: physical_document_language; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.physical_document_language (language_id, document_id) FROM stdin;
-\.
-
-
---
--- Data for Name: slug; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.slug (name, family_import_id, family_document_import_id) FROM stdin;
-\.
-
-
---
--- Data for Name: variant; Type: TABLE DATA; Schema: public; Owner: navigator
---
-
-COPY public.variant (variant_name, description) FROM stdin;
-\.
-
-
---
--- Name: geo_statistics_id_seq; Type: SEQUENCE SET; Schema: public; Owner: navigator
---
-
-SELECT pg_catalog.setval('public.geo_statistics_id_seq', 1, false);
-
-
---
--- Name: geography_id_seq; Type: SEQUENCE SET; Schema: public; Owner: navigator
---
-
-SELECT pg_catalog.setval('public.geography_id_seq', 1, false);
-
-
---
--- Name: language_id_seq; Type: SEQUENCE SET; Schema: public; Owner: navigator
---
-
-SELECT pg_catalog.setval('public.language_id_seq', 1, false);
-
-
---
--- Name: metadata_taxonomy_id_seq; Type: SEQUENCE SET; Schema: public; Owner: navigator
---
-
-SELECT pg_catalog.setval('public.metadata_taxonomy_id_seq', 1, false);
-
-
---
--- Name: organisation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: navigator
---
-
-SELECT pg_catalog.setval('public.organisation_id_seq', 1, false);
-
-
---
--- Name: physical_document_id_seq; Type: SEQUENCE SET; Schema: public; Owner: navigator
---
-
-SELECT pg_catalog.setval('public.physical_document_id_seq', 1, false);
-
-
---
 -- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: navigator
 --
 
 ALTER TABLE ONLY public.alembic_version
     ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
+
+
+--
+-- Name: geography ix_geography_slug; Type: CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.geography
+    ADD CONSTRAINT ix_geography_slug UNIQUE (slug);
 
 
 --
@@ -859,6 +690,14 @@ ALTER TABLE ONLY public.collection_family
 
 ALTER TABLE ONLY public.collection_organisation
     ADD CONSTRAINT pk_collection_organisation PRIMARY KEY (collection_import_id);
+
+
+--
+-- Name: entity_counter pk_entity_counter; Type: CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.entity_counter
+    ADD CONSTRAINT pk_entity_counter PRIMARY KEY (id);
 
 
 --
@@ -1014,6 +853,14 @@ ALTER TABLE ONLY public.variant
 
 
 --
+-- Name: entity_counter uq_entity_counter__prefix; Type: CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.entity_counter
+    ADD CONSTRAINT uq_entity_counter__prefix UNIQUE (prefix);
+
+
+--
 -- Name: family_document uq_family_document__physical_document_id; Type: CONSTRAINT; Schema: public; Owner: navigator
 --
 
@@ -1043,13 +890,6 @@ ALTER TABLE ONLY public.geography
 
 ALTER TABLE ONLY public.language
     ADD CONSTRAINT uq_language__language_code UNIQUE (language_code);
-
-
---
--- Name: ix_geography_slug; Type: INDEX; Schema: public; Owner: navigator
---
-
-CREATE UNIQUE INDEX ix_geography_slug ON public.geography USING btree (slug);
 
 
 --
@@ -1274,50 +1114,6 @@ ALTER TABLE ONLY public.slug
 
 REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 GRANT ALL ON SCHEMA public TO PUBLIC;
-
-
---
--- Name: entity_counter; Type: TABLE; Schema: public; Owner: navigator
---
-
-CREATE TABLE public.entity_counter (
-    id integer NOT NULL,
-    description character varying NOT NULL,
-    prefix character varying NOT NULL,
-    counter integer,
-    CONSTRAINT ck_entity_counter__prefix_allowed_orgs CHECK (((prefix)::text = ANY ((ARRAY['CCLW'::character varying, 'UNFCCC'::character varying])::text[])))
-);
-
-
-ALTER TABLE public.entity_counter OWNER TO navigator;
-
---
--- Name: entity_counter_id_seq; Type: SEQUENCE; Schema: public; Owner: navigator
---
-
-CREATE SEQUENCE public.entity_counter_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.entity_counter_id_seq OWNER TO navigator;
-
---
--- Name: entity_counter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: navigator
---
-
-ALTER SEQUENCE public.entity_counter_id_seq OWNED BY public.entity_counter.id;
-
-
---
--- Name: entity_counter id; Type: DEFAULT; Schema: public; Owner: navigator
---
-
-ALTER TABLE ONLY public.entity_counter ALTER COLUMN id SET DEFAULT nextval('public.entity_counter_id_seq'::regclass);
 
 
 --
