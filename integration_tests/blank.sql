@@ -44,7 +44,8 @@ ALTER TYPE public.documentstatus OWNER TO navigator;
 
 CREATE TYPE public.eventstatus AS ENUM (
     'OK',
-    'DUPLICATED'
+    'DUPLICATED',
+    'DELETED'
 );
 
 
