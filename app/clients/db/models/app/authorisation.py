@@ -53,21 +53,21 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
-        AuthOperation.DELETE: AuthAccess.ADMIN,
+        AuthOperation.DELETE: AuthAccess.USER,
     },
     # Collection
     AuthEndpoint.COLLECTION: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
-        AuthOperation.DELETE: AuthAccess.ADMIN,
+        AuthOperation.DELETE: AuthAccess.USER,
     },
     # Collection
     AuthEndpoint.DOCUMENT: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
-        AuthOperation.DELETE: AuthAccess.ADMIN,
+        AuthOperation.DELETE: AuthAccess.USER,
     },
     # Config
     AuthEndpoint.CONFIG: {
@@ -82,6 +82,6 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
         AuthOperation.UPDATE: AuthAccess.USER,
-        AuthOperation.DELETE: AuthAccess.ADMIN,
+        AuthOperation.DELETE: AuthAccess.USER,
     },
 }
