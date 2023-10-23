@@ -18,7 +18,7 @@ from app.clients.db.models.law_policy import (
     FamilyDocument,
 )
 
-from sqlalchemy import Column, or_, and_, update as db_update
+from sqlalchemy import Column, or_, and_, update as db_update, insert as db_insert
 from sqlalchemy_utils import escape_like
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session, Query, aliased
@@ -209,6 +209,17 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         )
         return False
 
+    # User Language changed?
+    pdl = (
+        db.query(PhysicalDocumentLanguage)
+        .filter(
+            PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
+        )
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one_or_none()
+    )
+    new_language = _get_new_language(db, new_values, pdl)
+
     update_slug = original_pd.title != new_values["title"]
 
     commands = [
@@ -227,6 +238,27 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         ),
     ]
 
+    if new_language is not None:
+        if pdl is not None:
+            command = (
+                db_update(PhysicalDocumentLanguage)
+                .where(
+                    and_(
+                        PhysicalDocumentLanguage.document_id
+                        == original_fd.physical_document_id,
+                        PhysicalDocumentLanguage.source == LanguageSource.USER,
+                    )
+                )
+                .values(language_id=new_language.id)
+            )
+        else:
+            command = db_insert(PhysicalDocumentLanguage).values(
+                document_id=original_fd.physical_document_id,
+                language_id=new_language.id,
+                source=LanguageSource.USER,
+            )
+        commands.append(command)
+
     for c in commands:
         result = db.execute(c)
 
@@ -243,6 +275,26 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
             )
         )
     return True
+
+
+def _get_new_language(
+    db: Session, new_values: dict, pdl: PhysicalDocumentLanguage
+) -> Optional[Language]:
+    requested_language = new_values["user_language_name"]
+    if requested_language is None:
+        return None
+    else:
+        new_language = (
+            db.query(Language)
+            .filter(Language.name == new_values["user_language_name"])
+            .one()
+        )
+        update_language = (
+            pdl.language_id != new_language.id if pdl is not None else True
+        )
+
+        if update_language:
+            return new_language
 
 
 def create(db: Session, document: DocumentCreateDTO) -> str:
