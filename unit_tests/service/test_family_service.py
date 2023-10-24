@@ -10,6 +10,9 @@ import app.service.family as family_service
 from unit_tests.helpers.family import create_family_dto
 
 
+USER_EMAIL = "test@cpr.org"
+
+
 def to_write_dto(dto: FamilyReadDTO) -> FamilyWriteDTO:
     return FamilyWriteDTO(
         title=dto.title,
@@ -27,7 +30,6 @@ def to_create_dto(dto: FamilyReadDTO) -> FamilyCreateDTO:
         geography=dto.geography,
         category=dto.category,
         metadata=dto.metadata,
-        organisation=dto.organisation,
     )
 
 
@@ -226,46 +228,47 @@ def test_update_family_raises_when_metadata_invalid(
 
 
 def test_create(
-    family_repo_mock,
-    geography_repo_mock,
-    organisation_repo_mock,
-    metadata_repo_mock,
+    family_repo_mock, geography_repo_mock, metadata_repo_mock, app_user_repo_mock
 ):
     new_family = create_family_dto(import_id="A.0.0.5")
-    family = family_service.create(to_create_dto(new_family))
+    family = family_service.create(to_create_dto(new_family), USER_EMAIL)
     assert family is not None
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
 
 
 def test_create_repo_fails(
     family_repo_mock,
     geography_repo_mock,
-    organisation_repo_mock,
     metadata_repo_mock,
+    app_user_repo_mock,
 ):
     new_family = create_family_dto(import_id="a.b.c.d")
     family_repo_mock.return_empty = True
-    family = family_service.create(to_create_dto(new_family))
+    family = family_service.create(to_create_dto(new_family), USER_EMAIL)
     assert family is False
     assert family_repo_mock.create.call_count == 1
     # Ensure the family service uses the geo service to validate
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
 
 
-def test_create_raises_when_category_invalid(family_repo_mock, geography_repo_mock):
+def test_create_raises_when_category_invalid(
+    family_repo_mock, geography_repo_mock, app_user_repo_mock
+):
     new_family = create_family_dto(import_id="A.0.0.5")
     new_family.category = "invalid"
     with pytest.raises(ValidationError) as e:
-        family_service.create(to_create_dto(new_family))
+        family_service.create(to_create_dto(new_family), USER_EMAIL)
     expected_msg = "Invalid is not a valid FamilyCategory"
     assert e.value.message == expected_msg
+    assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.create.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 1
 
 
 # --- COUNT

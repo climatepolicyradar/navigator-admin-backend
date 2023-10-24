@@ -122,20 +122,3 @@ def test_create_family_when_invalid_category(
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "Invalid is not a valid FamilyCategory"
-
-
-def test_create_family_when_invalid_org(
-    client: TestClient, test_db: Session, user_header_token
-):
-    setup_db(test_db)
-    new_family = create_family_create_dto(
-        title="Title",
-        summary="test test test",
-    )
-    new_family.organisation = "chicken"
-    response = client.post(
-        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
-    )
-    assert response.status_code == 400
-    data = response.json()
-    assert data["detail"] == "The organisation name chicken is invalid!"

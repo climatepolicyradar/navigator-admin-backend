@@ -18,6 +18,7 @@ from app.service import geography
 from app.service import category
 from app.service import organisation
 from app.service import metadata
+from app.service import app_user
 
 from app.repository import family_repo
 
@@ -116,7 +117,9 @@ def update(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(family: FamilyCreateDTO, db: Session = db_session.get_db()) -> str:
+def create(
+    family: FamilyCreateDTO, user_email: str, db: Session = db_session.get_db()
+) -> str:
     """
     Creates a new Family with the values passed.
 
@@ -125,12 +128,17 @@ def create(family: FamilyCreateDTO, db: Session = db_session.get_db()) -> str:
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
+
+    # Get the organisation from the user's email
+    org_id = app_user.get_organisation(db, user_email)
+
     # Validate geography
     geo_id = geography.get_id(db, family.geography)
+
     # Validate category
     category.validate(family.category)
+
     # Validate organisation
-    org_id = organisation.get_id(db, family.organisation)
     metadata.validate(db, org_id, family.metadata)
 
     return family_repo.create(db, family, geo_id, org_id)
