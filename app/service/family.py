@@ -162,7 +162,6 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
         msg = f"Unable to delete family {import_id}"
         _LOGGER.exception(msg)
         raise RepositoryError(msg)
-    return family_repo.delete(db, import_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
