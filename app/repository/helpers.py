@@ -61,7 +61,9 @@ def generate_import_id(
     if type(org) == str:
         org_name = org
     else:
-        org_name = db.query(Organisation.name).filter(Organisation.id == org)
+        org_name = (
+            db.query(Organisation.name).filter(Organisation.id == org).scalar_subquery()
+        )
 
     counter: EntityCounter = (
         db.query(EntityCounter).filter(EntityCounter.prefix == org_name).one()

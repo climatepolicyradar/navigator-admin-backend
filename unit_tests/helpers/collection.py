@@ -33,5 +33,4 @@ def create_collection_create_dto(
     return CollectionCreateDTO(
         title=title,
         description=description,
-        organisation="CCLW",
     )

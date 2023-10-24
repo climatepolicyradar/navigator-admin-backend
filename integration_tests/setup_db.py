@@ -1,7 +1,7 @@
 from typing import cast
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.clients.db.models.app.users import Organisation
+from app.clients.db.models.app.users import AppUser, Organisation, OrganisationUser
 from app.clients.db.models.document.physical_document import (
     LanguageSource,
     PhysicalDocument,
@@ -221,6 +221,24 @@ def _setup_organisation(test_db: Session) -> int:
         )
     )
     test_db.flush()
+
+    # Also link to the test user
+    test_db.add(
+        AppUser(
+            email="test@cpr.org", name="Test", hashed_password="", is_superuser=False
+        )
+    )
+    test_db.flush()
+    test_db.add(
+        OrganisationUser(
+            appuser_email="test@cpr.org",
+            organisation_id=org.id,
+            job_title="",
+            is_active=True,
+            is_admin=False,
+        )
+    )
+    test_db.commit()
     return cast(int, org.id)
 
 

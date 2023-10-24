@@ -7,7 +7,7 @@ layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
 import logging
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from app.errors import RepositoryError, ValidationError
 
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
@@ -119,6 +119,7 @@ async def update_family(
 
 @r.post("/families", response_model=str, status_code=status.HTTP_201_CREATED)
 async def create_family(
+    request: Request,
     new_family: FamilyCreateDTO,
 ) -> str:
     """
@@ -128,7 +129,7 @@ async def create_family(
     :return FamilyDTO: returns a FamilyDTO of the new family.
     """
     try:
-        family = family_service.create(new_family)
+        family = family_service.create(new_family, request.state.user.email)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

@@ -18,6 +18,8 @@ import app.service.config as config_service
 import app.service.token as token_service
 import app.service.analytics as analytics_service
 import app.service.event as event_service
+import app.service.app_user as app_user_service
+
 from app.repository import (
     family_repo,
     geography_repo,
@@ -41,6 +43,7 @@ from unit_tests.mocks.repos.organisation_repo import mock_organisation_repo
 from unit_tests.mocks.repos.config_repo import mock_config_repo
 from unit_tests.mocks.repos.event_repo import mock_event_repo
 
+from unit_tests.mocks.services.app_user_service import mock_app_user_service
 from unit_tests.mocks.services.family_service import mock_family_service
 from unit_tests.mocks.services.collection_service import mock_collection_service
 from unit_tests.mocks.services.document_service import mock_document_service
@@ -123,6 +126,13 @@ def event_repo_mock(monkeypatch, mocker):
 
 
 # ----- Mock services
+
+
+@pytest.fixture
+def app_user_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_app_user_service(app_user_service, monkeypatch, mocker)
+    yield app_user_service
 
 
 @pytest.fixture
