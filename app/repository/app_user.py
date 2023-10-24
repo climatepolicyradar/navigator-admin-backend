@@ -10,6 +10,16 @@ def get_user_by_email(db: Session, email: str) -> MaybeAppUser:
     return db.query(AppUser).filter(AppUser.email == email).one()
 
 
+def is_active(db: Session, email: str) -> bool:
+    return (
+        db.query(OrganisationUser)
+        .filter(OrganisationUser.appuser_email == email)
+        .filter(OrganisationUser.is_active is True)
+        .count()
+        > 0
+    )
+
+
 def get_app_user_authorisation(
     db: Session, app_user: AppUser
 ) -> list[Tuple[OrganisationUser, Organisation]]:
