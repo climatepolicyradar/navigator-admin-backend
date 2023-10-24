@@ -37,7 +37,6 @@ class EventCreateDTO(BaseModel):
     event_title: str
     date: datetime
     event_type_value: str
-    event_status: EventStatus
 
     # From FamilyDocument
     family_import_id: str
