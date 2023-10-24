@@ -12,6 +12,8 @@ VALID_USERNAME = "bob@here.com"
 
 
 def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
+    app_user_repo.user_active = True
+
     def mock_get_app_user_authorisation(
         _, __
     ) -> list[Tuple[OrganisationUser, Organisation]]:
@@ -26,10 +28,15 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
                 is_superuser=True,
             )
 
+    def mock_is_active(_, email: str) -> bool:
+        return app_user_repo.user_active
+
     app_user_repo.error = False
     monkeypatch.setattr(app_user_repo, "get_user_by_email", mock_get_user_by_email)
+    monkeypatch.setattr(app_user_repo, "is_active", mock_is_active)
     monkeypatch.setattr(
         app_user_repo, "get_app_user_authorisation", mock_get_app_user_authorisation
     )
     mocker.spy(app_user_repo, "get_user_by_email")
+    mocker.spy(app_user_repo, "is_active")
     mocker.spy(app_user_repo, "get_app_user_authorisation")

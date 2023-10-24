@@ -44,6 +44,17 @@ def test_raises_when_no_password(
     assert app_user_repo_mock.get_user_by_email.call_count == 1
 
 
+def test_raises_when_inactive(
+    app_user_repo_mock,
+):
+    app_user_repo_mock.user_active = False
+    with pytest.raises(AuthenticationError) as e:
+        auth_service.authenticate_user(VALID_USERNAME, PLAIN_PASSWORD)
+
+    assert e.value.message == f"User {VALID_USERNAME} is marked as not active."
+    assert app_user_repo_mock.get_user_by_email.call_count == 1
+
+
 def test_can_auth(
     app_user_repo_mock,
 ):
