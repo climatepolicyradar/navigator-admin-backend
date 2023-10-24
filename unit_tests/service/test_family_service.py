@@ -251,7 +251,8 @@ def test_create_repo_fails(
     family = family_service.create(to_create_dto(new_family), USER_EMAIL)
     assert family is False
     assert family_repo_mock.create.call_count == 1
-    # Ensure the family service uses the geo service to validate
+
+    # Check other services are used to validate data
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
@@ -266,6 +267,8 @@ def test_create_raises_when_category_invalid(
         family_service.create(to_create_dto(new_family), USER_EMAIL)
     expected_msg = "Invalid is not a valid FamilyCategory"
     assert e.value.message == expected_msg
+
+    # Check other services are used to validate data
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.create.call_count == 0
     assert app_user_repo_mock.get_org_id.call_count == 1
