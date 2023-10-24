@@ -14,6 +14,9 @@ ORG_ID = 1234
 
 
 def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
+    app_user_repo.user_active = True
+    app_user_repo.error = False
+    
     def mock_get_app_user_authorisation(
         _, __
     ) -> list[Tuple[OrganisationUser, Organisation]]:
@@ -31,12 +34,16 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_org_id(_, user_email: str) -> int:
         return ORG_ID
 
-    app_user_repo.error = False
+    def mock_is_active(_, email: str) -> bool:
+        return app_user_repo.user_active
+
     monkeypatch.setattr(app_user_repo, "get_user_by_email", mock_get_user_by_email)
     monkeypatch.setattr(app_user_repo, "get_org_id", mock_get_org_id)
+    monkeypatch.setattr(app_user_repo, "is_active", mock_is_active)
     monkeypatch.setattr(
         app_user_repo, "get_app_user_authorisation", mock_get_app_user_authorisation
     )
     mocker.spy(app_user_repo, "get_user_by_email")
     mocker.spy(app_user_repo, "get_org_id")
+    mocker.spy(app_user_repo, "is_active")
     mocker.spy(app_user_repo, "get_app_user_authorisation")

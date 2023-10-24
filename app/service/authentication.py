@@ -52,6 +52,9 @@ def authenticate_user(email: str, password: str) -> str:
         if user is None:
             raise RepositoryError(f"User not found for {email}")
 
+        if not app_user_repo.is_active(db, email):
+            raise AuthenticationError(f"User {email} is marked as not active.")
+
         if not verify_password(password, str(user.hashed_password)):
             # TODO: Log failed login attempt?
             raise AuthenticationError(f"Could not verify password for {email}")
