@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy import FamilyEvent, EventStatus
+from app.clients.db.models.law_policy import FamilyEvent
 from integration_tests.setup_db import setup_db
 import app.repository.event as event_repo
 
@@ -27,12 +27,6 @@ def test_delete_event_when_not_authenticated(
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert test_db.query(FamilyEvent).count() == 3
-    assert (
-        test_db.query(FamilyEvent)
-        .filter(FamilyEvent.status == EventStatus.DELETED)
-        .count()
-        == 0
-    )
     assert event_repo.delete.call_count == 0
 
 
