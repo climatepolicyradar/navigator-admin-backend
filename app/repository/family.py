@@ -7,7 +7,13 @@ from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
 from app.clients.db.models.law_policy.collection import CollectionFamily
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy.family import FamilyOrganisation, Slug
+from app.clients.db.models.law_policy.family import (
+    DocumentStatus,
+    FamilyDocument,
+    FamilyOrganisation,
+    FamilyStatus,
+    Slug,
+)
 from app.clients.db.models.law_policy.geography import Geography
 from app.clients.db.models.law_policy.metadata import (
     FamilyMetadata,
@@ -18,7 +24,7 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.clients.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
-from sqlalchemy import Column, or_, update as db_update, delete as db_delete
+from sqlalchemy import Column, or_, update as db_update
 from sqlalchemy.orm import Query
 
 from app.repository.helpers import generate_import_id, generate_slug
@@ -299,18 +305,29 @@ def delete(db: Session, import_id: str) -> bool:
     :param str import_id: The family import id to delete.
     :return bool: True if deleted False if not.
     """
-    commands = [
-        db_delete(FamilyOrganisation).where(
-            FamilyOrganisation.family_import_id == import_id
-        ),
-        db_delete(FamilyMetadata).where(FamilyMetadata.family_import_id == import_id),
-        db_delete(Slug).where(Slug.family_import_id == import_id),
-        db_delete(Family).where(Family.import_id == import_id),
-    ]
-    for c in commands:
-        result = db.execute(c)
+    found = db.query(Family).filter(Family.import_id == import_id).one_or_none()
+    if found is None:
+        return False
 
-    return result.rowcount > 0  # type: ignore
+    # Soft delete all documents associated with the family.
+    result = db.execute(
+        db_update(FamilyDocument)
+        .filter(FamilyDocument.family_import_id == import_id)
+        .values(document_status=DocumentStatus.DELETED)
+    )
+    if result.rowcount == 0:  # type: ignore
+        msg = f"Could not soft delete documents in family : {import_id}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+
+    # Check family has been soft deleted if all documents have also been soft deleted.
+    fam_deleted = db.query(Family).filter(Family.import_id == import_id).one()
+    if fam_deleted.family_status != FamilyStatus.DELETED:  # type: ignore
+        msg = f"Could not soft delete family : {import_id}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+
+    return bool(fam_deleted.family_status == FamilyStatus.DELETED)
 
 
 def get_organisation(db: Session, family_import_id: str) -> Optional[Organisation]:
