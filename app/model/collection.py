@@ -24,5 +24,3 @@ class CollectionCreateDTO(BaseModel):
 
     title: str
     description: str
-    # families: list[str] TODO: Ask Patrick if we want this as an option?
-    organisation: str

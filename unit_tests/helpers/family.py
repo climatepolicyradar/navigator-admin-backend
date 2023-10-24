@@ -47,7 +47,6 @@ def create_family_create_dto(
         geography=geography,
         category=category,
         metadata=metadata,
-        organisation="CCLW",
     )
 
 

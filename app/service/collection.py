@@ -20,7 +20,7 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 from app.service import id
-from app.service import organisation
+from app.service import app_user
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +120,9 @@ def update(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(collection: CollectionCreateDTO, db: Session = db_session.get_db()) -> str:
+def create(
+    collection: CollectionCreateDTO, user_email: str, db: Session = db_session.get_db()
+) -> str:
     """
     Creates a new collection with the values passed.
 
@@ -130,7 +132,8 @@ def create(collection: CollectionCreateDTO, db: Session = db_session.get_db()) -
     :return str: The new import_id for the collection.
     """
     try:
-        org_id = organisation.get_id(db, collection.organisation)
+        # Get the organisation from the user's email
+        org_id = app_user.get_organisation(db, user_email)
 
         return collection_repo.create(db, collection, org_id)
 

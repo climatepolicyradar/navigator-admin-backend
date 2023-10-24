@@ -80,22 +80,3 @@ def test_create_collection_when_db_error(
     data = response.json()
     assert data["detail"] == "Bad Repo"
     assert bad_collection_repo.create.call_count == 1
-
-
-def test_create_collection_when_org_invalid(
-    client: TestClient, test_db: Session, user_header_token
-):
-    setup_db(test_db)
-    new_collection = create_collection_create_dto(
-        title="Title",
-        description="test test test",
-    )
-    new_collection.organisation = "chicken"
-    response = client.post(
-        "/api/v1/collections",
-        json=new_collection.model_dump(),
-        headers=user_header_token,
-    )
-    assert response.status_code == 400
-    data = response.json()
-    assert data["detail"] == "The organisation name chicken is invalid!"

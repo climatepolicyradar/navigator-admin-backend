@@ -41,7 +41,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
                 "slug",
             )
 
-    def mock_create_family(data: FamilyWriteDTO) -> str:
+    def mock_create_family(data: FamilyWriteDTO, user_email: str) -> str:
         if family_service.missing:
             raise RepositoryError("bad-db")
         return "new-import-id"
