@@ -278,8 +278,6 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
         )
     )
 
-    # TODO: Validate the metadata
-
     # Add the metadata
     db.flush()
     tax = (

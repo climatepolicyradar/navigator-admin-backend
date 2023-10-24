@@ -26,7 +26,6 @@ from app.clients.db.models.law_policy.metadata import (
     MetadataTaxonomy,
 )
 
-# TODO: Change this to use the service.family.create - so we don't miss anything here
 EXPECTED_NUM_FAMILIES = 3
 EXPECTED_FAMILIES = [
     {

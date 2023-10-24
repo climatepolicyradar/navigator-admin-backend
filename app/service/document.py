@@ -71,8 +71,6 @@ def validate_import_id(import_id: str) -> None:
     """
     Validates the import id for a document.
 
-    TODO: add more validation
-
     :param str import_id: import id to check.
     :raises ValidationError: raised should the import_id be invalid.
     """
@@ -93,9 +91,6 @@ def update(
     :return Optional[documentDTO]: The updated document or None if not updated.
     """
     validate_import_id(import_id)
-
-    # TODO: implement changing of a document's organisation
-    # org_id = organisation.get_id(db, document.organisation)
 
     try:
         if document_repo.update(db, import_id, document):

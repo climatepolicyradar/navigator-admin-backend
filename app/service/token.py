@@ -9,8 +9,7 @@ from app.model.jwt_user import JWTUser
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
-# TODO: revisit/configure access token expiry
-ACCESS_TOKEN_EXPIRE_MINUTES = 24 * 60  # 24 hours for access token
+ACCESS_TOKEN_EXPIRE_MINUTES = 8 * 60  # 8 hours for access token
 
 
 def encode(

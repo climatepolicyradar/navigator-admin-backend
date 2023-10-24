@@ -37,13 +37,11 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         if not collection_service.missing:
             return create_collection_read_dto(import_id, data.title, data.description)
 
-    # TODO: Think: Is this return value correct?
-    def mock_create_collection(
-        data: CollectionWriteDTO, user_email: str
-    ) -> Optional[str]:
+    def mock_create_collection(data: CollectionWriteDTO, user_email: str) -> str:
         maybe_throw()
-        if not collection_service.missing:
-            return "test.new.collection.0"
+        if collection_service.missing:
+            raise RepositoryError("missing")
+        return "test.new.collection.0"
 
     def mock_delete_collection(import_id: str) -> bool:
         maybe_throw()

@@ -72,8 +72,6 @@ def validate_import_id(import_id: str) -> None:
     """
     Validates the import id for a family.
 
-    TODO: add more validation
-
     :param str import_id: import id to check.
     :raises ValidationError: raised should the import_id be invalid.
     """
