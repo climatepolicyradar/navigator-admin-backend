@@ -1,18 +1,32 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy.family import Family
+
+from app.clients.db.models.law_policy import (
+    Family,
+    FamilyDocument,
+    DocumentStatus,
+    FamilyStatus,
+)
 from integration_tests.setup_db import setup_db
 
 
 def test_delete_family(client: TestClient, test_db: Session, admin_user_header_token):
     setup_db(test_db)
     response = client.delete(
-        "/api/v1/families/A.0.0.2", headers=admin_user_header_token
+        "/api/v1/families/A.0.0.3", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_200_OK
-    n = test_db.query(Family).count()
-    assert n == 2
+    assert test_db.query(Family).count() == 3
+    assert (
+        test_db.query(FamilyDocument)
+        .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
+        .count()
+        == 2
+    )
+    family = test_db.query(Family).filter(Family.import_id == "A.0.0.3").all()
+    assert len(family) == 1
+    assert family[0].family_status == FamilyStatus.DELETED
 
 
 def test_delete_family_when_not_authenticated(client: TestClient, test_db: Session):
@@ -28,11 +42,17 @@ def test_delete_family_rollback(
 ):
     setup_db(test_db)
     response = client.delete(
-        "/api/v1/families/A.0.0.2", headers=admin_user_header_token
+        "/api/v1/families/A.0.0.3", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-    n = test_db.query(Family).count()
-    assert n == 3
+    assert (
+        test_db.query(FamilyDocument)
+        .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
+        .count()
+        == 0
+    )
+    test_family = test_db.query(Family).filter(Family.import_id == "A.0.0.3").one()
+    assert test_family.family_status != FamilyStatus.DELETED
 
 
 def test_delete_family_when_not_found(
