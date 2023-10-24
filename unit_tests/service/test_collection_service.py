@@ -150,7 +150,6 @@ def test_create(
     collection = collection_service.create(_to_create_dto(new_collection), USER_EMAIL)
     assert collection is not None
     assert collection_repo_mock.create.call_count == 1
-    # Ensure the collection service uses the org service to validate
     assert app_user_repo_mock.get_org_id.call_count == 1
 
 
@@ -164,7 +163,6 @@ def test_create_when_db_fails(
         collection_service.create(_to_create_dto(new_collection), USER_EMAIL)
     assert e.value.message == "Error when creating collection 'description'"
     assert collection_repo_mock.create.call_count == 1
-    # Ensure the collection service uses the geo service to validate
     assert app_user_repo_mock.get_org_id.call_count == 1
 
 
