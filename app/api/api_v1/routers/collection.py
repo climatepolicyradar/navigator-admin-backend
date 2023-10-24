@@ -1,6 +1,6 @@
 """Endpoints for managing the Collection entity."""
 import logging
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from app.errors import RepositoryError, ValidationError
 
 from app.model.collection import (
@@ -130,6 +130,7 @@ async def update_collection(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_collection(
+    request: Request,
     new_collection: CollectionCreateDTO,
 ) -> str:
     """
@@ -139,7 +140,7 @@ async def create_collection(
     :return str: returns the import_id of the new collection.
     """
     try:
-        return collection_service.create(new_collection)
+        return collection_service.create(new_collection, request.state.user.email)
     except ValidationError as e:
         _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
