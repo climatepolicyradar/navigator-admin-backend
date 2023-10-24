@@ -27,7 +27,6 @@ def create_event_create_dto(
         event_type_value="Passed/Approved",
         family_import_id=family_import_id,
         family_document_import_id=None,
-        event_status=EventStatus.OK,
     )
 
 

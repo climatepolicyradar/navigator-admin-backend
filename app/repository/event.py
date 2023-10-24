@@ -72,7 +72,7 @@ def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
     }
 
 
-def _event_from_dto(db: Session, dto: EventCreateDTO):
+def _event_from_dto(dto: EventCreateDTO):
     family_event = FamilyEvent(**_dto_to_event_dict(dto))
     return family_event
 
@@ -146,7 +146,7 @@ def create(db: Session, event: EventCreateDTO) -> str:
     """
 
     try:
-        new_family_event = _event_from_dto(db, event)
+        new_family_event = _event_from_dto(event)
 
         family_import_id = new_family_event.family_import_id
 
