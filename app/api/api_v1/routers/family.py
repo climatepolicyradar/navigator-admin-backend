@@ -90,6 +90,7 @@ async def search_family(q: str = "") -> list[FamilyReadDTO]:
     response_model=FamilyReadDTO,
 )
 async def update_family(
+    request: Request,
     import_id: str,
     new_family: FamilyWriteDTO,
 ) -> FamilyReadDTO:
@@ -101,7 +102,7 @@ async def update_family(
     :return FamilyDTO: returns a FamilyDTO of the family updated.
     """
     try:
-        family = family_service.update(import_id, new_family)
+        family = family_service.update(import_id, request.state.user.email, new_family)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

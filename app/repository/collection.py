@@ -33,6 +33,14 @@ _LOGGER = logging.getLogger(__name__)
 CollectionOrg = Tuple[Collection, Organisation]
 
 
+def get_org_from_collection_id(db: Session, collection_import_id: str) -> Optional[int]:
+    return (
+        db.query(CollectionOrganisation.organisation_id)
+        .filter_by(collection_import_id=collection_import_id)
+        .scalar()
+    )
+
+
 def _collection_org_from_dto(
     dto: CollectionCreateDTO, org_id: int
 ) -> Tuple[Collection, CollectionOrganisation]:

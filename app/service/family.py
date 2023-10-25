@@ -13,13 +13,15 @@ import app.clients.db.session as db_session
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-from app.service import id
-from app.service import geography
-from app.service import category
-from app.service import organisation
-from app.service import metadata
-from app.service import app_user
-
+from app.service import (
+    id,
+    collection,
+    geography,
+    category,
+    organisation,
+    metadata,
+    app_user,
+)
 from app.repository import family_repo
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +83,10 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    import_id: str, family_dto: FamilyWriteDTO, db: Session = db_session.get_db()
+    import_id: str,
+    user_email: str,
+    family_dto: FamilyWriteDTO,
+    db: Session = db_session.get_db(),
 ) -> Optional[FamilyReadDTO]:
     """
     Updates a single Family with the values passed.
@@ -91,8 +96,10 @@ def update(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
     """
+
     # Validate import_id
     validate_import_id(import_id)
+
     # Validate category
     category.validate(family_dto.category)
 
@@ -104,9 +111,28 @@ def update(
     if family is None:
         raise ValidationError(f"Could not find family {import_id}")
 
+    # Get the organisation from the user's email
+    user_org_id = app_user.get_organisation(db, user_email)
+    _LOGGER.warning(f"User org id: {user_org_id}")
+
     # Validate metadata
     org_id = organisation.get_id(db, family.organisation)
+    _LOGGER.warning(f"Family org id: {org_id}")
+    if org_id != user_org_id:
+        raise ValidationError(
+            f"Current user does not belong to the organisation that owns family {import_id}"
+        )
     metadata.validate(db, org_id, family_dto.metadata)
+
+    # Validate that the collections we want to update are from the same organisation as
+    # the current user.
+    cols_in_usr_org = [
+        collection.get_org_from_id(db, c) == org_id for c in family_dto.collections
+    ]
+    if any(cols_in_usr_org) is False:
+        msg = "Some collections are not from the same organisation as the current user"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
 
     if family_repo.update(db, import_id, family_dto, geo_id):
         db.commit()
