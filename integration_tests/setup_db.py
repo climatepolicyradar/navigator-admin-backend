@@ -273,7 +273,7 @@ def _setup_organisation(test_db: Session) -> int:
         "test3@cpr.org",
         "TestPassMismatch",
         org.id,
-        hashed_pass="$2b$12$9p2NXX/uXWwgrTvrCAP7ZuODA6EWxfHdaYwxGAT.S0XYWtWkwTQvG",
+        hashed_pass="$2b$12$WZq1rRMvU.Tv1VutLw.rju/Ez5ETkYqP3KufdcSFJm3GTRZP8E52C",
     )
     _add_app_user(
         test_db,
