@@ -43,7 +43,6 @@ def _validate(schema: Json, data: Json) -> bool:
     :return bool: True if valid, False if not
     :raises ValidationError: _description_
     """
-    # TODO : use pydantic
 
     # Quick schema validation first
     valid_data_keys = _validate_schema(schema)

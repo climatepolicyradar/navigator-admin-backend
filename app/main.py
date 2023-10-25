@@ -23,7 +23,6 @@ import uvicorn
 
 from app.service.health import is_database_online
 
-# TODO: Review this list of Origin exceptions.
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
     r"https://.+\.climatepolicyradar\.org|"
@@ -31,7 +30,6 @@ _ALLOW_ORIGIN_REGEX = (
     r"https://.+\.sandbox\.climatepolicyradar\.org|"
     r"https://climate-laws\.org|"
     r"https://.+\.climate-laws\.org|"
-    r"https://.+\.eu-west-1\.awsapprunner\.com"  # FIXME: TODO: Remove before release
 )
 
 app = FastAPI(title="navigator-admin")

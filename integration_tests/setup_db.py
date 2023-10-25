@@ -26,7 +26,6 @@ from app.clients.db.models.law_policy.metadata import (
     MetadataTaxonomy,
 )
 
-# TODO: Change this to use the service.family.create - so we don't miss anything here
 EXPECTED_NUM_FAMILIES = 3
 EXPECTED_FAMILIES = [
     {
@@ -205,6 +204,31 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     test_db.commit()
 
 
+def _add_app_user(
+    test_db: Session,
+    email: str,
+    name: str,
+    org_id,
+    password: str = "",
+    is_active: bool = True,
+    is_super: bool = False,
+):
+    test_db.add(
+        AppUser(email=email, name=name, hashed_password=password, is_superuser=is_super)
+    )
+    test_db.flush()
+    test_db.add(
+        OrganisationUser(
+            appuser_email=email,
+            organisation_id=org_id,
+            job_title="",
+            is_active=is_active,
+            is_admin=is_super,
+        )
+    )
+    test_db.commit()
+
+
 def _setup_organisation(test_db: Session) -> int:
     # Now an organisation
     org = Organisation(
@@ -222,23 +246,19 @@ def _setup_organisation(test_db: Session) -> int:
     )
     test_db.flush()
 
-    # Also link to the test user
-    test_db.add(
-        AppUser(
-            email="test@cpr.org", name="Test", hashed_password="", is_superuser=False
-        )
+    # Also link to the test users
+    _add_app_user(
+        test_db,
+        "test@cpr.org",
+        "Test",
+        org.id,
+        "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+        is_active=True,
     )
-    test_db.flush()
-    test_db.add(
-        OrganisationUser(
-            appuser_email="test@cpr.org",
-            organisation_id=org.id,
-            job_title="",
-            is_active=True,
-            is_admin=False,
-        )
+    _add_app_user(
+        test_db, "test-inactive@cpr.org", "TestInactive", org.id, is_active=False
     )
-    test_db.commit()
+
     return cast(int, org.id)
 
 

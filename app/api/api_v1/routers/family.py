@@ -113,7 +113,6 @@ async def update_family(
         detail = f"Family not updated: {import_id}"
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
-    # TODO: Make a decision to return this here or a resource URL in the 201?
     return family
 
 
