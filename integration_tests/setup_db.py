@@ -205,6 +205,30 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     test_db.commit()
 
 
+def _add_app_user(
+    test_db: Session,
+    email: str,
+    name: str,
+    org_id,
+    is_active: bool = True,
+    is_super: bool = False,
+):
+    test_db.add(
+        AppUser(email=email, name=name, hashed_password="", is_superuser=is_super)
+    )
+    test_db.flush()
+    test_db.add(
+        OrganisationUser(
+            appuser_email=email,
+            organisation_id=org_id,
+            job_title="",
+            is_active=is_active,
+            is_admin=is_super,
+        )
+    )
+    test_db.commit()
+
+
 def _setup_organisation(test_db: Session) -> int:
     # Now an organisation
     org = Organisation(
@@ -222,23 +246,10 @@ def _setup_organisation(test_db: Session) -> int:
     )
     test_db.flush()
 
-    # Also link to the test user
-    test_db.add(
-        AppUser(
-            email="test@cpr.org", name="Test", hashed_password="", is_superuser=False
-        )
-    )
-    test_db.flush()
-    test_db.add(
-        OrganisationUser(
-            appuser_email="test@cpr.org",
-            organisation_id=org.id,
-            job_title="",
-            is_active=True,
-            is_admin=False,
-        )
-    )
-    test_db.commit()
+    # Also link to the test users
+    _add_app_user(test_db, "test@cpr.org", "Test", org.id, True)
+    _add_app_user(test_db, "test-inactive@cpr.org", "TestInactive", org.id, False)
+
     return cast(int, org.id)
 
 

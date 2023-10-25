@@ -11,10 +11,11 @@ def get_user_by_email(db: Session, email: str) -> MaybeAppUser:
 
 
 def is_active(db: Session, email: str) -> bool:
+    # NOTE: DO NOT be tempted to fix the below to "is True" - this breaks things
     return (
         db.query(OrganisationUser)
         .filter(OrganisationUser.appuser_email == email)
-        .filter(OrganisationUser.is_active is True)
+        .filter(OrganisationUser.is_active == True)  # noqa: E712
         .count()
         > 0
     )

@@ -1,3 +1,4 @@
+import logging
 from typing import cast
 
 from passlib.context import CryptContext
@@ -9,6 +10,8 @@ from app.repository import app_user_repo
 import app.service.token as token_service
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_password_hash(password: str) -> str:
@@ -50,13 +53,15 @@ def authenticate_user(email: str, password: str) -> str:
             user = None
 
         if user is None:
+            _LOGGER.error(f"Failed login attempt, user not found {email}")
             raise RepositoryError(f"User not found for {email}")
-
         if not app_user_repo.is_active(db, email):
+            _LOGGER.error(f"Failed login attempt as inactive {email}")
             raise AuthenticationError(f"User {email} is marked as not active.")
 
-        if not verify_password(password, str(user.hashed_password)):
-            # TODO: Log failed login attempt?
+        hash = str(user.hashed_password)
+        if len(hash) == 0 or not verify_password(password, hash):
+            _LOGGER.error(f"Failed login attempt for password mismatch {email}")
             raise AuthenticationError(f"Could not verify password for {email}")
 
         app_user_links = app_user_repo.get_app_user_authorisation(db, user)
