@@ -210,12 +210,14 @@ def _add_app_user(
     email: str,
     name: str,
     org_id,
-    password: str = "",
+    hashed_pass: str = "",
     is_active: bool = True,
     is_super: bool = False,
 ):
     test_db.add(
-        AppUser(email=email, name=name, hashed_password=password, is_superuser=is_super)
+        AppUser(
+            email=email, name=name, hashed_password=hashed_pass, is_superuser=is_super
+        )
     )
     test_db.flush()
     test_db.add(
@@ -254,10 +256,14 @@ def _setup_organisation(test_db: Session) -> int:
         "Test",
         org.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
-        is_active=True,
     )
+    _add_app_user(test_db, "test1@cpr.org", "TestInactive", org.id, is_active=False)
     _add_app_user(
-        test_db, "test-inactive@cpr.org", "TestInactive", org.id, is_active=False
+        test_db, "test2@cpr.org", "TestHashedPassEmpty", org.id, hashed_pass=""
+    )
+    _add_app_user(test_db, "test3@cpr.org", "TestPassMismatch", org.id, hashed_pass="")
+    _add_app_user(
+        test_db, "admin@cpr.org", "Admin", org.id, hashed_pass="", is_super=True
     )
 
     return cast(int, org.id)
