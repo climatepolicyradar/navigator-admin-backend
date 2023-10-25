@@ -212,6 +212,7 @@ def _add_app_user(
     hashed_pass: str = "",
     is_active: bool = True,
     is_super: bool = False,
+    is_admin: bool = False,
 ):
     test_db.add(
         AppUser(
@@ -225,7 +226,7 @@ def _add_app_user(
             organisation_id=org_id,
             job_title="",
             is_active=is_active,
-            is_admin=is_super,
+            is_admin=is_admin,
         )
     )
     test_db.commit()
@@ -261,9 +262,7 @@ def _setup_organisation(test_db: Session) -> int:
         test_db, "test2@cpr.org", "TestHashedPassEmpty", org.id, hashed_pass=""
     )
     _add_app_user(test_db, "test3@cpr.org", "TestPassMismatch", org.id, hashed_pass="")
-    _add_app_user(
-        test_db, "admin@cpr.org", "Admin", org.id, hashed_pass="", is_super=True
-    )
+    _add_app_user(test_db, "admin@cpr.org", "Admin", org.id, hashed_pass="")
 
     return cast(int, org.id)
 
