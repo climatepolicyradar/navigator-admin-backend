@@ -24,7 +24,7 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.clients.db.models.law_policy import Family
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
-from sqlalchemy import Column, or_, update as db_update
+from sqlalchemy import Column, or_, update as db_update, delete as db_delete
 from sqlalchemy.orm import Query
 
 from app.repository.helpers import generate_import_id, generate_slug
@@ -100,6 +100,13 @@ def _update_intention(
     geo_id: int,
     original_family: Family,
 ):
+    original_collections = [
+        c.collection_import_id
+        for c in db.query(CollectionFamily).filter(
+            original_family.import_id == CollectionFamily.family_import_id
+        )
+    ]
+    update_collections = set(original_collections) != set(family.collections)
     update_title = cast(str, original_family.title) != family.title
     update_basics = (
         update_title
@@ -113,7 +120,7 @@ def _update_intention(
         .one()
     )
     update_metadata = existing_metadata.value != family.metadata
-    return update_title, update_basics, update_metadata
+    return update_title, update_basics, update_metadata, update_collections
 
 
 def all(db: Session) -> list[FamilyReadDTO]:
@@ -165,7 +172,9 @@ def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
+def update(
+    db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int, org_id: int
+) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -173,6 +182,7 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
     :param int geo_id: a validated geography id
+    :param int org_id: a validated organisation id
     :return bool: True if new values were set otherwise false.
     """
     new_values = family.model_dump()
@@ -186,12 +196,15 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
         return False
 
     # Now figure out the intention of the request:
-    update_title, update_basics, update_metadata = _update_intention(
-        db, import_id, family, geo_id, original_family
-    )
+    (
+        update_title,
+        update_basics,
+        update_metadata,
+        update_collections,
+    ) = _update_intention(db, import_id, family, geo_id, original_family)
 
     # Return if nothing to do
-    if not update_title and not update_basics and not update_metadata:
+    if not (update_title or update_basics or update_metadata or update_collections):
         return True
 
     # Update basic fields
@@ -226,7 +239,7 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
             _LOGGER.error(msg)
             raise RepositoryError(msg)
 
-    # update slug if title changed
+    # Update slug if title changed
     if update_title:
         db.flush()
         name = generate_slug(db, family.title)
@@ -237,6 +250,42 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
         )
         db.add(new_slug)
         _LOGGER.info(f"Added a new slug for {import_id} of {new_slug.name}")
+
+    # Update collections if collections changed.
+    if update_collections:
+        original_collections = set(
+            [
+                c.collection_import_id
+                for c in db.query(CollectionFamily).filter(
+                    original_family.import_id == CollectionFamily.family_import_id
+                )
+            ]
+        )
+
+        # Remove any collections that were originally associated with the family but
+        # now aren't.
+        cols_to_remove = set(original_collections) - set(family.collections)
+        for col in cols_to_remove:
+            result = db.execute(
+                db_delete(CollectionFamily).where(
+                    CollectionFamily.collection_import_id == col
+                )
+            )
+
+            if result.rowcount == 0:  # type: ignore
+                msg = f"Could not remove family {import_id} from collection {col}"
+                _LOGGER.error(msg)
+                raise RepositoryError(msg)
+
+        # Add any collections that weren't originally associated with the family.
+        cols_to_add = set(family.collections) - set(original_collections)
+        for col in cols_to_add:
+            db.flush()
+            new_collection = CollectionFamily(
+                family_import_id=import_id,
+                collection_import_id=col,
+            )
+            db.add(new_collection)
 
     return True
 

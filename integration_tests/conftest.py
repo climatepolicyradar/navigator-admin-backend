@@ -183,6 +183,13 @@ def user_header_token() -> Dict[str, str]:
 
 
 @pytest.fixture
+def non_cclw_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("unfccc@cpr.org", False, {"is_admin": False})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
 def admin_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("test@cpr.org", False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}

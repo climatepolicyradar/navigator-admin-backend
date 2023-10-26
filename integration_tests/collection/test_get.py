@@ -17,15 +17,16 @@ def test_get_all_collections(client: TestClient, test_db: Session, user_header_t
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert type(data) is list
-    assert len(data) == 2
+    assert len(data) == 3
     ids_found = set([f["import_id"] for f in data])
-    expected_ids = set(["C.0.0.1", "C.0.0.2"])
+    expected_ids = set(["C.0.0.1", "C.0.0.2", "C.0.0.3"])
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
     sdata = sorted(data, key=lambda d: d["import_id"])
     assert sdata[0] == EXPECTED_COLLECTIONS[0]
     assert sdata[1] == EXPECTED_COLLECTIONS[1]
+    assert sdata[2] == EXPECTED_COLLECTIONS[2]
 
 
 def test_get_all_collections_when_not_authenticated(

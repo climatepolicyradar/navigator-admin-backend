@@ -5,10 +5,14 @@ from app.errors import RepositoryError
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from unit_tests.helpers.collection import create_collection_read_dto
 
+ORG_ID = 1
+INCORRECT_ORG_ID = 1234
+
 
 def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker):
     collection_service.missing = False
     collection_service.throw_repository_error = False
+    collection_service.invalid_org = False
 
     def maybe_throw():
         if collection_service.throw_repository_error:
@@ -53,6 +57,14 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
             return None
         return 11
 
+    def mock_get_org_from_id() -> Optional[int]:
+        maybe_throw()
+        if collection_service.missing:
+            return None
+        if collection_service.invalid_org:
+            return INCORRECT_ORG_ID
+        return ORG_ID
+
     monkeypatch.setattr(collection_service, "get", mock_get_collection)
     mocker.spy(collection_service, "get")
 
@@ -73,3 +85,6 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
 
     monkeypatch.setattr(collection_service, "count", mock_count_collection)
     mocker.spy(collection_service, "count")
+
+    monkeypatch.setattr(collection_service, "get_org_from_id", mock_get_org_from_id)
+    mocker.spy(collection_service, "get_org_from_id")

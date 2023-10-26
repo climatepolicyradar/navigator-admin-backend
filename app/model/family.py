@@ -37,6 +37,7 @@ class FamilyWriteDTO(BaseModel):
     geography: str
     category: str
     metadata: Json
+    collections: list[str]
 
 
 class FamilyCreateDTO(BaseModel):
@@ -54,3 +55,4 @@ class FamilyCreateDTO(BaseModel):
     geography: str
     category: str
     metadata: Json
+    collections: list[str]

@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from pydantic import ConfigDict, validate_call
-from app.errors import RepositoryError
+from app.errors import RepositoryError, ValidationError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,
@@ -170,3 +170,13 @@ def count() -> Optional[int]:
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))
+
+
+def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
+    org = collection_repo.get_org_from_collection_id(db, collection_import_id)
+    if org is None:
+        _LOGGER.warning(
+            "The collection import id %s does not have an associated organisation",
+            collection_import_id,
+        )
+    return org

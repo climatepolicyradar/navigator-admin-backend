@@ -28,7 +28,9 @@ def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
             return [create_family_dto("search1")]
         return []
 
-    def mock_update(_, import_id: str, data: FamilyReadDTO, __) -> bool:
+    def mock_update(
+        _, import_id: str, user_email: str, data: FamilyReadDTO, __
+    ) -> bool:
         maybe_throw()
         return not family_repo.return_empty
 
