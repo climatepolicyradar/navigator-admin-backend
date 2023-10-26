@@ -1,6 +1,8 @@
+from typing import Optional
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
+from app.clients.db.models.law_policy.collection import CollectionFamily
 from app.clients.db.models.law_policy.family import Family, Slug
 from app.clients.db.models.law_policy.metadata import FamilyMetadata
 from integration_tests.setup_db import setup_db
@@ -14,6 +16,7 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
         title="Title",
         summary="test test test",
         metadata=test_meta,
+        collections=["C.0.0.3"],
     )
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -32,6 +35,14 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
     )
     assert metadata.value is not None
     assert metadata.value == test_meta
+
+    db_collection: Optional[list[CollectionFamily]] = (
+        test_db.query(CollectionFamily)
+        .filter(CollectionFamily.family_import_id == "CCLW.family.i00000001.n0000")
+        .all()
+    )
+    assert len(db_collection) == 1
+    assert db_collection[0].collection_import_id == "C.0.0.3"
 
 
 def test_create_family_when_not_authorised(client: TestClient, test_db: Session):
@@ -122,3 +133,44 @@ def test_create_family_when_invalid_category(
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "Invalid is not a valid FamilyCategory"
+
+
+def test_create_family_when_invalid_collection_id(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_family = create_family_create_dto(
+        title="Title",
+        summary="test test test",
+        metadata={"color": ["pink"], "size": [0]},
+        collections=["col1"],
+    )
+    # new_family.category = "invalid"
+    response = client.post(
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+    )
+    assert response.status_code == 400
+    data = response.json()
+    assert data["detail"] == "The import ids are invalid: ['col1']"
+
+
+def test_create_family_when_invalid_collection_org(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_family = create_family_create_dto(
+        title="Title",
+        summary="test test test",
+        metadata={"color": ["pink"], "size": [0]},
+        collections=["C.0.0.1"],
+    )
+    # new_family.category = "invalid"
+    response = client.post(
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+    )
+    assert response.status_code == 400
+    data = response.json()
+    assert (
+        data["detail"]
+        == "Organisation mismatch between some collections and the current user"
+    )

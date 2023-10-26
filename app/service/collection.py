@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from pydantic import ConfigDict, validate_call
-from app.errors import RepositoryError, ValidationError
+from app.errors import RepositoryError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,

@@ -172,9 +172,7 @@ def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(
-    db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int, org_id: int
-) -> bool:
+def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -182,7 +180,6 @@ def update(
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
     :param int geo_id: a validated geography id
-    :param int org_id: a validated organisation id
     :return bool: True if new values were set otherwise false.
     """
     new_values = family.model_dump()
@@ -338,6 +335,15 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
             value=family.metadata,
         )
     )
+
+    # Add any collections.
+    for col in set(family.collections):
+        db.flush()
+        new_collection = CollectionFamily(
+            family_import_id=new_family.import_id,
+            collection_import_id=col,
+        )
+        db.add(new_collection)
     return cast(str, new_family.import_id)
 
 

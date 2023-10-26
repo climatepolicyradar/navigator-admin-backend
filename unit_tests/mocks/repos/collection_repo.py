@@ -14,6 +14,7 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
     collection_repo.invalid_org = False
     collection_repo.missing = False
     collection_repo.throw_repository_error = False
+    collection_repo.alternative_org = False
 
     def maybe_throw():
         if collection_repo.throw_repository_error:
@@ -63,6 +64,8 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
             return None
         if collection_repo.invalid_org is True:
             return INCORRECT_ORG_ID
+        if collection_repo.alternative_org is True:
+            return 2
         return ORG_ID
 
     monkeypatch.setattr(collection_repo, "get", mock_get)
