@@ -32,8 +32,9 @@ async def get_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
+    _LOGGER.info(">>> ---------------------------")
     try:
-        family = family_service.get(import_id)
+        family = await family_service.get(import_id)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -46,6 +47,7 @@ async def get_family(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Family not found: {import_id}",
         )
+    _LOGGER.info("<<< ---------------------------")
 
     return family
 

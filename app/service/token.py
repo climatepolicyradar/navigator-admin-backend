@@ -1,3 +1,4 @@
+import logging
 import jwt
 import os
 from datetime import datetime, timedelta
@@ -11,6 +12,8 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 8 * 60  # 8 hours for access token
 
+
+_LOGGER = logging.getLogger(__name__)
 
 def encode(
     email: str, is_superuser: bool, authorisation: dict, minutes: Optional[int] = None
@@ -62,6 +65,7 @@ def decode(token: str) -> JWTUser:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except jwt.PyJWTError:
+        _LOGGER.exception(f"Error when decoding: {token}")
         raise TokenError("Payload cannot be decoded")
 
     email: Optional[str] = payload.get("email")

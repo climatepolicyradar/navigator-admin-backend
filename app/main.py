@@ -4,6 +4,7 @@ Main configuration for our FastAPI application routes for the admin service.
 Note: If you want to add a new endpoint, please make sure you update
 AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
+import logging
 from fastapi_pagination import add_pagination
 from app.api.api_v1.routers.auth import check_user_auth
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
@@ -16,12 +17,15 @@ from app.api.api_v1.routers import (
     analytics_router,
     event_router,
 )
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request, Response
 from fastapi_health import health
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from app.service.health import is_database_online
+
+_LOGGER = logging.getLogger(__name__)
+
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -79,6 +83,7 @@ app.include_router(
 )
 
 app.include_router(auth_router, prefix="/api", tags=["Authentication"])
+
 
 # Add CORS middleware to allow cross origin requests from any port
 app.add_middleware(

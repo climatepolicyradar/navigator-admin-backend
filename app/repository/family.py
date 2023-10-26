@@ -1,7 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
-from typing import Optional, Tuple, cast
+from typing import Any, Optional, Tuple, cast
 from app.clients.db.models.app.counters import CountedEntity
 
 from app.clients.db.models.app.users import Organisation
@@ -26,7 +26,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
 from sqlalchemy import Column, or_, update as db_update
 from sqlalchemy.orm import Query
-
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.repository.helpers import generate_import_id, generate_slug
 
 
@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Organisation]
 
 
-def _get_query(db: Session) -> Query:
+def _get_query(db: Any) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
@@ -65,7 +65,7 @@ def _family_org_from_dto(
     )
 
 
-def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyReadDTO:
+def _family_to_dto(db: Any, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyReadDTO:
     f = fam_geo_meta_org[0]
     geo_value = cast(str, fam_geo_meta_org[1].value)
     metadata = cast(dict, fam_geo_meta_org[2].value)
@@ -133,7 +133,7 @@ def all(db: Session) -> list[FamilyReadDTO]:
     return result
 
 
-def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
+async def get(db: AsyncSession, import_id: str) -> Optional[FamilyReadDTO]:
     """
     Gets a single family from the repository.
 
@@ -142,7 +142,10 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     :return Optional[FamilyResponse]: A single family or nothing
     """
     try:
+        _LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         fam_geo_meta = _get_query(db).filter(Family.import_id == import_id).one()
+        db.execute("SELECT pg_sleep(3);")
+        _LOGGER.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     except NoResultFound as e:
         _LOGGER.error(e)
         return

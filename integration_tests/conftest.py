@@ -3,7 +3,7 @@ from typing import Dict
 
 import pytest
 from fastapi.testclient import TestClient
-from app.config import SQLALCHEMY_DATABASE_URI
+from app.config import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_DATABASE_URI_SYNC
 from sqlalchemy_utils import create_database, database_exists, drop_database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -39,7 +39,7 @@ from integration_tests.mocks.rollback_event_repo import mock_rollback_event_repo
 
 
 def get_test_db_url() -> str:
-    return SQLALCHEMY_DATABASE_URI + f"_test_{uuid.uuid4()}"
+    return SQLALCHEMY_DATABASE_URI_SYNC + f"_test_{uuid.uuid4()}"
 
 
 @pytest.fixture
@@ -49,6 +49,7 @@ def test_db(scope="function"):
     test_db_url = get_test_db_url()
 
     # Create the test database
+    #await conn.run_sync(database_exists, test_db_url)
     if database_exists(test_db_url):
         drop_database(test_db_url)
     create_database(test_db_url)
@@ -177,13 +178,13 @@ def superuser_header_token() -> Dict[str, str]:
 
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("test@cpr.org", False, {"is_admin": False})
+    a_token = token_service.encode("test@cpr.org", False, {"CCLW":{"is_admin": False}})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def admin_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("test@cpr.org", False, {"is_admin": True})
+    a_token = token_service.encode("test@cpr.org", False, {"CCLW":{"is_admin": True}})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers

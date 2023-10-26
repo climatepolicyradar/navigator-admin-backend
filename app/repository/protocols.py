@@ -13,11 +13,6 @@ class FamilyRepo(Protocol):
         ...
 
     @staticmethod
-    def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
-        """Gets a single family"""
-        ...
-
-    @staticmethod
     def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
         """Searches the families"""
         ...

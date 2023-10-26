@@ -10,4 +10,3 @@ import app.repository.config as config_repo
 import app.repository.event as event_repo
 from app.repository.protocols import FamilyRepo
 
-family_repo: FamilyRepo

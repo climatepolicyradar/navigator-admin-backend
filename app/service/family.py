@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def get(import_id: str) -> Optional[FamilyReadDTO]:
+async def get(import_id: str) -> Optional[FamilyReadDTO]:
     """
     Gets a family given the import_id.
 
@@ -38,7 +38,7 @@ def get(import_id: str) -> Optional[FamilyReadDTO]:
     validate_import_id(import_id)
     try:
         with db_session.get_db() as db:
-            return family_repo.get(db, import_id)
+            return await family_repo.get(db, import_id)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))

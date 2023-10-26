@@ -1,11 +1,14 @@
 import logging
-from sqlalchemy import create_engine, exc
+from typing import cast
+from sqlalchemy import exc
 from sqlalchemy.orm import registry, sessionmaker, Session
 
 from app.config import SQLALCHEMY_DATABASE_URI
 from app.errors import RepositoryError
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-engine = create_engine(
+
+engine = create_async_engine(
     SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,
     # TODO: configure as part of scaling work
@@ -13,7 +16,9 @@ engine = create_engine(
     max_overflow=240,
     # echo="debug",
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +46,8 @@ def make_declarative_base():
     return Base
 
 
-def get_db() -> Session:
-    return SessionLocal()
+def get_db() -> AsyncSession:
+    return cast(AsyncSession, SessionLocal())
 
 
 Base = make_declarative_base()
@@ -52,22 +57,22 @@ AnyModel = Base
 
 def with_transaction(module_name):
     def inner(func):
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             db = get_db()
             try:
                 db.begin()
                 result = func(*args, **kwargs, db=db)
-                db.commit()
+                await db.commit()
                 return result
             except exc.SQLAlchemyError as e:
                 msg = f"Error {str(e)} in {module_name}.{func.__name__}()"
                 _LOGGER.error(
                     msg, extra={"failing_module": module_name, "func": func.__name__}
                 )
-                db.rollback()
+                await db.rollback()
                 raise RepositoryError(str(e))
             finally:
-                db.close()
+                await db.close()
 
         return wrapper
 
