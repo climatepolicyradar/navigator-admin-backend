@@ -165,7 +165,6 @@ def create(
     category.validate(family.category)
 
     # Validate metadata.
-    _LOGGER.warning(org_id)
     metadata.validate(db, org_id, family.metadata)
 
     # Validate collection ids.

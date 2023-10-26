@@ -175,7 +175,7 @@ def count() -> Optional[int]:
 def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
     org = collection_repo.get_org_from_collection_id(db, collection_import_id)
     if org is None:
-        _LOGGER.warning(
+        _LOGGER.error(
             "The collection import id %s does not have an associated organisation",
             collection_import_id,
         )
