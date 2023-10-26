@@ -113,11 +113,9 @@ def update(
 
     # Get the organisation from the user's email
     user_org_id = app_user.get_organisation(db, user_email)
-    _LOGGER.warning(f"User org id: {user_org_id}")
 
     # Validate metadata
     org_id = organisation.get_id(db, family.organisation)
-    _LOGGER.warning(f"Family org id: {org_id}")
     if org_id != user_org_id:
         raise ValidationError(
             f"Current user does not belong to the organisation that owns family {import_id}"
@@ -125,16 +123,22 @@ def update(
     metadata.validate(db, org_id, family_dto.metadata)
 
     # Validate that the collections we want to update are from the same organisation as
-    # the current user.
-    cols_in_usr_org = [
-        collection.get_org_from_id(db, c) == org_id for c in family_dto.collections
+    # the current user and are in a valid format.
+    original_collections = set(family.collections)
+    new_collections = set(family_dto.collections)
+    all_cols_to_modify = original_collections.union(new_collections)
+
+    id.validate_multiple_ids(all_cols_to_modify)
+
+    collections_in_usr_org = [
+        collection.get_org_from_id(db, c) != org_id for c in all_cols_to_modify
     ]
-    if any(cols_in_usr_org) is False:
-        msg = "Some collections are not from the same organisation as the current user"
+    if len(collections_in_usr_org) > 0 and any(collections_in_usr_org):
+        msg = "Some collections do not belong to the same organisation as the current user"
         _LOGGER.error(msg)
         raise ValidationError(msg)
 
-    if family_repo.update(db, import_id, family_dto, geo_id):
+    if family_repo.update(db, import_id, family_dto, geo_id, org_id):
         db.commit()
         return get(import_id)
 

@@ -172,10 +172,11 @@ def count() -> Optional[int]:
         raise RepositoryError(str(e))
 
 
-def get_org_from_id(db: Session, collection_import_id: str) -> int:
-    org = collection_repo.get_org_name_from_collection_id(db, collection_import_id)
+def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
+    org = collection_repo.get_org_from_collection_id(db, collection_import_id)
     if org is None:
-        raise ValidationError(
-            f"The collection import id {collection_import_id} is invalid!"
+        _LOGGER.warning(
+            "The collection import id %s does not have an associated organisation",
+            collection_import_id,
         )
     return org

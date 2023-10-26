@@ -8,6 +8,7 @@ from unit_tests.helpers.family import create_family_dto
 
 def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     family_service.missing = False
+    family_service.invalid_collections = False
     family_service.throw_repository_error = False
 
     def maybe_throw():
@@ -28,7 +29,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
             return [create_family_dto("search1")]
 
     def mock_update_family(
-        import_id: str, data: FamilyWriteDTO
+        import_id: str, user_email: str, data: FamilyWriteDTO
     ) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
             return create_family_dto(
@@ -39,6 +40,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
                 data.category,
                 data.metadata,
                 "slug",
+                ["col2", "col3"],
             )
 
     def mock_create_family(data: FamilyWriteDTO, user_email: str) -> str:

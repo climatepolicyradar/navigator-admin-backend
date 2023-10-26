@@ -5,9 +5,14 @@ from sqlalchemy import exc
 from app.model.collection import CollectionReadDTO
 from unit_tests.helpers.collection import create_collection_read_dto
 
+ORG_ID = 1
+INCORRECT_ORG_ID = 1234
+
 
 def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
     collection_repo.return_empty = False
+    collection_repo.invalid_org = False
+    collection_repo.missing = False
     collection_repo.throw_repository_error = False
 
     def maybe_throw():
@@ -52,6 +57,14 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
             return 11
         return
 
+    def mock_get_org_from_collection_id(_, import_id: str) -> Optional[int]:
+        maybe_throw()
+        if collection_repo.missing is True:
+            return None
+        if collection_repo.invalid_org is True:
+            return INCORRECT_ORG_ID
+        return ORG_ID
+
     monkeypatch.setattr(collection_repo, "get", mock_get)
     mocker.spy(collection_repo, "get")
 
@@ -72,3 +85,8 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(collection_repo, "count", mock_get_count)
     mocker.spy(collection_repo, "count")
+
+    monkeypatch.setattr(
+        collection_repo, "get_org_from_collection_id", mock_get_org_from_collection_id
+    )
+    mocker.spy(collection_repo, "get_org_from_collection_id")

@@ -13,3 +13,15 @@ def validate(import_id: str) -> None:
         return
 
     raise ValidationError(f"The import id {import_id} is invalid!")
+
+
+def validate_multiple_ids(import_ids: list[str]) -> None:
+    invalid_ids = [
+        import_id
+        for import_id in import_ids
+        if IMPORT_ID_MATCHER.match(import_id) is None
+    ]
+
+    if len(invalid_ids) > 0:
+        invalid_ids.sort()
+        raise ValidationError(f"The import ids are invalid: {invalid_ids}")
