@@ -194,7 +194,7 @@ def test_update_family_when_collection_org_different_to_family_org(
     data = response.json()
     assert (
         data["detail"]
-        == "Some collections are not from the same organisation as the current user"
+        == "Some collections do not belong to the same organisation as the current user"
     )
 
     db_families: Family = (
