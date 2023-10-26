@@ -20,14 +20,14 @@ async def test_async_family_get(client: TestClient, test_db, user_header_token):
     async with AsyncClient(app=app, base_url=BASE_URL) as async_client:
         responses = await asyncio.gather(
             *[
-                async_client.get("/api/v1/families/A.0.0.1", headers=user_header_token) 
+                async_client.get("/api/v1/families/A.0.0.1", headers=user_header_token)
                 for _ in range(N_TIMES)
             ],
         )
 
     time_taken_ms = (time.time_ns() - start) / 1e6
     print(time_taken_ms)
-    assert time_taken_ms < 500 # Assert that this takes less than 1 seconds
+    assert time_taken_ms < 500  # Assert that this takes less than 1 seconds
 
     # Check responses are all good
     assert len(responses) == N_TIMES
@@ -46,33 +46,33 @@ async def test_async_scenario(client: TestClient, test_db, user_header_token):
     async with AsyncClient(app=app, base_url=BASE_URL) as async_client:
         responses = await asyncio.gather(
             *[
-                async_client.get("/api/v1/families/A.0.0.1", headers=user_header_token) 
+                async_client.get("/api/v1/families/A.0.0.1", headers=user_header_token)
                 for _ in range(N_TIMES)
             ],
             *[
-                async_client.get("/api/v1/documents/D.0.0.1", headers=user_header_token) 
+                async_client.get("/api/v1/documents/D.0.0.1", headers=user_header_token)
                 for _ in range(N_TIMES)
             ],
             *[
-                async_client.get("/api/v1/documents/D.0.0.2", headers=user_header_token) 
+                async_client.get("/api/v1/documents/D.0.0.2", headers=user_header_token)
                 for _ in range(N_TIMES)
             ],
             *[
-                async_client.get("/api/v1/events/E.0.0.1", headers=user_header_token) 
+                async_client.get("/api/v1/events/E.0.0.1", headers=user_header_token)
                 for _ in range(N_TIMES)
             ],
             *[
-                async_client.get("/api/v1/events/E.0.0.2", headers=user_header_token) 
+                async_client.get("/api/v1/events/E.0.0.2", headers=user_header_token)
                 for _ in range(N_TIMES)
             ],
             *[
-                async_client.get("/api/v1/events/E.0.0.3", headers=user_header_token) 
+                async_client.get("/api/v1/events/E.0.0.3", headers=user_header_token)
                 for _ in range(N_TIMES)
             ],
         )
 
     time_taken_ns = time.thread_time_ns() - start
-    assert time_taken_ns < 4e9 # Assert that this takes less than 4 seconds
+    assert time_taken_ns < 4e9  # Assert that this takes less than 4 seconds
 
     # Check responses are all good
     assert len(responses) == N_REQUEST_LEN * N_TIMES

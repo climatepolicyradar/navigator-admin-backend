@@ -49,7 +49,7 @@ def test_db(scope="function"):
     test_db_url = get_test_db_url()
 
     # Create the test database
-    #await conn.run_sync(database_exists, test_db_url)
+    # await conn.run_sync(database_exists, test_db_url)
     if database_exists(test_db_url):
         drop_database(test_db_url)
     create_database(test_db_url)
@@ -178,13 +178,13 @@ def superuser_header_token() -> Dict[str, str]:
 
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("test@cpr.org", False, {"CCLW":{"is_admin": False}})
+    a_token = token_service.encode("test@cpr.org", False, {"CCLW": {"is_admin": False}})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def admin_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("test@cpr.org", False, {"CCLW":{"is_admin": True}})
+    a_token = token_service.encode("test@cpr.org", False, {"CCLW": {"is_admin": True}})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers

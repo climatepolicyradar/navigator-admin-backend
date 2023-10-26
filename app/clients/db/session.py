@@ -16,9 +16,7 @@ engine = create_async_engine(
     max_overflow=240,
     # echo="debug",
 )
-SessionLocal = sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession
-)
+SessionLocal = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 _LOGGER = logging.getLogger(__name__)
 
