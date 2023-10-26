@@ -76,22 +76,6 @@ EXPECTED_FAMILIES = [
         "documents": ["D.0.0.1", "D.0.0.2"],
         "collections": ["C.0.0.2"],
     },
-    # {
-    #     "import_id": "A.0.0.4",
-    #     "title": "grapes",
-    #     "summary": "",
-    #     "geography": "South Asia",
-    #     "category": "UNFCCC",
-    #     "status": "Created",
-    #     "metadata": {"size": [4], "color": ["green"]},
-    #     "organisation": "Another org",
-    #     "slug": "Slug4",
-    #     "events": [],
-    #     "published_date": None,
-    #     "last_updated_date": None,
-    #     "documents": [],
-    #     "collections": [],
-    # },
 ]
 
 
@@ -217,13 +201,13 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     _setup_family_data(test_db, org_id, other_org_id)
     test_db.commit()
 
-    _setup_collection_data(test_db, org_id, configure_empty)
+    _setup_collection_data(test_db, configure_empty)
     test_db.commit()
 
     _setup_document_data(test_db, "A.0.0.3")
     test_db.commit()
 
-    _setup_event_data(test_db, "A.0.0.3")
+    _setup_event_data(test_db)
     test_db.commit()
 
 
@@ -330,7 +314,6 @@ def _setup_organisation(test_db: Session) -> int:
 
 def _setup_collection_data(
     test_db: Session,
-    default_org_id: int,
     configure_empty: bool = False,
 ) -> None:
     if configure_empty is True:
@@ -486,7 +469,6 @@ def _setup_document_data(
 
 def _setup_event_data(
     test_db: Session,
-    family_id: str,
     configure_empty: bool = False,
 ) -> None:
     """
