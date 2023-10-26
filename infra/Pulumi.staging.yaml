@@ -1,5 +1,5 @@
 config:
-  admin_backend:apprunner_backend_max_concurrency: "1"
+  admin_backend:apprunner_backend_max_concurrency: "10"
   admin_backend:apprunner_backend_max_instance_count: "5"
   admin_backend:apprunner_backend_min_instance_count: "2"
   admin_backend:docker_tag: 0.0.21-beta
