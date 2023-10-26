@@ -124,9 +124,7 @@ def update(
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
-    original_collections = set(family.collections)
-    new_collections = set(family_dto.collections)
-    all_cols_to_modify = original_collections.union(new_collections)
+    all_cols_to_modify = set(family.collections).union(set(family_dto.collections))
 
     id.validate_multiple_ids(all_cols_to_modify)
 

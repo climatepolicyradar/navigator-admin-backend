@@ -182,7 +182,7 @@ def update(
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
     :param int geo_id: a validated geography id
-    FIXME:param int org_id: a validated geography id
+    :param int org_id: a validated organisation id
     :return bool: True if new values were set otherwise false.
     """
     new_values = family.model_dump()
