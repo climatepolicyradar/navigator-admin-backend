@@ -45,7 +45,7 @@ class DocumentCreateDTO(BaseModel):
 
     # From FamilyDocument
     family_import_id: str
-    variant_name: str
+    variant_name: Optional[str]
     role: str
     type: str
 

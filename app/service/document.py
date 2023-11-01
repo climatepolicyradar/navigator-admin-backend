@@ -116,6 +116,9 @@ def create(document: DocumentCreateDTO, db: Session = db_session.get_db()) -> st
     """
     id.validate(document.family_import_id)
 
+    if document.variant_name == "":
+        raise ValidationError("Variant name invalid")
+
     family = family_service.get(document.family_import_id)
     if family is None:
         raise ValidationError(f"Could not find family for {document.family_import_id}")
