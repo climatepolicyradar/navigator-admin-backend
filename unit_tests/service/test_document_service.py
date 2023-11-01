@@ -142,6 +142,18 @@ def test_update_raises_when_invalid_id(
     assert document_repo_mock.update.call_count == 0
 
 
+def test_update_raises_when_invalid_variant(document_repo_mock):
+    document = doc_service.get("a.b.c.d")
+    assert document is not None  # needed to placate pyright
+    document.variant_name = ""
+
+    with pytest.raises(ValidationError) as e:
+        doc_service.update(document.import_id, _to_write_dto(document))
+    expected_msg = "Variant name is empty"
+    assert e.value.message == expected_msg
+    assert document_repo_mock.update.call_count == 0
+
+
 # --- CREATE
 
 
@@ -168,6 +180,15 @@ def test_create_raises_when_invalid_family_id(document_repo_mock):
     with pytest.raises(ValidationError) as e:
         doc_service.create(new_document)
     expected_msg = f"The import id {new_document.family_import_id} is invalid!"
+    assert e.value.message == expected_msg
+    assert document_repo_mock.create.call_count == 0
+
+
+def test_create_raises_when_blank_variant(document_repo_mock):
+    new_document = create_document_create_dto(variant_name="")
+    with pytest.raises(ValidationError) as e:
+        doc_service.create(new_document)
+    expected_msg = "Variant name is empty"
     assert e.value.message == expected_msg
     assert document_repo_mock.create.call_count == 0
 
