@@ -143,6 +143,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     """
     try:
         fam_geo_meta = _get_query(db).filter(Family.import_id == import_id).one()
+        db.execute("SELECT pg_sleep(3)")
     except NoResultFound as e:
         _LOGGER.error(e)
         return

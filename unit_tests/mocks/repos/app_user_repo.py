@@ -16,7 +16,7 @@ ORG_ID = 1234
 def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
     app_user_repo.user_active = True
     app_user_repo.error = False
-    
+
     def mock_get_app_user_authorisation(
         _, __
     ) -> list[Tuple[OrganisationUser, Organisation]]:

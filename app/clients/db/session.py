@@ -1,8 +1,15 @@
 import logging
+import psycopg2
+import sqlalchemy.pool as pool
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import registry, sessionmaker, Session
 
-from app.config import SQLALCHEMY_DATABASE_URI
+from app.config import (
+    ADMIN_POSTGRES_DATABASE,
+    ADMIN_POSTGRES_HOST,
+    ADMIN_POSTGRES_USER,
+    SQLALCHEMY_DATABASE_URI,
+)
 from app.errors import RepositoryError
 
 engine = create_engine(
@@ -16,6 +23,18 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def getconn():
+    c = psycopg2.connect(
+        user=ADMIN_POSTGRES_USER,
+        host=ADMIN_POSTGRES_HOST,
+        dbname=ADMIN_POSTGRES_DATABASE,
+    )
+    return c
+
+
+mypool = pool.QueuePool(getconn, max_overflow=10, pool_size=5)
 
 
 def make_declarative_base():
@@ -42,7 +61,7 @@ def make_declarative_base():
 
 
 def get_db() -> Session:
-    return SessionLocal()
+    return mypool.connect()
 
 
 Base = make_declarative_base()
