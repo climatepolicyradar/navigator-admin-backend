@@ -2,7 +2,12 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.errors import AuthenticationError, AuthorisationError, RepositoryError
+from app.errors import (
+    AuthenticationError,
+    AuthorisationError,
+    RepositoryError,
+    TokenError,
+)
 from app.service.authentication import authenticate_user
 import app.service.authorisation as auth_service
 import app.service.token as token_service
@@ -26,9 +31,18 @@ async def check_user_auth(
     :param str token: The token the user supplied, defaults to Depends(oauth2_scheme)
     :raises HTTPException: Raised if the user is not authorised
     """
-    user = token_service.decode(token)
-    entity = auth_service.path_to_endpoint(request.scope["path"])
-    operation = auth_service.http_method_to_operation(request.scope["method"])
+    try:
+        user = token_service.decode(token)
+        entity = auth_service.path_to_endpoint(request.scope["path"])
+        operation = auth_service.http_method_to_operation(request.scope["method"])
+    except TokenError:
+        msg = f"Invalid token {token}"
+        _LOGGER.exception(msg)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=msg,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     payload = await request.json() if len(await request.body()) > 0 else False
     _LOGGER.info(
