@@ -243,7 +243,7 @@ def _get_org_id_from_name(test_db: Session, name: str) -> int:
     return test_db.query(Organisation.id).filter(Organisation.name == name).scalar()
 
 
-def _setup_organisation(test_db: Session) -> int:
+def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Now an organisation
     org = Organisation(
         name="CCLW",

@@ -15,7 +15,7 @@ def validate(import_id: str) -> None:
     raise ValidationError(f"The import id {import_id} is invalid!")
 
 
-def validate_multiple_ids(import_ids: list[str]) -> None:
+def validate_multiple_ids(import_ids: set[str]) -> None:
     invalid_ids = [
         import_id
         for import_id in import_ids

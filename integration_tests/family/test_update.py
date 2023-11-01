@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
@@ -43,7 +44,7 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
     assert len(db_slug) == 2
     assert str(db_slug[-1].name).startswith("updated-title")
 
-    db_collection: CollectionFamily = (
+    db_collection: Optional[list[CollectionFamily]] = (
         test_db.query(CollectionFamily)
         .filter(CollectionFamily.collection_import_id == "C.0.0.3")
         .all()
@@ -134,7 +135,7 @@ def test_update_family_append_collections(
     assert len(db_slug) == 2
     assert str(db_slug[-1].name).startswith("updated-title")
 
-    db_collections: CollectionFamily = (
+    db_collections: Optional[list[CollectionFamily]] = (
         test_db.query(CollectionFamily)
         .filter(CollectionFamily.family_import_id == "A.0.0.1")
         .all()
@@ -194,10 +195,10 @@ def test_update_family_when_collection_org_different_to_family_org(
     data = response.json()
     assert (
         data["detail"]
-        == "Some collections do not belong to the same organisation as the current user"
+        == "Organisation mismatch between some collections and the current user"
     )
 
-    db_families: Family = (
+    db_families: Optional[list[Family]] = (
         test_db.query(Family).filter(Family.import_id == "A.0.0.1").all()
     )
     assert len(db_families) == 1

@@ -5,7 +5,6 @@ Uses a family repo mock and ensures that the repo is called.
 """
 from typing import Optional
 import pytest
-from app.clients.db.models.law_policy.metadata import MetadataTaxonomy
 from app.errors import ValidationError, RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 import app.service.family as family_service
@@ -13,6 +12,7 @@ from unit_tests.helpers.family import create_family_dto
 
 
 USER_EMAIL = "test@cpr.org"
+ORG_ID = 1
 
 
 def to_write_dto(
@@ -335,9 +335,7 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
     collection_repo_mock.invalid_org = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", USER_EMAIL, to_write_dto(family))
-    expected_msg = (
-        "Some collections do not belong to the same organisation as the current user"
-    )
+    expected_msg = "Organisation mismatch between some collections and the current user"
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 2
@@ -363,9 +361,7 @@ def test_update_family_raises_when_collection_missing(
     collection_repo_mock.missing = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", USER_EMAIL, to_write_dto(family))
-    expected_msg = (
-        "Some collections do not belong to the same organisation as the current user"
-    )
+    expected_msg = "Organisation mismatch between some collections and the current user"
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 2
@@ -381,7 +377,11 @@ def test_update_family_raises_when_collection_missing(
 
 
 def test_create(
-    family_repo_mock, geography_repo_mock, metadata_repo_mock, app_user_repo_mock
+    family_repo_mock,
+    geography_repo_mock,
+    metadata_repo_mock,
+    app_user_repo_mock,
+    collection_repo_mock,
 ):
     new_family = create_family_dto(import_id="A.0.0.5")
     family = family_service.create(to_create_dto(new_family), USER_EMAIL)
@@ -391,6 +391,7 @@ def test_create(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
 
 
 def test_create_repo_fails(
@@ -398,6 +399,7 @@ def test_create_repo_fails(
     geography_repo_mock,
     metadata_repo_mock,
     app_user_repo_mock,
+    collection_repo_mock,
 ):
     new_family = create_family_dto(import_id="a.b.c.d")
     family_repo_mock.return_empty = True
@@ -408,10 +410,15 @@ def test_create_repo_fails(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
 
 
 def test_create_raises_when_category_invalid(
-    family_repo_mock, geography_repo_mock, app_user_repo_mock
+    family_repo_mock,
+    geography_repo_mock,
+    app_user_repo_mock,
+    metadata_repo_mock,
+    collection_repo_mock,
 ):
     new_family = create_family_dto(import_id="A.0.0.5")
     new_family.category = "invalid"
@@ -423,6 +430,72 @@ def test_create_raises_when_category_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.create.call_count == 0
     assert app_user_repo_mock.get_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 0
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 0
+
+
+def test_create_raises_when_metadata_invalid(
+    family_repo_mock,
+    geography_repo_mock,
+    app_user_repo_mock,
+    metadata_repo_mock,
+    collection_repo_mock,
+):
+    new_family = create_family_dto(import_id="A.0.0.5")
+    metadata_repo_mock.error = True
+    with pytest.raises(ValidationError) as e:
+        family_service.create(to_create_dto(new_family), USER_EMAIL)
+    expected_msg = "Organisation 1 has no Taxonomy defined!"
+    assert e.value.message == expected_msg
+
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert family_repo_mock.create.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 0
+
+
+def test_create_raises_when_collection_org_different_to_usr_org(
+    family_repo_mock,
+    geography_repo_mock,
+    app_user_repo_mock,
+    metadata_repo_mock,
+    collection_repo_mock,
+):
+    new_family = create_family_dto(import_id="A.0.0.5")
+    collection_repo_mock.alternative_org = True
+    with pytest.raises(ValidationError) as e:
+        family_service.create(to_create_dto(new_family), USER_EMAIL)
+    expected_msg = "Organisation mismatch between some collections and the current user"
+
+    assert e.value.message == expected_msg
+
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert family_repo_mock.create.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
+
+
+def test_create_raises_when_collection_missing(
+    family_repo_mock,
+    geography_repo_mock,
+    app_user_repo_mock,
+    metadata_repo_mock,
+    collection_repo_mock,
+):
+    new_family = create_family_dto(import_id="A.0.0.5")
+    collection_repo_mock.missing = True
+    with pytest.raises(ValidationError) as e:
+        family_service.create(to_create_dto(new_family), USER_EMAIL)
+    expected_msg = "Organisation mismatch between some collections and the current user"
+    assert e.value.message == expected_msg
+
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert family_repo_mock.create.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
 
 
 # --- COUNT

@@ -115,9 +115,9 @@ def update(
     user_org_id = app_user.get_organisation(db, user_email)
     org_id = organisation.get_id(db, family.organisation)
     if org_id != user_org_id:
-        raise ValidationError(
-            f"Current user does not belong to the organisation that owns family {import_id}"
-        )
+        msg = "Current user does not belong to the organisation that owns family "
+        msg += import_id
+        raise ValidationError(msg)
 
     # Validate metadata.
     metadata.validate(db, org_id, family_dto.metadata)
@@ -132,11 +132,11 @@ def update(
         collection.get_org_from_id(db, c) != org_id for c in all_cols_to_modify
     ]
     if len(collections_not_in_user_org) > 0 and any(collections_not_in_user_org):
-        msg = "Some collections do not belong to the same organisation as the current user"
+        msg = "Organisation mismatch between some collections and the current user"
         _LOGGER.error(msg)
         raise ValidationError(msg)
 
-    if family_repo.update(db, import_id, family_dto, geo_id, org_id):
+    if family_repo.update(db, import_id, family_dto, geo_id):
         db.commit()
         return get(import_id)
 
@@ -164,8 +164,22 @@ def create(
     # Validate category
     category.validate(family.category)
 
-    # Validate organisation
+    # Validate metadata.
     metadata.validate(db, org_id, family.metadata)
+
+    # Validate collection ids.
+    collections = set(family.collections)
+    id.validate_multiple_ids(collections)
+
+    # Validate that the collections we want to update are from the same organisation as
+    # the current user.
+    collections_not_in_user_org = [
+        collection.get_org_from_id(db, c) != org_id for c in collections
+    ]
+    if len(collections_not_in_user_org) > 0 and any(collections_not_in_user_org):
+        msg = "Organisation mismatch between some collections and the current user"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
 
     return family_repo.create(db, family, geo_id, org_id)
 
