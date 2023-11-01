@@ -16,7 +16,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/tokens")
 # TODO: We should use maybe use middleware for this see: PDCT-410
 
 
-def check_user_auth(request: Request, token: str = Depends(oauth2_scheme)) -> None:
+async def check_user_auth(
+    request: Request, token: str = Depends(oauth2_scheme)
+) -> None:
     """
     Checks the current user (id'd by the token) is authorised for the request.
 
@@ -27,6 +29,20 @@ def check_user_auth(request: Request, token: str = Depends(oauth2_scheme)) -> No
     user = token_service.decode(token)
     entity = auth_service.path_to_endpoint(request.scope["path"])
     operation = auth_service.http_method_to_operation(request.scope["method"])
+
+    payload = await request.json()
+    _LOGGER.info(
+        f"AUDIT: {user.email} is performing {operation} on {entity}",
+        extra={
+            "props": {
+                "request": request.scope["path"],
+                "user": user.email,
+                "op": operation,
+                "entity": entity,
+                "payload": payload if payload else "null",
+            }
+        },
+    )
 
     try:
         auth_service.is_authorised(user, entity, operation)
