@@ -45,9 +45,9 @@ class DocumentCreateDTO(BaseModel):
 
     # From FamilyDocument
     family_import_id: str
-    variant_name: str
+    variant_name: Optional[str] = None
     role: str
-    type: str
+    type: Optional[str] = None
 
     # From PhysicalDocument
     title: str
