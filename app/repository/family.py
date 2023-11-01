@@ -320,9 +320,9 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
             name=generate_slug(db, family.title),
         )
     )
+    db.flush()
 
     # Add the metadata
-    db.flush()
     tax = (
         db.query(MetadataOrganisation)
         .filter(MetadataOrganisation.organisation_id == org_id)
@@ -335,10 +335,10 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
             value=family.metadata,
         )
     )
+    db.flush()
 
     # Add any collections.
     for col in set(family.collections):
-        db.flush()
         new_collection = CollectionFamily(
             family_import_id=new_family.import_id,
             collection_import_id=col,
