@@ -30,7 +30,7 @@ async def check_user_auth(
     entity = auth_service.path_to_endpoint(request.scope["path"])
     operation = auth_service.http_method_to_operation(request.scope["method"])
 
-    payload = await request.json()
+    payload = await request.json() if len(await request.body()) > 0 else False
     _LOGGER.info(
         f"AUDIT: {user.email} is performing {operation} on {entity}",
         extra={
