@@ -17,6 +17,12 @@ config:
     secure: AAABAIizbJ4IiC3D0UvGRoNWJt1KNGj73YBBtGfUHHeX1WZIwg4WzrfORLcfl3gdCXe4VnCnvlQm0bn491ETzFnzOuQ=
   admin_backend:validation_account_id:
     secure: AAABABLsojJHl5ZBeqjrwE/yzA9SksStylWPGSNe9rdzwHBmt0x0WoYo0kM=
-  admin_backend:vpc_connector_arn:
-    secure: AAABABKhC0qr28TNpSU6EKW3i+AfsqMFWNgdFJ0k0CjZgSKDn0qzKfUhOcIniuhv4vivKrtDmjpAJh/hCoMA2pWEN7UqUS4+rfDknsyFovMefqTA0w5nVI9eBu1M8ePHuwtfyAgIU7NZwLy49OP91D6Jx+Hx8LHYcJRKMRTubKCTOF51sdWGfpPV/1nqUu9N46nadcze
+  admin_backend:vpc_private_subnet_1_id:
+    secure: AAABAFRjoeTyDVHlFnfiSekhW9T+C+qfZl3bSPPv5y6u8ElSS+c1qr+3JLjiN5AHaslyWdmCew8=
+  admin_backend:vpc_private_subnet_2_id:
+    secure: AAABALhFH50j+RYEo7fDK/sqPalzNXgb4Jmc6DGFOeGcEyn8StKaNTPURP/4YgyNcVcg1OtaH0U=
+  admin_backend:vpc_private_subnet_3_id:
+    secure: AAABADedbTCZqU0ep9p9tTA1932/j84PktEh1NZmFmroUq+/DH+ynP3VB9ScZrPOKbxTB9CL/Mo=
+  admin_backend:vpc_security_group_admin_backend:
+    secure: AAABANRx6DYMRpEv8Ei3OcHMSFf2fjDTrV6hSaKnMHJSR0qS0/c0Y60zwVw+paAdLqzmng==
   aws:region: eu-west-1

@@ -104,6 +104,25 @@ def _get_apprunner_access_role() -> aws.iam.Role:
     return apprunner_access_role
 
 
+def _create_backend_vpc_connector() -> aws.apprunner.VpcConnector:
+    # Create a VPC connector to allow AppRunner instances to access private services
+    vpc_connector_tags = dict(DEFAULT_TAGS)
+    vpc_connector_tags["Name"] = f"{NAME_PREFIX}-vpc-connector"
+    vpc_connector = aws.apprunner.VpcConnector(
+        f"{NAME_PREFIX}-vpc-connector",
+        vpc_connector_name=vpc_connector_tags["Name"],
+        security_groups=[CONFIG.require("vpc_security_group_admin_backend")],
+        subnets=[
+            CONFIG.require("vpc_private_subnet_1_id"),
+            CONFIG.require("vpc_private_subnet_2_id"),
+            CONFIG.require("vpc_private_subnet_3_id"),
+        ],
+        tags=vpc_connector_tags,
+    )
+
+    return vpc_connector
+
+
 def _create_backend_environment() -> dict[str, str]:
     # Create the environment config required for the backend service
     rds_username = CONFIG.require("rds_username")
@@ -171,6 +190,7 @@ def _create_backend_auto_scaling_config() -> (
 
 def create_admin_backend() -> aws.apprunner.Service:
     auto_scaling_config = _create_backend_auto_scaling_config()
+    vpc_connector = _create_backend_vpc_connector()
 
     # Create the backend AppRunner app instance
     app_tags = dict(DEFAULT_TAGS)
@@ -187,7 +207,7 @@ def create_admin_backend() -> aws.apprunner.Service:
         network_configuration=aws.apprunner.ServiceNetworkConfigurationArgs(
             egress_configuration=aws.apprunner.ServiceNetworkConfigurationEgressConfigurationArgs(
                 egress_type="VPC",
-                vpc_connector_arn=CONFIG.require("vpc_connector_arn"),
+                vpc_connector_arn=vpc_connector.arn,
             ),
         ),
         auto_scaling_configuration_arn=auto_scaling_config.arn,
