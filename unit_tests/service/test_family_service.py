@@ -404,7 +404,7 @@ def test_create_repo_fails(
     new_family = create_family_dto(import_id="a.b.c.d")
     family_repo_mock.return_empty = True
     family = family_service.create(to_create_dto(new_family), USER_EMAIL)
-    assert family is False
+    assert family == ""
 
     assert family_repo_mock.create.call_count == 1
     assert geography_repo_mock.get_id_from_value.call_count == 1

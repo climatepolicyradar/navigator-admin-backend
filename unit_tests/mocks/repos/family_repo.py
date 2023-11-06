@@ -1,68 +1,52 @@
 from typing import Optional
-from pytest import MonkeyPatch
 
 from sqlalchemy import exc
-from app.model.family import FamilyReadDTO
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from unit_tests.helpers.family import create_family_dto
+from sqlalchemy.orm import Session
+
+from app.repository import family_repo
 
 
-def mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
-    family_repo.return_empty = False
-    family_repo.throw_repository_error = False
+def _maybe_throw():
+    if getattr(family_repo, "throw_repository_error") is True:
+        raise exc.SQLAlchemyError("bad repo")
 
-    def maybe_throw():
-        if family_repo.throw_repository_error:
-            raise exc.SQLAlchemyError("bad repo")
 
-    def mock_get_all(_):
-        return [create_family_dto("test")]
+def all(db: Session):
+    return [create_family_dto("test")]
 
-    def mock_get(_, import_id: str) -> Optional[FamilyReadDTO]:
-        maybe_throw()
-        if not family_repo.return_empty:
-            return create_family_dto(import_id)
 
-    def mock_search(_, q: str) -> list[FamilyReadDTO]:
-        maybe_throw()
-        if not family_repo.return_empty:
-            return [create_family_dto("search1")]
-        return []
+def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
+    _maybe_throw()
+    if getattr(family_repo, "return_empty") is False:
+        return create_family_dto(import_id)
 
-    def mock_update(_, import_id: str, user_email: str, data: FamilyReadDTO) -> bool:
-        maybe_throw()
-        return not family_repo.return_empty
 
-    def mock_create(_, data: FamilyReadDTO, __, ___) -> bool:
-        maybe_throw()
-        return not family_repo.return_empty
+def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
+    _maybe_throw()
+    if getattr(family_repo, "return_empty") is False:
+        return [create_family_dto("search1")]
+    return []
 
-    def mock_delete(_, import_id: str) -> bool:
-        maybe_throw()
-        return not family_repo.return_empty
 
-    def mock_get_count(_) -> Optional[int]:
-        maybe_throw()
-        if not family_repo.return_empty:
-            return 22
-        return
+def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
+    _maybe_throw()
+    return getattr(family_repo, "return_empty") is False
 
-    monkeypatch.setattr(family_repo, "get", mock_get)
-    mocker.spy(family_repo, "get")
 
-    monkeypatch.setattr(family_repo, "all", mock_get_all)
-    mocker.spy(family_repo, "all")
+def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> str:
+    _maybe_throw()
+    return "" if getattr(family_repo, "return_empty") else "created"
 
-    monkeypatch.setattr(family_repo, "search", mock_search)
-    mocker.spy(family_repo, "search")
 
-    monkeypatch.setattr(family_repo, "update", mock_update)
-    mocker.spy(family_repo, "update")
+def delete(db: Session, import_id: str) -> bool:
+    _maybe_throw()
+    return getattr(family_repo, "return_empty") is False
 
-    monkeypatch.setattr(family_repo, "create", mock_create)
-    mocker.spy(family_repo, "create")
 
-    monkeypatch.setattr(family_repo, "delete", mock_delete)
-    mocker.spy(family_repo, "delete")
-
-    monkeypatch.setattr(family_repo, "count", mock_get_count)
-    mocker.spy(family_repo, "count")
+def count(db: Session) -> Optional[int]:
+    _maybe_throw()
+    if getattr(family_repo, "return_empty") is False:
+        return 22
+    return
