@@ -404,6 +404,8 @@ def test_create_repo_fails(
     new_family = create_family_dto(import_id="a.b.c.d")
     family_repo_mock.return_empty = True
     family = family_service.create(to_create_dto(new_family), USER_EMAIL)
+
+    # TODO: Should this be a RepositoryError
     assert family == ""
 
     assert family_repo_mock.create.call_count == 1
