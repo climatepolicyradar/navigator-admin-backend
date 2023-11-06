@@ -2,8 +2,7 @@ import json
 
 import pulumi
 import pulumi_aws as aws
-
-from util.naming import NAME_PREFIX, DEFAULT_TAGS
+from util.naming import DEFAULT_TAGS, NAME_PREFIX
 
 CONFIG = pulumi.config.Config()
 # TODO: we'll probably eventually needs some S3 access
