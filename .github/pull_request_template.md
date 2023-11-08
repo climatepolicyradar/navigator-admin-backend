@@ -1,6 +1,7 @@
 # Description
 
 Please include:
+
 - a summary of the changes
 - links to any related issue/ticket
 - any additional relevant motivation and context
@@ -20,7 +21,7 @@ Please describe the tests that you added to verify your changes.
 
 ## Reviewer Checklist
 
-- [ ] The PR represents a single feature (small driveby fixes are also ok)
+- [ ] The PR represents a single feature (small drive-by fixes are also ok)
 - [ ] The PR includes tests that are sufficient for the level of risk
 - [ ] The code is sufficiently commented, particularly in hard-to-understand areas
 - [ ] Any required documentation updates have been made
