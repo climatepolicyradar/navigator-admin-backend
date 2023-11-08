@@ -29,12 +29,11 @@ At the moment we are using PyRight pegged at version 1.1.294.
 Here is a snippet of some recommended settings to add to your VS Code User Settings. To open the user settings file where you can paste in the snippet below, press Ctrl+Shift+P to open the VS Code command palette and type 'User Settings', and then select 'Preferences: Open User Settings (JSON) from the dropdown list.
 
 ```json
-    "workbench.colorCustomizations": {"editorRuler.foreground": "#63636331"},
-    "[markdown]": {
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-    },
+    "editor.renderWhitespace": "all",
+    "python.languageServer": "Pylance",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.completeFunctionParens": true,
     "[python]": {
-        "editor.formatOnType": true,
         "editor.rulers": [
             72,
             88
@@ -46,11 +45,16 @@ Here is a snippet of some recommended settings to add to your VS Code User Setti
     "python.analysis.include": [
         "**/*.py"
     ],
-    "python.languageServer": "Pylance",
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.completeFunctionParens": true,
+    "workbench.colorCustomizations": {"editorRuler.foreground": "#63636331"},
     "cSpell.caseSensitive": true,
     "cSpell.language": "en-GB",
     "cSpell.showAutocompleteSuggestions": true,
     "cSpell.showSuggestionsLinkInEditorContextMenu": true,
+    "[markdown]": {
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "files.autoSave": "afterDelay",
 ```
