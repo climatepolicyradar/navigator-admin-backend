@@ -35,6 +35,9 @@ jobs:
       - name: Run Integration Tests
         run: make integration_test
 
+      - name: Run Git Hooks
+        run: make git_hooks
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
