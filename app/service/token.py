@@ -14,6 +14,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 8 * 60  # 8 hours for access token
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def encode(
     email: str, is_superuser: bool, authorisation: dict, minutes: Optional[int] = None
 ) -> str:
