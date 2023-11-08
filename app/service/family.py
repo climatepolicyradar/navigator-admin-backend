@@ -7,12 +7,13 @@ import logging
 from typing import Optional
 
 from pydantic import ConfigDict, validate_call
-from app.errors import RepositoryError, ValidationError
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-import app.clients.db.session as db_session
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
+import app.clients.db.session as db_session
+from app.errors import RepositoryError, ValidationError
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from app.repository import family_repo
 from app.service import (
     id,
     collection,
@@ -22,7 +23,6 @@ from app.service import (
     metadata,
     app_user,
 )
-from app.repository import family_repo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,15 +58,36 @@ def all() -> list[FamilyReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(search_term: str) -> list[FamilyReadDTO]:
+def search(query_params: dict[str, str]) -> list[FamilyReadDTO]:
     """
-    Searches the title and descriptions of all the Families for the search term.
+    Searches for the search term against families on specified fields.
 
-    :param str search_term: Search pattern to match.
-    :return list[FamilyDTO]: The list of families matching the search term.
+    Where 'q' is used instead of an explicit field name, the titles and
+    descriptions of all the Families are searched for the given term
+    only.
+
+    :param str query_params: Search patterns to match against specified
+        fields.
+    :return list[FamilyDTO]: The list of families matching the search
+        term.
     """
+    query_fields = query_params.keys()
+    if len(query_fields) < 1:
+        query_params = {"q": ""}
+
+    VALID_PARAMS = ["q", "title", "description", "geography", "status"]
+    invalid_params = [x for x in query_fields if x not in VALID_PARAMS]
+    if any(invalid_params):
+        raise ValidationError(f"Search parameters are invalid: {invalid_params}")
+
+    if "q" in query_fields:
+        if "title" in query_fields:
+            query_params.pop("title")
+        if "description" in query_fields:
+            query_params.pop("description")
+
     with db_session.get_db() as db:
-        return family_repo.search(db, search_term)
+        return family_repo.search(db, query_params)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

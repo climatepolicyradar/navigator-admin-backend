@@ -39,4 +39,4 @@ def test_search_family_when_not_found(
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Families not found for term: chicken"
+    assert data["detail"] == "Families not found for terms: {'q': 'chicken'}"
