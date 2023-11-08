@@ -1,0 +1,28 @@
+config:
+  admin_backend:apprunner_backend_max_concurrency: "10"
+  admin_backend:apprunner_backend_max_instance_count: "5"
+  admin_backend:apprunner_backend_min_instance_count: "2"
+  admin_backend:docker_tag: 0.0.24-beta
+  admin_backend:ecr_uri:
+    secure: AAABADGDJp8NB1PMdF0xypW3Qqi+W0j2nvXCXTrwErXic9HTh6E8asjRIZI3mAEeXOnZB2TrJUpra0/l1nxSoEkiGTrygYmdgVEUEEjtjY+c+EHyWhs/zPpNiXv+VAR2r/hERg==
+  admin_backend:rds_address:
+    secure: AAABAEsgmuDMFhu4sztLZCAj0Be3kRfxzaDGhLie5Q8h5fASP/fupEjhFJwSkqyDizv/G/zjyQ7tMHKlyo9Mnnr7kCofm99i+mmywNjnANLeu6ncFuHJAdoQBlkqHuNiQalr3RcKcbx+ggim
+  admin_backend:rds_database:
+    secure: AAABAMXu9e6I2l5P1k4GpK7bS29AjcnTPPCS436iGGzZOeXEbEdLFsIN0+1uVew=
+  admin_backend:rds_password:
+    secure: AAABAFi+77knR/AsskglULgfcgs5ja+Nhg0RtMTW7WonnJj9k0i4I5VLwpcTq4Y19/XmecUhrA==
+  admin_backend:rds_username:
+    secure: AAABACkh3HYtHyETH8Y80kYCO3UwGxKGHX/oHIRe+QG27jrDRyPx1O74UEBvmuA=
+  admin_backend:secret_key:
+    secure: AAABAJ4tlIq+2Xgl9ZgyUhsA/7EB1zY2zI/kaxEaPIl0SdwS56NFzJ2Z2BAkVm1cqE3yxKiuE2jfkQm6pK1d/Dcz2G0=
+  admin_backend:validation_account_id:
+    secure: AAABAA4bYO+O5RBLUdfRz8uOT9Fs+/sNcvElOWp3C7ThITE0o5GfGwVCyRw=
+  admin_backend:vpc_private_subnet_1_id:
+    secure: AAABAJof2698R6QYPuh765Dvkodcto+/Wf/yuqbsKk8dbMHTE0M1dzlbC8skkFyg0OMUrjzgfh0=
+  admin_backend:vpc_private_subnet_2_id:
+    secure: AAABAC5OS0MuJXQbde7ykv+vU2OkEbVXuYaE62b9XHiSze9fhqH0cCyZ7S/6mW2WvyVZ8YP0Jpc=
+  admin_backend:vpc_private_subnet_3_id:
+    secure: AAABAFCRmgeVJXl2ybhRxDWx6SPX6nVtJzWCjiyoIGhXNEnjrkfw3qM6oeE0Zx7Vg9h0/5iLNBE=
+  admin_backend:vpc_security_group_admin_backend:
+    secure: AAABAL8JPKwI0Y3WZTTVvBZdhA4LvIL/CTK6Kf1AHRqkT2Om9LuYiYnFLXYhdYo0nVkUjQ==
+  aws:region: eu-west-1
