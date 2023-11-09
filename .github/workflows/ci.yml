@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Run tests
-        run:  make test_bashscripts
+        run: make test_bashscripts
 
   build-start-test:
     runs-on: ubuntu-latest
