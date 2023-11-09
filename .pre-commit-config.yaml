@@ -31,4 +31,10 @@ repos:
         language: docker_image
         types: [markdown]
         minimum_pre_commit_version: 0.15.0
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+        name: codespell (admin-backend)
+        entry: codespell --skip="*.lock,integration_tests/default-data.sql"
 # TODO more checks? e.g. bandit, safety, snyk, ...
