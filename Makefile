@@ -7,8 +7,9 @@ bootstrap:
 	poetry install
 
 git_hooks:
-	# Install git pre-commit hooks
+	# Install & run git pre-commit hooks
 	poetry run pre-commit install --install-hooks
+	pre-commit run --all-files
 
 build_bats:
 	docker build bats -t bats-with-helpers:latest
