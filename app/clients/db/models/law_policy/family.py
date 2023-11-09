@@ -102,7 +102,7 @@ class Family(Base):
             .as_scalar()
         )
 
-        # DO NOT USE 'is None'! # type: ignore
+        # DO NOT USE 'is None'!
         return sa.case(
             [
                 (
