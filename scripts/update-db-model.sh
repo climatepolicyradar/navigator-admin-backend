@@ -12,7 +12,7 @@ rm -rf app/clients/db/models
 
 # copy new db model
 cp -r ${NAV}/app/db/models app/clients/db/models
-# restore the file - TODO: we shoud really move this methinks
+# restore the file - TODO: we should really move this methinks
 cp /tmp/authorisation.py app/clients/db/models/app/authorisation.py
 
 # update import paths

@@ -11,5 +11,5 @@ class BaseModelEnum(str, enum.Enum):
         raise ValueError(f"{value} is not a valid {cls.__name__}")
 
     def __str__(self):
-        """Returns tha value."""
+        """Returns the value."""
         return self._value_
