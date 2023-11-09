@@ -36,12 +36,6 @@ jobs:
         run: |
           poetry run pre-commit run --all-files
 
-      - name: Run Markdown linting
-        uses: DavidAnson/markdownlint-cli2-action@v13
-        with:
-          fix: true
-          globs: "**/*.md"
-
       - name: Build
         run: make build
 

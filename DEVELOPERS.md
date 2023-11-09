@@ -10,7 +10,8 @@ At the moment we are using PyRight pegged at version 1.1.294.
 
 ## VS Code
 
-- Although we use PyRight for linting (see [.pre-commit-config.yaml](./.pre-commit-config.yaml)), [PyRight recommends that you use PyLance when using VS Code](https://microsoft.github.io/pyright/#/installation?id=vs-code).
+- Although we use PyRight for linting (see [.pre-commit-config.yaml](./.pre-commit-config.yaml))
+[PyRight recommends that you use PyLance when using VS Code](https://microsoft.github.io/pyright/#/installation?id=vs-code).
 
 ### Extensions
 
@@ -26,7 +27,11 @@ At the moment we are using PyRight pegged at version 1.1.294.
 
 ### Recommended User Settings JSON
 
-Here is a snippet of some recommended settings to add to your VS Code User Settings. To open the user settings file where you can paste in the snippet below, press Ctrl+Shift+P to open the VS Code command palette and type 'User Settings', and then select 'Preferences: Open User Settings (JSON) from the dropdown list.
+Here is a snippet of some recommended settings to add to your VS Code User
+Settings. To open the user settings file where you can paste in the snippet
+below, press Ctrl+Shift+P to open the VS Code command palette and type 'User
+Settings', and then select 'Preferences: Open User Settings (JSON) from the
+dropdown list.
 
 ```json
     "editor.renderWhitespace": "all",
@@ -51,7 +56,10 @@ Here is a snippet of some recommended settings to add to your VS Code User Setti
     "cSpell.showAutocompleteSuggestions": true,
     "cSpell.showSuggestionsLinkInEditorContextMenu": true,
     "[markdown]": {
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+        "editor.rulers": [
+            80
+        ],
     },
     "[yaml]": {
         "editor.defaultFormatter": "redhat.vscode-yaml"
