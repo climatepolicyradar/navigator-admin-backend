@@ -9,6 +9,7 @@ from unit_tests.helpers.document import create_document_read_dto
 def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
     document_service.missing = False
     document_service.throw_repository_error = False
+    document_service.throw_validation_error = False
 
     def maybe_throw():
         if document_service.throw_repository_error:
@@ -34,15 +35,22 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         import_id: str, data: DocumentWriteDTO
     ) -> Optional[DocumentReadDTO]:
         maybe_throw()
-        if not document_service.missing:
-            return create_document_read_dto(import_id, "family_import_id", data.title)
+        if document_service.missing:
+            return
+
+        if document_service.throw_validation_error:
+            raise ValidationError("Variant name is empty")
+
+        return create_document_read_dto(import_id, "family_import_id", data.title)
 
     def mock_create_document(data: DocumentCreateDTO) -> str:
         maybe_throw()
-        if not document_service.missing:
-            return "new.doc.id.0"
+        if document_service.throw_validation_error:
+            raise ValidationError("Variant name is empty")
 
-        raise ValidationError(f"Could not find family for {data.family_import_id}")
+        if document_service.missing:
+            raise ValidationError(f"Could not find family for {data.family_import_id}")
+        return "new.doc.id.0"
 
     def mock_delete_document(_) -> bool:
         maybe_throw()

@@ -85,6 +85,59 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
     assert last_slug.startswith("updated-title")
 
 
+def test_update_document_remove_variant(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = DocumentWriteDTO(
+        variant_name=None,
+        role="SUMMARY",
+        type="Annex",
+        title="Updated Title",
+        source_url="Updated Source",
+        user_language_name="Ghotuo",
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.2",
+        json=new_document.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.2"
+    assert data["variant_name"] is None
+    assert data["role"] == "SUMMARY"
+    assert data["type"] == "Annex"
+    assert data["title"] == "Updated Title"
+    assert data["source_url"] == "Updated Source"
+    assert data["slug"].startswith("updated-title")
+    assert data["user_language_name"] == "Ghotuo"
+
+    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    assert fd.import_id == "D.0.0.2"
+    assert fd.variant_name is None
+    assert fd.document_role == "SUMMARY"
+    assert fd.document_type == "Annex"
+    assert pd.title == "Updated Title"
+    assert pd.source_url == "Updated Source"
+
+    # Check the user language in the db
+    lang = (
+        test_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one()
+    )
+    assert lang.language_id == 1
+
+    # Check slug is updated too
+    slugs = (
+        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
+    )
+    last_slug = slugs[-1].name
+    assert last_slug.startswith("updated-title")
+
+
 def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
     new_document = create_document_write_dto(
@@ -176,3 +229,25 @@ def test_update_document_when_db_error(
     data = response.json()
     assert data["detail"] == "Bad Repo"
     assert bad_document_repo.update.call_count == 1
+
+
+def test_update_document_blank_variant(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = DocumentWriteDTO(
+        variant_name="",
+        role="SUMMARY",
+        type="Annex",
+        title="Updated Title",
+        source_url="Updated Source",
+        user_language_name="Ghotuo",
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.2",
+        json=new_document.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["detail"] == "Variant name is empty"
