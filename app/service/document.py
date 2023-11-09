@@ -92,6 +92,9 @@ def update(
     """
     validate_import_id(import_id)
 
+    if document.variant_name == "":
+        raise ValidationError("Variant name is empty")
+
     try:
         if document_repo.update(db, import_id, document):
             db.commit()
@@ -115,6 +118,9 @@ def create(document: DocumentCreateDTO, db: Session = db_session.get_db()) -> st
     None if unsuccessful.
     """
     id.validate(document.family_import_id)
+
+    if document.variant_name == "":
+        raise ValidationError("Variant name is empty")
 
     family = family_service.get(document.family_import_id)
     if family is None:
