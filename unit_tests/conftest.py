@@ -31,11 +31,10 @@ from app.repository import (
     document_repo,
     event_repo,
 )
-
+from unit_tests.mocks.repos import create_mock_family_repo
 from unit_tests.mocks.repos.app_user_repo import mock_app_user_repo
 from unit_tests.mocks.repos.collection_repo import mock_collection_repo
 from unit_tests.mocks.repos.document_repo import mock_document_repo
-from unit_tests.mocks.repos.family_repo import mock_family_repo
 
 from unit_tests.mocks.repos.geography_repo import mock_geography_repo
 from unit_tests.mocks.repos.metadata_repo import mock_metadata_repo
@@ -93,7 +92,12 @@ def geography_repo_mock(monkeypatch, mocker):
 @pytest.fixture
 def family_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
-    mock_family_repo(family_repo, monkeypatch, mocker)
+    create_mock_family_repo(family_repo, monkeypatch, mocker)
+
+    # set some attributes for testing purposes...
+    setattr(family_repo, "return_empty", False)
+    setattr(family_repo, "throw_repository_error", False)
+
     yield family_repo
 
 
