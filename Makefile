@@ -66,3 +66,17 @@ start: build
 	-e ADMIN_POSTGRES_HOST=test_db \
 	-e SECRET_KEY="secret_test_key" \
 	-d navigator-admin-backend
+
+
+start_local: build
+	# - docker stop navigator-admin-backend
+	docker run -p 8888:8888 \
+	--name navigator-admin-backend \
+	--network=navigator-backend_default \
+	-e ADMIN_POSTGRES_HOST=backend_db \
+	-e SECRET_KEY="ae58d65b-9190-42bc-996c-c3a6541754b9" \
+	-d navigator-admin-backend
+
+
+restart:
+	docker stop navigator-admin-backend && docker rm navigator-admin-backend && make start_local && docker logs -f navigator-admin-backend
