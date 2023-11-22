@@ -1,11 +1,11 @@
 from typing import Optional
 
 from sqlalchemy import exc
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from unit_tests.helpers.family import create_family_dto
 from sqlalchemy.orm import Session
 
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
+from unit_tests.helpers.family import create_family_dto
 
 
 def _maybe_throw():
@@ -23,7 +23,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
         return create_family_dto(import_id)
 
 
-def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
+def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
     _maybe_throw()
     if getattr(family_repo, "return_empty") is False:
         return [create_family_dto("search1")]
