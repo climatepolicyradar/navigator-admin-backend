@@ -22,8 +22,8 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
         if not family_service.missing:
             return create_family_dto(import_id)
 
-    def mock_search_families(q: str) -> list[FamilyReadDTO]:
-        if q == "empty":
+    def mock_search_families(q_params: dict) -> list[FamilyReadDTO]:
+        if q_params["q"] == "empty":
             return []
         else:
             return [create_family_dto("search1")]

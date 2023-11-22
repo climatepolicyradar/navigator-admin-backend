@@ -2,13 +2,13 @@
 
 import logging
 from typing import Optional, Tuple, cast
-from app.clients.db.models.app.counters import CountedEntity
 
+from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
 from app.clients.db.models.law_policy.collection import CollectionFamily
-from sqlalchemy.orm import Session
 from app.clients.db.models.law_policy.family import (
     DocumentStatus,
+    Family,
     FamilyDocument,
     FamilyOrganisation,
     FamilyStatus,
@@ -21,13 +21,12 @@ from app.clients.db.models.law_policy.metadata import (
 )
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from app.clients.db.models.law_policy import Family
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy_utils import escape_like
-from sqlalchemy import Column, or_, update as db_update, delete as db_delete
-from sqlalchemy.orm import Query
-
 from app.repository.helpers import generate_import_id, generate_slug
+
+from sqlalchemy.orm import Session, Query
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy import Column, or_, update as db_update, delete as db_delete, and_
+from sqlalchemy_utils import escape_like
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,18 +156,42 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     return _family_to_dto(db, fam_geo_meta)
 
 
-def search(db: Session, search_term: str) -> list[FamilyReadDTO]:
+def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
     """
-    Gets a list of families from the repository searching title and summary.
+    Gets a list of families from the repository searching given fields.
 
     :param db Session: the database connection
-    :param str search_term: Any search term to filter on title or summary
-    :return Optional[list[FamilyResponse]]: A list of matches
+    :param dict[str, str] query_params: Any search terms to filter on
+        specified fields (title & summary by default if 'q' specified).
+    :return list[FamilyResponse]: A list of matches
     """
-    term = f"%{escape_like(search_term)}%"
-    search = or_(Family.title.ilike(term), Family.description.ilike(term))
-    found = _get_query(db).filter(search).all()
+    search = []
+    if "q" in query_params.keys():
+        term = f"%{escape_like(query_params['q'])}%"
+        search.append(or_(Family.title.ilike(term), Family.description.ilike(term)))
 
+    if "title" in query_params.keys():
+        term = f"%{escape_like(query_params['title'])}%"
+        search.append(Family.title.ilike(term))
+
+    if "description" in query_params.keys():
+        term = f"%{escape_like(query_params['description'])}%"
+        search.append(Family.description.ilike(term))
+
+    if "geography" in query_params.keys():
+        term = query_params["geography"]
+        search.append(
+            or_(
+                Geography.display_value == term.title(), Geography.value == term.upper()
+            )
+        )
+
+    if "status" in query_params.keys():
+        term = query_params["status"]
+        search.append(Family.family_status == term.capitalize())
+
+    condition = and_(*search) if len(search) > 1 else search[0]
+    found = _get_query(db).filter(condition).all()
     return [_family_to_dto(db, f) for f in found]
 
 

@@ -67,19 +67,28 @@ async def get_all_families() -> list[FamilyReadDTO]:
     "/families/",
     response_model=list[FamilyReadDTO],
 )
-async def search_family(q: str = "") -> list[FamilyReadDTO]:
+async def search_family(request: Request) -> list[FamilyReadDTO]:
     """
-    Searches for families matching the "q" URL parameter.
+    Searches for families matching URL parameters ("q" by default).
 
-    :param str q: The string to match, defaults to ""
+    :param Request request: The fields to match against and the values
+        to search for. Defaults to searching for "" in family titles and
+        summaries.
+    :raises HTTPException: If invalid fields passed a 400 is returned.
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[FamilyDTO]: A list of matching families.
     """
-    families = family_service.search(q)
+    query_params = {k: request.query_params[k] for k in request.query_params.keys()}
+
+    try:
+        families = family_service.search(query_params)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+
     if len(families) == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Families not found for term: {q}",
+            detail=f"Families not found for terms: {query_params}",
         )
 
     return families
