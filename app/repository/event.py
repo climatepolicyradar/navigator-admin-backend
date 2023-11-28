@@ -4,23 +4,24 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, cast
 
-from sqlalchemy import or_, Column, update as db_update, delete as db_delete
-from sqlalchemy.orm import Query, Session
+from sqlalchemy import Column, or_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.law_policy import (
     EventStatus,
-    FamilyEvent,
     Family,
     FamilyDocument,
+    FamilyEvent,
 )
-from app.errors import ValidationError, RepositoryError
+from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id
-
 
 _LOGGER = logging.getLogger(__name__)
 
