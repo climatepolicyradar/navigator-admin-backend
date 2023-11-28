@@ -74,7 +74,7 @@ start_local: build
 	--name navigator-admin-backend \
 	--network=navigator-backend_default \
 	-e ADMIN_POSTGRES_HOST=backend_db \
-	-e SECRET_KEY="ae58d65b-9190-42bc-996c-c3a6541754b9" \
+	-e SECRET_KEY="secret_test_key" \
 	-d navigator-admin-backend
 
 
