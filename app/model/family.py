@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel
+
 from app.model.general import Json
 
 
@@ -21,6 +23,8 @@ class FamilyReadDTO(BaseModel):
     documents: list[str]
     collections: list[str]
     organisation: str
+    created: datetime
+    last_modified: datetime
 
 
 class FamilyWriteDTO(BaseModel):
