@@ -1,8 +1,8 @@
-from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 
+from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 
 # --- GET ALL
 
@@ -22,10 +22,19 @@ def test_get_all_families(client: TestClient, test_db: Session, user_header_toke
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    sdata = sorted(data, key=lambda d: d["import_id"])
-    assert sdata[0] == EXPECTED_FAMILIES[0]
-    assert sdata[1] == EXPECTED_FAMILIES[1]
-    assert sdata[2] == EXPECTED_FAMILIES[2]
+    assert all(field in fam for fam in data for field in ("created", "last_modified"))
+    data = sorted(data, key=lambda d: d["import_id"])
+    expected_data = [
+        {
+            k: v if not isinstance(v, list) else sorted(v)
+            for k, v in fam.items()
+            if k not in ("created", "last_modified")
+        }
+        for fam in data
+    ]
+    assert expected_data[0] == EXPECTED_FAMILIES[0]
+    assert expected_data[1] == EXPECTED_FAMILIES[1]
+    assert expected_data[2] == EXPECTED_FAMILIES[2]
 
 
 def test_get_all_families_when_not_authenticated(client: TestClient, test_db: Session):
@@ -48,7 +57,12 @@ def test_get_family(client: TestClient, test_db: Session, user_header_token):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["import_id"] == "A.0.0.1"
-    assert data == EXPECTED_FAMILIES[0]
+
+    assert all(field in data for field in ("created", "last_modified"))
+    expected_data = {
+        k: v for k, v in data.items() if k not in ("created", "last_modified")
+    }
+    assert expected_data == EXPECTED_FAMILIES[0]
 
 
 def test_get_family_when_not_authenticated(client: TestClient, test_db: Session):
