@@ -1,5 +1,6 @@
 """Operations on the repository for the Family entity."""
 
+from datetime import datetime
 import logging
 from typing import Optional, Tuple, cast
 from app.clients.db.models.app.counters import CountedEntity
@@ -90,6 +91,8 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
             )
         ],
         organisation=org,
+        created=cast(datetime, f.created),
+        last_modified=cast(datetime, f.last_modified),
     )
 
 

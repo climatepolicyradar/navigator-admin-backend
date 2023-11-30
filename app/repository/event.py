@@ -59,6 +59,8 @@ def _event_to_dto(family_event_meta: FamilyEventTuple) -> EventReadDTO:
         family_document_import_id=family_document_import_id,
         event_type_value=cast(str, family_event.event_type_name),
         event_status=cast(EventStatus, family_event.status),
+        created=cast(datetime, family_event.created),
+        last_modified=cast(datetime, family_event.last_modified),
     )
 
 
