@@ -1,7 +1,8 @@
+from datetime import datetime
 from app.model.collection import (
+    CollectionCreateDTO,
     CollectionReadDTO,
     CollectionWriteDTO,
-    CollectionCreateDTO,
 )
 
 
@@ -14,6 +15,8 @@ def create_collection_read_dto(
         description=description,
         families=[],
         organisation="CCLW",
+        created=datetime.now(),
+        last_modified=datetime.now(),
     )
 
 
