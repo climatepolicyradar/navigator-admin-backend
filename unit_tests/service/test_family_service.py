@@ -69,7 +69,7 @@ def test_get_raises_when_invalid_id(family_repo_mock):
 
 
 def test_search(family_repo_mock):
-    result = family_service.search("two")
+    result = family_service.search({"q": "two"})
     assert result is not None
     assert len(result) == 1
     assert family_repo_mock.search.call_count == 1
@@ -77,7 +77,7 @@ def test_search(family_repo_mock):
 
 def test_search_missing(family_repo_mock):
     family_repo_mock.return_empty = True
-    result = family_service.search("empty")
+    result = family_service.search({"q": "empty"})
     assert result is not None
     assert len(result) == 0
     assert family_repo_mock.search.call_count == 1

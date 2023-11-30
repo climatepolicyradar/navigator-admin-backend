@@ -53,7 +53,7 @@ def test_search_when_not_found(
     response = client.get("/api/v1/families/?q=empty", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Families not found for term: empty"
+    assert data["detail"] == "Families not found for terms: {'q': 'empty'}"
     assert family_service_mock.search.call_count == 1
 
 
