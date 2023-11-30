@@ -1,9 +1,8 @@
-from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import EXPECTED_EVENTS, setup_db
-
 
 # --- GET ALL
 
@@ -23,10 +22,21 @@ def test_get_all_events(client: TestClient, test_db: Session, user_header_token)
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    sdata = sorted(data, key=lambda d: d["import_id"])
-    assert sdata[0] == EXPECTED_EVENTS[0]
-    assert sdata[1] == EXPECTED_EVENTS[1]
-    assert sdata[2] == EXPECTED_EVENTS[2]
+    assert all(
+        field in event for event in data for field in ("created", "last_modified")
+    )
+    data = sorted(data, key=lambda d: d["import_id"])
+    expected_data = [
+        {
+            k: v if not isinstance(v, list) else sorted(v)
+            for k, v in event.items()
+            if k not in ("created", "last_modified")
+        }
+        for event in data
+    ]
+    assert expected_data[0] == EXPECTED_EVENTS[0]
+    assert expected_data[1] == EXPECTED_EVENTS[1]
+    assert expected_data[2] == EXPECTED_EVENTS[2]
 
 
 def test_get_all_events_when_not_authenticated(client: TestClient, test_db: Session):
@@ -49,7 +59,12 @@ def test_get_event(client: TestClient, test_db: Session, user_header_token):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["import_id"] == "E.0.0.1"
-    assert data == EXPECTED_EVENTS[0]
+
+    assert all(field in data for field in ("created", "last_modified"))
+    expected_data = {
+        k: v for k, v in data.items() if k not in ("created", "last_modified")
+    }
+    assert expected_data == EXPECTED_EVENTS[0]
 
 
 def test_get_event_when_not_authenticated(client: TestClient, test_db: Session):
