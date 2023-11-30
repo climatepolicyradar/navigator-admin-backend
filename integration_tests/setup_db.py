@@ -1,6 +1,8 @@
 from typing import cast
-from sqlalchemy.orm import Session
+
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 from app.clients.db.models.app.users import AppUser, Organisation, OrganisationUser
 from app.clients.db.models.document.physical_document import (
     LanguageSource,
