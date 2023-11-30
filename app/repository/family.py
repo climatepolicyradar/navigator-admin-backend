@@ -1,8 +1,15 @@
 """Operations on the repository for the Family entity."""
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Optional, Tuple, cast
+
+from sqlalchemy import Column, and_, or_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query, Session
+from sqlalchemy_utils import escape_like
 
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
@@ -23,12 +30,6 @@ from app.clients.db.models.law_policy.metadata import (
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository.helpers import generate_import_id, generate_slug
-
-from sqlalchemy.orm import Session, Query
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy import Column, or_, update as db_update, delete as db_delete, and_
-from sqlalchemy_utils import escape_like
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
         category=str(f.family_category),
         status=str(f.family_status),
         metadata=metadata,
-        slug=str(f.slugs[-1].name if len(f.slugs) > 0 else ""),
+        slug=str(f.slugs[0].name if len(f.slugs) > 0 else ""),
         events=[str(e.import_id) for e in f.events],
         published_date=f.published_date,
         last_updated_date=f.last_updated_date,
