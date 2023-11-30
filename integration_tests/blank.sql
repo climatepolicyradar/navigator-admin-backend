@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.7
--- Dumped by pg_dump version 15.4 (Ubuntu 15.4-0ubuntu0.23.04.1)
+-- Dumped from database version 14.10 (Debian 14.10-1.pgdg120+1)
+-- Dumped by pg_dump version 14.9 (Ubuntu 14.9-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -88,6 +88,70 @@ CREATE TYPE public.languagesource AS ENUM (
 
 ALTER TYPE public.languagesource OWNER TO navigator;
 
+--
+-- Name: update_1_last_modified(); Type: FUNCTION; Schema: public; Owner: navigator
+--
+
+CREATE FUNCTION public.update_1_last_modified() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        NEW.last_modified = NOW();
+        RETURN NEW;
+    END;
+    $$;
+
+
+ALTER FUNCTION public.update_1_last_modified() OWNER TO navigator;
+
+--
+-- Name: update_2_collection_last_modified(); Type: FUNCTION; Schema: public; Owner: navigator
+--
+
+CREATE FUNCTION public.update_2_collection_last_modified() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        if tg_op = 'DELETE' then
+            UPDATE collection
+            SET last_modified = NOW()
+            WHERE import_id = OLD.collection_import_id;
+        else 
+            UPDATE collection
+            SET last_modified = NOW()
+            WHERE import_id = NEW.collection_import_id;
+        end if;
+        RETURN NEW;
+    END;
+    $$;
+
+
+ALTER FUNCTION public.update_2_collection_last_modified() OWNER TO navigator;
+
+--
+-- Name: update_2_family_last_modified(); Type: FUNCTION; Schema: public; Owner: navigator
+--
+
+CREATE FUNCTION public.update_2_family_last_modified() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        if tg_op = 'DELETE' then
+            UPDATE family
+            SET last_modified = NOW()
+            WHERE import_id = OLD.family_import_id;
+        else 
+            UPDATE family
+            SET last_modified = NOW()
+            WHERE import_id = NEW.family_import_id;
+        end if;
+        RETURN NEW;
+    END;
+    $$;
+
+
+ALTER FUNCTION public.update_2_family_last_modified() OWNER TO navigator;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -124,7 +188,9 @@ ALTER TABLE public.app_user OWNER TO navigator;
 CREATE TABLE public.collection (
     import_id text NOT NULL,
     title text NOT NULL,
-    description text NOT NULL
+    description text NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    last_modified timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -163,7 +229,7 @@ CREATE TABLE public.entity_counter (
     description character varying NOT NULL,
     prefix character varying NOT NULL,
     counter integer,
-    CONSTRAINT ck_entity_counter__prefix_allowed_orgs CHECK (((prefix)::text = ANY ((ARRAY['CCLW'::character varying, 'UNFCCC'::character varying])::text[])))
+    CONSTRAINT ck_entity_counter__prefix_allowed_orgs CHECK (((prefix)::text = ANY (ARRAY[('CCLW'::character varying)::text, ('UNFCCC'::character varying)::text])))
 );
 
 
@@ -200,7 +266,9 @@ CREATE TABLE public.family (
     import_id text NOT NULL,
     description text NOT NULL,
     geography_id integer NOT NULL,
-    family_category public.familycategory NOT NULL
+    family_category public.familycategory NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    last_modified timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -217,7 +285,9 @@ CREATE TABLE public.family_document (
     variant_name text,
     document_status public.documentstatus NOT NULL,
     document_type text,
-    document_role text
+    document_role text,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    last_modified timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -258,7 +328,9 @@ CREATE TABLE public.family_event (
     event_type_name text NOT NULL,
     family_import_id text NOT NULL,
     family_document_import_id text,
-    status public.eventstatus NOT NULL
+    status public.eventstatus NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    last_modified timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -890,6 +962,55 @@ ALTER TABLE ONLY public.geography
 
 ALTER TABLE ONLY public.language
     ADD CONSTRAINT uq_language__language_code UNIQUE (language_code);
+
+
+--
+-- Name: collection update_collection_last_modified; Type: TRIGGER; Schema: public; Owner: navigator
+--
+
+CREATE TRIGGER update_collection_last_modified BEFORE UPDATE ON public.collection FOR EACH ROW EXECUTE FUNCTION public.update_1_last_modified();
+
+
+--
+-- Name: collection_family update_collection_last_modified; Type: TRIGGER; Schema: public; Owner: navigator
+--
+
+CREATE TRIGGER update_collection_last_modified AFTER INSERT OR DELETE OR UPDATE ON public.collection_family FOR EACH ROW EXECUTE FUNCTION public.update_2_collection_last_modified();
+
+
+--
+-- Name: family_document update_family_last_modified; Type: TRIGGER; Schema: public; Owner: navigator
+--
+
+CREATE TRIGGER update_family_last_modified AFTER INSERT OR DELETE OR UPDATE ON public.family_document FOR EACH ROW EXECUTE FUNCTION public.update_2_family_last_modified();
+
+
+--
+-- Name: family_event update_family_last_modified; Type: TRIGGER; Schema: public; Owner: navigator
+--
+
+CREATE TRIGGER update_family_last_modified AFTER INSERT OR DELETE OR UPDATE ON public.family_event FOR EACH ROW EXECUTE FUNCTION public.update_2_family_last_modified();
+
+
+--
+-- Name: family update_last_modified; Type: TRIGGER; Schema: public; Owner: navigator
+--
+
+CREATE TRIGGER update_last_modified BEFORE UPDATE ON public.family FOR EACH ROW EXECUTE FUNCTION public.update_1_last_modified();
+
+
+--
+-- Name: family_document update_last_modified; Type: TRIGGER; Schema: public; Owner: navigator
+--
+
+CREATE TRIGGER update_last_modified BEFORE UPDATE ON public.family_document FOR EACH ROW EXECUTE FUNCTION public.update_1_last_modified();
+
+
+--
+-- Name: family_event update_last_modified; Type: TRIGGER; Schema: public; Owner: navigator
+--
+
+CREATE TRIGGER update_last_modified BEFORE UPDATE ON public.family_event FOR EACH ROW EXECUTE FUNCTION public.update_1_last_modified();
 
 
 --
