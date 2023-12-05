@@ -6,7 +6,7 @@ from typing import Optional, Tuple, Union, cast
 from sqlalchemy import Column, and_, or_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
@@ -194,7 +194,15 @@ def search(
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
-    found = _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+    try:
+        found = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
+
     return [_family_to_dto(db, f) for f in found]
 
 
