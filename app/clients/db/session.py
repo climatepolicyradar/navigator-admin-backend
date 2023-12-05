@@ -13,7 +13,7 @@ engine = create_engine(
     pool_size=10,
     max_overflow=240,
     # echo="debug",
-    connect_args={"connect_timeout": STATEMENT_TIMEOUT},
+    connect_args={"options": f"-c statement_timeout={STATEMENT_TIMEOUT}"},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
