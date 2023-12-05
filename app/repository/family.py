@@ -1,7 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, Union, cast
 
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
@@ -156,7 +156,9 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     return _family_to_dto(db, fam_geo_meta)
 
 
-def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
 
@@ -179,7 +181,7 @@ def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
         search.append(Family.description.ilike(term))
 
     if "geography" in query_params.keys():
-        term = query_params["geography"]
+        term = cast(str, query_params["geography"])
         search.append(
             or_(
                 Geography.display_value == term.title(), Geography.value == term.upper()
@@ -187,11 +189,11 @@ def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
         )
 
     if "status" in query_params.keys():
-        term = query_params["status"]
+        term = cast(str, query_params["status"])
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
-    found = _get_query(db).filter(condition).all()
+    found = _get_query(db).filter(condition).limit(query_params["max_results"]).all()
     return [_family_to_dto(db, f) for f in found]
 
 

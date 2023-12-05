@@ -7,11 +7,13 @@ layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
 import logging
-from fastapi import APIRouter, HTTPException, Request, status
-from app.errors import RepositoryError, ValidationError
+from typing import Union
 
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from fastapi import APIRouter, HTTPException, Request, status
+
 import app.service.family as family_service
+from app.errors import RepositoryError, ValidationError
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
 families_router = r = APIRouter()
 
@@ -78,18 +80,18 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[FamilyDTO]: A list of matching families.
     """
-    query_params = {k: request.query_params[k] for k in request.query_params.keys()}
+    query_params: dict[str, Union[str, int]] = {
+        k: request.query_params[k] for k in request.query_params.keys()
+    }
 
     try:
         families = family_service.search(query_params)
     except ValidationError as e:
+        _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
     if len(families) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Families not found for terms: {query_params}",
-        )
+        _LOGGER.info(f"Families not found for terms: {query_params}")
 
     return families
 

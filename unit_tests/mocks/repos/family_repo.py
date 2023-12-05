@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -23,11 +23,13 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
         return create_family_dto(import_id)
 
 
-def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[FamilyReadDTO]:
     _maybe_throw()
-    if getattr(family_repo, "return_empty") is False:
-        return [create_family_dto("search1")]
-    return []
+    if getattr(family_repo, "return_empty"):
+        return []
+    return [create_family_dto("search1")]
 
 
 def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:

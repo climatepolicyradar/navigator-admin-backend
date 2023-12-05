@@ -4,12 +4,13 @@ Tests the family service.
 Uses a family repo mock and ensures that the repo is called.
 """
 from typing import Optional
-import pytest
-from app.errors import ValidationError, RepositoryError
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-import app.service.family as family_service
-from unit_tests.helpers.family import create_family_dto
 
+import pytest
+
+import app.service.family as family_service
+from app.errors import RepositoryError, ValidationError
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from unit_tests.helpers.family import create_family_dto
 
 USER_EMAIL = "test@cpr.org"
 ORG_ID = 1
@@ -73,6 +74,14 @@ def test_search(family_repo_mock):
     assert result is not None
     assert len(result) == 1
     assert family_repo_mock.search.call_count == 1
+
+
+def test_search_invalid_params(family_repo_mock):
+    with pytest.raises(ValidationError) as e:
+        family_service.search({"wrong": "yes"})
+    expected_msg = "Search parameters are invalid: ['wrong']"
+    assert e.value.message == expected_msg
+    assert family_repo_mock.search.call_count == 0
 
 
 def test_search_missing(family_repo_mock):
