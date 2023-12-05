@@ -124,6 +124,7 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except TimeoutError:
         msg = "Request timed out fetching matching families. Try adjusting your query."
+        _LOGGER.error(msg)
         raise HTTPException(
             status_code=status.HTTP_408_REQUEST_TIMEOUT,
             detail=msg,
