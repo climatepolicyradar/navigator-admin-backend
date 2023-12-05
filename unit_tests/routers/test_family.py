@@ -59,6 +59,17 @@ def test_search_when_invalid_params(
     assert family_service_mock.search.call_count == 0
 
 
+def test_search_when_db_error(
+    client: TestClient, family_service_mock, user_header_token
+):
+    family_service_mock.throw_repository_error = True
+    response = client.get("/api/v1/families/?q=error", headers=user_header_token)
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    data = response.json()
+    assert data["detail"] == "bad repo"
+    assert family_service_mock.search.call_count == 1
+
+
 def test_search_when_request_timeout(
     client: TestClient, family_service_mock, user_header_token, caplog
 ):

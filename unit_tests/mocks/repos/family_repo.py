@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
-from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
+from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from unit_tests.helpers.family import create_family_dto
@@ -10,7 +10,7 @@ from unit_tests.helpers.family import create_family_dto
 
 def _maybe_throw():
     if getattr(family_repo, "throw_repository_error") is True:
-        raise exc.SQLAlchemyError("bad repo")
+        raise RepositoryError("bad repo")
 
 
 def _maybe_timeout():

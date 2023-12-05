@@ -32,6 +32,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
         if q_params["q"] == "empty":
             return []
 
+        maybe_throw()
         maybe_timeout()
         return [create_family_dto("search1")]
 

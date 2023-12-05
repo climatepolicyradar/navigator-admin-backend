@@ -76,6 +76,13 @@ def test_search(family_repo_mock):
     assert family_repo_mock.search.call_count == 1
 
 
+def test_search_db_error(family_repo_mock):
+    family_repo_mock.throw_repository_error = True
+    with pytest.raises(RepositoryError):
+        family_service.search({"q": "error"})
+    assert family_repo_mock.search.call_count == 1
+
+
 def test_search_request_timeout(family_repo_mock):
     family_repo_mock.throw_timeout_error = True
     with pytest.raises(TimeoutError):
