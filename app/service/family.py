@@ -4,7 +4,7 @@ Family Service
 This file hands off to the family repo, adding the dependency of the db (future)
 """
 import logging
-from typing import Optional, Union, cast
+from typing import Optional, Union
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
@@ -71,30 +71,6 @@ def search(query_params: dict[str, Union[str, int]]) -> list[FamilyReadDTO]:
     :return list[FamilyDTO]: The list of families matching the search
         term.
     """
-    query_fields = query_params.keys()
-    if len(query_fields) < 1:
-        query_params = {"q": ""}
-
-    VALID_PARAMS = ["q", "title", "description", "geography", "status", "max_results"]
-    invalid_params = [x for x in query_fields if x not in VALID_PARAMS]
-    if any(invalid_params):
-        raise ValidationError(f"Search parameters are invalid: {invalid_params}")
-
-    if "q" in query_fields:
-        if "title" in query_fields:
-            query_params.pop("title")
-        if "description" in query_fields:
-            query_params.pop("description")
-
-    if "max_results" not in query_fields:
-        query_params["max_results"] = 500
-    else:
-        if not isinstance(query_params["max_results"], int):
-            try:
-                query_params["max_results"] = cast(int, query_params["max_results"])
-            except Exception:
-                raise ValidationError("Maximum results must be an integer value")
-
     with db_session.get_db() as db:
         return family_repo.search(db, query_params)
 
