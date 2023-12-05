@@ -76,14 +76,6 @@ def test_search(family_repo_mock):
     assert family_repo_mock.search.call_count == 1
 
 
-def test_search_invalid_params(family_repo_mock):
-    with pytest.raises(ValidationError) as e:
-        family_service.search({"wrong": "yes"})
-    expected_msg = "Search parameters are invalid: ['wrong']"
-    assert e.value.message == expected_msg
-    assert family_repo_mock.search.call_count == 0
-
-
 def test_search_request_timeout(family_repo_mock):
     family_repo_mock.throw_timeout_error = True
     with pytest.raises(TimeoutError):

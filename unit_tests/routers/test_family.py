@@ -56,7 +56,7 @@ def test_search_when_invalid_params(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["detail"] == "Search parameters are invalid: ['wrong']"
-    assert family_service_mock.search.call_count == 1
+    assert family_service_mock.search.call_count == 0
 
 
 def test_search_when_request_timeout(
@@ -81,7 +81,10 @@ def test_search_when_not_found(
     assert response.status_code == status.HTTP_200_OK
     response.json()
     assert family_service_mock.search.call_count == 1
-    assert "Families not found for terms: {'q': 'empty'}" in caplog.text
+    assert (
+        "Families not found for terms: {'q': 'empty', 'max_results': 500}"
+        in caplog.text
+    )
 
 
 def test_update_when_ok(client: TestClient, family_service_mock, user_header_token):

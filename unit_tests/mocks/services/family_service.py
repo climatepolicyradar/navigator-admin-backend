@@ -2,7 +2,7 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError, ValidationError
+from app.errors import RepositoryError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
 from unit_tests.helpers.family import create_family_dto
 
@@ -29,18 +29,6 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
             return create_family_dto(import_id)
 
     def mock_search_families(q_params: dict) -> list[FamilyReadDTO]:
-        VALID_PARAMS = [
-            "q",
-            "title",
-            "description",
-            "geography",
-            "status",
-            "max_results",
-        ]
-        invalid_params = [x for x in q_params if x not in VALID_PARAMS]
-        if any(invalid_params):
-            raise ValidationError(f"Search parameters are invalid: {invalid_params}")
-
         if q_params["q"] == "empty":
             return []
 

@@ -61,7 +61,10 @@ def test_search_family_when_not_found(
             headers=user_header_token,
         )
     assert response.status_code == status.HTTP_200_OK
-    assert "Families not found for terms: {'q': 'chicken'}" in caplog.text
+    assert (
+        "Families not found for terms: {'q': 'chicken', 'max_results': 500}"
+        in caplog.text
+    )
 
 
 def test_search_family_when_invalid_params(
