@@ -84,6 +84,13 @@ def test_search_invalid_params(family_repo_mock):
     assert family_repo_mock.search.call_count == 0
 
 
+def test_search_request_timeout(family_repo_mock):
+    family_repo_mock.throw_timeout_error = True
+    with pytest.raises(TimeoutError):
+        family_service.search({"q": "timeout"})
+    assert family_repo_mock.search.call_count == 1
+
+
 def test_search_missing(family_repo_mock):
     family_repo_mock.return_empty = True
     result = family_service.search({"q": "empty"})

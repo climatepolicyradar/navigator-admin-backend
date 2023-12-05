@@ -11,10 +11,15 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     family_service.missing = False
     family_service.invalid_collections = False
     family_service.throw_repository_error = False
+    family_service.throw_timeout_error = False
 
     def maybe_throw():
         if family_service.throw_repository_error:
             raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if family_service.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all_families():
         return [create_family_dto("test")]
@@ -39,6 +44,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
         if q_params["q"] == "empty":
             return []
 
+        maybe_timeout()
         return [create_family_dto("search1")]
 
     def mock_update_family(

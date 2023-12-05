@@ -87,8 +87,13 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     try:
         families = family_service.search(query_params)
     except ValidationError as e:
-        _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except TimeoutError:
+        msg = "Request timed out fetching matching families. Try adjusting your query."
+        raise HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail=msg,
+        )
 
     if len(families) == 0:
         _LOGGER.info(f"Families not found for terms: {query_params}")

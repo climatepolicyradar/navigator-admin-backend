@@ -13,6 +13,11 @@ def _maybe_throw():
         raise exc.SQLAlchemyError("bad repo")
 
 
+def _maybe_timeout():
+    if getattr(family_repo, "throw_timeout_error") is True:
+        raise TimeoutError
+
+
 def all(db: Session):
     return [create_family_dto("test")]
 
@@ -27,6 +32,7 @@ def search(
     db: Session, query_params: dict[str, Union[str, int]]
 ) -> list[FamilyReadDTO]:
     _maybe_throw()
+    _maybe_timeout()
     if getattr(family_repo, "return_empty"):
         return []
     return [create_family_dto("search1")]
