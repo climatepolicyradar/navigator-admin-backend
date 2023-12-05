@@ -4,12 +4,13 @@ Tests the family service.
 Uses a family repo mock and ensures that the repo is called.
 """
 from typing import Optional
-import pytest
-from app.errors import ValidationError, RepositoryError
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-import app.service.family as family_service
-from unit_tests.helpers.family import create_family_dto
 
+import pytest
+
+import app.service.family as family_service
+from app.errors import RepositoryError, ValidationError
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from unit_tests.helpers.family import create_family_dto
 
 USER_EMAIL = "test@cpr.org"
 ORG_ID = 1
@@ -72,6 +73,20 @@ def test_search(family_repo_mock):
     result = family_service.search({"q": "two"})
     assert result is not None
     assert len(result) == 1
+    assert family_repo_mock.search.call_count == 1
+
+
+def test_search_db_error(family_repo_mock):
+    family_repo_mock.throw_repository_error = True
+    with pytest.raises(RepositoryError):
+        family_service.search({"q": "error"})
+    assert family_repo_mock.search.call_count == 1
+
+
+def test_search_request_timeout(family_repo_mock):
+    family_repo_mock.throw_timeout_error = True
+    with pytest.raises(TimeoutError):
+        family_service.search({"q": "timeout"})
     assert family_repo_mock.search.call_count == 1
 
 

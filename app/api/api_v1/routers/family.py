@@ -7,11 +7,13 @@ layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
 import logging
-from fastapi import APIRouter, HTTPException, Request, status
-from app.errors import RepositoryError, ValidationError
+from typing import Union, cast
 
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from fastapi import APIRouter, HTTPException, Request, status
+
 import app.service.family as family_service
+from app.errors import RepositoryError, ValidationError
+from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
 families_router = r = APIRouter()
 
@@ -78,18 +80,62 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[FamilyDTO]: A list of matching families.
     """
-    query_params = {k: request.query_params[k] for k in request.query_params.keys()}
+    query_params: dict[str, Union[str, int]] = {
+        k: request.query_params[k] for k in request.query_params.keys()
+    }
+
+    query_fields = query_params.keys()
+    if len(query_fields) < 1:
+        query_params = {"q": ""}
+
+    VALID_PARAMS = ["q", "title", "description", "geography", "status", "max_results"]
+    invalid_params = [x for x in query_fields if x not in VALID_PARAMS]
+    if any(invalid_params):
+        msg = f"Search parameters are invalid: {invalid_params}"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=msg,
+        )
+
+    if "q" in query_fields:
+        if "title" in query_fields:
+            query_params.pop("title")
+        if "description" in query_fields:
+            query_params.pop("description")
+
+    DEFAULT_MAX_RESULTS = 500
+    if "max_results" not in query_fields:
+        query_params["max_results"] = DEFAULT_MAX_RESULTS
+    else:
+        if not isinstance(query_params["max_results"], int):
+            try:
+                query_params.update(
+                    {"max_results": cast(int, query_params["max_results"])}
+                )
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Maximum results must be an integer value",
+                )
 
     try:
         families = family_service.search(query_params)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+    except TimeoutError:
+        msg = "Request timed out fetching matching families. Try adjusting your query."
+        _LOGGER.error(msg)
+        raise HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail=msg,
+        )
 
     if len(families) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Families not found for terms: {query_params}",
-        )
+        _LOGGER.info(f"Families not found for terms: {query_params}")
 
     return families
 

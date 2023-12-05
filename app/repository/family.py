@@ -1,7 +1,14 @@
 """Operations on the repository for the Family entity."""
 
 import logging
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, Union, cast
+
+from sqlalchemy import Column, and_, or_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound, OperationalError
+from sqlalchemy.orm import Query, Session
+from sqlalchemy_utils import escape_like
 
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
@@ -22,12 +29,6 @@ from app.clients.db.models.law_policy.metadata import (
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository.helpers import generate_import_id, generate_slug
-
-from sqlalchemy.orm import Session, Query
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy import Column, or_, update as db_update, delete as db_delete, and_
-from sqlalchemy_utils import escape_like
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,7 +157,9 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     return _family_to_dto(db, fam_geo_meta)
 
 
-def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
 
@@ -179,7 +182,7 @@ def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
         search.append(Family.description.ilike(term))
 
     if "geography" in query_params.keys():
-        term = query_params["geography"]
+        term = cast(str, query_params["geography"])
         search.append(
             or_(
                 Geography.display_value == term.title(), Geography.value == term.upper()
@@ -187,11 +190,19 @@ def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
         )
 
     if "status" in query_params.keys():
-        term = query_params["status"]
+        term = cast(str, query_params["status"])
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
-    found = _get_query(db).filter(condition).all()
+    try:
+        found = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
+
     return [_family_to_dto(db, f) for f in found]
 
 

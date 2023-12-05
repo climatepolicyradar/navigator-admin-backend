@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, Union
 
-from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
+from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from unit_tests.helpers.family import create_family_dto
@@ -10,7 +10,12 @@ from unit_tests.helpers.family import create_family_dto
 
 def _maybe_throw():
     if getattr(family_repo, "throw_repository_error") is True:
-        raise exc.SQLAlchemyError("bad repo")
+        raise RepositoryError("bad repo")
+
+
+def _maybe_timeout():
+    if getattr(family_repo, "throw_timeout_error") is True:
+        raise TimeoutError
 
 
 def all(db: Session):
@@ -23,11 +28,14 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
         return create_family_dto(import_id)
 
 
-def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[FamilyReadDTO]:
     _maybe_throw()
-    if getattr(family_repo, "return_empty") is False:
-        return [create_family_dto("search1")]
-    return []
+    _maybe_timeout()
+    if getattr(family_repo, "return_empty"):
+        return []
+    return [create_family_dto("search1")]
 
 
 def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:

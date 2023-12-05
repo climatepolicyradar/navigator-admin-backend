@@ -1,4 +1,4 @@
-from typing import Optional, Protocol
+from typing import Optional, Protocol, Union
 from sqlalchemy.orm import Session
 
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
@@ -18,7 +18,9 @@ class FamilyRepo(Protocol):
         ...
 
     @staticmethod
-    def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
+    def search(
+        db: Session, query_params: dict[str, Union[str, int]]
+    ) -> list[FamilyReadDTO]:
         """Searches the families"""
         ...
 
