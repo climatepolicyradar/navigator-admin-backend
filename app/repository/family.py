@@ -3,6 +3,13 @@
 import logging
 from typing import Optional, Tuple, Union, cast
 
+from sqlalchemy import Column, and_, or_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query, Session
+from sqlalchemy_utils import escape_like
+
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
 from app.clients.db.models.law_policy.collection import CollectionFamily
@@ -22,12 +29,6 @@ from app.clients.db.models.law_policy.metadata import (
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository.helpers import generate_import_id, generate_slug
-
-from sqlalchemy.orm import Session, Query
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy import Column, or_, update as db_update, delete as db_delete, and_
-from sqlalchemy_utils import escape_like
-
 
 _LOGGER = logging.getLogger(__name__)
 
