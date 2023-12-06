@@ -16,7 +16,7 @@ class DocumentReadDTO(BaseModel):
     family_import_id: str
     variant_name: Optional[str]
     status: DocumentStatus
-    role: str
+    role: Optional[str]
     type: Optional[str]
     slug: str
     created: datetime
@@ -37,7 +37,7 @@ class DocumentWriteDTO(BaseModel):
 
     # From FamilyDocument
     variant_name: Optional[str]
-    role: str
+    role: Optional[str]
     type: Optional[str]
     title: str
     source_url: Optional[str]
