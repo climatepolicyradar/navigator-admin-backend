@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from app.clients.db.models.law_policy.family import FamilyCategory
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
@@ -34,6 +35,8 @@ def create_family_dto(
         documents=["doc1", "doc2"],
         collections=collections,
         organisation="CCLW",
+        created=datetime.now(),
+        last_modified=datetime.now(),
     )
 
 

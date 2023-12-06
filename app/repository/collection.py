@@ -1,12 +1,19 @@
 """Operations on the repository for the Collection entity."""
 
 import logging
+from datetime import datetime
 from typing import Optional, Tuple, cast
 
-from sqlalchemy.orm import Session
-from sqlalchemy import Column
+from sqlalchemy import Column, or_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query, Session
+from sqlalchemy_utils import escape_like
+
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
+from app.clients.db.models.law_policy import Collection
 from app.clients.db.models.law_policy.collection import (
     CollectionFamily,
     CollectionOrganisation,
@@ -18,15 +25,7 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
-from app.clients.db.models.law_policy import Collection
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Query
-
-from sqlalchemy import or_, update as db_update, delete as db_delete
-from sqlalchemy_utils import escape_like
-
 from app.repository.helpers import generate_import_id
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +82,8 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         description=str(collection.description),
         organisation=cast(str, org.name),
         families=families,
+        created=cast(datetime, collection.created),
+        last_modified=cast(datetime, collection.last_modified),
     )
 
 

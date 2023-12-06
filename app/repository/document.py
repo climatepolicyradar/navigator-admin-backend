@@ -1,13 +1,15 @@
-from typing import Tuple
 import logging
-from typing import Optional, cast
+from typing import Optional, Tuple, cast
+
+from sqlalchemy import Column, and_, func, or_
+from sqlalchemy import insert as db_insert
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query, Session, aliased
+from sqlalchemy.sql.functions import concat
+from sqlalchemy_utils import escape_like
+
 from app.clients.db.models.app.counters import CountedEntity
-from app.clients.db.models.law_policy.family import (
-    DocumentStatus,
-    Slug,
-)
-from app.errors import RepositoryError, ValidationError
-from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.clients.db.models.document.physical_document import (
     Language,
     LanguageSource,
@@ -17,17 +19,14 @@ from app.clients.db.models.document.physical_document import (
 from app.clients.db.models.law_policy import (
     FamilyDocument,
 )
-
-from sqlalchemy import Column, or_, and_, update as db_update, insert as db_insert
-from sqlalchemy_utils import escape_like
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session, Query, aliased
-from sqlalchemy.sql.functions import concat
-from sqlalchemy import func
-
-from app.repository.helpers import generate_import_id, generate_slug
+from app.clients.db.models.law_policy.family import (
+    DocumentStatus,
+    Slug,
+)
+from app.errors import RepositoryError, ValidationError
+from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.repository import family as family_repo
-
+from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,9 @@ def _get_query(db: Session) -> Query:
             FamilyDocument.document_status.label("status"),
             FamilyDocument.document_role.label("role"),
             FamilyDocument.document_type.label("type"),
-            concat(sq_slug.c.name).label("slug"),
+            FamilyDocument.created.label("created"),
+            FamilyDocument.last_modified.label("last_modified"),
+            concat(sq_slug.c.name).label("slug"),  # type: ignore
             PhysicalDocument.id.label("physical_id"),
             PhysicalDocument.title.label("title"),
             PhysicalDocument.md5_sum.label("md5_sum"),

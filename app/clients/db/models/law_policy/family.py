@@ -5,11 +5,12 @@ import sqlalchemy as sa
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
-from .geography import Geography
 from app.clients.db.models.app import Organisation
 from app.clients.db.models.app.enum import BaseModelEnum
 from app.clients.db.models.document import PhysicalDocument
 from app.clients.db.session import Base
+
+from .geography import Geography
 
 
 class FamilyCategory(BaseModelEnum):
@@ -62,6 +63,15 @@ class Family(Base):
         "FamilyEvent",
         lazy="joined",
         order_by="FamilyEvent.date",
+    )
+    created = sa.Column(
+        sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+    )
+    last_modified = sa.Column(
+        sa.DateTime(timezone=True),
+        server_default=sa.func.now(),
+        onupdate=sa.func.now(),
+        nullable=False,
     )
 
     @hybrid_property
@@ -202,6 +212,15 @@ class FamilyDocument(Base):
     )
     document_type = sa.Column(sa.ForeignKey(FamilyDocumentType.name), nullable=True)
     document_role = sa.Column(sa.ForeignKey(FamilyDocumentRole.name), nullable=True)
+    created = sa.Column(
+        sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+    )
+    last_modified = sa.Column(
+        sa.DateTime(timezone=True),
+        server_default=sa.func.now(),
+        onupdate=sa.func.now(),
+        nullable=False,
+    )
 
     slugs: list["Slug"] = relationship("Slug", lazy="joined")
     physical_document: PhysicalDocument = relationship(
@@ -272,3 +291,12 @@ class FamilyEvent(Base):
         nullable=True,
     )
     status = sa.Column(sa.Enum(EventStatus), nullable=False)
+    created = sa.Column(
+        sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+    )
+    last_modified = sa.Column(
+        sa.DateTime(timezone=True),
+        server_default=sa.func.now(),
+        onupdate=sa.func.now(),
+        nullable=False,
+    )

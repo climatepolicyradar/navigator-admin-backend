@@ -1,9 +1,8 @@
-from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
-
 
 # --- GET ALL
 
@@ -24,8 +23,14 @@ def test_get_all_documents(client: TestClient, test_db: Session, user_header_tok
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
     sdata = sorted(data, key=lambda d: d["import_id"])
-    assert sdata[0] == EXPECTED_DOCUMENTS[0]
-    assert sdata[1] == EXPECTED_DOCUMENTS[1]
+    assert all(field in col for col in sdata for field in ("created", "last_modified"))
+
+    expected_data = [
+        {k: v for k, v in col.items() if k not in ("created", "last_modified")}
+        for col in sdata
+    ]
+    assert expected_data[0] == EXPECTED_DOCUMENTS[0]
+    assert expected_data[1] == EXPECTED_DOCUMENTS[1]
 
 
 def test_get_all_documents_when_not_authenticated(client: TestClient, test_db: Session):
@@ -48,7 +53,12 @@ def test_get_document(client: TestClient, test_db: Session, user_header_token):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
-    assert data == EXPECTED_DOCUMENTS[0]
+
+    assert all(field in data for field in ("created", "last_modified"))
+    expected_data = {
+        k: v for k, v in data.items() if k not in ("created", "last_modified")
+    }
+    assert expected_data == EXPECTED_DOCUMENTS[0]
 
 
 def test_get_document_when_not_authenticated(client: TestClient, test_db: Session):
