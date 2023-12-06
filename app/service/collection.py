@@ -61,10 +61,16 @@ def all() -> list[CollectionReadDTO]:
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(query_params: dict[str, Union[str, int]]) -> list[CollectionReadDTO]:
     """
-    Searches the title and descriptions of all the collections for the search term.
+    Searches for the search term against collections on specified fields.
 
-    :param str search_term: Search pattern to match.
-    :return list[CollectionDTO]: The list of collections matching the search term.
+    Where 'q' is used instead of an explicit field name, the titles and
+    descriptions of all the collections are searched for the given term
+    only.
+
+    :param dict query_params: Search patterns to match against specified
+        fields, given as key value pairs in a dictionary.
+    :return list[CollectionReadDTO]: The list of collections matching
+        the given search terms.
     """
     with db_session.get_db() as db:
         return collection_repo.search(db, query_params)

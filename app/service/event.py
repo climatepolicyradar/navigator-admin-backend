@@ -48,14 +48,16 @@ def all() -> list[EventReadDTO]:
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
     """
-    Search for all family events that match a search term.
+    Searches for the search term against events on specified fields.
 
-    Specifically searches the event title and event type name for the
-    search term.
+    Where 'q' is used instead of an explicit field name, the titles and
+    event type names of all the events are searched for the given term
+    only.
 
-    :param str search_term: Search pattern to match.
-    :return Optional[list[EventReadDTO]] The list of events that match
-        the search term or none.
+    :param dict query_params: Search patterns to match against specified
+        fields, given as key value pairs in a dictionary.
+    :return list[EventReadDTO]: The list of events matching the given
+        search terms.
     """
     with db_session.get_db() as db:
         return event_repo.search(db, query_params)

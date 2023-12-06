@@ -164,9 +164,13 @@ def search(
     Gets a list of families from the repository searching given fields.
 
     :param db Session: the database connection
-    :param dict[str, str] query_params: Any search terms to filter on
-        specified fields (title & summary by default if 'q' specified).
-    :return list[FamilyResponse]: A list of matches
+    :param dict query_params: Any search terms to filter on specified
+        fields (title & summary by default if 'q' specified).
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[FamilyReadDTO]: A list of families matching the search
+        terms.
     """
     search = []
     if "q" in query_params.keys():

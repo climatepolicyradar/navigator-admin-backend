@@ -117,10 +117,12 @@ def search(db: Session, query_params: dict[str, Union[str, int]]) -> list[EventR
     Get family events matching a search term on the event title or type.
 
     :param db Session: The database connection.
-    :param str search_term: Any search term to filter on the event title
-        or event type name.
-    :return Optional[list[EventReadDTO]]: A list of matching family
-        events or none.
+    :param dict query_params: Any search terms to filter on specified
+        fields (title & event type name by default if 'q' specified).
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[EventReadDTO]: A list of matching family events.
     """
     search = []
     if "q" in query_params.keys():

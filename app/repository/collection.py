@@ -122,11 +122,15 @@ def search(
     db: Session, query_params: dict[str, Union[str, int]]
 ) -> list[CollectionReadDTO]:
     """
-    Gets a list of collections from the repository searching title and description.
+    Gets a list of collections from the repo searching given fields.
 
     :param db Session: the database connection
-    :param str search_term: Any search term to filter on title or summary
-    :return Optional[list[CollectionResponse]]: A list of matches
+    :param dict query_params: Any search terms to filter on specified
+        fields (title & summary by default if 'q' specified).
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[CollectionResponse]: A list of matching collections.
     """
     search = []
     if "q" in query_params.keys():

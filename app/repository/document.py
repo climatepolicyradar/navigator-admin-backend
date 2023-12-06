@@ -166,8 +166,12 @@ def search(
     Gets a list of documents from the repository searching the title.
 
     :param db Session: the database connection
-    :param str search_term: Any search term to filter on title or summary
-    :return Optional[list[DocumentResponse]]: A list of matches
+    :param dict query_params: Any search terms to filter on specified
+        fields (title by default if 'q' specified).
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[DocumentResponse]: A list of matching documents.
     """
     search = []
     if "q" in query_params.keys():

@@ -81,8 +81,11 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
         to search for. Defaults to searching for "" in family titles and
         summaries.
     :raises HTTPException: If invalid fields passed a 400 is returned.
-    :raises HTTPException: If nothing found a 404 is returned.
-    :return list[FamilyDTO]: A list of matching families.
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[FamilyDTO]: A list of matching families (which can be
+        empty).
     """
     query_params = get_query_params_as_dict(request.query_params)
 

@@ -77,11 +77,16 @@ async def get_all_documents() -> list[DocumentReadDTO]:
 )
 async def search_document(request: Request) -> list[DocumentReadDTO]:
     """
-    Searches for documents matching the "q" URL parameter.
+    Searches for documents matching URL parameters ("q" by default).
 
-    :param str q: The string to match, defaults to ""
-    :raises HTTPException: If nothing found a 404 is returned.
-    :return list[DocumentDTO]: A list of matching documents.
+    :param Request request: The fields to match against and the values
+        to search for. Defaults to searching for "" in document titles.
+    :raises HTTPException: If invalid fields passed a 400 is returned.
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[DocumentReadDTO]: A list of matching documents (which
+        can be empty).
     """
     query_params = get_query_params_as_dict(request.query_params)
 

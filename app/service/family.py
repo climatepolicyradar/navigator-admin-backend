@@ -66,10 +66,10 @@ def search(query_params: dict[str, Union[str, int]]) -> list[FamilyReadDTO]:
     descriptions of all the Families are searched for the given term
     only.
 
-    :param str query_params: Search patterns to match against specified
-        fields.
-    :return list[FamilyDTO]: The list of families matching the search
-        term.
+    :param dict query_params: Search patterns to match against specified
+        fields, given as key value pairs in a dictionary.
+    :return list[FamilyDTO]: The list of families matching the given
+        search terms.
     """
     with db_session.get_db() as db:
         return family_repo.search(db, query_params)

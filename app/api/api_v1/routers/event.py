@@ -44,11 +44,17 @@ async def get_all_events() -> list[EventReadDTO]:
 )
 async def search_event(request: Request) -> list[EventReadDTO]:
     """
-    Searches for family events matching the "q" URL parameter.
+    Searches for family events matching URL parameters ("q" by default).
 
-    :param str q: The string to match, defaults to ""
-    :raises HTTPException: If nothing found a 404 is returned.
-    :return list[EventDTO]: A list of matching events.
+    :param Request request: The fields to match against and the values
+        to search for. Defaults to searching for "" in event titles and
+        type names.
+    :raises HTTPException: If invalid fields passed a 400 is returned.
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[EventReadDTO]: A list of matching events (which can be
+        empty).
     """
     query_params = get_query_params_as_dict(request.query_params)
 

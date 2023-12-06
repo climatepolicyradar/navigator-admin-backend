@@ -2,17 +2,17 @@ import logging
 from typing import Optional, Tuple, Union
 
 from pydantic import ConfigDict, validate_call
-from app.clients.aws.client import get_s3_client
-from app.errors import RepositoryError, ValidationError
-from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
-import app.repository.document as document_repo
-import app.repository.document_file as file_repo
-import app.clients.db.session as db_session
-import app.service.family as family_service
-from app.service import id
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
+import app.clients.db.session as db_session
+import app.repository.document as document_repo
+import app.repository.document_file as file_repo
+import app.service.family as family_service
+from app.clients.aws.client import get_s3_client
+from app.errors import RepositoryError, ValidationError
+from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
+from app.service import id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,10 +57,15 @@ def all() -> list[DocumentReadDTO]:
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(query_params: dict[str, Union[str, int]]) -> list[DocumentReadDTO]:
     """
-    Searches the title and descriptions of all the documents for the search term.
+    Searches for the search term against documents on specified fields.
 
-    :param str search_term: Search pattern to match.
-    :return list[documentDTO]: The list of documents matching the search term.
+    Where 'q' is used instead of an explicit field name, only the titles
+    of all the documents are searched for the given term.
+
+    :param dict query_params: Search patterns to match against specified
+        fields, given as key value pairs in a dictionary.
+    :return list[DocumentReadDTO]: The list of documents matching the
+        given search terms.
     """
     with db_session.get_db() as db:
         return document_repo.search(db, query_params)
