@@ -1,9 +1,14 @@
 """Endpoints for managing the Document entity."""
 import logging
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 import app.service.document as document_service
+from app.api.api_v1.query_params import (
+    get_query_params_as_dict,
+    set_default_query_params,
+    validate_query_params,
+)
 from app.errors import RepositoryError, ValidationError
 from app.model.document import (
     DocumentCreateDTO,
@@ -70,7 +75,7 @@ async def get_all_documents() -> list[DocumentReadDTO]:
     "/documents/",
     response_model=list[DocumentReadDTO],
 )
-async def search_document(q: str = "") -> list[DocumentReadDTO]:
+async def search_document(request: Request) -> list[DocumentReadDTO]:
     """
     Searches for documents matching the "q" URL parameter.
 
@@ -78,15 +83,32 @@ async def search_document(q: str = "") -> list[DocumentReadDTO]:
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[DocumentDTO]: A list of matching documents.
     """
+    query_params = get_query_params_as_dict(request.query_params)
+
+    DEFAULT_SEARCH_FIELDS = ["title"]
+    query_params = set_default_query_params(query_params, DEFAULT_SEARCH_FIELDS)
+
+    VALID_PARAMS = ["q", "max_results"]
+    validate_query_params(query_params, VALID_PARAMS)
+
     try:
-        documents = document_service.search(q)
+        documents = document_service.search(query_params)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except TimeoutError:
+        msg = "Request timed out fetching matching documents. Try adjusting your query."
+        _LOGGER.error(msg)
+        raise HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail=msg,
+        )
 
     if len(documents) == 0:
-        _LOGGER.info(f"Documents not found for terms: {q}")
+        _LOGGER.info(f"Documents not found for terms: {query_params}")
 
     return documents
 

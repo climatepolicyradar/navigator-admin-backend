@@ -1,13 +1,15 @@
-from typing import Tuple
 import logging
-from typing import Optional, cast
+from typing import Optional, Tuple, Union, cast
+
+from sqlalchemy import Column, and_, func
+from sqlalchemy import insert as db_insert
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound, OperationalError
+from sqlalchemy.orm import Query, Session, aliased
+from sqlalchemy.sql.functions import concat
+from sqlalchemy_utils import escape_like
+
 from app.clients.db.models.app.counters import CountedEntity
-from app.clients.db.models.law_policy.family import (
-    DocumentStatus,
-    Slug,
-)
-from app.errors import RepositoryError, ValidationError
-from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.clients.db.models.document.physical_document import (
     Language,
     LanguageSource,
@@ -17,17 +19,14 @@ from app.clients.db.models.document.physical_document import (
 from app.clients.db.models.law_policy import (
     FamilyDocument,
 )
-
-from sqlalchemy import Column, or_, and_, update as db_update, insert as db_insert
-from sqlalchemy_utils import escape_like
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session, Query, aliased
-from sqlalchemy.sql.functions import concat
-from sqlalchemy import func
-
-from app.repository.helpers import generate_import_id, generate_slug
+from app.clients.db.models.law_policy.family import (
+    DocumentStatus,
+    Slug,
+)
+from app.errors import RepositoryError, ValidationError
+from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.repository import family as family_repo
-
+from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def _get_query(db: Session) -> Query:
             FamilyDocument.document_status.label("status"),
             FamilyDocument.document_role.label("role"),
             FamilyDocument.document_type.label("type"),
-            concat(sq_slug.c.name).label("slug"),
+            concat(sq_slug.c.name).label("slug"),  # type: ignore
             PhysicalDocument.id.label("physical_id"),
             PhysicalDocument.title.label("title"),
             PhysicalDocument.md5_sum.label("md5_sum"),
@@ -160,17 +159,30 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     return DocumentReadDTO(**dict(result))
 
 
-def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[DocumentReadDTO]:
     """
-    Gets a list of documents from the repository searching title and summary.
+    Gets a list of documents from the repository searching the title.
 
     :param db Session: the database connection
     :param str search_term: Any search term to filter on title or summary
     :return Optional[list[DocumentResponse]]: A list of matches
     """
-    term = f"%{escape_like(search_term)}%"
-    search = or_(PhysicalDocument.title.ilike(term))
-    result = _get_query(db).filter(search).all()
+    search = []
+    if "q" in query_params.keys():
+        term = f"%{escape_like(query_params['q'])}%"
+        search.append(PhysicalDocument.title.ilike(term))
+
+    condition = and_(*search) if len(search) > 1 else search[0]
+    try:
+        result = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
 
     return [DocumentReadDTO(**dict(r)) for r in result]
 

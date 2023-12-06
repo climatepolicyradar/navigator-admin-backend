@@ -1,7 +1,8 @@
 from typing import Optional
-from pytest import MonkeyPatch
-from app.errors import RepositoryError, ValidationError
 
+from pytest import MonkeyPatch
+
+from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from unit_tests.helpers.document import create_document_read_dto
 
@@ -10,10 +11,15 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
     document_service.missing = False
     document_service.throw_repository_error = False
     document_service.throw_validation_error = False
+    document_service.throw_timeout_error = False
 
     def maybe_throw():
         if document_service.throw_repository_error:
             raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if document_service.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all_documents() -> list[DocumentReadDTO]:
         maybe_throw()
@@ -24,12 +30,13 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         if not document_service.missing:
             return create_document_read_dto(import_id)
 
-    def mock_search_documents(q: str) -> list[DocumentReadDTO]:
-        maybe_throw()
+    def mock_search_documents(q_params: dict) -> list[DocumentReadDTO]:
         if document_service.missing:
             return []
-        else:
-            return [create_document_read_dto("search1")]
+
+        maybe_throw()
+        maybe_timeout()
+        return [create_document_read_dto("search1")]
 
     def mock_update_document(
         import_id: str, data: DocumentWriteDTO

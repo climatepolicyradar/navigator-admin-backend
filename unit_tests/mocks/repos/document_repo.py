@@ -1,7 +1,9 @@
 from typing import Optional
-from pytest import MonkeyPatch
 
+from pytest import MonkeyPatch
 from sqlalchemy import exc
+
+from app.errors import RepositoryError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO
 from unit_tests.helpers.document import create_document_read_dto
 
@@ -9,10 +11,15 @@ from unit_tests.helpers.document import create_document_read_dto
 def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
     document_repo.return_empty = False
     document_repo.throw_repository_error = False
+    document_repo.throw_timeout_error = False
 
     def maybe_throw():
         if document_repo.throw_repository_error:
-            raise exc.SQLAlchemyError("bad repo")
+            raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if document_repo.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all(_) -> list[DocumentReadDTO]:
         values = []
@@ -27,6 +34,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_search(_, q: str) -> list[DocumentReadDTO]:
         maybe_throw()
+        maybe_timeout()
         if not document_repo.return_empty:
             return [create_document_read_dto("search1")]
         return []

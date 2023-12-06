@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from pydantic import ConfigDict, validate_call
 from app.clients.aws.client import get_s3_client
@@ -55,7 +55,7 @@ def all() -> list[DocumentReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(search_term: str) -> list[DocumentReadDTO]:
+def search(query_params: dict[str, Union[str, int]]) -> list[DocumentReadDTO]:
     """
     Searches the title and descriptions of all the documents for the search term.
 
@@ -63,7 +63,7 @@ def search(search_term: str) -> list[DocumentReadDTO]:
     :return list[documentDTO]: The list of documents matching the search term.
     """
     with db_session.get_db() as db:
-        return document_repo.search(db, search_term)
+        return document_repo.search(db, query_params)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
