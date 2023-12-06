@@ -1,14 +1,15 @@
 """Endpoints for managing the Collection entity."""
 import logging
-from fastapi import APIRouter, HTTPException, Request, status
-from app.errors import RepositoryError, ValidationError
 
+from fastapi import APIRouter, HTTPException, Request, status
+
+import app.service.collection as collection_service
+from app.errors import RepositoryError, ValidationError
 from app.model.collection import (
+    CollectionCreateDTO,
     CollectionReadDTO,
     CollectionWriteDTO,
-    CollectionCreateDTO,
 )
-import app.service.collection as collection_service
 
 collections_router = r = APIRouter()
 
@@ -85,10 +86,7 @@ async def search_collection(q: str = "") -> list[CollectionReadDTO]:
         )
 
     if len(collections) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Collections not found for term: {q}",
-        )
+        _LOGGER.info(f"Collections not found for terms: {q}")
 
     return collections
 
