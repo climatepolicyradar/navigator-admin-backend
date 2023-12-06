@@ -92,8 +92,7 @@ async def search_collection(request: Request) -> list[CollectionReadDTO]:
 
     query_params = get_query_params_as_dict(request.query_params)
 
-    DEFAULT_SEARCH_FIELDS = ["title", "description"]
-    query_params = set_default_query_params(query_params, DEFAULT_SEARCH_FIELDS)
+    query_params = set_default_query_params(query_params)
 
     VALID_PARAMS = ["q", "max_results"]
     validate_query_params(query_params, VALID_PARAMS)

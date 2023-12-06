@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from integration_tests.setup_db import setup_db
 
 
-def test_search_family(client: TestClient, test_db: Session, user_header_token):
+def test_search_family_using_q(client: TestClient, test_db: Session, user_header_token):
     setup_db(test_db)
     response = client.get(
         "/api/v1/families/?q=orange",

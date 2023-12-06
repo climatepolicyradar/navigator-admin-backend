@@ -72,6 +72,13 @@ def test_get_raises_when_invalid_id(family_repo_mock):
 def test_search(family_repo_mock):
     result = family_service.search({"q": "two"})
     assert result is not None
+    assert len(result) == 2
+    assert family_repo_mock.search.call_count == 1
+
+
+def test_search_on_specific_field(family_repo_mock):
+    result = family_service.search({"title": "one"})
+    assert result is not None
     assert len(result) == 1
     assert family_repo_mock.search.call_count == 1
 

@@ -218,7 +218,7 @@ def test_update_family_when_user_org_different_to_family_org(
         test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
     )
     assert db_family.title == "apple orange banana"
-    assert db_family.description == ""
+    assert db_family.description == "apple"
     assert db_family.geography_id == 1
     assert db_family.family_category == "UNFCCC"
 

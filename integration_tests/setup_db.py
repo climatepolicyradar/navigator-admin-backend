@@ -49,7 +49,7 @@ EXPECTED_FAMILIES = [
     {
         "import_id": "A.0.0.2",
         "title": "apple orange banana",
-        "summary": "",
+        "summary": "apple",
         "geography": "South Asia",
         "category": "UNFCCC",
         "status": "Created",

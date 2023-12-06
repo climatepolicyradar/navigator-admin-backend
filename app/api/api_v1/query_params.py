@@ -10,7 +10,6 @@ def get_query_params_as_dict(query_params) -> dict[str, Union[str, int]]:
 
 def set_default_query_params(
     query_params,
-    default_search_fields,
     default_query_term: str = "",
     default_max_results: int = 500,
 ) -> dict[str, Union[str, int]]:
@@ -22,7 +21,6 @@ def set_default_query_params(
     if "max_results" not in query_fields:
         query_params["max_results"] = default_max_results
 
-    query_params = remove_duplicate_query_params(query_params, default_search_fields)
     return query_params
 
 
@@ -46,13 +44,3 @@ def validate_query_params(
                 detail="Maximum results must be an integer value",
             )
     return True
-
-
-def remove_duplicate_query_params(
-    query_params, params_to_remove: list[str]
-) -> dict[str, Union[str, int]]:
-    for param in params_to_remove:
-        if all(k in query_params.keys() for k in ("q", param)):
-            query_params.pop(param)
-
-    return query_params

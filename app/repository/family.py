@@ -179,14 +179,14 @@ def search(
     if "q" in query_params.keys():
         term = f"%{escape_like(query_params['q'])}%"
         search.append(or_(Family.title.ilike(term), Family.description.ilike(term)))
+    else:
+        if "title" in query_params.keys():
+            term = f"%{escape_like(query_params['title'])}%"
+            search.append(Family.title.ilike(term))
 
-    if "title" in query_params.keys():
-        term = f"%{escape_like(query_params['title'])}%"
-        search.append(Family.title.ilike(term))
-
-    if "description" in query_params.keys():
-        term = f"%{escape_like(query_params['description'])}%"
-        search.append(Family.description.ilike(term))
+        if "description" in query_params.keys():
+            term = f"%{escape_like(query_params['description'])}%"
+            search.append(Family.description.ilike(term))
 
     if "geography" in query_params.keys():
         term = cast(str, query_params["geography"])

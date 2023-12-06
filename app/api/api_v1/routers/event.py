@@ -58,8 +58,7 @@ async def search_event(request: Request) -> list[EventReadDTO]:
     """
     query_params = get_query_params_as_dict(request.query_params)
 
-    DEFAULT_SEARCH_FIELDS = ["title", "event_type_value"]
-    query_params = set_default_query_params(query_params, DEFAULT_SEARCH_FIELDS)
+    query_params = set_default_query_params(query_params)
 
     VALID_PARAMS = ["q", "max_results"]
     validate_query_params(query_params, VALID_PARAMS)
