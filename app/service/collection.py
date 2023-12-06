@@ -5,9 +5,13 @@ This layer uses the collection repo to handle storage management and other
 services for validation etc.
 """
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import ConfigDict, validate_call
+from sqlalchemy import exc
+from sqlalchemy.orm import Session
+
+import app.clients.db.session as db_session
 from app.errors import RepositoryError
 from app.model.collection import (
     CollectionCreateDTO,
@@ -15,13 +19,7 @@ from app.model.collection import (
     CollectionWriteDTO,
 )
 from app.repository import collection_repo
-import app.clients.db.session as db_session
-from sqlalchemy import exc
-from sqlalchemy.orm import Session
-
-from app.service import id
-from app.service import app_user
-
+from app.service import app_user, id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,19 +59,15 @@ def all() -> list[CollectionReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(search_term: str) -> list[CollectionReadDTO]:
+def search(query_params: dict[str, Union[str, int]]) -> list[CollectionReadDTO]:
     """
     Searches the title and descriptions of all the collections for the search term.
 
     :param str search_term: Search pattern to match.
     :return list[CollectionDTO]: The list of collections matching the search term.
     """
-    try:
-        with db_session.get_db() as db:
-            return collection_repo.search(db, search_term)
-    except exc.SQLAlchemyError:
-        _LOGGER.exception(f"When searching for collections with '{search_term}'")
-        raise RepositoryError(f"When searching for collections with '{search_term}'")
+    with db_session.get_db() as db:
+        return collection_repo.search(db, query_params)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

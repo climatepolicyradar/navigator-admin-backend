@@ -4,6 +4,11 @@ import logging
 from fastapi import APIRouter, HTTPException, Request, status
 
 import app.service.collection as collection_service
+from app.api.api_v1.query_params import (
+    get_query_params_as_dict,
+    set_default_query_params,
+    validate_query_params,
+)
 from app.errors import RepositoryError, ValidationError
 from app.model.collection import (
     CollectionCreateDTO,
@@ -70,7 +75,7 @@ async def get_all_collections() -> list[CollectionReadDTO]:
     "/collections/",
     response_model=list[CollectionReadDTO],
 )
-async def search_collection(q: str = "") -> list[CollectionReadDTO]:
+async def search_collection(request: Request) -> list[CollectionReadDTO]:
     """
     Searches for collections matching the "q" URL parameter.
 
@@ -78,15 +83,35 @@ async def search_collection(q: str = "") -> list[CollectionReadDTO]:
     :raises HTTPException: If nothing found a 404 is returned.
     :return list[CollectionDTO]: A list of matching collections.
     """
+
+    query_params = get_query_params_as_dict(request.query_params)
+
+    DEFAULT_SEARCH_FIELDS = ["title", "description"]
+    query_params = set_default_query_params(query_params, DEFAULT_SEARCH_FIELDS)
+
+    VALID_PARAMS = ["q", "max_results"]
+    validate_query_params(query_params, VALID_PARAMS)
+
     try:
-        collections = collection_service.search(q)
+        collections = collection_service.search(query_params)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except TimeoutError:
+        msg = (
+            "Request timed out fetching matching collections. Try adjusting your query."
+        )
+        _LOGGER.error(msg)
+        raise HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail=msg,
+        )
 
     if len(collections) == 0:
-        _LOGGER.info(f"Collections not found for terms: {q}")
+        _LOGGER.info(f"Collections not found for terms: {query_params}")
 
     return collections
 

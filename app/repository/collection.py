@@ -1,12 +1,18 @@
 """Operations on the repository for the Collection entity."""
 
 import logging
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy.orm import Session
-from sqlalchemy import Column
+from sqlalchemy import Column, and_, or_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound, OperationalError
+from sqlalchemy.orm import Query, Session
+from sqlalchemy_utils import escape_like
+
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.app.users import Organisation
+from app.clients.db.models.law_policy import Collection
 from app.clients.db.models.law_policy.collection import (
     CollectionFamily,
     CollectionOrganisation,
@@ -18,15 +24,7 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
-from app.clients.db.models.law_policy import Collection
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Query
-
-from sqlalchemy import or_, update as db_update, delete as db_delete
-from sqlalchemy_utils import escape_like
-
 from app.repository.helpers import generate_import_id
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,17 +118,32 @@ def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
     return _collection_to_dto(db, collection_org)
 
 
-def search(db: Session, search_term: str) -> list[CollectionReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[CollectionReadDTO]:
     """
-    Gets a list of collections from the repository searching title and summary.
+    Gets a list of collections from the repository searching title and description.
 
     :param db Session: the database connection
     :param str search_term: Any search term to filter on title or summary
     :return Optional[list[CollectionResponse]]: A list of matches
     """
-    term = f"%{escape_like(search_term)}%"
-    search = or_(Collection.title.ilike(term), Collection.description.ilike(term))
-    found = _get_query(db).filter(search).all()
+    search = []
+    if "q" in query_params.keys():
+        term = f"%{escape_like(query_params['q'])}%"
+        search.append(
+            or_(Collection.title.ilike(term), Collection.description.ilike(term))
+        )
+
+    condition = and_(*search) if len(search) > 1 else search[0]
+    try:
+        found = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
 
     return [_collection_to_dto(db, f) for f in found]
 
