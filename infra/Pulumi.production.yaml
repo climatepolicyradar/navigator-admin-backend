@@ -2,13 +2,13 @@ config:
   admin_backend:apprunner_backend_max_concurrency: "10"
   admin_backend:apprunner_backend_max_instance_count: "5"
   admin_backend:apprunner_backend_min_instance_count: "2"
-  admin_backend:docker_tag: 0.0.24-beta
+  admin_backend:docker_tag: 1.0.1-beta
   admin_backend:ecr_uri:
     secure: AAABADGDJp8NB1PMdF0xypW3Qqi+W0j2nvXCXTrwErXic9HTh6E8asjRIZI3mAEeXOnZB2TrJUpra0/l1nxSoEkiGTrygYmdgVEUEEjtjY+c+EHyWhs/zPpNiXv+VAR2r/hERg==
   admin_backend:rds_address:
     secure: AAABAEsgmuDMFhu4sztLZCAj0Be3kRfxzaDGhLie5Q8h5fASP/fupEjhFJwSkqyDizv/G/zjyQ7tMHKlyo9Mnnr7kCofm99i+mmywNjnANLeu6ncFuHJAdoQBlkqHuNiQalr3RcKcbx+ggim
   admin_backend:rds_database:
-    secure: AAABAMXu9e6I2l5P1k4GpK7bS29AjcnTPPCS436iGGzZOeXEbEdLFsIN0+1uVew=
+    secure: AAABAKR0nREmlOZTFgWYb1cu0GejbE+iuZnrgx/GxRgqJ16Lum78A7kLHkny
   admin_backend:rds_password:
     secure: AAABAFi+77knR/AsskglULgfcgs5ja+Nhg0RtMTW7WonnJj9k0i4I5VLwpcTq4Y19/XmecUhrA==
   admin_backend:rds_username:
