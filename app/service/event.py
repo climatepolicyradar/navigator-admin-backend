@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
@@ -11,7 +11,6 @@ import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.service import id
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ def all() -> list[EventReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(search_term: str) -> Optional[list[EventReadDTO]]:
+def search(query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
     """
     Search for all family events that match a search term.
 
@@ -59,7 +58,7 @@ def search(search_term: str) -> Optional[list[EventReadDTO]]:
         the search term or none.
     """
     with db_session.get_db() as db:
-        return event_repo.search(db, search_term)
+        return event_repo.search(db, query_params)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

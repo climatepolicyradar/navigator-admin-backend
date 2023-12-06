@@ -2,25 +2,26 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import or_, Column, update as db_update, delete as db_delete
+from sqlalchemy import Column, and_, or_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy_utils import escape_like
 
 from app.clients.db.models.app.counters import CountedEntity
 from app.clients.db.models.law_policy import (
     EventStatus,
-    FamilyEvent,
     Family,
     FamilyDocument,
+    FamilyEvent,
 )
-from app.errors import ValidationError, RepositoryError
+from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
     return _event_to_dto(family_event_meta)
 
 
-def search(db: Session, search_term: str) -> Optional[list[EventReadDTO]]:
+def search(db: Session, query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
     """
     Get family events matching a search term on the event title or type.
 
@@ -121,17 +122,22 @@ def search(db: Session, search_term: str) -> Optional[list[EventReadDTO]]:
     :return Optional[list[EventReadDTO]]: A list of matching family
         events or none.
     """
-    term = f"%{escape_like(search_term)}%"
-    search = or_(FamilyEvent.title.ilike(term), FamilyEvent.event_type_name.ilike(term))
+    search = []
+    if "q" in query_params.keys():
+        term = f"%{escape_like(query_params['q'])}%"
+        search.append(
+            or_(FamilyEvent.title.ilike(term), FamilyEvent.event_type_name.ilike(term))
+        )
 
+    condition = and_(*search) if len(search) > 1 else search[0]
     try:
-        found = _get_query(db).filter(search).all()
-    except NoResultFound as e:
-        _LOGGER.error(e)
-        return
-
-    if not found:
-        return []
+        found = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
 
     return [_event_to_dto(f) for f in found]
 
