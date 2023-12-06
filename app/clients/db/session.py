@@ -1,17 +1,19 @@
 import logging
-from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import registry, sessionmaker, Session
 
-from app.config import SQLALCHEMY_DATABASE_URI
+from sqlalchemy import create_engine, exc
+from sqlalchemy.orm import Session, registry, sessionmaker
+
+from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
 from app.errors import RepositoryError
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,
-    # TODO: configure as part of scaling work
+    # TODO: configure as part of scaling work: PDCT-650
     pool_size=10,
     max_overflow=240,
     # echo="debug",
+    connect_args={"options": f"-c statement_timeout={STATEMENT_TIMEOUT}"},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

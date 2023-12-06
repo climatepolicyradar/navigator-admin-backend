@@ -1,7 +1,8 @@
 from typing import Optional
-from pytest import MonkeyPatch
-from app.errors import RepositoryError
 
+from pytest import MonkeyPatch
+
+from app.errors import RepositoryError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
 from unit_tests.helpers.family import create_family_dto
 
@@ -10,10 +11,15 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     family_service.missing = False
     family_service.invalid_collections = False
     family_service.throw_repository_error = False
+    family_service.throw_timeout_error = False
 
     def maybe_throw():
         if family_service.throw_repository_error:
             raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if family_service.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all_families():
         return [create_family_dto("test")]
@@ -25,8 +31,10 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_search_families(q_params: dict) -> list[FamilyReadDTO]:
         if q_params["q"] == "empty":
             return []
-        else:
-            return [create_family_dto("search1")]
+
+        maybe_throw()
+        maybe_timeout()
+        return [create_family_dto("search1")]
 
     def mock_update_family(
         import_id: str, user_email: str, data: FamilyWriteDTO

@@ -97,6 +97,7 @@ def family_repo_mock(monkeypatch, mocker):
     # set some attributes for testing purposes...
     setattr(family_repo, "return_empty", False)
     setattr(family_repo, "throw_repository_error", False)
+    setattr(family_repo, "throw_timeout_error", False)
 
     yield family_repo
 

@@ -2,12 +2,12 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, Union, cast
 
 from sqlalchemy import Column, and_, or_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
@@ -160,7 +160,9 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     return _family_to_dto(db, fam_geo_meta)
 
 
-def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
 
@@ -183,7 +185,7 @@ def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
         search.append(Family.description.ilike(term))
 
     if "geography" in query_params.keys():
-        term = query_params["geography"]
+        term = cast(str, query_params["geography"])
         search.append(
             or_(
                 Geography.display_value == term.title(), Geography.value == term.upper()
@@ -191,11 +193,19 @@ def search(db: Session, query_params: dict[str, str]) -> list[FamilyReadDTO]:
         )
 
     if "status" in query_params.keys():
-        term = query_params["status"]
+        term = cast(str, query_params["status"])
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
-    found = _get_query(db).filter(condition).all()
+    try:
+        found = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
+
     return [_family_to_dto(db, f) for f in found]
 
 
