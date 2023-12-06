@@ -1,14 +1,15 @@
 """Endpoints for managing the Document entity."""
 import logging
+
 from fastapi import APIRouter, HTTPException, status
+
+import app.service.document as document_service
 from app.errors import RepositoryError, ValidationError
 from app.model.document import (
     DocumentCreateDTO,
     DocumentReadDTO,
     DocumentWriteDTO,
 )
-
-import app.service.document as document_service
 
 document_router = r = APIRouter()
 
@@ -85,10 +86,7 @@ async def search_document(q: str = "") -> list[DocumentReadDTO]:
         )
 
     if len(documents) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Documents not found for term: {q}",
-        )
+        _LOGGER.info(f"Documents not found for terms: {q}")
 
     return documents
 
