@@ -184,8 +184,8 @@ def search(
             term = f"%{escape_like(query_params['title'])}%"
             search.append(Family.title.ilike(term))
 
-        if "description" in query_params.keys():
-            term = f"%{escape_like(query_params['description'])}%"
+        if "summary" in query_params.keys():
+            term = f"%{escape_like(query_params['summary'])}%"
             search.append(Family.description.ilike(term))
 
     if "geography" in query_params.keys():

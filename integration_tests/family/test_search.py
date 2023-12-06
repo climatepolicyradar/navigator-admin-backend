@@ -24,6 +24,25 @@ def test_search_family_using_q(client: TestClient, test_db: Session, user_header
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
+def test_search_family_with_specific_param(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    response = client.get(
+        "/api/v1/families/?summary=apple",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert type(data) is list
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 1
+
+    expected_ids = set(["A.0.0.2"])
+    assert ids_found.symmetric_difference(expected_ids) == set([])
+
+
 def test_search_family_with_max_results(
     client: TestClient, test_db: Session, user_header_token
 ):
