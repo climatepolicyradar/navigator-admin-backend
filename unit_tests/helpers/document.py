@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Optional
+
 from app.clients.db.models.law_policy.family import DocumentStatus
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 
@@ -55,4 +57,6 @@ def create_document_read_dto(
         content_type="content_type",
         user_language_name="Ghotuo",
         calc_language_name=None,
+        created=datetime.now(),
+        last_modified=datetime.now(),
     )

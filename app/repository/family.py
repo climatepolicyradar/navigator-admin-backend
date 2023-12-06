@@ -1,6 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
+from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from sqlalchemy import Column, and_, or_
@@ -78,7 +79,7 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
         category=str(f.family_category),
         status=str(f.family_status),
         metadata=metadata,
-        slug=str(f.slugs[-1].name if len(f.slugs) > 0 else ""),
+        slug=str(f.slugs[0].name if len(f.slugs) > 0 else ""),
         events=[str(e.import_id) for e in f.events],
         published_date=f.published_date,
         last_updated_date=f.last_updated_date,
@@ -90,6 +91,8 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
             )
         ],
         organisation=org,
+        created=cast(datetime, f.created),
+        last_modified=cast(datetime, f.last_modified),
     )
 
 

@@ -15,6 +15,8 @@ def create_event_read_dto(
         family_import_id=family_import_id,
         family_document_import_id=None,
         event_status=EventStatus.OK,
+        created=datetime.now(),
+        last_modified=datetime.now(),
     )
 
 

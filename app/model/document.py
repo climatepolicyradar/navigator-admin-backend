@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel
 
 from app.clients.db.models.law_policy.family import (
@@ -17,6 +19,8 @@ class DocumentReadDTO(BaseModel):
     role: str
     type: Optional[str]
     slug: str
+    created: datetime
+    last_modified: datetime
     # From PhysicalDocument
     physical_id: int
     title: str

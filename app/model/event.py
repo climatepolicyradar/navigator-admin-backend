@@ -19,6 +19,8 @@ class EventReadDTO(BaseModel):
     date: datetime
     event_type_value: str
     event_status: EventStatus
+    created: datetime
+    last_modified: datetime
 
     # From FamilyDocument
     family_import_id: str

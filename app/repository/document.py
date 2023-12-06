@@ -56,6 +56,8 @@ def _get_query(db: Session) -> Query:
             FamilyDocument.document_status.label("status"),
             FamilyDocument.document_role.label("role"),
             FamilyDocument.document_type.label("type"),
+            FamilyDocument.created.label("created"),
+            FamilyDocument.last_modified.label("last_modified"),
             concat(sq_slug.c.name).label("slug"),  # type: ignore
             PhysicalDocument.id.label("physical_id"),
             PhysicalDocument.title.label("title"),

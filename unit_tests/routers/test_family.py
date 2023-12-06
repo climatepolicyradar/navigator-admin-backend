@@ -9,7 +9,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from unit_tests.helpers.family import create_family_dto
+from unit_tests.helpers.family import create_family_create_dto, create_family_write_dto
 
 
 def test_get_all_when_ok(client: TestClient, family_service_mock, user_header_token):
@@ -99,7 +99,7 @@ def test_search_when_not_found(
 
 
 def test_update_when_ok(client: TestClient, family_service_mock, user_header_token):
-    new_data = create_family_dto("fam1").model_dump()
+    new_data = create_family_write_dto("fam1").model_dump()
     response = client.put(
         "/api/v1/families/fam1", json=new_data, headers=user_header_token
     )
@@ -113,7 +113,7 @@ def test_update_when_not_found(
     client: TestClient, family_service_mock, user_header_token
 ):
     family_service_mock.missing = True
-    new_data = create_family_dto("fam1").model_dump()
+    new_data = create_family_write_dto("fam1").model_dump()
     response = client.put(
         "/api/v1/families/fam1", json=new_data, headers=user_header_token
     )
@@ -124,7 +124,7 @@ def test_update_when_not_found(
 
 
 def test_create_when_ok(client: TestClient, family_service_mock, user_header_token):
-    new_data = create_family_dto("fam1").model_dump()
+    new_data = create_family_create_dto("fam1").model_dump()
     response = client.post("/api/v1/families", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()

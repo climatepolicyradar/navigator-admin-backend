@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -9,6 +10,8 @@ class CollectionReadDTO(BaseModel):
     description: str
     families: list[str]
     organisation: str
+    created: datetime
+    last_modified: datetime
 
 
 class CollectionWriteDTO(BaseModel):

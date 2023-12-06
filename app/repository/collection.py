@@ -1,6 +1,7 @@
 """Operations on the repository for the Collection entity."""
 
 import logging
+from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from sqlalchemy import Column, and_, or_
@@ -81,6 +82,8 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         description=str(collection.description),
         organisation=cast(str, org.name),
         families=families,
+        created=cast(datetime, collection.created),
+        last_modified=cast(datetime, collection.last_modified),
     )
 
 
