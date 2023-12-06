@@ -13,7 +13,6 @@ from fastapi import APIRouter, HTTPException, Request, status
 import app.service.family as family_service
 from app.api.api_v1.query_params import (
     get_query_params_as_dict,
-    remove_query_params,
     set_default_query_params,
     validate_query_params,
 )
@@ -87,13 +86,11 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     """
     query_params = get_query_params_as_dict(request.query_params)
 
-    query_params = set_default_query_params(query_params)
+    DEFAULT_SEARCH_PARAMS = ["title", "description"]
+    query_params = set_default_query_params(query_params, DEFAULT_SEARCH_PARAMS)
 
     VALID_PARAMS = ["q", "title", "description", "geography", "status", "max_results"]
     validate_query_params(query_params, VALID_PARAMS)
-
-    PARAMS_TO_REMOVE = ["title", "description"]
-    query_params = remove_query_params(query_params, PARAMS_TO_REMOVE)
 
     try:
         families = family_service.search(query_params)
