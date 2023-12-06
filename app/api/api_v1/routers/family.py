@@ -7,11 +7,15 @@ layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
 import logging
-from typing import Union, cast
 
 from fastapi import APIRouter, HTTPException, Request, status
 
 import app.service.family as family_service
+from app.api.api_v1.query_params import (
+    get_query_params_as_dict,
+    set_default_query_params,
+    validate_query_params,
+)
 from app.errors import RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
@@ -77,46 +81,18 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
         to search for. Defaults to searching for "" in family titles and
         summaries.
     :raises HTTPException: If invalid fields passed a 400 is returned.
-    :raises HTTPException: If nothing found a 404 is returned.
-    :return list[FamilyDTO]: A list of matching families.
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[FamilyDTO]: A list of matching families (which can be
+        empty).
     """
-    query_params: dict[str, Union[str, int]] = {
-        k: request.query_params[k] for k in request.query_params.keys()
-    }
+    query_params = get_query_params_as_dict(request.query_params)
 
-    query_fields = query_params.keys()
-    if len(query_fields) < 1:
-        query_params = {"q": ""}
+    query_params = set_default_query_params(query_params)
 
-    VALID_PARAMS = ["q", "title", "description", "geography", "status", "max_results"]
-    invalid_params = [x for x in query_fields if x not in VALID_PARAMS]
-    if any(invalid_params):
-        msg = f"Search parameters are invalid: {invalid_params}"
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=msg,
-        )
-
-    if "q" in query_fields:
-        if "title" in query_fields:
-            query_params.pop("title")
-        if "description" in query_fields:
-            query_params.pop("description")
-
-    DEFAULT_MAX_RESULTS = 500
-    if "max_results" not in query_fields:
-        query_params["max_results"] = DEFAULT_MAX_RESULTS
-    else:
-        if not isinstance(query_params["max_results"], int):
-            try:
-                query_params.update(
-                    {"max_results": cast(int, query_params["max_results"])}
-                )
-            except Exception:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Maximum results must be an integer value",
-                )
+    VALID_PARAMS = ["q", "title", "summary", "geography", "status", "max_results"]
+    validate_query_params(query_params, VALID_PARAMS)
 
     try:
         families = family_service.search(query_params)

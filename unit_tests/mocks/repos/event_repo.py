@@ -1,7 +1,9 @@
 from typing import Optional
-from pytest import MonkeyPatch
 
+from pytest import MonkeyPatch
 from sqlalchemy import exc
+
+from app.errors import RepositoryError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from unit_tests.helpers.event import create_event_read_dto
 
@@ -9,10 +11,15 @@ from unit_tests.helpers.event import create_event_read_dto
 def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     event_repo.return_empty = False
     event_repo.throw_repository_error = False
+    event_repo.throw_timeout_error = False
 
     def maybe_throw():
         if event_repo.throw_repository_error:
-            raise exc.SQLAlchemyError("bad repo")
+            raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if event_repo.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all(_) -> list[EventReadDTO]:
         values = []
@@ -25,8 +32,9 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         dto = create_event_read_dto(import_id)
         return dto
 
-    def mock_search(_, q: str) -> list[EventReadDTO]:
+    def mock_search(_, q: dict) -> list[EventReadDTO]:
         maybe_throw()
+        maybe_timeout()
         if not event_repo.return_empty:
             return [create_event_read_dto("search1")]
         return []

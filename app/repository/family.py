@@ -167,22 +167,26 @@ def search(
     Gets a list of families from the repository searching given fields.
 
     :param db Session: the database connection
-    :param dict[str, str] query_params: Any search terms to filter on
-        specified fields (title & summary by default if 'q' specified).
-    :return list[FamilyResponse]: A list of matches
+    :param dict query_params: Any search terms to filter on specified
+        fields (title & summary by default if 'q' specified).
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[FamilyReadDTO]: A list of families matching the search
+        terms.
     """
     search = []
     if "q" in query_params.keys():
         term = f"%{escape_like(query_params['q'])}%"
         search.append(or_(Family.title.ilike(term), Family.description.ilike(term)))
+    else:
+        if "title" in query_params.keys():
+            term = f"%{escape_like(query_params['title'])}%"
+            search.append(Family.title.ilike(term))
 
-    if "title" in query_params.keys():
-        term = f"%{escape_like(query_params['title'])}%"
-        search.append(Family.title.ilike(term))
-
-    if "description" in query_params.keys():
-        term = f"%{escape_like(query_params['description'])}%"
-        search.append(Family.description.ilike(term))
+        if "summary" in query_params.keys():
+            term = f"%{escape_like(query_params['summary'])}%"
+            search.append(Family.description.ilike(term))
 
     if "geography" in query_params.keys():
         term = cast(str, query_params["geography"])

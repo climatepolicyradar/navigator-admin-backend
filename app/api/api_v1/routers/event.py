@@ -1,9 +1,14 @@
 """Endpoints for managing Family Event entities."""
 import logging
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 import app.service.event as event_service
+from app.api.api_v1.query_params import (
+    get_query_params_as_dict,
+    set_default_query_params,
+    validate_query_params,
+)
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 
@@ -37,26 +42,45 @@ async def get_all_events() -> list[EventReadDTO]:
     "/events/",
     response_model=list[EventReadDTO],
 )
-async def search_event(q: str = "") -> list[EventReadDTO]:
+async def search_event(request: Request) -> list[EventReadDTO]:
     """
-    Searches for family events matching the "q" URL parameter.
+    Searches for family events matching URL parameters ("q" by default).
 
-    :param str q: The string to match, defaults to ""
-    :raises HTTPException: If nothing found a 404 is returned.
-    :return list[EventDTO]: A list of matching events.
+    :param Request request: The fields to match against and the values
+        to search for. Defaults to searching for "" in event titles and
+        type names.
+    :raises HTTPException: If invalid fields passed a 400 is returned.
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[EventReadDTO]: A list of matching events (which can be
+        empty).
     """
+    query_params = get_query_params_as_dict(request.query_params)
+
+    query_params = set_default_query_params(query_params)
+
+    VALID_PARAMS = ["q", "max_results"]
+    validate_query_params(query_params, VALID_PARAMS)
+
     try:
-        events_found = event_service.search(q)
+        events_found = event_service.search(query_params)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
-
-    if not events_found:
+    except TimeoutError:
+        msg = "Request timed out fetching matching events. Try adjusting your query."
+        _LOGGER.error(msg)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Events not found for term: {q}",
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail=msg,
         )
+
+    if len(events_found) == 0:
+        _LOGGER.info(f"Events not found for terms: {query_params}")
 
     return events_found
 

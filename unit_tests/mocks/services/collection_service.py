@@ -1,7 +1,8 @@
 from typing import Optional
-from pytest import MonkeyPatch
-from app.errors import RepositoryError
 
+from pytest import MonkeyPatch
+
+from app.errors import RepositoryError
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from unit_tests.helpers.collection import create_collection_read_dto
 
@@ -12,11 +13,16 @@ INCORRECT_ORG_ID = 1234
 def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker):
     collection_service.missing = False
     collection_service.throw_repository_error = False
+    collection_service.throw_timeout_error = False
     collection_service.invalid_org = False
 
     def maybe_throw():
         if collection_service.throw_repository_error:
             raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if collection_service.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all_collections():
         maybe_throw()
@@ -27,12 +33,12 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         if not collection_service.missing:
             return create_collection_read_dto(import_id)
 
-    def mock_search_collections(q: str) -> list[CollectionReadDTO]:
+    def mock_search_collections(q_params: dict) -> list[CollectionReadDTO]:
         maybe_throw()
+        maybe_timeout()
         if collection_service.missing:
             return []
-        else:
-            return [create_collection_read_dto("search1")]
+        return [create_collection_read_dto("search1")]
 
     def mock_update_collection(
         import_id: str, data: CollectionWriteDTO

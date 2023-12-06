@@ -2,12 +2,12 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import Column, or_
+from sqlalchemy import Column, and_, or_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
@@ -121,17 +121,36 @@ def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
     return _collection_to_dto(db, collection_org)
 
 
-def search(db: Session, search_term: str) -> list[CollectionReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[CollectionReadDTO]:
     """
-    Gets a list of collections from the repository searching title and summary.
+    Gets a list of collections from the repo searching given fields.
 
     :param db Session: the database connection
-    :param str search_term: Any search term to filter on title or summary
-    :return Optional[list[CollectionResponse]]: A list of matches
+    :param dict query_params: Any search terms to filter on specified
+        fields (title & summary by default if 'q' specified).
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[CollectionResponse]: A list of matching collections.
     """
-    term = f"%{escape_like(search_term)}%"
-    search = or_(Collection.title.ilike(term), Collection.description.ilike(term))
-    found = _get_query(db).filter(search).all()
+    search = []
+    if "q" in query_params.keys():
+        term = f"%{escape_like(query_params['q'])}%"
+        search.append(
+            or_(Collection.title.ilike(term), Collection.description.ilike(term))
+        )
+
+    condition = and_(*search) if len(search) > 1 else search[0]
+    try:
+        found = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
 
     return [_collection_to_dto(db, f) for f in found]
 

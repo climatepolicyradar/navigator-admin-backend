@@ -1,7 +1,9 @@
 from typing import Optional
-from pytest import MonkeyPatch
 
+from pytest import MonkeyPatch
 from sqlalchemy import exc
+
+from app.errors import RepositoryError
 from app.model.collection import CollectionReadDTO
 from unit_tests.helpers.collection import create_collection_read_dto
 
@@ -14,11 +16,16 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
     collection_repo.invalid_org = False
     collection_repo.missing = False
     collection_repo.throw_repository_error = False
+    collection_repo.throw_timeout_error = False
     collection_repo.alternative_org = False
 
     def maybe_throw():
         if collection_repo.throw_repository_error:
-            raise exc.SQLAlchemyError("bad repo")
+            raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if collection_repo.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all(_) -> list[CollectionReadDTO]:
         return [
@@ -32,6 +39,7 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_search(_, q: str) -> list[CollectionReadDTO]:
         maybe_throw()
+        maybe_timeout()
         if not collection_repo.return_empty:
             return [create_collection_read_dto("search1")]
         return []

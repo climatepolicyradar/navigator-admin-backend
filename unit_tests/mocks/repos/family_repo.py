@@ -35,7 +35,9 @@ def search(
     _maybe_timeout()
     if getattr(family_repo, "return_empty"):
         return []
-    return [create_family_dto("search1")]
+    if "title" in query_params.keys():
+        return [create_family_dto("search1")]
+    return [create_family_dto("search1"), create_family_dto("search2")]
 
 
 def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:

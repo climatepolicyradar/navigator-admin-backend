@@ -1,7 +1,8 @@
 from typing import Optional
-from pytest import MonkeyPatch
-from app.errors import RepositoryError, ValidationError
 
+from pytest import MonkeyPatch
+
+from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from unit_tests.helpers.event import create_event_read_dto
 
@@ -9,10 +10,15 @@ from unit_tests.helpers.event import create_event_read_dto
 def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
     event_service.missing = False
     event_service.throw_repository_error = False
+    event_service.throw_timeout_error = False
 
     def maybe_throw():
         if event_service.throw_repository_error:
             raise RepositoryError("bad repo")
+
+    def maybe_timeout():
+        if event_service.throw_timeout_error:
+            raise TimeoutError
 
     def mock_get_all_events() -> list[EventReadDTO]:
         maybe_throw()
@@ -23,8 +29,9 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         if not event_service.missing:
             return create_event_read_dto(import_id)
 
-    def mock_search_events(q: str) -> list[EventReadDTO]:
+    def mock_search_events(q: dict) -> list[EventReadDTO]:
         maybe_throw()
+        maybe_timeout()
         if event_service.missing:
             return []
         else:

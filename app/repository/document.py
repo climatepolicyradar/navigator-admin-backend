@@ -1,10 +1,10 @@
 import logging
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import Column, and_, func, or_
+from sqlalchemy import Column, and_, func
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql.functions import concat
 from sqlalchemy_utils import escape_like
@@ -161,17 +161,34 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     return DocumentReadDTO(**dict(result))
 
 
-def search(db: Session, search_term: str) -> list[DocumentReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]]
+) -> list[DocumentReadDTO]:
     """
-    Gets a list of documents from the repository searching title and summary.
+    Gets a list of documents from the repository searching the title.
 
     :param db Session: the database connection
-    :param str search_term: Any search term to filter on title or summary
-    :return Optional[list[DocumentResponse]]: A list of matches
+    :param dict query_params: Any search terms to filter on specified
+        fields (title by default if 'q' specified).
+    :raises HTTPException: If a DB error occurs a 503 is returned.
+    :raises HTTPException: If the search request times out a 408 is
+        returned.
+    :return list[DocumentResponse]: A list of matching documents.
     """
-    term = f"%{escape_like(search_term)}%"
-    search = or_(PhysicalDocument.title.ilike(term))
-    result = _get_query(db).filter(search).all()
+    search = []
+    if "q" in query_params.keys():
+        term = f"%{escape_like(query_params['q'])}%"
+        search.append(PhysicalDocument.title.ilike(term))
+
+    condition = and_(*search) if len(search) > 1 else search[0]
+    try:
+        result = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
+    except OperationalError as e:
+        if "canceling statement due to statement timeout" in str(e):
+            raise TimeoutError
+        raise RepositoryError(e)
 
     return [DocumentReadDTO(**dict(r)) for r in result]
 

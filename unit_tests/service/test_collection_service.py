@@ -1,12 +1,12 @@
 import pytest
 
+import app.service.collection as collection_service
 from app.errors import RepositoryError, ValidationError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,
     CollectionWriteDTO,
 )
-import app.service.collection as collection_service
 from unit_tests.helpers.collection import create_collection_write_dto
 from unit_tests.mocks.repos.collection_repo import (
     create_collection_read_dto as create_dto,
@@ -57,15 +57,29 @@ def test_get_raises_if_invalid_id(collection_repo_mock):
 
 
 def test_search(collection_repo_mock):
-    result = collection_service.search("two")
+    result = collection_service.search({"q": "two"})
     assert result is not None
     assert len(result) == 1
     assert collection_repo_mock.search.call_count == 1
 
 
-def test_search_when_missing(collection_repo_mock):
+def test_search_db_error(collection_repo_mock):
+    collection_repo_mock.throw_repository_error = True
+    with pytest.raises(RepositoryError):
+        collection_service.search({"q": "error"})
+    assert collection_repo_mock.search.call_count == 1
+
+
+def test_search_request_timeout(collection_repo_mock):
+    collection_repo_mock.throw_timeout_error = True
+    with pytest.raises(TimeoutError):
+        collection_service.search({"q": "timeout"})
+    assert collection_repo_mock.search.call_count == 1
+
+
+def test_search_missing(collection_repo_mock):
     collection_repo_mock.return_empty = True
-    result = collection_service.search("empty")
+    result = collection_service.search({"q": "empty"})
     assert result is not None
     assert len(result) == 0
     assert collection_repo_mock.search.call_count == 1
