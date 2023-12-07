@@ -2,6 +2,7 @@ import logging
 from typing import Optional, Tuple, Union, cast
 
 from sqlalchemy import Column, and_, func
+from sqlalchemy import delete as db_delete
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
@@ -275,6 +276,11 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
                 language_id=new_language.id,
                 source=LanguageSource.USER,
             )
+        commands.append(command)
+    else:
+        command = db_delete(PhysicalDocumentLanguage).where(
+            PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
+        )
         commands.append(command)
 
     for c in commands:
