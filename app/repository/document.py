@@ -137,6 +137,7 @@ def all(db: Session) -> list[DocumentReadDTO]:
     :param db Session: the database connection
     :return Optional[DocumentResponse]: All of things
     """
+    # TODO: PDCT-672 .Add ordering e.g., order_by(desc(FamilyDocument.last_modified))
     result = _get_query(db).all()
 
     if not result:
@@ -183,6 +184,7 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
+        # TODO: Fix order by on search PDCT-672
         result = (
             _get_query(db).filter(condition).limit(query_params["max_results"]).all()
         )
