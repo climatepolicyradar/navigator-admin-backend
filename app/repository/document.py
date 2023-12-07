@@ -183,12 +183,9 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
+        # TODO: Fix order by on search PDCT-672
         result = (
-            _get_query(db)
-            .filter(condition)
-            .order_by(desc(FamilyDocument.last_modified))
-            .limit(query_params["max_results"])
-            .all()
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
         )
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
