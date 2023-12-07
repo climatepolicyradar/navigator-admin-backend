@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import Column, and_, desc, func
+from sqlalchemy import Column, and_, func
 from sqlalchemy import delete as db_delete
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
@@ -137,7 +137,8 @@ def all(db: Session) -> list[DocumentReadDTO]:
     :param db Session: the database connection
     :return Optional[DocumentResponse]: All of things
     """
-    result = _get_query(db).order_by(desc(FamilyDocument.last_modified)).all()
+    # TODO: PDCT-672 .Add ordering e.g., order_by(desc(FamilyDocument.last_modified))
+    result = _get_query(db).all()
 
     if not result:
         return []
