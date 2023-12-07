@@ -1,8 +1,10 @@
-from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy import FamilyDocument
+
 from app.clients.db.models.document import PhysicalDocument
+from app.clients.db.models.document.physical_document import PhysicalDocumentLanguage
+from app.clients.db.models.law_policy import FamilyDocument
 from app.clients.db.models.law_policy.family import Slug
 from integration_tests.setup_db import setup_db
 from unit_tests.helpers.document import create_document_create_dto
@@ -66,6 +68,52 @@ def test_create_document_null_variant(
 
     assert actual_fd is not None
     assert actual_fd.variant_name is None
+
+    actual_pd = (
+        test_db.query(PhysicalDocument)
+        .filter(PhysicalDocument.id == actual_fd.physical_document_id)
+        .one()
+    )
+    assert actual_pd is not None
+    assert actual_pd.title == "Title"
+
+    slug = (
+        test_db.query(Slug)
+        .filter(Slug.family_document_import_id == actual_fd.import_id)
+        .one()
+    )
+    assert len(slug.name) == len("title") + 1 + 4
+    assert slug.name.startswith("title")
+
+
+def test_create_document_null_user_language_name(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = create_document_create_dto(
+        title="Title", family_import_id="A.0.0.3", user_language_name=None
+    )
+    response = client.post(
+        "/api/v1/documents",
+        json=new_document.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+
+    created_import_id = response.json()
+    actual_fd = (
+        test_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == created_import_id)
+        .one()
+    )
+    assert actual_fd is not None
+
+    language = (
+        test_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == actual_fd.physical_document_id)
+        .one()
+    )
+    assert language is not None
 
     actual_pd = (
         test_db.query(PhysicalDocument)

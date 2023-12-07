@@ -56,7 +56,7 @@ class DocumentCreateDTO(BaseModel):
     # From PhysicalDocument
     title: str
     source_url: str
-    user_language_name: str
+    user_language_name: Optional[str]
 
 
 class DocumentUploadRequest(BaseModel):
