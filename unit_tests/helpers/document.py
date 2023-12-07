@@ -9,6 +9,7 @@ def create_document_create_dto(
     family_import_id="test.family.1.0",
     title: str = "title",
     variant_name: Optional[str] = "Original Language",
+    user_language_name: Optional[str] = None,
 ) -> DocumentCreateDTO:
     return DocumentCreateDTO(
         family_import_id=family_import_id,
