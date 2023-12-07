@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import Column, and_, or_
+from sqlalchemy import Column, and_, desc, or_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
@@ -87,7 +87,7 @@ def all(db: Session) -> list[EventReadDTO]:
     :param db Session: The database connection.
     :return Optional[EventReadDTO]: All family events in the database.
     """
-    family_event_metas = _get_query(db).all()
+    family_event_metas = _get_query(db).order_by(desc(FamilyEvent.last_modified)).all()
 
     if not family_event_metas:
         return []

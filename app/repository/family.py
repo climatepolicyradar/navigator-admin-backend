@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import Column, and_, or_
+from sqlalchemy import Column, and_, desc, or_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
@@ -133,7 +133,7 @@ def all(db: Session) -> list[FamilyReadDTO]:
     :param db Session: the database connection
     :return Optional[FamilyResponse]: All of things
     """
-    family_geo_metas = _get_query(db).all()
+    family_geo_metas = _get_query(db).order_by(desc(Family.last_modified)).all()
 
     if not family_geo_metas:
         return []
