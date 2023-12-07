@@ -18,7 +18,7 @@ def create_document_create_dto(
         type="Law",
         title=title,
         source_url="source",
-        user_language_name="Ghotuo",
+        user_language_name=user_language_name,
     )
 
 

@@ -111,9 +111,9 @@ def test_create_document_null_user_language_name(
     language = (
         test_db.query(PhysicalDocumentLanguage)
         .filter(PhysicalDocumentLanguage.document_id == actual_fd.physical_document_id)
-        .one()
+        .one_or_none()
     )
-    assert language is not None
+    assert language is None
 
     actual_pd = (
         test_db.query(PhysicalDocument)

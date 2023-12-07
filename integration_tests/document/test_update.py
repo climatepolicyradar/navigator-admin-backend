@@ -1,7 +1,9 @@
 from typing import Tuple
-from fastapi.testclient import TestClient
+
 from fastapi import status
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+
 from app.clients.db.models.document.physical_document import (
     LanguageSource,
     PhysicalDocument,
@@ -9,7 +11,6 @@ from app.clients.db.models.document.physical_document import (
 )
 from app.clients.db.models.law_policy.family import FamilyDocument, Slug
 from app.model.document import DocumentWriteDTO
-
 from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 from unit_tests.helpers.document import create_document_write_dto
 
@@ -138,6 +139,59 @@ def test_update_document_remove_variant(
     assert last_slug.startswith("updated-title")
 
 
+def test_update_document_remove_user_language(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = DocumentWriteDTO(
+        variant_name=None,
+        role="SUMMARY",
+        type="Annex",
+        title="Updated Title",
+        source_url="Updated Source",
+        user_language_name=None,
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.1"
+    assert data["variant_name"] is None
+    assert data["role"] == "SUMMARY"
+    assert data["type"] == "Annex"
+    assert data["title"] == "Updated Title"
+    assert data["source_url"] == "Updated Source"
+    assert data["slug"].startswith("updated-title")
+    assert data["user_language_name"] is None
+
+    fd, pd = _get_doc_tuple(test_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name is None
+    assert fd.document_role == "SUMMARY"
+    assert fd.document_type == "Annex"
+    assert pd.title == "Updated Title"
+    assert pd.source_url == "Updated Source"
+
+    # Check the user language in the db
+    lang = (
+        test_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one_or_none()
+    )
+    assert lang is None
+
+    # Check slug is updated too
+    slugs = (
+        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.1").all()
+    )
+    last_slug = slugs[-1].name
+    assert last_slug.startswith("updated-title")
+
+
 def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
     setup_db(test_db)
     new_document = create_document_write_dto(
@@ -151,7 +205,7 @@ def test_update_document_idempotent(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
-    doc = EXPECTED_DOCUMENTS[1]
+    doc = EXPECTED_DOCUMENTS[0]
     document = {
         "variant_name": doc["variant_name"],
         "role": doc["role"],
@@ -169,10 +223,10 @@ def test_update_document_idempotent(
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
-    assert data["title"] == EXPECTED_DOCUMENTS[1]["title"]
+    assert data["title"] == EXPECTED_DOCUMENTS[0]["title"]
 
-    _, pd = _get_doc_tuple(test_db, EXPECTED_DOCUMENTS[1]["import_id"])
-    assert pd.title == EXPECTED_DOCUMENTS[1]["title"]
+    _, pd = _get_doc_tuple(test_db, EXPECTED_DOCUMENTS[0]["import_id"])
+    assert pd.title == EXPECTED_DOCUMENTS[0]["title"]
 
 
 def test_update_document_rollback(

@@ -2,6 +2,7 @@ import logging
 from typing import Optional, Tuple, Union, cast
 
 from sqlalchemy import Column, and_, func
+from sqlalchemy import delete as db_delete
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
@@ -276,6 +277,11 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
                 source=LanguageSource.USER,
             )
         commands.append(command)
+    else:
+        command = db_delete(PhysicalDocumentLanguage).where(
+            PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
+        )
+        commands.append(command)
 
     for c in commands:
         result = db.execute(c)
@@ -333,9 +339,6 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
         # Update the FamilyDocument with the new PhysicalDocument id
         family_doc.physical_document_id = phys_doc.id
 
-        # Add the language link with the new PhysicalDocument id
-        language.document_id = phys_doc.id
-
         # Generate the import_id for the new document
         org = family_repo.get_organisation(db, cast(str, family_doc.family_import_id))
         if org is None:
@@ -351,7 +354,12 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
 
         # Add the new document and its language link
         db.add(family_doc)
-        db.add(language)
+
+        # Add the language link with the new PhysicalDocument id
+        if language.language_id is not None:
+            language.document_id = phys_doc.id
+            db.add(language)
+
         db.flush()
 
         # Finally the slug
