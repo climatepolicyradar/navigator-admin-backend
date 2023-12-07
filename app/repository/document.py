@@ -339,9 +339,6 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
         # Update the FamilyDocument with the new PhysicalDocument id
         family_doc.physical_document_id = phys_doc.id
 
-        # Add the language link with the new PhysicalDocument id
-        language.document_id = phys_doc.id
-
         # Generate the import_id for the new document
         org = family_repo.get_organisation(db, cast(str, family_doc.family_import_id))
         if org is None:
@@ -357,7 +354,12 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
 
         # Add the new document and its language link
         db.add(family_doc)
-        db.add(language)
+
+        # Add the language link with the new PhysicalDocument id
+        if language.language_id is not None:
+            language.document_id = phys_doc.id
+            db.add(language)
+
         db.flush()
 
         # Finally the slug
