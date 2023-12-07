@@ -76,7 +76,7 @@ def test_search_document_with_max_results(
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1
 
-    expected_ids = set(["E.0.0.2"])
+    expected_ids = set(["E.0.0.3"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
