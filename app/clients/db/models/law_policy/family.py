@@ -207,7 +207,7 @@ class FamilyDocument(Base):
     variant_name = sa.Column(sa.ForeignKey(Variant.variant_name), nullable=True)
     document_status = sa.Column(
         sa.Enum(DocumentStatus),
-        default=DocumentStatus.CREATED,
+        default=DocumentStatus.PUBLISHED,
         nullable=False,
     )
     document_type = sa.Column(sa.ForeignKey(FamilyDocumentType.name), nullable=True)
