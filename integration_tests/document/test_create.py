@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.clients.db.models.document import PhysicalDocument
 from app.clients.db.models.document.physical_document import PhysicalDocumentLanguage
 from app.clients.db.models.law_policy import FamilyDocument
-from app.clients.db.models.law_policy.family import Slug
+from app.clients.db.models.law_policy.family import DocumentStatus, Slug
 from integration_tests.setup_db import setup_db
 from unit_tests.helpers.document import create_document_create_dto
 
@@ -242,3 +242,25 @@ def test_create_document_when_invalid_variant(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert '(Invalid) is not present in table "variant"' in data["detail"]
+
+
+def test_document_status_is_published_on_create(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
+    response = client.post(
+        "/api/v1/documents",
+        json=new_document.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    created_import_id = response.json()
+    actual_fd = (
+        test_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == created_import_id)
+        .one()
+    )
+
+    assert actual_fd is not None
+    assert actual_fd.document_status is DocumentStatus.PUBLISHED
