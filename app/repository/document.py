@@ -125,7 +125,7 @@ def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjec
     phys_doc = PhysicalDocument(
         id=None,
         title=dto.title,
-        source_url=dto.source_url,
+        source_url=str(dto.source_url),
     )
     return language, fam_doc, phys_doc
 
@@ -248,7 +248,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         .where(PhysicalDocument.id == original_pd.id)
         .values(
             title=new_values["title"],
-            source_url=new_values["source_url"],
+            source_url=str(new_values["source_url"]),
         ),
         db_update(FamilyDocument)
         .where(FamilyDocument.import_id == original_fd.import_id)
