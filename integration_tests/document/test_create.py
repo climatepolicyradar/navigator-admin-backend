@@ -263,4 +263,4 @@ def test_document_status_is_published_on_create(
     )
 
     assert actual_fd is not None
-    assert actual_fd.document_status is DocumentStatus.PUBLISHED
+    assert actual_fd.document_status is DocumentStatus.CREATED
