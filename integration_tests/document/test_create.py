@@ -244,7 +244,7 @@ def test_create_document_when_invalid_variant(
     assert '(Invalid) is not present in table "variant"' in data["detail"]
 
 
-def test_document_status_is_published_on_create(
+def test_document_status_is_created_on_create(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
@@ -263,4 +263,4 @@ def test_document_status_is_published_on_create(
     )
 
     assert actual_fd is not None
-    assert actual_fd.document_status is DocumentStatus.PUBLISHED
+    assert actual_fd.document_status is DocumentStatus.CREATED
