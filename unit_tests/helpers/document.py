@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, cast
+from pydantic import AnyHttpUrl
 
 from app.clients.db.models.law_policy.family import DocumentStatus
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
@@ -17,7 +18,7 @@ def create_document_create_dto(
         role="MAIN",
         type="Law",
         title=title,
-        source_url="source",
+        source_url=cast(AnyHttpUrl, "http://source"),
         user_language_name=user_language_name,
     )
 
@@ -31,7 +32,7 @@ def create_document_write_dto(
         role="MAIN",
         type="Law",
         title=title,
-        source_url="source",
+        source_url=cast(AnyHttpUrl, "http://source"),
         user_language_name="Ghotuo",
     )
 
@@ -54,7 +55,7 @@ def create_document_read_dto(
         title=title,
         md5_sum="sum",
         cdn_object="cdn",
-        source_url="source",
+        source_url=cast(AnyHttpUrl, "http://source"),
         content_type="content_type",
         user_language_name="Ghotuo",
         calc_language_name=None,

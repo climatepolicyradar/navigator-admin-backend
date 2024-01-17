@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, AnyHttpUrl
 
 from app.clients.db.models.law_policy.family import (
     DocumentStatus,
@@ -26,7 +26,7 @@ class DocumentReadDTO(BaseModel):
     title: str
     md5_sum: Optional[str]
     cdn_object: Optional[str]
-    source_url: Optional[str]
+    source_url: Optional[AnyHttpUrl]
     content_type: Optional[str]
     user_language_name: Optional[str]
     calc_language_name: Optional[str]
@@ -40,7 +40,7 @@ class DocumentWriteDTO(BaseModel):
     role: Optional[str]
     type: Optional[str]
     title: str
-    source_url: Optional[str]
+    source_url: Optional[AnyHttpUrl]
     user_language_name: Optional[str]
 
 
@@ -55,7 +55,7 @@ class DocumentCreateDTO(BaseModel):
 
     # From PhysicalDocument
     title: str
-    source_url: str
+    source_url: AnyHttpUrl
     user_language_name: Optional[str]
 
 
@@ -69,5 +69,5 @@ class DocumentUploadRequest(BaseModel):
 class DocumentUploadResponse(BaseModel):
     """Details required to upload a document"""
 
-    presigned_upload_url: str
-    cdn_url: str
+    presigned_upload_url: AnyHttpUrl
+    cdn_url: AnyHttpUrl

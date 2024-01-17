@@ -15,7 +15,7 @@ def test_create_document(client: TestClient, test_db: Session, user_header_token
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -55,7 +55,7 @@ def test_create_document_null_variant(
     )
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -95,7 +95,7 @@ def test_create_document_null_user_language_name(
     )
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -137,7 +137,7 @@ def test_create_document_when_not_authenticated(client: TestClient, test_db: Ses
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -149,7 +149,7 @@ def test_create_document_rollback(
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -169,7 +169,7 @@ def test_create_document_when_db_error(
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -185,7 +185,7 @@ def test_create_document_when_family_invalid(
     new_document = create_document_create_dto(title="Title", family_import_id="invalid")
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -202,7 +202,7 @@ def test_create_document_when_family_missing(
     )
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -219,7 +219,7 @@ def test_create_document_when_empty_variant(
     new_document = create_document_create_dto(title="Empty variant", variant_name="")
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -236,7 +236,7 @@ def test_create_document_when_invalid_variant(
     )
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -251,7 +251,7 @@ def test_document_status_is_created_on_create(
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED

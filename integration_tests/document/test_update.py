@@ -1,7 +1,8 @@
-from typing import Tuple
+from typing import Tuple, cast
 
 from fastapi import status
 from fastapi.testclient import TestClient
+from pydantic import AnyHttpUrl
 from sqlalchemy.orm import Session
 
 from app.clients.db.models.document.physical_document import (
@@ -42,12 +43,12 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
         role="SUMMARY",
         type="Annex",
         title="Updated Title",
-        source_url="Updated Source",
+        source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name="Ghotuo",
     )
     response = client.put(
         "/api/v1/documents/D.0.0.2",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
@@ -57,7 +58,7 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
     assert data["role"] == "SUMMARY"
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
-    assert data["source_url"] == "Updated Source"
+    assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
     assert data["user_language_name"] == "Ghotuo"
 
@@ -67,7 +68,7 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
     assert pd.title == "Updated Title"
-    assert pd.source_url == "Updated Source"
+    assert pd.source_url == "http://update_source/"
 
     # Check the user language in the db
     lang = (
@@ -95,12 +96,12 @@ def test_update_document_remove_variant(
         role="SUMMARY",
         type="Annex",
         title="Updated Title",
-        source_url="Updated Source",
+        source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name="Ghotuo",
     )
     response = client.put(
         "/api/v1/documents/D.0.0.2",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
@@ -110,7 +111,7 @@ def test_update_document_remove_variant(
     assert data["role"] == "SUMMARY"
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
-    assert data["source_url"] == "Updated Source"
+    assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
     assert data["user_language_name"] == "Ghotuo"
 
@@ -120,7 +121,7 @@ def test_update_document_remove_variant(
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
     assert pd.title == "Updated Title"
-    assert pd.source_url == "Updated Source"
+    assert pd.source_url == "http://update_source/"
 
     # Check the user language in the db
     lang = (
@@ -148,12 +149,12 @@ def test_update_document_remove_user_language(
         role="SUMMARY",
         type="Annex",
         title="Updated Title",
-        source_url="Updated Source",
+        source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name=None,
     )
     response = client.put(
         "/api/v1/documents/D.0.0.1",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
@@ -163,7 +164,7 @@ def test_update_document_remove_user_language(
     assert data["role"] == "SUMMARY"
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
-    assert data["source_url"] == "Updated Source"
+    assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
     assert data["user_language_name"] is None
 
@@ -173,7 +174,7 @@ def test_update_document_remove_user_language(
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
     assert pd.title == "Updated Title"
-    assert pd.source_url == "Updated Source"
+    assert pd.source_url == "http://update_source/"
 
     # Check the user language in the db
     lang = (
@@ -197,7 +198,9 @@ def test_update_document_when_not_authorised(client: TestClient, test_db: Sessio
     new_document = create_document_write_dto(
         title="Updated Title",
     )
-    response = client.put("/api/v1/documents/D.0.0.2", json=new_document.model_dump())
+    response = client.put(
+        "/api/v1/documents/D.0.0.2", json=new_document.model_dump(mode="json")
+    )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -238,7 +241,7 @@ def test_update_document_rollback(
     )
     response = client.put(
         "/api/v1/documents/D.0.0.2",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -258,7 +261,7 @@ def test_update_document_when_not_found(
     )
     response = client.put(
         "/api/v1/documents/D.0.0.22",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -276,7 +279,7 @@ def test_update_document_when_db_error(
     )
     response = client.put(
         "/api/v1/documents/D.0.0.2",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
@@ -294,12 +297,12 @@ def test_update_document_blank_variant(
         role="SUMMARY",
         type="Annex",
         title="Updated Title",
-        source_url="Updated Source",
+        source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name="Ghotuo",
     )
     response = client.put(
         "/api/v1/documents/D.0.0.2",
-        json=new_document.model_dump(),
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
