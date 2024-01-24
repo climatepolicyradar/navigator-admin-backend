@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, AnyHttpUrl
 
-from app.clients.db.models.law_policy.family import (
+from navigator_db_client.models.law_policy.family import (
     DocumentStatus,
 )
 

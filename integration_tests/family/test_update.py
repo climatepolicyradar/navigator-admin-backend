@@ -4,9 +4,9 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.clients.db.models.law_policy.collection import CollectionFamily
-from app.clients.db.models.law_policy.family import Family, FamilyCategory, Slug
-from app.clients.db.models.law_policy.metadata import FamilyMetadata
+from navigator_db_client.models.law_policy.collection import CollectionFamily
+from navigator_db_client.models.law_policy.family import Family, FamilyCategory, Slug
+from navigator_db_client.models.law_policy.metadata import FamilyMetadata
 from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 from unit_tests.helpers.family import create_family_write_dto
 

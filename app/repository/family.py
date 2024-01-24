@@ -11,10 +11,10 @@ from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
-from app.clients.db.models.app.counters import CountedEntity
-from app.clients.db.models.app.users import Organisation
-from app.clients.db.models.law_policy.collection import CollectionFamily
-from app.clients.db.models.law_policy.family import (
+from navigator_db_client.models.app.counters import CountedEntity
+from navigator_db_client.models.app.users import Organisation
+from navigator_db_client.models.law_policy.collection import CollectionFamily
+from navigator_db_client.models.law_policy.family import (
     DocumentStatus,
     Family,
     FamilyDocument,
@@ -22,8 +22,8 @@ from app.clients.db.models.law_policy.family import (
     FamilyStatus,
     Slug,
 )
-from app.clients.db.models.law_policy.geography import Geography
-from app.clients.db.models.law_policy.metadata import (
+from navigator_db_client.models.law_policy.geography import Geography
+from navigator_db_client.models.law_policy.metadata import (
     FamilyMetadata,
     MetadataOrganisation,
 )

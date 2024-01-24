@@ -2,6 +2,7 @@ import pytest
 
 import app.service.event as event_service
 from app.errors import RepositoryError, ValidationError
+from navigator_db_client.errors import RepositoryError as NDCRepositoryError
 from app.model.event import EventReadDTO, EventWriteDTO
 from unit_tests.helpers.event import create_event_create_dto
 
@@ -86,7 +87,7 @@ def test_create_when_db_fails(event_repo_mock, family_repo_mock):
     new_event = create_event_create_dto()
     event_repo_mock.return_empty = True
 
-    with pytest.raises(RepositoryError):
+    with pytest.raises(NDCRepositoryError):
         event_service.create(new_event)
     assert event_repo_mock.create.call_count == 1
     assert family_repo_mock.get.call_count == 1

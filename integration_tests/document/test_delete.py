@@ -1,9 +1,9 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy import FamilyDocument
-from app.clients.db.models.document import PhysicalDocument
-from app.clients.db.models.law_policy.family import DocumentStatus
+from navigator_db_client.models.law_policy import FamilyDocument
+from navigator_db_client.models.document import PhysicalDocument
+from navigator_db_client.models.law_policy.family import DocumentStatus
 from integration_tests.setup_db import setup_db
 import app.repository.document as document_repo
 

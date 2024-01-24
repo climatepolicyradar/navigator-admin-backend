@@ -10,17 +10,17 @@ from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql.functions import concat
 from sqlalchemy_utils import escape_like
 
-from app.clients.db.models.app.counters import CountedEntity
-from app.clients.db.models.document.physical_document import (
+from navigator_db_client.models.app.counters import CountedEntity
+from navigator_db_client.models.document.physical_document import (
     Language,
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from app.clients.db.models.law_policy import (
+from navigator_db_client.models.law_policy import (
     FamilyDocument,
 )
-from app.clients.db.models.law_policy.family import (
+from navigator_db_client.models.law_policy.family import (
     DocumentStatus,
     Slug,
 )

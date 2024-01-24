@@ -2,6 +2,7 @@ import pytest
 
 import app.service.document as doc_service
 from app.errors import RepositoryError, ValidationError
+from navigator_db_client.errors import RepositoryError as NDCRepositoryError
 from app.model.document import DocumentReadDTO, DocumentWriteDTO
 from unit_tests.helpers.document import create_document_create_dto
 
@@ -184,7 +185,7 @@ def test_create_when_db_fails(document_repo_mock, family_repo_mock):
     new_document = create_document_create_dto()
     document_repo_mock.return_empty = True
 
-    with pytest.raises(RepositoryError):
+    with pytest.raises(NDCRepositoryError):
         doc_service.create(new_document)
     assert document_repo_mock.create.call_count == 1
     assert family_repo_mock.get.call_count == 1

@@ -1,4 +1,4 @@
-from app.clients.db.models.law_policy.family import FamilyCategory
+from navigator_db_client.models.law_policy.family import FamilyCategory
 from app.errors import ValidationError
 
 

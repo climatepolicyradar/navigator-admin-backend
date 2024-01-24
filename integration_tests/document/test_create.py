@@ -2,10 +2,12 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.clients.db.models.document import PhysicalDocument
-from app.clients.db.models.document.physical_document import PhysicalDocumentLanguage
-from app.clients.db.models.law_policy import FamilyDocument
-from app.clients.db.models.law_policy.family import DocumentStatus, Slug
+from navigator_db_client.models.document import PhysicalDocument
+from navigator_db_client.models.document.physical_document import (
+    PhysicalDocumentLanguage,
+)
+from navigator_db_client.models.law_policy import FamilyDocument
+from navigator_db_client.models.law_policy.family import DocumentStatus, Slug
 from integration_tests.setup_db import setup_db
 from unit_tests.helpers.document import create_document_create_dto
 

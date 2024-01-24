@@ -1,20 +1,20 @@
 import logging
 from typing import Any, Optional
 from sqlalchemy.orm import Session
-from app.clients.db.models.app.users import Organisation
-from app.clients.db.models.document.physical_document import Language
-from app.clients.db.models.law_policy.family import (
+from navigator_db_client.models.app.users import Organisation
+from navigator_db_client.models.document.physical_document import Language
+from navigator_db_client.models.law_policy.family import (
     FamilyDocumentRole,
     FamilyDocumentType,
     FamilyEventType,
     Variant,
 )
-from app.clients.db.models.law_policy.geography import Geography
-from app.clients.db.models.law_policy.metadata import (
+from navigator_db_client.models.law_policy.geography import Geography
+from navigator_db_client.models.law_policy.metadata import (
     MetadataOrganisation,
     MetadataTaxonomy,
 )
-from app.clients.db.session import AnyModel
+from navigator_db_client.session import AnyModel
 from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData
 
 

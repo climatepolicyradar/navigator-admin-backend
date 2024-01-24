@@ -10,7 +10,7 @@ from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-import app.clients.db.session as db_session
+import navigator_db_client.session as db_session
 from app.errors import RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo

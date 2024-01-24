@@ -3,9 +3,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy.family import EventStatus
+from navigator_db_client.models.law_policy.family import EventStatus
 
-from app.clients.db.models.law_policy import FamilyEvent
+from navigator_db_client.models.law_policy import FamilyEvent
 
 from integration_tests.setup_db import EXPECTED_EVENTS, setup_db
 from unit_tests.helpers.event import create_event_write_dto

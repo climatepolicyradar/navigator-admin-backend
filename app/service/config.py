@@ -4,7 +4,7 @@ from app.model.config import ConfigReadDTO
 import app.repository.config as config_repo
 
 from sqlalchemy import exc
-import app.clients.db.session as db_session
+import navigator_db_client.session as db_session
 
 
 _LOGGER = logging.getLogger(__name__)

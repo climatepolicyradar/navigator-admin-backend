@@ -5,7 +5,7 @@ from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-import app.clients.db.session as db_session
+import navigator_db_client.session as db_session
 import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.service.family as family_service
