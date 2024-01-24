@@ -8,7 +8,7 @@ from typing import Optional
 import pytest
 
 import app.service.family as family_service
-from app.errors import RepositoryError, ValidationError
+from navigator_db_client.errors import RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from unit_tests.helpers.family import create_family_dto
 

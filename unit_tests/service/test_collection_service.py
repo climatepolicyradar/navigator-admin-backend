@@ -1,7 +1,7 @@
 import pytest
 
 import app.service.collection as collection_service
-from app.errors import RepositoryError, ValidationError
+from navigator_db_client.errors import RepositoryError, ValidationError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,

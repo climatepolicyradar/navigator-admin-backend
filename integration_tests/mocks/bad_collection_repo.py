@@ -1,6 +1,6 @@
 from typing import Optional
 from pytest import MonkeyPatch
-from app.errors import RepositoryError
+from navigator_db_client.errors import RepositoryError
 
 from app.model.collection import CollectionReadDTO
 

@@ -2,7 +2,7 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError
+from navigator_db_client.errors import RepositoryError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
 from unit_tests.helpers.family import create_family_dto
 

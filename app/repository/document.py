@@ -24,7 +24,7 @@ from navigator_db_client.models.law_policy.family import (
     DocumentStatus,
     Slug,
 )
-from app.errors import RepositoryError, ValidationError
+from navigator_db_client.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id, generate_slug

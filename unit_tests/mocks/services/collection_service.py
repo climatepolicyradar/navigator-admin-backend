@@ -2,7 +2,7 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError
+from navigator_db_client.errors import RepositoryError
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from unit_tests.helpers.collection import create_collection_read_dto
 

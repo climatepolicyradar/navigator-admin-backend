@@ -1323,7 +1323,7 @@ sqlalchemy = "^1.4.31"
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
 reference = "HEAD"
-resolved_reference = "bb554bf65f3a95d6804303abaf02eaf9d911bd2f"
+resolved_reference = "94a6df996a3a119dceb65638d7dd94206e4fc838"
 
 [[package]]
 name = "nodeenv"

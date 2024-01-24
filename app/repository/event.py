@@ -18,7 +18,7 @@ from navigator_db_client.models.law_policy import (
     FamilyDocument,
     FamilyEvent,
 )
-from app.errors import RepositoryError, ValidationError
+from navigator_db_client.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id

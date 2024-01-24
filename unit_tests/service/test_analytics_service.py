@@ -2,7 +2,7 @@ from typing import Optional
 
 import pytest
 
-from app.errors import RepositoryError
+from navigator_db_client.errors import RepositoryError
 from app.model.analytics import SummaryDTO
 import app.service.analytics as analytics_service
 
