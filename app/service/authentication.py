@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from sqlalchemy.exc import NoResultFound
 
 import navigator_db_client.session as db_session
-from app.errors import AuthenticationError, RepositoryError
+from navigator_db_client.errors import AuthenticationError, RepositoryError
 from app.repository import app_user_repo
 import app.service.token as token_service
 

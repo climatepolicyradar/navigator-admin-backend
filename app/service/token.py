@@ -3,7 +3,7 @@ import os
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Optional
-from app.errors import TokenError
+from navigator_db_client.errors import TokenError
 
 from app.model.jwt_user import JWTUser
 

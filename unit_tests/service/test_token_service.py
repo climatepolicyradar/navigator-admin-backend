@@ -1,7 +1,7 @@
 from typing import cast
 import jwt
 import pytest
-from app.errors import TokenError
+from navigator_db_client.errors import TokenError
 import app.service.token as token_service
 
 
