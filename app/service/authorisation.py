@@ -1,11 +1,11 @@
-from navigator_db_client.models.app.authorisation import (
+from db_client.models.app.authorisation import (
     AUTH_TABLE,
     HTTP_MAP_TO_OPERATION,
     AuthAccess,
     AuthEndpoint,
     AuthOperation,
 )
-from navigator_db_client.errors import AuthorisationError
+from db_client.errors import AuthorisationError
 from app.model.jwt_user import JWTUser
 
 

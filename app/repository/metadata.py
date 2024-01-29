@@ -1,5 +1,5 @@
 from typing import Optional
-from navigator_db_client.models.law_policy.metadata import (
+from db_client.models.law_policy.metadata import (
     MetadataOrganisation,
     MetadataTaxonomy,
 )

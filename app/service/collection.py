@@ -11,8 +11,8 @@ from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-import navigator_db_client.session as db_session
-from navigator_db_client.errors import RepositoryError
+import db_client.session as db_session
+from db_client.errors import RepositoryError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,

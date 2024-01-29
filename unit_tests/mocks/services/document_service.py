@@ -2,7 +2,7 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from navigator_db_client.errors import RepositoryError, ValidationError
+from db_client.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from unit_tests.helpers.document import create_document_read_dto
 

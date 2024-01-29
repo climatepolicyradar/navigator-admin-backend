@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, cast
 from pydantic import AnyHttpUrl
 
-from navigator_db_client.models.law_policy.family import DocumentStatus
+from db_client.models.law_policy.family import DocumentStatus
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 
 

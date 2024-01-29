@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from navigator_db_client.errors import ValidationError
+from db_client.errors import ValidationError
 from app.service.metadata import _validate
 
 

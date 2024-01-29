@@ -11,14 +11,14 @@ from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
-from navigator_db_client.models.app.counters import CountedEntity
-from navigator_db_client.models.law_policy import (
+from db_client.models.app.counters import CountedEntity
+from db_client.models.law_policy import (
     EventStatus,
     Family,
     FamilyDocument,
     FamilyEvent,
 )
-from navigator_db_client.errors import RepositoryError, ValidationError
+from db_client.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id

@@ -10,21 +10,21 @@ from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql.functions import concat
 from sqlalchemy_utils import escape_like
 
-from navigator_db_client.models.app.counters import CountedEntity
-from navigator_db_client.models.document.physical_document import (
+from db_client.models.app.counters import CountedEntity
+from db_client.models.document.physical_document import (
     Language,
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from navigator_db_client.models.law_policy import (
+from db_client.models.law_policy import (
     FamilyDocument,
 )
-from navigator_db_client.models.law_policy.family import (
+from db_client.models.law_policy.family import (
     DocumentStatus,
     Slug,
 )
-from navigator_db_client.errors import RepositoryError, ValidationError
+from db_client.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id, generate_slug

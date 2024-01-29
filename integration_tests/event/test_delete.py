@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from navigator_db_client.models.law_policy import FamilyEvent
+from db_client.models.law_policy import FamilyEvent
 from integration_tests.setup_db import setup_db
 import app.repository.event as event_repo
 

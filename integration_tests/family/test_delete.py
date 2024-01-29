@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
 
-from navigator_db_client.models.law_policy import (
+from db_client.models.law_policy import (
     Family,
     FamilyDocument,
     DocumentStatus,

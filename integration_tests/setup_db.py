@@ -3,18 +3,18 @@ from typing import cast
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from navigator_db_client.models.app.users import AppUser, Organisation, OrganisationUser
-from navigator_db_client.models.document.physical_document import (
+from db_client.models.app.users import AppUser, Organisation, OrganisationUser
+from db_client.models.document.physical_document import (
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from navigator_db_client.models.law_policy.collection import (
+from db_client.models.law_policy.collection import (
     Collection,
     CollectionFamily,
     CollectionOrganisation,
 )
-from navigator_db_client.models.law_policy.family import (
+from db_client.models.law_policy.family import (
     EventStatus,
     Family,
     FamilyDocument,
@@ -22,7 +22,7 @@ from navigator_db_client.models.law_policy.family import (
     FamilyOrganisation,
     Slug,
 )
-from navigator_db_client.models.law_policy.metadata import (
+from db_client.models.law_policy.metadata import (
     FamilyMetadata,
     MetadataOrganisation,
     MetadataTaxonomy,

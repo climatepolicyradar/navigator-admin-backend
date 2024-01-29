@@ -1,5 +1,5 @@
 from pytest import MonkeyPatch
-from navigator_db_client.errors import RepositoryError
+from db_client.errors import RepositoryError
 
 from app.model.analytics import SummaryDTO
 from unit_tests.helpers.analytics import create_summary_dto

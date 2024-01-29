@@ -1,7 +1,7 @@
 import pytest
 
 import app.service.document as doc_service
-from navigator_db_client.errors import RepositoryError, ValidationError
+from db_client.errors import RepositoryError, ValidationError
 from app.model.document import DocumentReadDTO, DocumentWriteDTO
 from unit_tests.helpers.document import create_document_create_dto
 

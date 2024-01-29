@@ -1,4 +1,4 @@
-from navigator_db_client.models.law_policy.family import EventStatus
+from db_client.models.law_policy.family import EventStatus
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 
 from datetime import datetime, timezone

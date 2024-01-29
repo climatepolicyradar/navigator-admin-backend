@@ -4,10 +4,10 @@ from typing import Union, cast
 from uuid import uuid4
 from slugify import slugify
 from sqlalchemy.orm import Session
-from navigator_db_client.models.app.counters import CountedEntity, EntityCounter
-from navigator_db_client.models.app.users import Organisation
+from db_client.models.app.counters import CountedEntity, EntityCounter
+from db_client.models.app.users import Organisation
 
-from navigator_db_client.models.law_policy.family import Slug
+from db_client.models.law_policy.family import Slug
 
 
 def generate_slug(

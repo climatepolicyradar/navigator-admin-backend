@@ -5,12 +5,12 @@ from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-import navigator_db_client.session as db_session
+import db_client.session as db_session
 import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
-from navigator_db_client.errors import RepositoryError, ValidationError
+from db_client.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.service import id
 

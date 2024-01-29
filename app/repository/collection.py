@@ -11,15 +11,15 @@ from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
-from navigator_db_client.models.app.counters import CountedEntity
-from navigator_db_client.models.app.users import Organisation
-from navigator_db_client.models.law_policy import Collection
-from navigator_db_client.models.law_policy.collection import (
+from db_client.models.app.counters import CountedEntity
+from db_client.models.app.users import Organisation
+from db_client.models.law_policy import Collection
+from db_client.models.law_policy.collection import (
     CollectionFamily,
     CollectionOrganisation,
 )
-from navigator_db_client.models.law_policy.family import Family
-from navigator_db_client.errors import RepositoryError
+from db_client.models.law_policy.family import Family
+from db_client.errors import RepositoryError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,

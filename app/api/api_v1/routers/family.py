@@ -16,7 +16,7 @@ from app.api.api_v1.query_params import (
     set_default_query_params,
     validate_query_params,
 )
-from navigator_db_client.errors import RepositoryError, ValidationError
+from db_client.errors import RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
 families_router = r = APIRouter()

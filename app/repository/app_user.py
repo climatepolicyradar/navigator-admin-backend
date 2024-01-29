@@ -1,7 +1,7 @@
 from typing import Optional, Tuple, cast
 from sqlalchemy.orm import Session
 
-from navigator_db_client.models.app.users import AppUser, Organisation, OrganisationUser
+from db_client.models.app.users import AppUser, Organisation, OrganisationUser
 
 MaybeAppUser = Optional[AppUser]
 

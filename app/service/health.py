@@ -1,4 +1,4 @@
-from navigator_db_client.session import get_db
+from db_client.session import get_db
 
 
 def is_database_online() -> bool:

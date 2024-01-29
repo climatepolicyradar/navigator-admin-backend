@@ -1,7 +1,7 @@
 import pytest
 
 import app.service.event as event_service
-from navigator_db_client.errors import RepositoryError, ValidationError
+from db_client.errors import RepositoryError, ValidationError
 from app.model.event import EventReadDTO, EventWriteDTO
 from unit_tests.helpers.event import create_event_create_dto
 

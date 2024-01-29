@@ -1,7 +1,7 @@
 """Endpoints for managing the Analytics service."""
 import logging
 from fastapi import APIRouter, HTTPException, status
-from navigator_db_client.errors import RepositoryError
+from db_client.errors import RepositoryError
 
 import app.service.analytics as analytics_service
 from app.model.analytics import SummaryDTO

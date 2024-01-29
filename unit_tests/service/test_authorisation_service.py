@@ -1,5 +1,5 @@
 import pytest
-from navigator_db_client.errors import AuthenticationError, RepositoryError
+from db_client.errors import AuthenticationError, RepositoryError
 import app.service.authentication as auth_service
 import app.service.token as token_service
 from unit_tests.mocks.repos.app_user_repo import (
