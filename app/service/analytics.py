@@ -9,7 +9,7 @@ import logging
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 
-from db_client.errors import RepositoryError
+from app.clients.db.errors import RepositoryError
 from app.model.analytics import SummaryDTO
 import app.service.collection as collection_service
 import app.service.document as document_service

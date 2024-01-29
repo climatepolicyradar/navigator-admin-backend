@@ -1,5 +1,5 @@
 import pytest
-from db_client.errors import ValidationError
+from app.clients.db.errors import ValidationError
 import app.service.geography as geography_service
 
 

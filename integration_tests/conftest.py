@@ -8,7 +8,7 @@ from sqlalchemy_utils import create_database, database_exists, drop_database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import db_client.session as db_session
+import app.clients.db.session as db_session
 import app.service.token as token_service
 from app.main import app
 from app.repository import family_repo, collection_repo, document_repo, event_repo

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from db_client.errors import ValidationError
+from app.clients.db.errors import ValidationError
 from app.repository import geography_repo
 
 

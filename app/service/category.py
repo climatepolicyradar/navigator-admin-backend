@@ -1,5 +1,5 @@
 from db_client.models.law_policy.family import FamilyCategory
-from db_client.errors import ValidationError
+from app.clients.db.errors import ValidationError
 
 
 def validate(category: str) -> str:

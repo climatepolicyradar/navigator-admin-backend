@@ -19,7 +19,7 @@ from db_client.models.law_policy.collection import (
     CollectionOrganisation,
 )
 from db_client.models.law_policy.family import Family
-from db_client.errors import RepositoryError
+from app.clients.db.errors import RepositoryError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,

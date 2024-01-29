@@ -14,7 +14,7 @@ from db_client.models.law_policy.metadata import (
     MetadataOrganisation,
     MetadataTaxonomy,
 )
-from db_client.session import AnyModel
+from db_client.models.base import AnyModel
 from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData
 
 

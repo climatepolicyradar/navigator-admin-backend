@@ -1,10 +1,10 @@
 import logging
-from db_client.errors import RepositoryError
+from app.clients.db.errors import RepositoryError
 from app.model.config import ConfigReadDTO
 import app.repository.config as config_repo
 
 from sqlalchemy import exc
-import db_client.session as db_session
+import app.clients.db.session as db_session
 
 
 _LOGGER = logging.getLogger(__name__)

@@ -3,7 +3,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 from sqlalchemy import exc
 
-from db_client.errors import RepositoryError
+from app.clients.db.errors import RepositoryError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from unit_tests.helpers.event import create_event_read_dto
 

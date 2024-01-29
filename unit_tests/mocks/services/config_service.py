@@ -1,5 +1,5 @@
 from pytest import MonkeyPatch
-from db_client.errors import RepositoryError
+from app.clients.db.errors import RepositoryError
 
 from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig
 

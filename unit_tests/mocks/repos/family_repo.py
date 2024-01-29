@@ -2,7 +2,7 @@ from typing import Optional, Union
 
 from sqlalchemy.orm import Session
 
-from db_client.errors import RepositoryError
+from app.clients.db.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from unit_tests.helpers.family import create_family_dto

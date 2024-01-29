@@ -4,8 +4,8 @@ from typing import cast
 from passlib.context import CryptContext
 from sqlalchemy.exc import NoResultFound
 
-import db_client.session as db_session
-from db_client.errors import AuthenticationError, RepositoryError
+import app.clients.db.session as db_session
+from app.clients.db.errors import AuthenticationError, RepositoryError
 from app.repository import app_user_repo
 import app.service.token as token_service
 
