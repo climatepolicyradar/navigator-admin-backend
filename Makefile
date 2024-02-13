@@ -18,7 +18,7 @@ test_bashscripts: build_bats
 	docker run --rm -v "${PWD}/.github:/code" bats-with-helpers:latest /code/tests/test_retag_and_push.bats
 
 build:
-	docker build -t navigator-admin-backend .
+	docker compose build
 
 unit_test: build
 	docker run --rm \
@@ -39,9 +39,6 @@ setup_test_db:
 		-e POSTGRES_USER=navigator \
 		postgres:14 
 	sleep 3
-	@echo Loading schema...
-	docker exec test_db psql -U navigator -f /data-load/blank.sql > load_blank.txt
-	docker exec test_db psql -U navigator -f /data-load/default-data.sql > load_default.txt
 
 integration_test: build 
 	@echo Assuming setup_test_db has already run.
@@ -58,14 +55,13 @@ integration_test: build
 
 test: unit_test setup_test_db integration_test
 
-start: build
-	- docker stop admin
-	docker run -p 8888:8888 \
-	--name admin \
-	--network=test-network \
-	-e ADMIN_POSTGRES_HOST=test_db \
-	-e SECRET_KEY="secret_test_key" \
-	-d navigator-admin-backend
+migrations:
+	- docker compose run --rm admin_backend python3 app/initial_data.py
+
+run: 
+	- docker-compose -f docker-compose.yml up -d --remove-orphans
+
+start: build run migrations
 
 start_local: build
 	# - docker stop navigator-admin-backend

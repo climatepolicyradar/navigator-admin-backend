@@ -13,6 +13,12 @@ The make command below uses `pyenv` to create a new virtualenv called
 make bootstrap
 ```
 
+Create a `.env` file, you can use the example one running:
+
+```shell
+cp .env.example .env
+```
+
 This can then be activated in any shell with `pyenv activate admin-backend`.
 
 Also ensure that you have the git commit hooks installed to maintain code
