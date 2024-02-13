@@ -48,6 +48,11 @@ jobs:
       - name: Run Integration Tests
         run: make integration_test
 
+      - name: Run Auto-tagging
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0)
+          .github/auto-tag.sh ${latest_tag} ${{ github.event.pull_request.body }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
