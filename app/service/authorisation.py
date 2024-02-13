@@ -5,7 +5,7 @@ from db_client.models.app.authorisation import (
     AuthEndpoint,
     AuthOperation,
 )
-from app.clients.db.errors import AuthorisationError
+from app.errors import AuthorisationError
 from app.model.jwt_user import JWTUser
 
 

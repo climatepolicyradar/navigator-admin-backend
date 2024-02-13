@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.clients.db.errors import (
+from app.errors import (
     AuthenticationError,
     AuthorisationError,
     RepositoryError,

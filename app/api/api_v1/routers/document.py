@@ -9,7 +9,7 @@ from app.api.api_v1.query_params import (
     set_default_query_params,
     validate_query_params,
 )
-from app.clients.db.errors import RepositoryError, ValidationError
+from app.errors import RepositoryError, ValidationError
 from app.model.document import (
     DocumentCreateDTO,
     DocumentReadDTO,

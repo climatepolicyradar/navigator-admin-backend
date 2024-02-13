@@ -1,7 +1,7 @@
 from typing import cast
 import jwt
 import pytest
-from app.clients.db.errors import TokenError
+from app.errors import TokenError
 import app.service.token as token_service
 
 

@@ -3,7 +3,7 @@ from urllib.parse import quote_plus, urlsplit
 from app.clients.aws.client import AWSClient
 from botocore.exceptions import ClientError
 
-from app.clients.db.errors import RepositoryError
+from app.errors import RepositoryError
 
 
 def _encode_characters_in_path(s3_path: str) -> str:

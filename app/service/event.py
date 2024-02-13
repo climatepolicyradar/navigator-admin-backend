@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 import app.repository.event as event_repo
 import app.service.family as family_service
-from app.clients.db.errors import RepositoryError, ValidationError
+from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.service import id
 

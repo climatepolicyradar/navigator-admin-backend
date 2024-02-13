@@ -10,7 +10,7 @@ import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
-from app.clients.db.errors import RepositoryError, ValidationError
+from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.service import id
 

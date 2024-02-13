@@ -27,7 +27,7 @@ from db_client.models.law_policy.metadata import (
     FamilyMetadata,
     MetadataOrganisation,
 )
-from app.clients.db.errors import RepositoryError
+from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository.helpers import generate_import_id, generate_slug
 

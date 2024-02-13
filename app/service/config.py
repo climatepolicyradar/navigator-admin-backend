@@ -1,5 +1,5 @@
 import logging
-from app.clients.db.errors import RepositoryError
+from app.errors import RepositoryError
 from app.model.config import ConfigReadDTO
 import app.repository.config as config_repo
 

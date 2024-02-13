@@ -12,7 +12,7 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
-from app.clients.db.errors import RepositoryError
+from app.errors import RepositoryError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,

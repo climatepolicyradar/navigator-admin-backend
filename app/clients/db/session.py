@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
-from app.clients.db.errors import RepositoryError
+from app.errors import RepositoryError
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
