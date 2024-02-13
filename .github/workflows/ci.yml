@@ -55,9 +55,9 @@ jobs:
         env:
           BODY: ${{ github.event.pull_request.body }}
         run: |
-          git fetch --prune --unshallow --tags
+          git fetch --prune --unshallow --tags 2>&1 /dev/null
           latest_tag=$(git describe --tags --abbrev=0)
-          .github/auto-tag.sh ${latest_tag} ${BODY}
+          .github/auto-tag.sh ${latest_tag} "${BODY}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
