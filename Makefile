@@ -35,3 +35,6 @@ run:
 	- docker-compose -f docker-compose.yml up -d --remove-orphans
 
 start: build run migrations
+
+show_logs: 
+	- docker-compose logs -f
