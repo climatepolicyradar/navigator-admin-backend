@@ -50,6 +50,7 @@ jobs:
 
       - name: Run Auto-tagging
         run: |
+          git fetch --tags
           latest_tag=$(git describe --tags --abbrev=0)
           .github/auto-tag.sh ${latest_tag} ${{ github.event.pull_request.body }}
 
