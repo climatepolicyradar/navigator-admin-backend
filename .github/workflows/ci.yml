@@ -37,7 +37,7 @@ jobs:
           poetry run pre-commit run --all-files
 
       - name: Use .env.example
-        run:  cp .env.example .env
+        run: cp .env.example .env
 
       - name: Build
         run: make build

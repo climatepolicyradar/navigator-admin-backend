@@ -15,11 +15,11 @@ services:
       timeout: 3s
       retries: 30
 
-  admin_backend:
+  navigator-admin-backend:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: admin-backend
+    image: navigator-admin-backend
     tty: true
     env_file:
       - .env
