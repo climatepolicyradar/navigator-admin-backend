@@ -9,10 +9,6 @@ on:
       - main
 
 # https://github.com/marketplace/actions/docker-layer-caching
-#
-# User controlled input needs to be santitised beforehand e.g., by adding an
-# intermediate env var to prevent the workflow being exposed to a critical
-# command injection attack
 jobs:
   test-bash:
     runs-on: ubuntu-latest
@@ -52,7 +48,10 @@ jobs:
       - name: Run Integration Tests
         run: make integration_test
 
-        - name: Run Auto-tagging
+      - name: Run Auto-tagging
+        # User controlled input needs to be santitised beforehand e.g., by adding an
+        # intermediate env var to prevent the workflow being exposed to a critical
+        # command injection attack
         env:
           BODY: ${{ github.event.pull_request.body }}
         run: |
