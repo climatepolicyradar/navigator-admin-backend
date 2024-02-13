@@ -4,7 +4,7 @@
 latest_tag=$1
 echo "${latest_tag}"
 
-pull_request_body=$2
+pull_request_body="$2"
 echo "${pull_request_body}"
 
 # Check if minor version.
