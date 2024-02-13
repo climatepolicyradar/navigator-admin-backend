@@ -42,9 +42,6 @@ jobs:
       - name: Run Unit Tests
         run: make unit_test
 
-      - name: Setup test db
-        run: make setup_test_db
-
       - name: Run Integration Tests
         run: make integration_test
 

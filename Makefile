@@ -20,40 +20,13 @@ test_bashscripts: build_bats
 build:
 	docker compose build
 
-unit_test: build
-	docker run --rm \
-	-e SECRET_KEY="secret_test_key" \
-	navigator-admin-backend pytest -vvv unit_tests
+unit_test:
+	- docker compose run --rm admin_backend pytest -vvv unit_tests
 
-setup_test_db:
-	@echo Setting up...
-	-docker network create test-network
-	-docker stop test_db
-	@echo Starting Postgres...
-	docker pull postgres:14
-	docker run --rm -d -p 5432:5432 \
-		--name test_db \
-		--network=test-network \
-		-v ${PWD}/integration_tests:/data-load \
-		-e POSTGRES_PASSWORD=password \
-		-e POSTGRES_USER=navigator \
-		postgres:14 
-	sleep 3
+integration_test:
+	- docker compose run --rm admin_backend pytest -vvv integration_tests
 
-integration_test: build 
-	@echo Assuming setup_test_db has already run.
-	@echo Running tests...
-	- docker stop admin
-	docker run --rm \
-		--name admin \
-		--network=test-network \
-		-e ADMIN_POSTGRES_HOST=test_db \
-		-e SECRET_KEY="secret_test_key" \
-		navigator-admin-backend \
-		pytest -vvv integration_tests
-	docker stop test_db
-
-test: unit_test setup_test_db integration_test
+test: unit_test integration_test
 
 migrations:
 	- docker compose run --rm admin_backend python3 app/initial_data.py
@@ -62,15 +35,3 @@ run:
 	- docker-compose -f docker-compose.yml up -d --remove-orphans
 
 start: build run migrations
-
-start_local: build
-	# - docker stop navigator-admin-backend
-	docker run -p 8888:8888 \
-	--name navigator-admin-backend \
-	--network=navigator-backend_default \
-	-e ADMIN_POSTGRES_HOST=backend_db \
-	-e SECRET_KEY="secret_test_key" \
-	-d navigator-admin-backend
-
-restart:
-	docker stop navigator-admin-backend && docker rm navigator-admin-backend && make start_local && docker logs -f navigator-admin-backend
