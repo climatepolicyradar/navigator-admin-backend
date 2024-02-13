@@ -15,6 +15,14 @@ Please select the option(s) below that are most relevant:
 - [ ] New feature
 - [ ] Breaking change
 
+## Type of version
+
+Please select the option below that is most relevant:
+
+- [ ] Minor version
+- [ ] Major version
+- [ ] Breaking change
+
 ## How Has This Been Tested?
 
 Please describe the tests that you added to verify your changes.
