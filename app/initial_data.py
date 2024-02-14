@@ -9,7 +9,6 @@ import requests
 from db_client.initial_data import populate_initial_data
 
 from app.clients.db.session import SessionLocal
-from app.service.authentication import get_password_hash
 
 
 def wait_for_app():
@@ -40,6 +39,6 @@ if __name__ == "__main__":
         wait_for_app()
 
     db = SessionLocal()
-    populate_initial_data(db, get_password_hash)
+    populate_initial_data(db, None)
     db.commit()
     print("Done creating initial data")
