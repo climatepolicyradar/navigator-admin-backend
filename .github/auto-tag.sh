@@ -1,15 +1,15 @@
 #!/bin/sh
 
-# Argument is going to be the pull request body.
-latest_tag="$1"
+pull_request_body="$1"
+
+# Get the latest Git tag.
+git fetch --prune --unshallow --tags
+latest_tag=$(git tag --list 'v*' --sort=-authordate --merged | head -n1)
 echo "Latest tag: ${latest_tag}"
 
 # Extract the version numbers from the tag
 version_numbers=${latest_tag#v}       # Remove the leading 'v'
 version_numbers=${version_numbers%-*} # Remove the trailing '-beta'
-
-pull_request_body="$2"
-echo "${pull_request_body}"
 
 # Check if patch version.
 is_patch=false
