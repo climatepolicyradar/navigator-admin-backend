@@ -1,22 +1,27 @@
 name: main push git autotag
 
 on:
-  push:
-    branches:
-      - main
+  push
 
 jobs:
   auto-git-tag:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+    - uses: actions/github-script@v6
+      id: get_pr_data
+      with:
+        script: |
+            return (
+              await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                commit_sha: context.sha,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              })
+            ).data[0];
 
-      - name: Auto-tagging debug
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          echo "${EVENT_NAME}"
-          echo "${GITHUB_REF}"
-          echo "${GITHUB_REF_NAME}"
-          echo "${GITHUB_REPOSITORY}"
-          echo "${GITHUB_HEAD_REF}"
+    - name: Pull Request data
+      run: |
+        echo '${{ fromJson(steps.get_pr_data.outputs.result).number }}'
+        echo '${{ fromJson(steps.get_pr_data.outputs.result).title }}'
+        echo '${{ fromJson(steps.get_pr_data.outputs.result).body }}'
+
