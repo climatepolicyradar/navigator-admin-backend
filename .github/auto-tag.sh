@@ -37,10 +37,10 @@ fi
 if { [ "${is_minor}" = true ] && [ "${is_patch}" = true ]; } ||
 	{ [ "${is_minor}" = true ] && [ "${is_major}" = true ]; } ||
 	{ [ "${is_patch}" = true ] && [ "${is_major}" = true ]; }; then
-	echo "Ambiguous tag information. Auto-tagging failed..."
+	echo "Ambiguous tag information in pull request body. Auto-tagging failed..."
 	exit 1
 elif { [ "${is_minor}" = false ] && [ "${is_patch}" = false ] && [ "${is_major}" = false ]; }; then
-	echo "No tag information found. Auto-tagging failed..."
+	echo "No tag information found in pull request body. Auto-tagging failed..."
 	exit 1
 else
 	# Split the version numbers into their respective parts
