@@ -25,17 +25,3 @@ jobs:
         echo '${{ fromJson(steps.get_pr_data.outputs.result).title }}'
         echo '${{ fromJson(steps.get_pr_data.outputs.result).body }}'
 
-    - name: Auto-tagging debug
-      env:
-        EVENT_NAME: ${{ github.event_name }}
-      run: |
-        echo "${EVENT_NAME}"
-        echo "${GITHUB_REF}"
-        echo "${GITHUB_REF_NAME}"
-        echo "${GITHUB_REPOSITORY}"
-        echo "${GITHUB_HEAD_REF}"
-        echo ${{ github.head_ref }}
-        echo ${{ github.event.pull_request.head.ref }}
-        echo "commit-message=$(git log -1 --pretty=format:'%s')" >> $GITHUB_ENV
-        echo "commit-message=${{ env.commit-message }}"
-
