@@ -5,6 +5,7 @@ Note: If you want to add a new endpoint, please make sure you update
 AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
 from fastapi_pagination import add_pagination
+from contextlib import asynccontextmanager
 from app.api.api_v1.routers.auth import check_user_auth
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.api.api_v1.routers import (
@@ -22,6 +23,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from app.service.health import is_database_online
+from app.clients.db.session import engine
+from db_client import run_migrations
+
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -32,7 +36,18 @@ _ALLOW_ORIGIN_REGEX = (
     r"https://.+\.climate-laws\.org|"
 )
 
-app = FastAPI(title="navigator-admin")
+
+@asynccontextmanager
+async def lifespan(app_: FastAPI):
+    """Run startup and shutdown events."""
+    run_migrations(engine)
+    yield
+
+
+app = FastAPI(
+    title="navigator-admin",
+    lifespan=lifespan,
+)
 setup_json_logging(app)
 add_pagination(app)
 

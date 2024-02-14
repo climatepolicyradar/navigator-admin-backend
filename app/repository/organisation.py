@@ -1,6 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.clients.db.models.app.users import Organisation
+from db_client.models.app.users import Organisation
 
 
 def get_id_from_name(db: Session, org_name: str) -> Optional[int]:

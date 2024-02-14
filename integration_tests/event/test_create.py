@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
 
-from app.clients.db.models.law_policy import FamilyEvent, Family
+from db_client.models.law_policy import FamilyEvent, Family
 
 from integration_tests.setup_db import setup_db
 from unit_tests.helpers.event import create_event_create_dto

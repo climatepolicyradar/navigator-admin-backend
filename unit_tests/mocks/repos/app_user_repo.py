@@ -1,6 +1,6 @@
 from typing import Tuple
 from pytest import MonkeyPatch
-from app.clients.db.models.app.users import AppUser, Organisation, OrganisationUser
+from db_client.models.app.users import AppUser, Organisation, OrganisationUser
 
 from app.repository.app_user import MaybeAppUser
 import app.service.authentication as auth_service

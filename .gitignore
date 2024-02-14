@@ -159,3 +159,6 @@ backend/models
 # Sundry files
 load_blank.txt
 load_default.txt
+
+# PIP (because we want to use Poetry)
+requirements.txt
