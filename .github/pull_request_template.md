@@ -19,9 +19,9 @@ Please select the option(s) below that are most relevant:
 
 Please select the option below that is most relevant:
 
+- [ ] Patch
 - [ ] Minor version
 - [ ] Major version
-- [ ] Breaking change
 
 ## How Has This Been Tested?
 
