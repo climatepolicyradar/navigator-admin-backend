@@ -48,15 +48,6 @@ jobs:
       - name: Run Integration Tests
         run: make integration_test
 
-      - name: Run Auto-tagging
-        # User controlled input needs to be santitised beforehand e.g., by adding an
-        # intermediate env var to prevent the workflow being exposed to a critical
-        # command injection attack
-        env:
-          BODY: ${{ github.event.pull_request.body }}
-        run: |
-          .github/auto-tag.sh "${BODY}"
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
