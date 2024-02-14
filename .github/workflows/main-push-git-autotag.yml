@@ -15,6 +15,7 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
         run: |
+          echo "${EVENT_NAME}"
           echo "${GITHUB_REF}"
           echo "${GITHUB_REF_NAME}"
           echo "${GITHUB_REPOSITORY}"
