@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 
-from app.clients.db.models.law_policy.family import EventStatus
+from db_client.models.law_policy.family import EventStatus
 
 
 class EventReadDTO(BaseModel):

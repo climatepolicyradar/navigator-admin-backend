@@ -36,14 +36,14 @@ jobs:
         run: |
           poetry run pre-commit run --all-files
 
+      - name: Use .env.example
+        run: cp .env.example .env
+
       - name: Build
         run: make build
 
       - name: Run Unit Tests
         run: make unit_test
-
-      - name: Setup test db
-        run: make setup_test_db
 
       - name: Run Integration Tests
         run: make integration_test

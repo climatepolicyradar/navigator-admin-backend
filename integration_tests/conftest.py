@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import app.clients.db.session as db_session
+from db_client.models.base import Base
 import app.service.token as token_service
 from app.main import app
 from app.repository import family_repo, collection_repo, document_repo, event_repo
@@ -55,7 +56,7 @@ def test_db(scope="function"):
     try:
         test_engine = create_engine(test_db_url)
         connection = test_engine.connect()
-        db_session.Base.metadata.create_all(test_engine)  # type: ignore
+        Base.metadata.create_all(test_engine)  # type: ignore
         test_session_maker = sessionmaker(
             autocommit=False,
             autoflush=False,

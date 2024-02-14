@@ -5,12 +5,12 @@ from fastapi.testclient import TestClient
 from pydantic import AnyHttpUrl
 from sqlalchemy.orm import Session
 
-from app.clients.db.models.document.physical_document import (
+from db_client.models.document.physical_document import (
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from app.clients.db.models.law_policy.family import FamilyDocument, Slug
+from db_client.models.law_policy.family import FamilyDocument, Slug
 from app.model.document import DocumentWriteDTO
 from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 from unit_tests.helpers.document import create_document_write_dto

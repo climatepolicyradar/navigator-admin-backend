@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 from sqlalchemy.orm import Session
-from app.clients.db.models.law_policy.collection import (
+from db_client.models.law_policy.collection import (
     Collection,
     CollectionFamily,
     CollectionOrganisation,

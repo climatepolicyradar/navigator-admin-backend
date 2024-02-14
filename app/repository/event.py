@@ -11,8 +11,8 @@ from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
-from app.clients.db.models.app.counters import CountedEntity
-from app.clients.db.models.law_policy import (
+from db_client.models.app.counters import CountedEntity
+from db_client.models.law_policy import (
     EventStatus,
     Family,
     FamilyDocument,
