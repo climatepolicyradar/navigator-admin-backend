@@ -1,7 +1,9 @@
 name: main push git autotag
 
 on:
-  push
+  push:
+    branches:
+      - main
 
 jobs:
   auto-git-tag:
@@ -19,9 +21,14 @@ jobs:
               })
             ).data[0];
 
-    - name: Pull Request data
+    - uses: actions/checkout@v2
+    - name: Run Auto-tagging
+      # User controlled input needs to be santitised beforehand e.g., by adding an
+      # intermediate env var to prevent the workflow being exposed to a critical
+      # command injection attack
+      env:
+        PR_BODY: '${{ fromJson(steps.get_pr_data.outputs.result).body }}'
+        PR_NUMBER: '${{ fromJson(steps.get_pr_data.outputs.result).number }}'
       run: |
-        echo '${{ fromJson(steps.get_pr_data.outputs.result).number }}'
-        echo '${{ fromJson(steps.get_pr_data.outputs.result).title }}'
-        echo '${{ fromJson(steps.get_pr_data.outputs.result).body }}'
-
+        echo "Attempting to auto-tag merge commit"
+        .github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}"
