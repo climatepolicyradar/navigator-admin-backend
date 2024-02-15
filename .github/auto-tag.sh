@@ -21,23 +21,10 @@ version_numbers=${version_numbers%-*} # Remove the trailing '-beta'
 
 pr_body="$1"
 
-# Check if patch version.
-is_patch=false
-if [ $(echo "${pr_body}" | grep -c "\[x\] Patch") -gt 0 ]; then
-	is_patch=true
-fi
-
-# Check if minor version.
-is_minor=false
-if [ $(echo "${pr_body}" | grep -c "\[x\] Minor version") -gt 0 ]; then
-	is_minor=true
-fi
-
-# Check if major change.
-is_major=false
-if [ $(echo "${pr_body}" | grep -c "\[x\] Major version") -gt 0 ]; then
-	is_major=true
-fi
+# Get selected versioning checkboxes.
+is_patch=$(is_patch_selected "${pr_body}")
+is_minor=$(is_minor_selected "${pr_body}")
+is_major=$(is_major_selected "${pr_body}")
 
 # If multiple have been checked or none have been checked, don't auto tag.
 pr_number="$2"
