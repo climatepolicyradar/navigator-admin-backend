@@ -25,8 +25,8 @@ Notes:
 - Where multiple options are selected, the most senior option ticked will be
   used -- e.g. Major > Minor > Patch
 - If you are selecting the version in the list above using the textbox, make
-    sure your selected option is marked `[x]` with no spaces in between the
-    brackets and the `x`
+  sure your selected option is marked `[x]` with no spaces in between the
+  brackets and the `x`
 
 ## Type of change
 
