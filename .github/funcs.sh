@@ -93,21 +93,15 @@ is_selected() {
 
 is_patch_selected() {
 	local phrase=Patch
-	get_major "$1" "${phrase}"
+	is_selected "$1" "${phrase}"
 }
 
 is_minor_selected() {
-	if [ $(echo "$1" | grep -c "\[x\] Minor version") -gt 0 ]; then
-		echo true
-	else
-		echo false
-	fi
+	local phrase="Minor version"
+	is_selected "$1" "${phrase}"
 }
 
 is_major_selected() {
-	if [ $(echo "$1" | grep -c "\[x\] Major version") -gt 0 ]; then
-		echo true
-	else
-		echo false
-	fi
+	local phrase="Major version"
+	is_selected "$1" "${phrase}"
 }
