@@ -14,6 +14,8 @@ fi
 echo "Latest tag: ${latest_tag}"
 
 # Extract the version numbers from the tag
+maturity=$(get_maturity "${latest_tag}")
+echo "Maturity: ${latest_tag}"
 version_numbers=${latest_tag#v}       # Remove the leading 'v'
 version_numbers=${version_numbers%-*} # Remove the trailing '-beta'
 
@@ -51,9 +53,6 @@ else
 	# Split the version numbers into their respective parts
 	major_version=$(get_major "${version_numbers}")
 	minor_version=$(get_minor "${version_numbers}")
-
-	maturity=$(get_maturity "${version_numbers}")
-	echo "Maturity: ${maturity}"
 
 	# Auto-tag based on selected option.
 	if [ "${is_patch}" = true ]; then
