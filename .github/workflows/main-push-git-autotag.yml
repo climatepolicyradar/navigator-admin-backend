@@ -1,9 +1,7 @@
 name: main push git autotag
 
 on:
-  push:
-    branches:
-      - main
+  push
 
 jobs:
   auto-git-tag:
