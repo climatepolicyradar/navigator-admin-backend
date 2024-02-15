@@ -1,9 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+# set -e
 
-pr_body="$1"
+script_folder=$(dirname "${BASH_SOURCE[0]}")
+source $script_folder/funcs.sh
 
 # Get the latest Git tag.
-git fetch --prune --unshallow --tags
+# git fetch --prune --unshallow --tags # Is this really needed?
 latest_tag=$(git tag --list 'v*' --sort=-authordate --merged | head -n1)
 if [ -z "${latest_tag}" ]; then
 	echo "No tags found. Please create first tag manually to enable auto-tagging."
@@ -14,6 +16,8 @@ echo "Latest tag: ${latest_tag}"
 # Extract the version numbers from the tag
 version_numbers=${latest_tag#v}       # Remove the leading 'v'
 version_numbers=${version_numbers%-*} # Remove the trailing '-beta'
+
+pr_body="$1"
 
 # Check if patch version.
 is_patch=false
@@ -47,6 +51,13 @@ else
 	# Split the version numbers into their respective parts
 	major_version=$(echo "${version_numbers}" | cut -d'.' -f1)
 	minor_version=$(echo "${version_numbers}" | cut -d'.' -f2)
+
+	major=$(get_major "${version_numbers}")
+	echo "Major: ${major}"
+	minor=$(get_minor "${version_numbers}")
+	echo "Major: ${minor}"
+	patch=$(get_patch "${version_numbers}")
+	echo "Major: ${patch}"
 
 	# Auto-tag based on selected option.
 	if [ "${is_patch}" = true ]; then
