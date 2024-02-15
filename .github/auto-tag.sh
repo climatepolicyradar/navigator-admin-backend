@@ -29,6 +29,8 @@ if { [[ ${is_minor} == true ]] && [[ ${is_patch} == true ]]; } ||
 fi
 
 # Extract the version numbers from the tag
+version_numbers=${latest_tag#v}       # Remove the leading 'v'
+version_numbers=${version_numbers%-*} # Remove the trailing '-beta'
 major_version=$(get_major "${version_numbers}")
 minor_version=$(get_minor "${version_numbers}")
 patch_version=$(get_patch "${version_numbers}")
@@ -36,8 +38,6 @@ maturity=$(get_maturity "${latest_tag}")
 if [ ! -z "${maturity}" ]; then
 	maturity="-${maturity}"
 fi
-version_numbers=${latest_tag#v}       # Remove the leading 'v'
-version_numbers=${version_numbers%-*} # Remove the trailing '-beta'
 
 # Auto-tag based on most senior version selected.
 if [[ ${is_major} == true ]]; then
