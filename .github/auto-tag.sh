@@ -55,21 +55,18 @@ else
 	maturity=$(get_maturity "${version_numbers}")
 	echo "Maturity: ${maturity}"
 
-	incremented_number=$(increment "${major_version}")
-	echo "Increment major version: ${incremented_number}"
-
 	# Auto-tag based on selected option.
 	if [ "${is_patch}" = true ]; then
 		patch_version=$(get_patch "${version_numbers}")
-		new_patch_version=$((patch_version + 1))
+		new_patch_version=$(increment "${patch_version}")
 		new_tag=v${major_version}.${minor_version}.${new_patch_version}-beta
 		echo "Tagging as new patch ${new_tag}..."
 	elif [ "${is_minor}" = true ]; then
-		new_minor_version=$((minor_version + 1))
+		new_minor_version=$(increment "${minor_version}")
 		new_tag="v${major_version}.${new_minor_version}.0-beta"
 		echo "Tagging as new minor version ${new_tag}..."
 	elif [ "${is_major}" = true ]; then
-		new_major_version=$((major_version + 1))
+		new_major_version=$(increment "${major_version}")
 		new_tag=v${new_major_version}.0.0-beta
 		echo "Tagging as new major version ${new_tag}..."
 	fi
