@@ -5,7 +5,7 @@ script_folder=$(dirname "${BASH_SOURCE[0]}")
 source $script_folder/funcs.sh
 
 # Get the latest Git tag.
-git fetch --prune --unshallow --tags # Is this really needed?
+git fetch --prune --unshallow --tags # This is needed - without it no tags are found.
 latest_tag=$(git tag --list 'v*' --sort=-authordate --merged | head -n1)
 if [ -z "${latest_tag}" ]; then
 	echo "No tags found. Please create first tag manually to enable auto-tagging."
@@ -49,19 +49,18 @@ elif { [ "${is_minor}" = false ] && [ "${is_patch}" = false ] && [ "${is_major}"
 	exit 1
 else
 	# Split the version numbers into their respective parts
-	major_version=$(echo "${version_numbers}" | cut -d'.' -f1)
-	minor_version=$(echo "${version_numbers}" | cut -d'.' -f2)
+	major_version=$(get_major "${version_numbers}")
+	minor_version=$(get_minor "${version_numbers}")
 
-	major=$(get_major "${version_numbers}")
-	echo "Major: ${major}"
-	minor=$(get_minor "${version_numbers}")
-	echo "Major: ${minor}"
-	patch=$(get_patch "${version_numbers}")
-	echo "Major: ${patch}"
+	maturity=$(get_maturity "${version_numbers}")
+	echo "Maturity: ${maturity}"
+
+	incremented_number=$(increment "${major_version}")
+	echo "Increment major version: ${incremented_number}"
 
 	# Auto-tag based on selected option.
 	if [ "${is_patch}" = true ]; then
-		patch_version=$(echo "${version_numbers}" | cut -d'.' -f3)
+		patch_version=$(get_patch "${version_numbers}")
 		new_patch_version=$((patch_version + 1))
 		new_tag=v${major_version}.${minor_version}.${new_patch_version}-beta
 		echo "Tagging as new patch ${new_tag}..."
