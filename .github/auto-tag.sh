@@ -32,12 +32,12 @@ echo "Is major: ${is_major}"
 
 # If multiple have been checked or none have been checked, don't auto tag.
 pr_number="$2"
-if { [[ "${is_minor}" ]] && [[ "${is_patch}" ]]; } ||
-	{ [[ "${is_minor}" ]] && [[ "${is_major}" ]]; } ||
-	{ [[ "${is_patch}" ]] && [[ "${is_major}" ]]; }; then
+if { [[ "${is_minor}" = true ]] && [[ "${is_patch}" = true ]]; } ||
+	{ [[ "${is_minor}" = true ]] && [[ "${is_major}" = true ]]; } ||
+	{ [[ "${is_patch}" = true ]] && [[ "${is_major}" = true ]]; }; then
 	echo "Ambiguous tag information in body of pull request #${pr_number}. Auto-tagging failed..."
 	exit 1
-elif { [[ ! ${is_minor} ]] && [[ ! ${is_patch} ]] && [[ ! ${is_major} ]]; }; then
+elif { [[ "${is_minor}" = false ]] && [[ "${is_patch}" = false ]] && [[ "${is_major}" = false ]]; }; then
 	echo "No tag information found in body of pull request #${pr_number}. Auto-tagging failed..."
 	exit 1
 else
@@ -46,16 +46,16 @@ else
 	minor_version=$(get_minor "${version_numbers}")
 
 	# Auto-tag based on selected option.
-	if [[ "${is_patch}" ]]; then
+	if [[ ${is_patch} == true ]]; then
 		patch_version=$(get_patch "${version_numbers}")
 		new_patch_version=$(increment "${patch_version}")
 		new_tag=v${major_version}.${minor_version}.${new_patch_version}-beta
 		echo "Tagging as new patch ${new_tag}..."
-	elif [[ "${is_minor}" ]]; then
+	elif [[ ${is_minor} == true ]]; then
 		new_minor_version=$(increment "${minor_version}")
 		new_tag="v${major_version}.${new_minor_version}.0-beta"
 		echo "Tagging as new minor version ${new_tag}..."
-	elif [[ "${is_major}" ]]; then
+	elif [[ ${is_major} == true ]]; then
 		new_major_version=$(increment "${major_version}")
 		new_tag=v${new_major_version}.0.0-beta
 		echo "Tagging as new major version ${new_tag}..."
