@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -e
+set -e
 
 script_folder=$(dirname "${BASH_SOURCE[0]}")
 source $script_folder/funcs.sh
@@ -37,7 +37,7 @@ if { [[ "${is_minor}" ]] && [[ "${is_patch}" ]]; } ||
 	{ [[ "${is_patch}" ]] && [[ "${is_major}" ]]; }; then
 	echo "Ambiguous tag information in body of pull request #${pr_number}. Auto-tagging failed..."
 	exit 1
-elif { [[ ${is_minor} != 0 ]] && [[ ${is_patch} != 0 ]] && [[ ${is_major} != 0 ]]; }; then
+elif { [[ ! ${is_minor} ]] && [[ ! ${is_patch} ]] && [[ ! ${is_major} ]]; }; then
 	echo "No tag information found in body of pull request #${pr_number}. Auto-tagging failed..."
 	exit 1
 else
