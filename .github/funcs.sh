@@ -1,17 +1,13 @@
 #
 # This is the core functionality taken out so it can be tested
 #
-
-clean_string() {
-	echo "$1" | tr -d '\n' | tr -d ' '
+# Core funcs.
+increment() {
+	echo $(($1 + 1))
 }
 
-is_tagged_version() {
-	if [[ "$1" =~ refs/tags/v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*) ]]; then
-		return 0
-	else
-		return 1
-	fi
+clean_string() {
+	echo "${1}" | tr -d '\n' | tr -d ' '
 }
 
 get_major() {
@@ -35,6 +31,15 @@ get_maturity() {
 		echo "${1}" | cut -d'.' -f3 | cut -d'-' -f2
 	else
 		echo ""
+	fi
+}
+
+# Docker funcs.
+is_tagged_version() {
+	if [[ $1 =~ refs/tags/v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*) ]]; then
+		return 0
+	else
+		return 1
 	fi
 }
 
@@ -67,6 +72,7 @@ get_docker_tags() {
 	arr=($full_tag $minor_tag $major_tag)
 }
 
+# Auto-tag funcs.
 is_valid_git_tag() {
 	if [[ $1 =~ v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*) ]]; then
 		return 0
@@ -75,6 +81,26 @@ is_valid_git_tag() {
 	fi
 }
 
-increment() {
-	echo $(($1 + 1))
+is_patch_selected() {
+	if [ $(echo "${1}" | grep -c "\[x\] Patch") -gt 0 ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+is_minor_selected() {
+	if [ $(echo "${1}" | grep -c "\[x\] Minor version") -gt 0 ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+is_major_selected() {
+	if [ $(echo "${1}" | grep -c "\[x\] Major version") -gt 0 ]; then
+		return 0
+	else
+		return 1
+	fi
 }
