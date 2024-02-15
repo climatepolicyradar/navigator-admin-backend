@@ -26,6 +26,10 @@ is_patch=$(is_patch_selected "${pr_body}")
 is_minor=$(is_minor_selected "${pr_body}")
 is_major=$(is_major_selected "${pr_body}")
 
+echo "Is patch: ${is_patch}"
+echo "Is minor: ${is_minor}"
+echo "Is major: ${is_major}"
+
 # If multiple have been checked or none have been checked, don't auto tag.
 pr_number="$2"
 if { [[ "${is_minor}" ]] && [[ "${is_patch}" ]]; } ||
