@@ -7,32 +7,39 @@ load '/opt/bats-test-helpers/lox-bats-mock/stub.bash'
 
 @test "get_major returns major version" {
   source /code/funcs.sh
-  run get_major "v1.2.3-alpha"
+  run get_major "5.6.7-alpha"
   [ "$status" -eq 0 ]
-  [ "$output" == "1" ]
+  [ "$output" == "5" ]
 }
 
 # ------
 
 @test "get_minor returns minor version" {
   source /code/funcs.sh
-  run get_minor "v1.2.3-alpha"
+  run get_minor "5.6.7-alpha"
   [ "$status" -eq 0 ]
-  [ "$output" == "2" ]
+  [ "$output" == "6" ]
 }
 
 # ------
 
 @test "get_patch returns patch version" {
   source /code/funcs.sh
-  run get_patch "v1.2.3-alpha"
+  run get_patch "5.6.7-alpha"
   [ "$status" -eq 0 ]
-  [ "$output" == "3" ]
+  [ "$output" == "7" ]
 }
 
 # ------
 
 @test "get_maturity returns maturity version" {
+  source /code/funcs.sh
+  run get_maturity "8.9.7-alpha"
+  [ "$status" -eq 0 ]
+  [ "$output" == "alpha" ]
+}
+
+@test "get_maturity returns maturity version with v prefix" {
   source /code/funcs.sh
   run get_maturity "v8.9.7-alpha"
   [ "$status" -eq 0 ]
@@ -91,7 +98,7 @@ load '/opt/bats-test-helpers/lox-bats-mock/stub.bash'
 
 @test "is_minor_selected returns correctly when Minor checkbox checked" {
   source /code/funcs.sh
-  run is_minor_selected "[x] Minor Version"
+  run is_minor_selected "[x] Minor version"
   [ "$status" -eq 0 ]
   [ "$output" == "true" ]
 
@@ -99,7 +106,7 @@ load '/opt/bats-test-helpers/lox-bats-mock/stub.bash'
 
 @test "is_major_selected returns correctly when Major checkbox checked" {
   source /code/funcs.sh
-  run is_major_selected "[x] Major Version"
+  run is_major_selected "[x] Major version"
   [ "$status" -eq 0 ]
   [ "$output" == "true" ]
 
@@ -107,27 +114,27 @@ load '/opt/bats-test-helpers/lox-bats-mock/stub.bash'
 
 # ------
 
-@test "is_patch_selected returns correctly when Patch checkbox not found" {
+@test "is_patch_selected returns false when Patch checkbox not found" {
   source /code/funcs.sh
   run is_patch_selected "[x] apple"
   [ "$status" -eq 0 ]
-  [ "$output" == "true" ]
+  [ "$output" == "false" ]
 
 }
 
-@test "is_minor_selected returns correctly when Minor checkbox not found" {
+@test "is_minor_selected returns false when Minor checkbox not found" {
   source /code/funcs.sh
   run is_minor_selected "[x] banana"
   [ "$status" -eq 0 ]
-  [ "$output" == "true" ]
+  [ "$output" == "false" ]
 
 }
 
-@test "is_major_selected returns correctly when Major checkbox not found" {
+@test "is_major_selected returns false when Major checkbox not found" {
   source /code/funcs.sh
   run is_major_selected "[x] cucumber"
   [ "$status" -eq 0 ]
-  [ "$output" == "true" ]
+  [ "$output" == "false" ]
 
 }
 
@@ -135,32 +142,32 @@ load '/opt/bats-test-helpers/lox-bats-mock/stub.bash'
 
 @test "is_selected returns correctly when checkbox checked correctly" {
   source /code/funcs.sh
-  run is_selected "[x] Patch"
+  run is_selected "[x] Patch" "Patch"
   [ "$status" -eq 0 ]
   [ "$output" == "true" ]
 
 }
 
-@test "is_selected returns correctly when checkbox not checked properly" {
+@test "is_selected returns false when checkbox not checked properly: space to right of cross" {
   source /code/funcs.sh
-  run is_selected "[x ] Patch"
+  run is_selected "\[x \] Patch" "Patch"
   [ "$status" -eq 0 ]
-  [ "$output" == "true" ]
+  [ "$output" == "false" ]
 
 }
 
-@test "is_selected returns correctly when checkbox not checked properly" {
+@test "is_selected returns false when checkbox not checked properly: space to left of cross" {
   source /code/funcs.sh
-  run is_selected "[ x] Patch"
+  run is_selected "\[ x\] Patch" "Patch"
   [ "$status" -eq 0 ]
-  [ "$output" == "true" ]
+  [ "$output" == "false" ]
 
 }
 
-@test "is_selected returns correctly when checkbox not checked properly" {
+@test "is_selected returns false when checkbox not checked properly: spaces either side of cross" {
   source /code/funcs.sh
-  run is_selected "[ x ] Patch"
+  run is_selected "\[ x \] Patch" "Patch"
   [ "$status" -eq 0 ]
-  [ "$output" == "true" ]
+  [ "$output" == "false" ]
 
 }
