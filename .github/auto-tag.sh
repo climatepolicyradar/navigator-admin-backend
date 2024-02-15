@@ -5,7 +5,7 @@ script_folder=$(dirname "${BASH_SOURCE[0]}")
 source $script_folder/funcs.sh
 
 # Get the latest Git tag.
-# git fetch --prune --unshallow --tags # Is this really needed?
+git fetch --prune --unshallow --tags # Is this really needed?
 latest_tag=$(git tag --list 'v*' --sort=-authordate --merged | head -n1)
 if [ -z "${latest_tag}" ]; then
 	echo "No tags found. Please create first tag manually to enable auto-tagging."
