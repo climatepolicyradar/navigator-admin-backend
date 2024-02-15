@@ -81,12 +81,19 @@ is_valid_git_tag() {
 	fi
 }
 
-is_patch_selected() {
-	if [ $(echo "$1" | grep -c "\[x\] Patch") -gt 0 ]; then
+is_selected() {
+	body=$1
+	phrase=$2
+	if [ $(echo "${body}" | grep -c "\[x\] ${phrase}") -gt 0 ]; then
 		echo true
 	else
 		echo false
 	fi
+}
+
+is_patch_selected() {
+	local phrase=Patch
+	get_major "$1" "${phrase}"
 }
 
 is_minor_selected() {
