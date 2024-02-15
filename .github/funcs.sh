@@ -83,25 +83,24 @@ is_valid_git_tag() {
 
 is_patch_selected() {
 	if [ $(echo "$1" | grep -c "\[x\] Patch") -gt 0 ]; then
-		return 0
+		echo 0
 	else
-		return 1
+		echo 1
 	fi
 }
 
 is_minor_selected() {
 	if [ $(echo "$1" | grep -c "\[x\] Minor version") -gt 0 ]; then
-		return 0
+		echo 0
 	else
-		return 1
+		echo 1
 	fi
 }
 
 is_major_selected() {
-	echo "$1"
 	if [ $(echo "$1" | grep -c "\[x\] Major version") -gt 0 ]; then
-		return 0
+		echo 0
 	else
-		return 1
+		echo 1
 	fi
 }
