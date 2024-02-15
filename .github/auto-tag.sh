@@ -35,18 +35,18 @@ if { [[ ${is_minor} == true ]] && [[ ${is_patch} == true ]]; } ||
 fi
 
 # Auto-tag based on most senior version selected.
+major_version=$(get_major "${version_numbers}")
+minor_version=$(get_minor "${version_numbers}")
+patch_version=$(get_patch "${version_numbers}")
 if [[ ${is_major} == true ]]; then
-	major_version=$(get_major "${version_numbers}")
 	new_major_version=$(increment "${major_version}")
 	new_tag=v${new_major_version}.0.0-beta
 	echo "Tagging as new major version ${new_tag}..."
 elif [[ ${is_minor} == true ]]; then
-	minor_version=$(get_minor "${version_numbers}")
 	new_minor_version=$(increment "${minor_version}")
 	new_tag="v${major_version}.${new_minor_version}.0-beta"
 	echo "Tagging as new minor version ${new_tag}..."
 else
-	patch_version=$(get_patch "${version_numbers}")
 	new_patch_version=$(increment "${patch_version}")
 	new_tag=v${major_version}.${minor_version}.${new_patch_version}-beta
 	echo "Tagging as new patch ${new_tag}..."
