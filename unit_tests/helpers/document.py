@@ -10,6 +10,7 @@ def create_document_create_dto(
     family_import_id="test.family.1.0",
     title: str = "title",
     variant_name: Optional[str] = "Original Language",
+    source_url: Optional[AnyHttpUrl] = cast(AnyHttpUrl, "http://source"),
     user_language_name: Optional[str] = None,
 ) -> DocumentCreateDTO:
     return DocumentCreateDTO(
@@ -18,7 +19,7 @@ def create_document_create_dto(
         role="MAIN",
         type="Law",
         title=title,
-        source_url=cast(AnyHttpUrl, "http://source"),
+        source_url=source_url,
         user_language_name=user_language_name,
     )
 

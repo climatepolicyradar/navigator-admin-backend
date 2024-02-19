@@ -134,6 +134,45 @@ def test_create_document_null_user_language_name(
     assert slug.name.startswith("title")
 
 
+def test_create_document_null_source_url(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = create_document_create_dto(
+        title="Title", family_import_id="A.0.0.3", source_url=None
+    )
+    response = client.post(
+        "/api/v1/documents",
+        json=new_document.model_dump(mode="json"),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    created_import_id = response.json()
+    actual_fd = (
+        test_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == created_import_id)
+        .one()
+    )
+
+    assert actual_fd is not None
+
+    actual_pd = (
+        test_db.query(PhysicalDocument)
+        .filter(PhysicalDocument.id == actual_fd.physical_document_id)
+        .one()
+    )
+    assert actual_pd is not None
+    assert actual_pd.source_url is None
+
+    slug = (
+        test_db.query(Slug)
+        .filter(Slug.family_document_import_id == actual_fd.import_id)
+        .one()
+    )
+    assert len(slug.name) == len("title") + 1 + 4
+    assert slug.name.startswith("title")
+
+
 def test_create_document_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
