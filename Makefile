@@ -17,6 +17,9 @@ test_bashscripts: build_bats
 	docker run --rm -v "${PWD}/.github:/code" bats-with-helpers:latest /code/tests/
 
 build:
+	docker build -t navigator-admin-backend .
+
+build_local:
 	docker compose build
 
 unit_test:
