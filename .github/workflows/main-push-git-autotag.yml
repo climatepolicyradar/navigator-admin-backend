@@ -22,7 +22,6 @@ jobs:
             ).data[0];
 
     - uses: actions/checkout@v2
-    - uses: fregante/setup-git-user@v2
     - name: Run Auto-tagging
       # User controlled input needs to be santitised beforehand e.g., by adding an
       # intermediate env var to prevent the workflow being exposed to a critical
