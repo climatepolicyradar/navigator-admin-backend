@@ -5,6 +5,11 @@ on:
     tags:
       - v*
 
+  workflow_run:
+    workflows: ["main push git autotag"]
+    types:
+      - completed
+
 env:
   DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
