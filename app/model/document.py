@@ -55,7 +55,7 @@ class DocumentCreateDTO(BaseModel):
 
     # From PhysicalDocument
     title: str
-    source_url: AnyHttpUrl
+    source_url: Optional[AnyHttpUrl]
     user_language_name: Optional[str]
 
 
