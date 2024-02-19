@@ -125,7 +125,7 @@ def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjec
     phys_doc = PhysicalDocument(
         id=None,
         title=dto.title,
-        source_url=str(dto.source_url),
+        source_url=cast(str, dto.source_url) if dto.source_url is not None else None,
     )
     return language, fam_doc, phys_doc
 
