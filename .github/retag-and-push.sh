@@ -20,6 +20,18 @@ fi
 project="$1"
 image_tag="$2"
 
+if [[ -n "${NEW_TAG}" ]]; then
+    if is_valid_tag_name ${NEW_TAG} ; then
+        # push `semver` tagged image
+        semver="${NEW_TAG/v/}"
+        echo "Detected Tag: ${semver}"
+        process_tagged_version ${semver}
+    else
+        echo "New tag ${NEW_TAG} is not a valid tag name"
+        exit 1
+    fi
+fi
+
 # login
 # This should now be performed as a GA
 # See: https://docs.docker.com/build/ci/github-actions/#step-three-define-the-workflow-steps
