@@ -45,6 +45,7 @@ if [[ -n "${NEW_TAG}" ]]; then
         semver="${NEW_TAG/v/}"
         echo "Detected Tag: ${semver}"
         process_tagged_version ${semver}
+        exit 0
     else
         echo "New tag ${NEW_TAG} is not a valid tag name"
         exit 1
