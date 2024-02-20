@@ -66,4 +66,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           docker pull ${DOCKER_REGISTRY}/navigator-admin-backend:main-d62fb12f
+          docker tag ${DOCKER_REGISTRY}/navigator-admin-backend:main-d62fb12f  navigator-admin-backend:main-d62fb12f
           .github/retag-and-push.sh navigator-admin-backend main-d62fb12f
