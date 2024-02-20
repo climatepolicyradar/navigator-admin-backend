@@ -17,6 +17,9 @@ fi
 
 [ "${DOCKER_REGISTRY}" == "" ] && (echo "DOCKER_REGISTRY is not set" ; exit 1)
 
+project="$1"
+image_tag="$2"
+
 docker_tag() {
     echo "Re-tagging $1 -> $2"
     docker tag $1 $2
@@ -32,9 +35,6 @@ process_tagged_version() {
         docker push "${tag}"
     done
 }
-
-project="$1"
-image_tag="$2"
 
 name=$(clean_string "${DOCKER_REGISTRY}/${project}")
 input_image="${project}:${image_tag}"
