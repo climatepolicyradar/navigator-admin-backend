@@ -1,4 +1,4 @@
-name: main push git autotag
+name: main push autotag
 
 on:
   push:
