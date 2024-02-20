@@ -2,8 +2,7 @@ name: Semver Tagging
 
 on:
   push:
-    tags:
-      - v*
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
 
   workflow_run:
     workflows: ["main push git autotag"]
