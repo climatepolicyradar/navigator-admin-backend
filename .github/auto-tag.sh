@@ -63,4 +63,4 @@ set -e
 # # git tag -a "${new_tag}" -m "Version ${new_version_num}"
 # # git push --tags origin "${new_tag}"
 # echo "${new_tag}"
-echo "v1.0.9-beta"
+echo "v1.0.7-beta"
