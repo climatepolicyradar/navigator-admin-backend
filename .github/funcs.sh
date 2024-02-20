@@ -73,7 +73,7 @@ get_docker_tags() {
 }
 
 # Auto-tag funcs.
-is_valid_git_tag() {
+is_valid_tag_name() {
 	if [[ $1 =~ v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*) ]]; then
 		return 0
 	else
@@ -104,4 +104,10 @@ is_minor_selected() {
 is_major_selected() {
 	local phrase="Major version"
 	is_selected "$1" "${phrase}"
+}
+
+get_latest_tag() {
+	git fetch --prune --unshallow --tags # This is needed - without it no tags are found.
+	latest_tag=$(git tag --list 'v*' --sort=-creatordate | head -n1)
+	echo "${latest_tag}"
 }
