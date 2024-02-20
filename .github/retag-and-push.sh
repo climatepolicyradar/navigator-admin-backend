@@ -17,6 +17,22 @@ fi
 
 [ "${DOCKER_REGISTRY}" == "" ] && (echo "DOCKER_REGISTRY is not set" ; exit 1)
 
+docker_tag() {
+    echo "Re-tagging $1 -> $2"
+    docker tag $1 $2
+}
+
+process_tagged_version() {
+    local tag_array
+    semver=$1
+    get_docker_tags tag_array ${name} ${semver}
+
+    for tag in "${tag_array[@]}" ; do
+        docker_tag "${input_image}" ${tag}
+        docker push "${tag}"
+    done
+}
+
 project="$1"
 image_tag="$2"
 
@@ -47,22 +63,6 @@ echo "GitHeadRef  : ${GITHUB_HEAD_REF}"
 echo "Branch      : ${GITHUB_REF/refs\/heads\//}"
 echo "Repo Tag    : ${name}"
 echo "-------------"
-
-docker_tag() {
-    echo "Re-tagging $1 -> $2"
-    docker tag $1 $2
-}
-
-process_tagged_version() {
-    local tag_array
-    semver=$1
-    get_docker_tags tag_array ${name} ${semver}
-
-    for tag in "${tag_array[@]}" ; do
-        docker_tag "${input_image}" ${tag}
-        docker push "${tag}"
-    done
-}
 
 timestamp=$(date --utc -Iseconds | cut -c1-19 | tr -c '[0-9]T\n' '-')
 short_sha=${GITHUB_SHA:0:8}
