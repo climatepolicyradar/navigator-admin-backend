@@ -39,6 +39,7 @@ jobs:
       run: |
         echo "Attempting to auto-tag merge commit"
         new_tag=$(.github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}")
+        new_tag=$(echo "${new_tag}" | tail -n 1)
         echo "new_tag=${new_tag}"  >> "$GITHUB_OUTPUT"
 
   auto-semver-tag:
