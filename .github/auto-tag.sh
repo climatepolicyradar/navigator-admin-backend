@@ -62,3 +62,4 @@ fi
 new_version_num=${new_tag#v} # Remove the leading 'v'
 # git tag -a "${new_tag}" -m "Version ${new_version_num}"
 # git push --tags origin "${new_tag}"
+echo "${new_tag}"
