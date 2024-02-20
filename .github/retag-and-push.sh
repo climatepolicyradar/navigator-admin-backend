@@ -36,6 +36,9 @@ process_tagged_version() {
 project="$1"
 image_tag="$2"
 
+name=$(clean_string "${DOCKER_REGISTRY}/${project}")
+input_image="${project}:${image_tag}"
+
 if [[ -n "${NEW_TAG}" ]]; then
     if is_valid_tag_name ${NEW_TAG} ; then
         # push `semver` tagged image
@@ -51,9 +54,6 @@ fi
 # login
 # This should now be performed as a GA
 # See: https://docs.docker.com/build/ci/github-actions/#step-three-define-the-workflow-steps
-
-name=$(clean_string "${DOCKER_REGISTRY}/${project}")
-input_image="${project}:${image_tag}"
 
 echo "-------------"
 echo "Input       : ${project}:${image_tag}"
@@ -77,7 +77,6 @@ if [[ "${GITHUB_REF}" == "refs/heads"* ]]; then
     branch="${GITHUB_REF/refs\/heads\//}"
     echo "Detected Branch: ${branch}"
 
-
     # Only update latest if on main
     if [[ "${branch}" = "main" ]]; then
         # push `latest` tag
@@ -90,11 +89,13 @@ if [[ "${GITHUB_REF}" == "refs/heads"* ]]; then
         docker_tag "${input_image}" "${name}:${branch}-${short_sha}"
         docker push "${name}:${branch}-${short_sha}"
     fi
+
 elif is_tagged_version ${GITHUB_REF} ; then
     # push `semver` tagged image
     semver="${GITHUB_REF/refs\/tags\/v/}"
     echo "Detected Tag: ${semver}"
     process_tagged_version ${semver}
+
 else
     echo "${GITHUB_REF} is neither a branch head nor valid semver tag"
     echo "Assuming '${GITHUB_HEAD_REF}' is a branch"
