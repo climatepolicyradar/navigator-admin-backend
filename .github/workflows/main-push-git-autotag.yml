@@ -8,6 +8,11 @@ on:
 jobs:
   auto-git-tag:
     runs-on: ubuntu-latest
+
+    # Expose step outputs as job outputs
+    outputs:
+      new_tag: ${{ steps.run_git_auto_tag.outputs.new_tag }}
+
     steps:
     - uses: actions/github-script@v6
       id: get_pr_data
@@ -24,6 +29,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: fregante/setup-git-user@v2
     - name: Run Auto-tagging
+      id: run_git_auto_tag
       # User controlled input needs to be santitised beforehand e.g., by adding an
       # intermediate env var to prevent the workflow being exposed to a critical
       # command injection attack
@@ -32,4 +38,5 @@ jobs:
         PR_NUMBER: '${{ fromJson(steps.get_pr_data.outputs.result).number }}'
       run: |
         echo "Attempting to auto-tag merge commit"
-        .github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}"
+        new_tag=$(.github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}")
+        echo "new_tag=${new_tag}"  >> "$GITHUB_OUTPUT"
