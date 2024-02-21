@@ -23,20 +23,20 @@ build_local:
 	docker compose build
 
 unit_test:
-	- docker compose run --rm navigator-admin-backend pytest -vvv unit_tests
+	docker compose run --rm navigator-admin-backend pytest -vvv unit_tests
 
 integration_test:
-	- docker compose run --rm navigator-admin-backend pytest -vvv integration_tests
+	docker compose run --rm navigator-admin-backend pytest -vvv integration_tests
 
 test: unit_test integration_test
 
 migrations:
-	- docker compose run --rm navigator-admin-backend python3 app/initial_data.py
+	docker compose run --rm navigator-admin-backend python3 app/initial_data.py
 
 run: 
-	- docker-compose -f docker-compose.yml up -d --remove-orphans
+	docker-compose -f docker-compose.yml up -d --remove-orphans
 
 start: build run migrations
 
 show_logs: 
-	- docker-compose logs -f
+	docker-compose logs -f
