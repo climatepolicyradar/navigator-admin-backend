@@ -2,9 +2,12 @@ name: Auto-Tag
 
 on:
   workflow_run:
-    workflows: [build]
+    workflows: ["CI"]
     types:
       - completed
+
+  push:
+    tags: ['v*']
 
 jobs:
   auto-git-and-semver-tag:
