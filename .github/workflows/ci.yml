@@ -10,18 +10,10 @@ on:
 
 # https://github.com/marketplace/actions/docker-layer-caching
 jobs:
-  test-bash:
+  code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Run tests
-        run: make test_bashscripts
-
-  build-start-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -36,14 +28,44 @@ jobs:
         run: |
           poetry run pre-commit run --all-files
 
-      - name: Build
-        run: make build
+      - name: Check code contains no FIXME's
+        run: |
+          git grep -r --no-color ${case_sensitive} --line-number -e "FIXME" :^.github
+          if [[ $? -eq 0 ]]; then
+            # if we found any FIXME entries in checked in files, fail on main
+            exit 1
+          else
+            exit 0
+          fi
+        shell: bash {0}
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure test env variables
+        run: cp .env.example .env
+
+      - name: Test bash scripts
+        run: make test_bashscripts
 
       - name: Run Unit Tests
         run: make unit_test
 
       - name: Run Integration Tests
         run: make integration_test
+
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - code-quality
+      - test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: make build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
