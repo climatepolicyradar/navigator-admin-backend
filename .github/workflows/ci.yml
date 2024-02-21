@@ -13,7 +13,7 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -42,7 +42,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Run tests
         run: make test_bashscripts
@@ -59,7 +59,7 @@ jobs:
       - code-quality
       - test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Build
         run: make build
