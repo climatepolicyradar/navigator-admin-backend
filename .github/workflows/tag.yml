@@ -81,7 +81,7 @@ jobs:
         git push --tags origin "${new_tag}"
 
   semver-for-manually-created-tags:
-    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
