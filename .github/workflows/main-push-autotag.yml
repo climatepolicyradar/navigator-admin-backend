@@ -1,9 +1,9 @@
 name: main push autotag
 
 on:
-  push #:
-    # branches:
-    #   - main
+  push:
+    branches:
+      - main
 
 jobs:
   auto-git-tag:
@@ -11,7 +11,7 @@ jobs:
 
     # Expose step outputs as job outputs
     outputs:
-      new_tag: v1.0.10-beta
+      new_tag: ${{ steps.run_git_auto_tag.outputs.new_tag }}
 
     steps:
     - uses: actions/github-script@v6
@@ -70,6 +70,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          docker pull ${DOCKER_REGISTRY}/navigator-admin-backend:main-66ffb486
-          docker tag ${DOCKER_REGISTRY}/navigator-admin-backend:main-66ffb486  navigator-admin-backend:main-66ffb486
-          .github/retag-and-push.sh navigator-admin-backend main-66ffb486
+          docker pull ${DOCKER_REGISTRY}/navigator-admin-backend:main-${GITHUB_SHA::8}
+          docker tag ${DOCKER_REGISTRY}/navigator-admin-backend:main-${GITHUB_SHA::8}  navigator-admin-backend:main-${GITHUB_SHA::8}
+          .github/retag-and-push.sh navigator-admin-backend main-${GITHUB_SHA::8}
