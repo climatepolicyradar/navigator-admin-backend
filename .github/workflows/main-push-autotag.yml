@@ -37,6 +37,7 @@ jobs:
         PR_BODY: '${{ fromJson(steps.get_pr_data.outputs.result).body }}'
         PR_NUMBER: '${{ fromJson(steps.get_pr_data.outputs.result).number }}'
       run: |
+        echo '${{ fromJson(steps.get_pr_data.outputs.result) }}'
         echo "Attempting to auto-tag merge commit"
         script_output=$(.github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}")
         if $? != 0; then
@@ -70,4 +71,4 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          .github/retag-and-push.sh navigator-admin-backend main-${GITHUB_SHA::8}
+          .github/retag-and-push.sh navigator-admin-backend latest
