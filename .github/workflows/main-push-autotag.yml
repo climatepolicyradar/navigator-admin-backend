@@ -37,7 +37,7 @@ jobs:
         PR_BODY: '${{ fromJson(steps.get_pr_data.outputs.result).body }}'
         PR_NUMBER: '${{ fromJson(steps.get_pr_data.outputs.result).number }}'
       run: |
-        echo '${{ fromJson(steps.get_pr_data.outputs.result) }}'
+        echo '${{ fromJson(steps.get_pr_data.outputs.result).sha }}'
         echo "Attempting to auto-tag merge commit"
         script_output=$(.github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}")
         if $? != 0; then
@@ -45,7 +45,7 @@ jobs:
         fi
         script_output=$(echo "${new_tag}" | tail -n 1)
         echo "new_tag=${script_output}"  >> "$GITHUB_OUTPUT"
-      shell: bash {0}
+      shell: bash
 
   auto-semver-tag:
     needs: auto-git-tag
