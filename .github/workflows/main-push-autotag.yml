@@ -11,7 +11,7 @@ jobs:
 
     # Expose step outputs as job outputs
     outputs:
-      new_tag: v1.0.11-beta
+      new_tag: v1.0.10-beta
 
     steps:
     - uses: actions/github-script@v6
@@ -70,6 +70,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          docker pull ${DOCKER_REGISTRY}/navigator-admin-backend:latest
-          docker tag ${DOCKER_REGISTRY}/navigator-admin-backend:latest  navigator-admin-backend:latest
-          .github/retag-and-push.sh navigator-admin-backend latest
+          docker pull ${DOCKER_REGISTRY}/navigator-admin-backend:main-66ffb486
+          docker tag ${DOCKER_REGISTRY}/navigator-admin-backend:main-66ffb486  navigator-admin-backend:main-66ffb486
+          .github/retag-and-push.sh navigator-admin-backend main-66ffb486
