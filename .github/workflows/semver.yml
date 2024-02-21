@@ -1,4 +1,4 @@
-name: Semver Tagging
+name: Semver Tagging for Manually Created Versions
 
 on:
   push:
