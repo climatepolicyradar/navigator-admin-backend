@@ -44,6 +44,7 @@ jobs:
         fi
         script_output=$(echo "${new_tag}" | tail -n 1)
         echo "new_tag=${script_output}"  >> "$GITHUB_OUTPUT"
+      shell: bash {0}
 
   auto-semver-tag:
     needs: auto-git-tag
