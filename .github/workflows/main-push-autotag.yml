@@ -1,9 +1,9 @@
 name: main push autotag
 
 on:
-  push:
-    branches:
-      - main
+  push #:
+    # branches:
+    #   - main
 
 jobs:
   auto-git-tag:
@@ -11,7 +11,7 @@ jobs:
 
     # Expose step outputs as job outputs
     outputs:
-      new_tag: ${{ steps.run_git_auto_tag.outputs.new_tag }}
+      new_tag: v1.0.11-beta
 
     steps:
     - uses: actions/github-script@v6
