@@ -44,7 +44,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run tests
+      - name: Configure test env variables
+        run: cp .env.example .env
+
+      - name: Test bash scripts
         run: make test_bashscripts
 
       - name: Run Unit Tests
