@@ -1,15 +1,6 @@
 import logging
 from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import Column, and_, func
-from sqlalchemy import delete as db_delete
-from sqlalchemy import insert as db_insert
-from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session, aliased
-from sqlalchemy.sql.functions import concat
-from sqlalchemy_utils import escape_like
-
 from db_client.models.app.counters import CountedEntity
 from db_client.models.document.physical_document import (
     Language,
@@ -24,6 +15,15 @@ from db_client.models.law_policy.family import (
     DocumentStatus,
     Slug,
 )
+from sqlalchemy import Column, and_, func
+from sqlalchemy import delete as db_delete
+from sqlalchemy import insert as db_insert
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound, OperationalError
+from sqlalchemy.orm import Query, Session, aliased
+from sqlalchemy.sql.functions import concat
+from sqlalchemy_utils import escape_like
+
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.repository import family as family_repo
@@ -125,6 +125,7 @@ def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjec
     phys_doc = PhysicalDocument(
         id=None,
         title=dto.title,
+        # TODO: More verification needed here: PDCT-865
         source_url=str(dto.source_url) if dto.source_url is not None else None,
     )
     return language, fam_doc, phys_doc
