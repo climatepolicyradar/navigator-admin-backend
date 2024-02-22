@@ -44,7 +44,11 @@ jobs:
       run: |
         echo "Attempting to auto-tag merge commit"
         script_output=$(set -e; .github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}")
+        if $? != 0; then
+          exit 1
+        fi
         script_output=$(set -e; echo "${new_tag}" | tail -n 1)
+        echo "New tag version: ${script_output}"
         echo "new_tag=${script_output}"  >> "$GITHUB_OUTPUT"
 
     - name: Configure AWS credentials
