@@ -19,7 +19,7 @@ test_bashscripts: build_bats
 build:
 	docker build -t navigator-admin-backend .
 
-build_local:
+build_dev:
 	docker compose build
 
 unit_test:
