@@ -47,6 +47,9 @@ jobs:
       - name: Configure test env variables
         run: cp .env.example .env
 
+      - name: Build docker compose
+        run: make build_dev
+
       - name: Test bash scripts
         run: make test_bashscripts
 
