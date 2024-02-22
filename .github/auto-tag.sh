@@ -15,9 +15,9 @@ echo "Latest tag: ${latest_tag}"
 pr_body="$1"
 
 # Get selected versioning checkboxes.
-is_patch=$(set -e is_patch_selected "${pr_body}")
-is_minor=$(set -e is_minor_selected "${pr_body}")
-is_major=$(set -e is_major_selected "${pr_body}")
+is_patch=$(is_patch_selected "${pr_body}")
+is_minor=$(is_minor_selected "${pr_body}")
+is_major=$(is_major_selected "${pr_body}")
 
 pr_number="$2"
 
