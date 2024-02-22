@@ -15,9 +15,9 @@ echo "Latest tag: ${latest_tag}"
 pr_body="$1"
 
 # Get selected versioning checkboxes.
-is_patch=$(is_patch_selected "${pr_body}")
-is_minor=$(is_minor_selected "${pr_body}")
-is_major=$(is_major_selected "${pr_body}")
+is_patch=$(set -e is_patch_selected "${pr_body}")
+is_minor=$(set -e is_minor_selected "${pr_body}")
+is_major=$(set -e is_major_selected "${pr_body}")
 
 pr_number="$2"
 
@@ -40,15 +40,15 @@ fi
 
 # Auto-tag based on most senior version selected.
 if [[ ${is_major} == true ]]; then
-	new_major_version=$(increment "${major_version}")
+	new_major_version=$(set -e increment "${major_version}")
 	new_tag=v${new_major_version}.0.0${maturity}
 	echo "Tagging as new major version ${new_tag}..."
 elif [[ ${is_minor} == true ]]; then
-	new_minor_version=$(increment "${minor_version}")
+	new_minor_version=$(set -e increment "${minor_version}")
 	new_tag="v${major_version}.${new_minor_version}.0${maturity}"
 	echo "Tagging as new minor version ${new_tag}..."
 else
-	new_patch_version=$(increment "${patch_version}")
+	new_patch_version=$(set -e increment "${patch_version}")
 	new_tag=v${major_version}.${minor_version}.${new_patch_version}${maturity}
 	echo "Tagging as new patch ${new_tag}..."
 fi
