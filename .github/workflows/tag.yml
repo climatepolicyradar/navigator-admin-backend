@@ -12,7 +12,6 @@ on:
 jobs:
   auto-git-and-semver-tag:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success' }}
 
     # Expose step outputs as job outputs
     outputs:
