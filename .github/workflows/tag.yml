@@ -43,8 +43,8 @@ jobs:
         PR_NUMBER: '${{ fromJson(steps.get_pr_data.outputs.result).number }}'
       run: |
         echo "Attempting to auto-tag merge commit"
-        script_output=$(set -e .github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}")
-        script_output=$(set -e echo "${new_tag}" | tail -n 1)
+        script_output=$(set -e; .github/auto-tag.sh "${PR_BODY}" "${PR_NUMBER}")
+        script_output=$(set -e; echo "${new_tag}" | tail -n 1)
         echo "new_tag=${script_output}"  >> "$GITHUB_OUTPUT"
 
     - name: Configure AWS credentials
