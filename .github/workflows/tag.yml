@@ -44,7 +44,7 @@ jobs:
         if $? != 0; then
           exit 1
         fi
-        script_output=$(echo "${new_tag}" | tail -n 1)
+        script_output=$(echo "${script_output}" | tail -n 1)
         echo "New tag version: ${script_output}"
         echo "new_tag=${script_output}"  >> "$GITHUB_OUTPUT"
 
