@@ -1,12 +1,12 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 script_folder=$(dirname "${BASH_SOURCE[0]}")
 source "${script_folder}"/funcs.sh
 
 # Get the latest Git tag.
 latest_tag=$(get_latest_tag)
-if [[ -z "${latest_tag}" ]]; then
+if [[ -z ${latest_tag} ]]; then
 	echo "No tags found. Please create first tag manually to enable auto-tagging."
 	exit 1
 fi
@@ -34,21 +34,21 @@ major_version=$(get_major "${version_numbers}")
 minor_version=$(get_minor "${version_numbers}")
 patch_version=$(get_patch "${version_numbers}")
 maturity=$(get_maturity "${latest_tag}")
-if [[ -n "${maturity}" ]]; then
+if [[ -n ${maturity} ]]; then
 	maturity="-${maturity}"
 fi
 
 # Auto-tag based on most senior version selected.
 if [[ ${is_major} == true ]]; then
-	new_major_version=$(set -e increment "${major_version}")
+	new_major_version=$(increment "${major_version}")
 	new_tag=v${new_major_version}.0.0${maturity}
 	echo "Tagging as new major version ${new_tag}..."
 elif [[ ${is_minor} == true ]]; then
-	new_minor_version=$(set -e increment "${minor_version}")
+	new_minor_version=$(increment "${minor_version}")
 	new_tag="v${major_version}.${new_minor_version}.0${maturity}"
 	echo "Tagging as new minor version ${new_tag}..."
 else
-	new_patch_version=$(set -e increment "${patch_version}")
+	new_patch_version=$(increment "${patch_version}")
 	new_tag=v${major_version}.${minor_version}.${new_patch_version}${maturity}
 	echo "Tagging as new patch ${new_tag}..."
 fi
