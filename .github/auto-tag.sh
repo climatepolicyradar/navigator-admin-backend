@@ -1,12 +1,12 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 script_folder=$(dirname "${BASH_SOURCE[0]}")
 source "${script_folder}"/funcs.sh
 
 # Get the latest Git tag.
 latest_tag=$(get_latest_tag)
-if [ -z "${latest_tag}" ]; then
+if [[ -z ${latest_tag} ]]; then
 	echo "No tags found. Please create first tag manually to enable auto-tagging."
 	exit 1
 fi
@@ -15,9 +15,9 @@ echo "Latest tag: ${latest_tag}"
 pr_body="$1"
 
 # Get selected versioning checkboxes.
-is_patch=$(is_patch_selected "${pr_body}")
-is_minor=$(is_minor_selected "${pr_body}")
-is_major=$(is_major_selected "${pr_body}")
+is_patch=$(set -e is_patch_selected "${pr_body}")
+is_minor=$(set -e is_minor_selected "${pr_body}")
+is_major=$(set -e is_major_selected "${pr_body}")
 
 pr_number="$2"
 
@@ -34,7 +34,7 @@ major_version=$(get_major "${version_numbers}")
 minor_version=$(get_minor "${version_numbers}")
 patch_version=$(get_patch "${version_numbers}")
 maturity=$(get_maturity "${latest_tag}")
-if [ ! -z "${maturity}" ]; then
+if [[ -n ${maturity} ]]; then
 	maturity="-${maturity}"
 fi
 
@@ -59,7 +59,4 @@ if { [[ ${is_minor} == false ]] && [[ ${is_patch} == false ]] && [[ ${is_major} 
 	exit 1
 fi
 
-new_version_num=${new_tag#v} # Remove the leading 'v'
-git tag -a "${new_tag}" -m "Version ${new_version_num}"
-git push --tags origin "${new_tag}"
 echo "${new_tag}"
