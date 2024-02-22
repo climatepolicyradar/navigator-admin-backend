@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 script_folder=$(dirname "${BASH_SOURCE[0]}")
 source "${script_folder}"/funcs.sh
