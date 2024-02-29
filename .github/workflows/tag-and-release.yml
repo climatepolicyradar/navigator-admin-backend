@@ -54,8 +54,6 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
         automatic_release_tag: ${{ steps.determine_next_tag.outputs.new_tag }}
-        files: |
-          *
       id: run_auto_tag_and_release
 
 
