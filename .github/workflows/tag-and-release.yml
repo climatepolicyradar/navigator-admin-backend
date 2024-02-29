@@ -88,7 +88,6 @@ jobs:
   auto-semver:
     needs: auto-git-tag-and-release
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success' }}
 
     steps:
     - uses: actions/checkout@v4
