@@ -54,8 +54,6 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
         automatic_release_tag: ${{ steps.determine_next_tag.outputs.new_tag }}
-        files: |
-          *
       id: run_auto_tag_and_release
 
 
@@ -90,7 +88,6 @@ jobs:
   auto-semver:
     needs: auto-git-tag-and-release
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success' }}
 
     steps:
     - uses: actions/checkout@v4
