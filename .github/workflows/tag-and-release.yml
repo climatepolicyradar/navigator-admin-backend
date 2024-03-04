@@ -119,4 +119,3 @@ jobs:
         generateReleaseNotes: true
         prerelease: false
         tag: ${{needs.auto-git-and-semver-tag.outputs.new_tag}}
-      id: run_auto_tag_and_release
