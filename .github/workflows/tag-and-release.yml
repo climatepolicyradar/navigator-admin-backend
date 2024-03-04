@@ -105,3 +105,18 @@ jobs:
           docker tag ${DOCKER_REGISTRY}/navigator-admin-backend:main-${GITHUB_SHA::8}  navigator-admin-backend:main-${GITHUB_SHA::8}
           .github/retag-and-push.sh navigator-admin-backend main-${GITHUB_SHA::8}
 
+
+  auto-release:
+    needs: auto-git-and-semver-tag
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create Git release
+      uses: ncipollo/release-action@v1.14.0
+      with:
+        token: "${{ secrets.GITHUB_TOKEN }}"
+        generateReleaseNotes: true
+        prerelease: false
+        tag: ${{needs.auto-git-and-semver-tag.outputs.new_tag}}
+      id: run_auto_tag_and_release
