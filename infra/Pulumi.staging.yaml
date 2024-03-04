@@ -8,7 +8,7 @@ config:
   admin_backend:rds_address:
     secure: AAABADe4vlk1LEh+750adXOQMX0BDaYadfPX8a3ErZmtBArLPMtdKfEoMy3ald8gyLbWhasn2qP0kY5zxBtHNtZhjwdDW7OnBsSLhvkZvVaiEP/CT9MAGLr4u8oCV27NgDUfNzGa3j/O
   admin_backend:rds_database:
-    secure: AAABAM1YYMUn+PzGoRjz/Yz0q6x8KynLJg2DYlnkxdfPRsdxqbBERjMvKONO
+    secure: AAABAJAQXdJN7sjK0iA9SryJm8OXbqrMkNry7HCcT/P9OzI4q6Ez4LgoT3IvbqQGDc2FKA==
   admin_backend:rds_password:
     secure: AAABAAKUI1n5vZWfUXpgxQK52jp6nJ8m4sfywtdrPDq8sB+D0+yo2pcyxFODwfZFhPu5+gOihxIypQQ9apwYMdHoq24=
   admin_backend:rds_username:
