@@ -108,6 +108,6 @@ is_major_selected() {
 
 get_latest_tag() {
 	git fetch --prune --unshallow --tags --force # This is needed - without it no tags are found.
-	latest_tag=$(git tag --list 'v*' --sort=-creatordate | head -n1)
+	latest_tag=$(git tag --list 'v*' --sort=-v:refname | head -n1)
 	echo "${latest_tag}"
 }
