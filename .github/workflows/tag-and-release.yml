@@ -118,5 +118,6 @@ jobs:
       with:
         token: "${{ secrets.GITHUB_TOKEN }}"
         generateReleaseNotes: true
+        makeLatest: true
         prerelease: false
         tag: ${{needs.auto-git-and-semver-tag.outputs.new_tag}}
