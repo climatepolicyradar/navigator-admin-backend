@@ -108,6 +108,7 @@ jobs:
 
   auto-release:
     needs: auto-git-and-semver-tag
+    if: ${{ github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
