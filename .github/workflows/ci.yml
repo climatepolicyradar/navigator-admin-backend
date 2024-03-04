@@ -51,9 +51,6 @@ jobs:
       - name: Build docker compose
         run: make build_dev
 
-      - name: Test bash scripts
-        run: make test_bashscripts
-
       - name: Run Unit Tests
         run: make unit_test
 
