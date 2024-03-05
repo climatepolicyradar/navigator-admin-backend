@@ -79,16 +79,30 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Push Images to ECR
+      - name: Publish initial image based on branch to ECR
         env:
           DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
         run: |
-          branch="$(echo ${GITHUB_HEAD_REF}| tr -c '[0-9,A-Z,a-z]' '-')"
-          timestamp=$(date --utc -Iseconds | cut -c1-19 | tr -c '[0-9]T\n' '-')
-          short_sha=${GITHUB_SHA:0:8}
-          docker tag navigator-admin-backend "$ECR_REGISTRY/navigator-admin-backend:${branch}-${timestamp}-${short_sha}"
-          docker push "$ECR_REGISTRY/navigator-admin-backend:${branch}-${timestamp}-${short_sha}"
+          if [[ "${GITHUB_REF}" == "refs/heads"* ]]; then
+            branch="${GITHUB_REF/refs\/heads\//}"
+            if [[ "${branch}" = "main" ]]; then
+              docker_tag=latest
+              docker tag navigator-admin-backend "$ECR_REGISTRY/navigator-admin-backend:${docker_tag}"
+              docker push "$ECR_REGISTRY/navigator-admin-backend:${docker_tag}"
+            fi
+          elif [[ "${GITHUB_REF}" != "refs/tags"* ]]; then
+            echo "Assuming '${GITHUB_HEAD_REF}' is a branch"
+            if [[ -n "${GITHUB_HEAD_REF}" ]]; then
+                branch="$(echo ${GITHUB_HEAD_REF}| tr -c '[0-9,A-Z,a-z]' '-')"
+                timestamp=$(date --utc -Iseconds | cut -c1-19 | tr -c '[0-9]T\n' '-')
+                short_sha=${GITHUB_SHA:0:8}
+                docker_tag="${branch}-${timestamp}-${short_sha}"
+                docker tag navigator-admin-backend "$ECR_REGISTRY/navigator-admin-backend:${docker_tag}"
+                docker push "$ECR_REGISTRY/navigator-admin-backend:${docker_tag}"
+            fi
+          fi
 
   tag:
     needs: build
