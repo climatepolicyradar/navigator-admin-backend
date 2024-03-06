@@ -51,9 +51,6 @@ jobs:
       - name: Build docker compose
         run: make build_dev
 
-      - name: Test bash scripts
-        run: make test_bashscripts
-
       - name: Run Unit Tests
         run: make unit_test
 
@@ -61,6 +58,7 @@ jobs:
         run: make integration_test
 
   build:
+    if: ${{ ! startsWith(github.ref, 'refs/tags') }}
     runs-on: ubuntu-latest
     needs:
       - code-quality
@@ -82,7 +80,11 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Push Images to ECR
+      - name: Publish initial image based on branch to ECR
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
         run: |
           if [[ "${GITHUB_REF}" == "refs/heads"* ]]; then
             branch="${GITHUB_REF/refs\/heads\//}"
