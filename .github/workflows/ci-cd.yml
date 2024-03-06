@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -104,6 +104,17 @@ jobs:
                 docker push "$ECR_REGISTRY/navigator-admin-backend:${docker_tag}"
             fi
           fi
+
+  manual-semver:
+    needs:
+      - code-quality
+      - test
+    if: ${{ startsWith(github.ref, 'refs/tags') }}
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@main
+    secrets: inherit
+    with:
+      repo-name: navigator-admin-backend
+      semver-tag: main-${GITHUB_SHA::8}
 
   tag:
     needs: build
