@@ -232,7 +232,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         return False
 
     # User Language changed?
-    pdl = (
+    existing_language = (
         db.query(PhysicalDocumentLanguage)
         .filter(
             PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
@@ -240,7 +240,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
         .one_or_none()
     )
-    new_language = _get_new_language(db, new_values, pdl)
+    new_language = _get_new_language(db, new_values, existing_language)
 
     update_slug = original_pd.title != new_values["title"]
 
@@ -261,7 +261,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
     ]
 
     if new_language is not None:
-        if pdl is not None:
+        if existing_language is not None:
             command = (
                 db_update(PhysicalDocumentLanguage)
                 .where(
@@ -281,10 +281,11 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
             )
         commands.append(command)
     else:
-        command = db_delete(PhysicalDocumentLanguage).where(
-            PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
-        )
-        commands.append(command)
+        if existing_language is not None:
+            command = db_delete(PhysicalDocumentLanguage).where(
+                PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
+            )
+            commands.append(command)
 
     for c in commands:
         result = db.execute(c)
