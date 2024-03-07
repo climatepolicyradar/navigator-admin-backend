@@ -24,13 +24,10 @@ integration_test:
 
 test: unit_test integration_test
 
-migrations:
-	docker compose run --rm navigator-admin-backend python3 app/initial_data.py
-
 run: 
 	docker-compose -f docker-compose.yml up -d --remove-orphans
 
-start: build run migrations
+start: build run 
 
 show_logs: 
 	- docker-compose logs -f
