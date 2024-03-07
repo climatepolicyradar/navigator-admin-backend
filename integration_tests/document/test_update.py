@@ -1,16 +1,16 @@
 from typing import Tuple, cast
 
-from fastapi import status
-from fastapi.testclient import TestClient
-from pydantic import AnyHttpUrl
-from sqlalchemy.orm import Session
-
 from db_client.models.document.physical_document import (
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
 from db_client.models.law_policy.family import FamilyDocument, Slug
+from fastapi import status
+from fastapi.testclient import TestClient
+from pydantic import AnyHttpUrl
+from sqlalchemy.orm import Session
+
 from app.model.document import DocumentWriteDTO
 from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 from unit_tests.helpers.document import create_document_write_dto
@@ -308,3 +308,57 @@ def test_update_document_blank_variant(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["detail"] == "Variant name is empty"
+
+
+def test_update_document_idempotent_user_language(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = DocumentWriteDTO(
+        variant_name="Translation",
+        role="SUMMARY",
+        type="Annex",
+        title="Updated Title",
+        source_url=cast(AnyHttpUrl, "http://update_source"),
+        user_language_name=None,
+    )
+    print(new_document.model_dump(mode="json"))
+    response = client.put(
+        "/api/v1/documents/D.0.0.2",
+        json=new_document.model_dump(mode="json"),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.2"
+    assert data["variant_name"] == "Translation"
+    assert data["role"] == "SUMMARY"
+    assert data["type"] == "Annex"
+    assert data["title"] == "Updated Title"
+    assert data["source_url"] == "http://update_source/"
+    assert data["slug"].startswith("updated-title")
+    assert data["user_language_name"] is None
+
+    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    assert fd.import_id == "D.0.0.2"
+    assert fd.variant_name == "Translation"
+    assert fd.document_role == "SUMMARY"
+    assert fd.document_type == "Annex"
+    assert pd.title == "Updated Title"
+    assert pd.source_url == "http://update_source/"
+
+    # Check the user language in the db
+    lang = (
+        test_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one_or_none()
+    )
+    assert lang is None
+
+    # Check slug is updated too
+    slugs = (
+        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
+    )
+    last_slug = slugs[-1].name
+    assert last_slug.startswith("updated-title")
