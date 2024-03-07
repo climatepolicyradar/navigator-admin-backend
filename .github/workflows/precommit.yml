@@ -1,0 +1,32 @@
+name: Python Precommit Validator
+
+on: [pull_request]
+
+permissions: read-all
+
+jobs:
+  python-precommit-validator:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write # For trunk to post annotations
+      contents: read # For repo checkout
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check JSON
+        run: ls
+
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
+
+      - name: Check code contains no FIXME's
+        run: |
+          git grep -r --no-color ${case_sensitive} --line-number -e "FIXME" :^.github
+          if [[ $? -eq 0 ]]; then
+            # if we found any FIXME entries in checked in files, fail on main
+            exit 1
+          else
+            exit 0
+          fi
+        shell: bash {0}
