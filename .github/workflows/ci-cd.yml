@@ -9,10 +9,15 @@ on:
     branches:
       - main
 
+permissions: read-all
+
 # https://github.com/marketplace/actions/docker-layer-caching
 jobs:
   code-quality:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write # For trunk to post annotations
+      contents: read # For repo checkout
     steps:
       - uses: actions/checkout@v4
 
@@ -23,11 +28,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install "poetry==1.6.1" && poetry install && poetry run pre-commit install
+          python -m pip install "poetry==1.6.1"
+          poetry install
 
-      - name: Run pre-commit checks
-        run: |
-          poetry run pre-commit run --all-files
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
+        with:
+          check-mode: all
+          arguments: --github-annotate-new-only=false
 
       - name: Check code contains no FIXME's
         run: |
