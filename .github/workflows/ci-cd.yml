@@ -38,7 +38,7 @@ jobs:
       - name: Export PYTHONPATH
         run: |
           ls
-          echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+          echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
           echo $PYTHONPATH
 
       - name: Trunk Check
