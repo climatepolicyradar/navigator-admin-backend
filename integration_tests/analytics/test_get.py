@@ -1,5 +1,5 @@
-from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import (
@@ -7,7 +7,6 @@ from integration_tests.setup_db import (
     EXPECTED_ANALYTICS_SUMMARY_KEYS,
     setup_db,
 )
-
 
 # --- GET ALL
 

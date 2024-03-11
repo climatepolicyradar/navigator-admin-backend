@@ -5,28 +5,28 @@ Note: If you want to add a new endpoint, please make sure you update
 AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
 
-from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
-from app.api.api_v1.routers.auth import check_user_auth
-from app.logging_config import DEFAULT_LOGGING, setup_json_logging
+
+import uvicorn
+from db_client import run_migrations
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi_health import health
+from fastapi_pagination import add_pagination
+
 from app.api.api_v1.routers import (
-    families_router,
+    analytics_router,
     auth_router,
     collections_router,
-    document_router,
     config_router,
-    analytics_router,
+    document_router,
     event_router,
+    families_router,
 )
-from fastapi import FastAPI, Depends
-from fastapi_health import health
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-
-from app.service.health import is_database_online
+from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
-from db_client import run_migrations
-
+from app.logging_config import DEFAULT_LOGGING, setup_json_logging
+from app.service.health import is_database_online
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"

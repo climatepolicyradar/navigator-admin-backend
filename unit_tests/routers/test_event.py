@@ -6,10 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 
 import app.service.event as event_service
-from unit_tests.helpers.event import (
-    create_event_create_dto,
-    create_event_write_dto,
-)
+from unit_tests.helpers.event import create_event_create_dto, create_event_write_dto
 
 
 def test_get_all_when_ok(client: TestClient, user_header_token, event_service_mock):

@@ -1,12 +1,12 @@
-import jwt
-import os
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Any, Optional
+
+import jwt
+
 from app.errors import TokenError
-
 from app.model.jwt_user import JWTUser
-
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
