@@ -14,6 +14,11 @@ permissions: read-all
 # https://github.com/marketplace/actions/docker-layer-caching
 jobs:
   code-quality:
+    permissions:
+      # For trunk to post annotations
+      checks: write
+      # For repo checkout
+      contents: read
     uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@main
 
   test:
