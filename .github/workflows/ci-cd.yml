@@ -16,8 +16,10 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     permissions:
-      checks: write # For trunk to post annotations
-      contents: read # For repo checkout
+      # For trunk to post annotations
+      checks: write
+      # For repo checkout
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
