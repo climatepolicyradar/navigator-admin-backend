@@ -228,7 +228,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         return False
 
     # User Language changed?
-    pdl = (
+    existing_language = (
         db.query(PhysicalDocumentLanguage)
         .filter(
             PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
@@ -236,7 +236,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
         .one_or_none()
     )
-    new_language = _get_new_language(db, new_values, pdl)
+    new_language = _get_new_language(db, new_values, existing_language)
 
     update_slug = original_pd.title != new_values["title"]
 
@@ -245,7 +245,9 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         .where(PhysicalDocument.id == original_pd.id)
         .values(
             title=new_values["title"],
-            source_url=str(new_values["source_url"]),
+            source_url=str(new_values["source_url"])
+            if new_values["source_url"] is not None
+            else None,
         ),
         db_update(FamilyDocument)
         .where(FamilyDocument.import_id == original_fd.import_id)
@@ -257,7 +259,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
     ]
 
     if new_language is not None:
-        if pdl is not None:
+        if existing_language is not None:
             command = (
                 db_update(PhysicalDocumentLanguage)
                 .where(
@@ -277,10 +279,11 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
             )
         commands.append(command)
     else:
-        command = db_delete(PhysicalDocumentLanguage).where(
-            PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
-        )
-        commands.append(command)
+        if existing_language is not None:
+            command = db_delete(PhysicalDocumentLanguage).where(
+                PhysicalDocumentLanguage.document_id == original_fd.physical_document_id
+            )
+            commands.append(command)
 
     for c in commands:
         result = db.execute(c)
