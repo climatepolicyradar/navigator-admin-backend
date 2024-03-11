@@ -47,7 +47,7 @@ lint:
           - check-json
           - detect-aws-credentials
     - prettier@3.2.5
-    - pyright@1.1.353
+    - pyright@1.1.294
     - ruff@0.3.2
     - shellcheck@0.10.0
     - shfmt@3.6.0
