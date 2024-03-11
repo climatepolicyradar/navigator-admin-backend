@@ -7,7 +7,6 @@ packages = [
   { include = "app" },
   { include = "integration_tests" },
   { include = "unit_tests" },
-
 ]
 
 [tool.poetry.dependencies]
