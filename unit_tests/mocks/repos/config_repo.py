@@ -1,6 +1,6 @@
 from typing import Optional
-from pytest import MonkeyPatch
 
+from pytest import MonkeyPatch
 from sqlalchemy import exc
 
 from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig

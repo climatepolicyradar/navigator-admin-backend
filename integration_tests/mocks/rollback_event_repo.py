@@ -1,6 +1,6 @@
 from typing import Optional
-from pytest import MonkeyPatch
 
+from pytest import MonkeyPatch
 from sqlalchemy.exc import NoResultFound
 
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO

@@ -1,16 +1,16 @@
 from typing import Tuple, cast
 
-from fastapi import status
-from fastapi.testclient import TestClient
-from pydantic import AnyHttpUrl
-from sqlalchemy.orm import Session
-
 from db_client.models.document.physical_document import (
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
 from db_client.models.law_policy.family import FamilyDocument, Slug
+from fastapi import status
+from fastapi.testclient import TestClient
+from pydantic import AnyHttpUrl
+from sqlalchemy.orm import Session
+
 from app.model.document import DocumentWriteDTO
 from integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 from unit_tests.helpers.document import create_document_write_dto

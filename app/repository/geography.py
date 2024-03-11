@@ -1,7 +1,7 @@
 from typing import Optional
-from sqlalchemy.orm import Session
 
 from db_client.models.law_policy.geography import Geography
+from sqlalchemy.orm import Session
 
 
 def get_id_from_value(db: Session, geo_string: str) -> Optional[int]:

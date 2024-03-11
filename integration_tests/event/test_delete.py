@@ -1,9 +1,10 @@
-from fastapi.testclient import TestClient
-from fastapi import status
-from sqlalchemy.orm import Session
 from db_client.models.law_policy import FamilyEvent
-from integration_tests.setup_db import setup_db
+from fastapi import status
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
 import app.repository.event as event_repo
+from integration_tests.setup_db import setup_db
 
 
 def test_delete_event(client: TestClient, test_db: Session, admin_user_header_token):

@@ -1,4 +1,5 @@
 from typing import Optional
+
 from pytest import MonkeyPatch
 from sqlalchemy.exc import NoResultFound
 

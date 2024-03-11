@@ -1,6 +1,7 @@
 import pytest
-from app.errors import ValidationError
+
 import app.service.geography as geography_service
+from app.errors import ValidationError
 
 
 def test_geo_service_validate_raises_when_invalid(

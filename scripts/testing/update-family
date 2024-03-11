@@ -4,7 +4,7 @@
 source config
 TOKEN=$(get_token)
 
-curl -s -X PUT --data @family  \
-    -H "Authorization: Bearer ${TOKEN}" \
-    -H "Content-Type: application/json" \
-    ${TEST_URL}/api/v1/families| jq
+curl -s -X PUT --data @family \
+	-H "Authorization: Bearer ${TOKEN}" \
+	-H "Content-Type: application/json" \
+	${TEST_URL}/api/v1/families | jq

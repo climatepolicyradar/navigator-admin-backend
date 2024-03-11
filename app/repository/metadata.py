@@ -1,10 +1,9 @@
 from typing import Optional
-from db_client.models.law_policy.metadata import (
-    MetadataOrganisation,
-    MetadataTaxonomy,
-)
-from app.model.general import Json
+
+from db_client.models.law_policy.metadata import MetadataOrganisation, MetadataTaxonomy
 from sqlalchemy.orm import Session
+
+from app.model.general import Json
 
 
 def get_schema_for_org(db: Session, org_id: int) -> Optional[Json]:

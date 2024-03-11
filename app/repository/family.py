@@ -4,13 +4,6 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
-from sqlalchemy import Column, and_, desc, or_
-from sqlalchemy import delete as db_delete
-from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session
-from sqlalchemy_utils import escape_like
-
 from db_client.models.app.counters import CountedEntity
 from db_client.models.app.users import Organisation
 from db_client.models.law_policy.collection import CollectionFamily
@@ -23,10 +16,15 @@ from db_client.models.law_policy.family import (
     Slug,
 )
 from db_client.models.law_policy.geography import Geography
-from db_client.models.law_policy.metadata import (
-    FamilyMetadata,
-    MetadataOrganisation,
-)
+from db_client.models.law_policy.metadata import FamilyMetadata, MetadataOrganisation
+from sqlalchemy import Column, and_
+from sqlalchemy import delete as db_delete
+from sqlalchemy import desc, or_
+from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound, OperationalError
+from sqlalchemy.orm import Query, Session
+from sqlalchemy_utils import escape_like
+
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository.helpers import generate_import_id, generate_slug

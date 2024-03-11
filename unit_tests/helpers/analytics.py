@@ -1,4 +1,5 @@
 from typing import Optional
+
 from app.model.analytics import SummaryDTO
 
 # ANALYTICS SUMMARY

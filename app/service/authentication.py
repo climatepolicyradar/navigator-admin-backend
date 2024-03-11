@@ -5,9 +5,9 @@ from passlib.context import CryptContext
 from sqlalchemy.exc import NoResultFound
 
 import app.clients.db.session as db_session
+import app.service.token as token_service
 from app.errors import AuthenticationError, RepositoryError
 from app.repository import app_user_repo
-import app.service.token as token_service
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

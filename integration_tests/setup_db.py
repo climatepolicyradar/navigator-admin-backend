@@ -1,8 +1,5 @@
 from typing import cast
 
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-
 from db_client.models.app.users import AppUser, Organisation, OrganisationUser
 from db_client.models.document.physical_document import (
     LanguageSource,
@@ -27,6 +24,8 @@ from db_client.models.law_policy.metadata import (
     MetadataOrganisation,
     MetadataTaxonomy,
 )
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 EXPECTED_NUM_FAMILIES = 3
 EXPECTED_FAMILIES = [

@@ -1,10 +1,10 @@
 from typing import Tuple
-from pytest import MonkeyPatch
+
 from db_client.models.app.users import AppUser, Organisation, OrganisationUser
+from pytest import MonkeyPatch
 
-from app.repository.app_user import MaybeAppUser
 import app.service.authentication as auth_service
-
+from app.repository.app_user import MaybeAppUser
 
 PLAIN_PASSWORD = "test-password"
 HASH_PASSWORD = auth_service.get_password_hash(PLAIN_PASSWORD)

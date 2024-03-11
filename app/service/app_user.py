@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+
 from app.errors import ValidationError
 from app.repository import app_user_repo
 

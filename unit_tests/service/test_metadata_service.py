@@ -1,9 +1,9 @@
 import json
 
 import pytest
+
 from app.errors import ValidationError
 from app.service.metadata import _validate
-
 
 SCHEMA_VALUES_NO_BLANKS = json.loads(
     """
