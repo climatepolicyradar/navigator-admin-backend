@@ -33,11 +33,12 @@ jobs:
           python -m pip install "poetry==1.6.1"
           poetry config virtualenvs.create false
           poetry install --no-cache
+          poetry install --only-root
 
       - name: Export PYTHONPATH
         run: |
           ls
-          echo "PYTHONPATH=." >> $GITHUB_ENV
+          echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
           echo $PYTHONPATH
 
       - name: Trunk Check
