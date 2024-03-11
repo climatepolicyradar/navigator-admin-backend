@@ -59,6 +59,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Install latest Docker Compose
+        uses: ndeloof/install-compose-action@v0.0.1
+        with:
+          legacy: false
+
       - uses: actions/checkout@v4
 
       - name: Configure test env variables
