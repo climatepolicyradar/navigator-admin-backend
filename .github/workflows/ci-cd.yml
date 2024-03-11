@@ -63,8 +63,6 @@ jobs:
         uses: ndeloof/install-compose-action@v0.0.1
         with:
           legacy: false
-      - run: docker compose --version
-      - run: docker-compose --version
 
       - uses: actions/checkout@v4
 
