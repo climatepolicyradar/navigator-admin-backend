@@ -43,7 +43,7 @@ jobs:
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
         with:
-          arguments: --fix
+          arguments: --fix --ci --diff full
 
       - name: Check code contains no FIXME's
         run: |
