@@ -37,7 +37,7 @@ jobs:
 
       - name: Export PYTHONPATH
         run: |
-          ls -a
+          poetry show
           echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
       - name: Trunk Check

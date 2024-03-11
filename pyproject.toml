@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "admin_backend"
+name = "navigator-admin-backend"
 version = "0.0.1"
 description = ""
 authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
