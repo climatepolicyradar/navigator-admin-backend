@@ -5,4 +5,4 @@ source config
 TOKEN=$(get_token)
 curl -s \
 	-H "Authorization: Bearer ${TOKEN}" \
-	${TEST_URL}/api/v1/config | jq
+	"${TEST_URL}"/api/v1/config | jq
