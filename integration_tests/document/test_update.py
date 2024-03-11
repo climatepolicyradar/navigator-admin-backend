@@ -87,6 +87,59 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
     assert last_slug.startswith("updated-title")
 
 
+def test_update_document_no_source_url(
+    client: TestClient, test_db: Session, user_header_token
+):
+    setup_db(test_db)
+    new_document = DocumentWriteDTO(
+        variant_name="Translation",
+        role="SUMMARY",
+        type="Annex",
+        title="Updated Title No Source URL",
+        source_url=None,
+        user_language_name="Ghotuo",
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.2",
+        json=new_document.model_dump(mode="json"),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.2"
+    assert data["variant_name"] == "Translation"
+    assert data["role"] == "SUMMARY"
+    assert data["type"] == "Annex"
+    assert data["title"] == new_document.title
+    assert data["source_url"] == new_document.source_url
+    assert data["slug"].startswith("updated-title")
+    assert data["user_language_name"] == "Ghotuo"
+
+    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    assert fd.import_id == "D.0.0.2"
+    assert fd.variant_name == "Translation"
+    assert fd.document_role == "SUMMARY"
+    assert fd.document_type == "Annex"
+    assert pd.title == new_document.title
+    assert pd.source_url == new_document.source_url
+
+    # Check the user language in the db
+    lang = (
+        test_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one()
+    )
+    assert lang.language_id == 1
+
+    # Check slug is updated too
+    slugs = (
+        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
+    )
+    last_slug = slugs[-1].name
+    assert last_slug.startswith("updated-title")
+
+
 def test_update_document_remove_variant(
     client: TestClient, test_db: Session, user_header_token
 ):

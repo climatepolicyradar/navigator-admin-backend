@@ -249,7 +249,9 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         .where(PhysicalDocument.id == original_pd.id)
         .values(
             title=new_values["title"],
-            source_url=str(new_values["source_url"]),
+            source_url=str(new_values["source_url"])
+            if new_values["source_url"] is not None
+            else None,
         ),
         db_update(FamilyDocument)
         .where(FamilyDocument.import_id == original_fd.import_id)

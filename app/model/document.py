@@ -26,7 +26,7 @@ class DocumentReadDTO(BaseModel):
     title: str
     md5_sum: Optional[str]
     cdn_object: Optional[str]
-    source_url: Optional[AnyHttpUrl]
+    source_url: Optional[AnyHttpUrl] = None
     content_type: Optional[str]
     user_language_name: Optional[str]
     calc_language_name: Optional[str]
@@ -40,7 +40,7 @@ class DocumentWriteDTO(BaseModel):
     role: Optional[str]
     type: Optional[str]
     title: str
-    source_url: Optional[AnyHttpUrl]
+    source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
 
 
@@ -55,7 +55,7 @@ class DocumentCreateDTO(BaseModel):
 
     # From PhysicalDocument
     title: str
-    source_url: Optional[AnyHttpUrl]
+    source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
 
 
