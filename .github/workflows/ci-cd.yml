@@ -37,9 +37,8 @@ jobs:
 
       - name: Export PYTHONPATH
         run: |
-          ls
+          ls -a
           echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
-          echo $PYTHONPATH
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
