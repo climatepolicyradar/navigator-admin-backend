@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 
-cd $(git rev-parse --show-toplevel)
+cd $(git rev-parse --show-toplevel) || exit
 NAV=../navigator-backend
 
 # Squirrel away this file to restore later
