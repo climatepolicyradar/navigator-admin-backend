@@ -11,19 +11,20 @@ At the moment we are using PyRight pegged at version 1.1.294.
 ## VS Code
 
 - Although we use PyRight for linting (see [.pre-commit-config.yaml](./.pre-commit-config.yaml))
-[PyRight recommends that you use PyLance when using VS Code](https://microsoft.github.io/pyright/#/installation?id=vs-code).
+  [PyRight recommends that you use PyLance when using VS Code](https://microsoft.github.io/pyright/#/installation?id=vs-code).
 
 ### Extensions
 
-| Extension | Author | Description | Recommended/Optional |
-|-----------|--------|-------------|-------------------------------|
-| [Black Formatter](https://github.com/) | Microsoft | | Optional |
-| [Code Spell Checker](https://github.com/) | Street Side Software | | Recommended |
-| [Makefile Tools](https://github.com/) | Microsoft | | Recommended |
-| [markdownlint](https://github.com/) | David Anson | | Recommended |
-| [Markdown All in One](https://github.com/) | Yu Zhang | | Optional |
-| [PyLance](https://github.com/) | Microsoft | | Recommended |
-| [YAML](https://github.com/) | Red Hat | | Optional |
+| Extension                                  | Author               | Recommended/Optional |
+| ------------------------------------------ | -------------------- | -------------------- |
+| [Black Formatter](https://github.com/)     | Microsoft            | Optional             |
+| [Code Spell Checker](https://github.com/)  | Street Side Software | Recommended          |
+| [Makefile Tools](https://github.com/)      | Microsoft            | Recommended          |
+| [markdownlint](https://github.com/)        | David Anson          | Recommended          |
+| [Markdown All in One](https://github.com/) | Yu Zhang             | Optional             |
+| [PyLance](https://github.com/)             | Microsoft            | Recommended          |
+| [YAML](https://github.com/)                | Red Hat              | Optional             |
+| [Ruff](https://github.com/)                | Charlie R Marsh      | Recommended          |
 
 ### Recommended User Settings JSON
 
