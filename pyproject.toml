@@ -1,8 +1,14 @@
 [tool.poetry]
-name = "navigator-admin-backend"
+name = "admin_backend"
 version = "0.0.1"
 description = ""
 authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
+packages = [
+  { include = "app" },
+  { include = "integration_tests" },
+  { include = "unit_tests" },
+
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -66,6 +72,7 @@ exclude = "^/alembic/versions/"
 [tool.pyright]
 include = ["app", "unit_tests", "integration_tests"]
 exclude = ["**/__pycache__"]
+pythonVersion = "3.9"
 
 [tool.ruff]
 select = ["E", "F", "D"]
