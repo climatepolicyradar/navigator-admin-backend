@@ -15,7 +15,7 @@ def test_search_document(client: TestClient, test_db: Session, user_header_token
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 2
@@ -72,7 +72,7 @@ def test_search_document_with_max_results(
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1

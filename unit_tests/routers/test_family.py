@@ -17,7 +17,7 @@ def test_get_all_when_ok(client: TestClient, family_service_mock, user_header_to
     response = client.get("/api/v1/families", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
     assert len(data) > 0
     assert data[0]["import_id"] == "test"
     assert family_service_mock.all.call_count == 1
@@ -44,7 +44,7 @@ def test_search_when_ok(client: TestClient, family_service_mock, user_header_tok
     response = client.get("/api/v1/families/?q=anything", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
     assert len(data) > 0
     assert data[0]["import_id"] == "search1"
     assert family_service_mock.search.call_count == 1

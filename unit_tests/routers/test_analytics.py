@@ -12,7 +12,7 @@ def test_get_all_when_ok(client: TestClient, analytics_service_mock, user_header
     response = client.get("/api/v1/analytics/summary", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is dict
+    assert isinstance(data, dict)
     assert len(data) == 4
     assert analytics_service_mock.summary.call_count == 1
 
@@ -21,7 +21,7 @@ def test_get_when_ok(client: TestClient, analytics_service_mock, user_header_tok
     response = client.get("/api/v1/analytics/summary", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is dict
+    assert isinstance(data, dict)
     assert len(data) == 4
     assert analytics_service_mock.summary.call_count == 1
 

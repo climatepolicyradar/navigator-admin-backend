@@ -41,7 +41,7 @@ def test_get_analytics_summary(client: TestClient, test_db: Session, user_header
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
-    assert type(data) is dict
+    assert isinstance(data, dict)
     assert list(data.keys()) == EXPECTED_ANALYTICS_SUMMARY_KEYS
 
     assert dict(sorted(data.items())) == dict(

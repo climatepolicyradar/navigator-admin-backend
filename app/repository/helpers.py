@@ -58,7 +58,7 @@ def generate_import_id(
     :return str: the generated import_id
     """
 
-    if type(org) == str:
+    if isinstance(org, str):
         org_name = org
     else:
         org_name = (

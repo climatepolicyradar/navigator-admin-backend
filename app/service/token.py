@@ -31,12 +31,12 @@ def encode(
     if "@" not in email or "." not in email:
         raise TokenError(f"Parameter email should be an email, not {email}")
 
-    if type(authorisation) != dict:
+    if not isinstance(authorisation, dict):
         raise TokenError(
             f"Parameter authorisation should be a dict, not {authorisation}"
         )
 
-    if type(is_superuser) != bool:
+    if not isinstance(is_superuser, bool):
         raise TokenError(f"Parameter is_superuser should be a bool, not {is_superuser}")
 
     to_encode = {
