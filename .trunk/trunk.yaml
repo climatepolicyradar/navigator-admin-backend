@@ -31,8 +31,6 @@ lint:
         - name: lint
           run: bandit --exit-zero -c bandit.yaml --format json --output ${tmpfile} ${target}
 
-  disabled:
-    - isort
   enabled:
     - actionlint@1.6.27
     - bandit@1.7.8
