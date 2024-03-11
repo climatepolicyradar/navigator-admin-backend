@@ -3,6 +3,7 @@ Family Service
 
 This file hands off to the family repo, adding the dependency of the db (future)
 """
+
 import logging
 from typing import Optional, Union
 

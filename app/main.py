@@ -4,6 +4,7 @@ Main configuration for our FastAPI application routes for the admin service.
 Note: If you want to add a new endpoint, please make sure you update
 AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
+
 from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
 from app.api.api_v1.routers.auth import check_user_auth

@@ -3,6 +3,7 @@ Tests the routes for collection management.
 
 This uses a service mock and ensures each endpoint calls into the service.
 """
+
 import logging
 
 import pytest

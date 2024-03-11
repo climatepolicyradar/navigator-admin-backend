@@ -3,6 +3,7 @@ Tests the family service.
 
 Uses a family repo mock and ensures that the repo is called.
 """
+
 from typing import Optional
 
 import pytest

@@ -4,6 +4,7 @@ Analytics Service
 This layer uses the document, family, and collection repos to handle querying
 the count of available entities.
 """
+
 import logging
 
 from pydantic import ConfigDict, validate_call

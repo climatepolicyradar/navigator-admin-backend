@@ -1,4 +1,5 @@
 """Endpoints for managing the Analytics service."""
+
 import logging
 from fastapi import APIRouter, HTTPException, status
 from app.errors import RepositoryError

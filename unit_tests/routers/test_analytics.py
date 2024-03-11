@@ -3,6 +3,7 @@ Tests the analytics routes.
 
 This uses a service mock and ensures each endpoint calls into the service.
 """
+
 from fastapi import status
 from fastapi.testclient import TestClient
 

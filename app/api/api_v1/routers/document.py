@@ -1,4 +1,5 @@
 """Endpoints for managing the Document entity."""
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request, status
