@@ -1,8 +1,9 @@
-import os
-from fastapi import FastAPI
-import json_logging
 import logging
 import logging.config
+import os
+
+import json_logging
+from fastapi import FastAPI
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 DEFAULT_LOGGING = {

@@ -1,7 +1,8 @@
-from fastapi.testclient import TestClient
-from fastapi import status
-from sqlalchemy.orm import Session
 from db_client.models.law_policy.collection import Collection
+from fastapi import status
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
 from integration_tests.setup_db import EXPECTED_NUM_COLLECTIONS, setup_db
 
 

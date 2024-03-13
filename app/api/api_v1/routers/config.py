@@ -1,9 +1,10 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, Request, status
-from app.model.config import ConfigReadDTO
+
 import app.service.config as config_service
 from app.errors import RepositoryError
+from app.model.config import ConfigReadDTO
 
 config_router = r = APIRouter()
 

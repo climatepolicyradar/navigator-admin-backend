@@ -1,8 +1,9 @@
 import re
 from urllib.parse import quote_plus, urlsplit
-from app.clients.aws.client import AWSClient
+
 from botocore.exceptions import ClientError
 
+from app.clients.aws.client import AWSClient
 from app.errors import RepositoryError
 
 

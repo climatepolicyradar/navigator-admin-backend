@@ -4,18 +4,18 @@ Analytics Service
 This layer uses the document, family, and collection repos to handle querying
 the count of available entities.
 """
+
 import logging
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 
-from app.errors import RepositoryError
-from app.model.analytics import SummaryDTO
 import app.service.collection as collection_service
 import app.service.document as document_service
-import app.service.family as family_service
 import app.service.event as event_service
-
+import app.service.family as family_service
+from app.errors import RepositoryError
+from app.model.analytics import SummaryDTO
 
 _LOGGER = logging.getLogger(__name__)
 

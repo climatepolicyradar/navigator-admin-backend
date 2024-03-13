@@ -15,7 +15,7 @@ def test_search_collection(client: TestClient, test_db: Session, user_header_tok
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 3
@@ -72,7 +72,7 @@ def test_search_collections_with_max_results(
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1

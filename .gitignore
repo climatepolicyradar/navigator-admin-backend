@@ -162,3 +162,14 @@ load_default.txt
 
 # PIP (because we want to use Poetry)
 requirements.txt
+
+# Trunk miscellaneous
+*out
+*logs
+*actions
+*notifications
+*tools
+plugins
+user_trunk.yaml
+user.yaml
+tmp

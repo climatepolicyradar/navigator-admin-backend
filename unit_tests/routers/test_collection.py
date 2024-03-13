@@ -3,15 +3,14 @@ Tests the routes for collection management.
 
 This uses a service mock and ensures each endpoint calls into the service.
 """
+
 import logging
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from unit_tests.helpers.collection import (
-    create_collection_write_dto,
-)
+from unit_tests.helpers.collection import create_collection_write_dto
 
 
 def test_get_all_when_ok(
@@ -20,7 +19,7 @@ def test_get_all_when_ok(
     response = client.get("/api/v1/collections", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
     assert len(data) > 0
     assert data[0]["import_id"] == "test"
     assert collection_service_mock.all.call_count == 1
@@ -49,7 +48,7 @@ def test_search_when_ok(client: TestClient, collection_service_mock, user_header
     response = client.get("/api/v1/collections/?q=anything", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
     assert len(data) > 0
     assert data[0]["import_id"] == "search1"
     assert collection_service_mock.search.call_count == 1

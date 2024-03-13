@@ -1,6 +1,6 @@
 from pytest import MonkeyPatch
-from app.errors import RepositoryError
 
+from app.errors import RepositoryError
 from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig
 
 

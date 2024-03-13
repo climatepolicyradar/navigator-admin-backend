@@ -15,7 +15,7 @@ def test_search_family_using_q(client: TestClient, test_db: Session, user_header
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 2
@@ -34,7 +34,7 @@ def test_search_family_with_specific_param(
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1
@@ -53,7 +53,7 @@ def test_search_family_with_max_results(
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1

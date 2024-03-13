@@ -1,10 +1,10 @@
 import os
 from typing import Any
+
 import boto3
 import botocore.client
 
 from app.model.aws_config import AWSConfig
-
 
 _AWS_REGION = os.getenv("AWS_REGION", "eu-west-2")
 _AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")

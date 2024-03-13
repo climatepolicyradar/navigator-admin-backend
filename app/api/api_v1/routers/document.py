@@ -1,4 +1,5 @@
 """Endpoints for managing the Document entity."""
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -10,11 +11,7 @@ from app.api.api_v1.query_params import (
     validate_query_params,
 )
 from app.errors import RepositoryError, ValidationError
-from app.model.document import (
-    DocumentCreateDTO,
-    DocumentReadDTO,
-    DocumentWriteDTO,
-)
+from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 
 document_router = r = APIRouter()
 

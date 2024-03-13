@@ -4,9 +4,9 @@ WORKDIR /usr/src
 ENV PYTHONPATH=/usr/src
 
 # Requirements
-RUN pip install poetry
+RUN pip install --no-cache-dir poetry==1.6.1
 COPY poetry.lock pyproject.toml ./
-RUN poetry config virtualenvs.create false && poetry install --no-cache
+RUN poetry config virtualenvs.create false && poetry install --no-directory --no-root
 
 # Now code
 COPY ./app ./app

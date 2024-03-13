@@ -1,5 +1,5 @@
-from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import (
@@ -7,7 +7,6 @@ from integration_tests.setup_db import (
     EXPECTED_ANALYTICS_SUMMARY_KEYS,
     setup_db,
 )
-
 
 # --- GET ALL
 
@@ -41,7 +40,7 @@ def test_get_analytics_summary(client: TestClient, test_db: Session, user_header
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
-    assert type(data) is dict
+    assert isinstance(data, dict)
     assert list(data.keys()) == EXPECTED_ANALYTICS_SUMMARY_KEYS
 
     assert dict(sorted(data.items())) == dict(

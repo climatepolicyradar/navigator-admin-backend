@@ -1,11 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, AnyHttpUrl
-
-from db_client.models.law_policy.family import (
-    DocumentStatus,
-)
+from db_client.models.law_policy.family import DocumentStatus
+from pydantic import AnyHttpUrl, BaseModel
 
 
 class DocumentReadDTO(BaseModel):

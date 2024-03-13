@@ -1,7 +1,9 @@
 import logging
+
+from sqlalchemy.orm import Session
+
 from app.errors import ValidationError
 from app.model.general import Json
-from sqlalchemy.orm import Session
 from app.repository import metadata_repo
 
 _LOGGER = logging.getLogger(__name__)

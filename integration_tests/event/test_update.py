@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
-from fastapi.encoders import jsonable_encoder
-from fastapi.testclient import TestClient
-from fastapi import status
-from sqlalchemy.orm import Session
-from db_client.models.law_policy.family import EventStatus
 
 from db_client.models.law_policy import FamilyEvent
+from db_client.models.law_policy.family import EventStatus
+from fastapi import status
+from fastapi.encoders import jsonable_encoder
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import EXPECTED_EVENTS, setup_db
 from unit_tests.helpers.event import create_event_write_dto

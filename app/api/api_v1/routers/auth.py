@@ -2,6 +2,9 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+import app.service.authorisation as auth_service
+import app.service.token as token_service
 from app.errors import (
     AuthenticationError,
     AuthorisationError,
@@ -9,8 +12,6 @@ from app.errors import (
     TokenError,
 )
 from app.service.authentication import authenticate_user
-import app.service.authorisation as auth_service
-import app.service.token as token_service
 
 auth_router = r = APIRouter()
 

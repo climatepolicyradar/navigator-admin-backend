@@ -15,7 +15,7 @@ def test_get_all_collections(client: TestClient, test_db: Session, user_header_t
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
     assert len(data) == 3
     ids_found = set([f["import_id"] for f in data])
     expected_ids = set(["C.0.0.1", "C.0.0.2", "C.0.0.3"])

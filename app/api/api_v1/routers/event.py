@@ -1,4 +1,5 @@
 """Endpoints for managing Family Event entities."""
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request, status

@@ -1,11 +1,12 @@
 """
 Endpoints for managing the Family entity.
 
-It was considered to create a "service" layer that would use the repo 
-directly.  However, this API has little / no logic in so the service 
+It was considered to create a "service" layer that would use the repo
+directly.  However, this API has little / no logic in so the service
 layer would just pass through directly to the repo. So the approach
 implemented directly accesses the "repository" layer.
 """
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request, status

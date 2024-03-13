@@ -1,7 +1,8 @@
 import logging
 from typing import Any, Optional
-from sqlalchemy.orm import Session
+
 from db_client.models.app.users import Organisation
+from db_client.models.base import AnyModel
 from db_client.models.document.physical_document import Language
 from db_client.models.law_policy.family import (
     FamilyDocumentRole,
@@ -10,13 +11,10 @@ from db_client.models.law_policy.family import (
     Variant,
 )
 from db_client.models.law_policy.geography import Geography
-from db_client.models.law_policy.metadata import (
-    MetadataOrganisation,
-    MetadataTaxonomy,
-)
-from db_client.models.base import AnyModel
-from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData
+from db_client.models.law_policy.metadata import MetadataOrganisation, MetadataTaxonomy
+from sqlalchemy.orm import Session
 
+from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData
 
 _LOGGER = logging.getLogger(__name__)
 

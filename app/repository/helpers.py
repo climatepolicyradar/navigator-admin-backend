@@ -2,12 +2,12 @@
 
 from typing import Union, cast
 from uuid import uuid4
-from slugify import slugify
-from sqlalchemy.orm import Session
+
 from db_client.models.app.counters import CountedEntity, EntityCounter
 from db_client.models.app.users import Organisation
-
 from db_client.models.law_policy.family import Slug
+from slugify import slugify
+from sqlalchemy.orm import Session
 
 
 def generate_slug(
@@ -58,7 +58,7 @@ def generate_import_id(
     :return str: the generated import_id
     """
 
-    if type(org) == str:
+    if isinstance(org, str):
         org_name = org
     else:
         org_name = (

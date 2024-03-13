@@ -5,50 +5,48 @@ Service mocks should only be used for router tests.
 """
 
 from typing import Dict
-from app.clients.aws.client import get_s3_client
-from app.main import app
+
 import pytest
 from fastapi.testclient import TestClient
 from moto import mock_s3
 
-import app.service.family as family_service
-import app.service.collection as collection_service
-import app.service.document as document_service
-import app.service.config as config_service
-import app.service.token as token_service
 import app.service.analytics as analytics_service
-import app.service.event as event_service
 import app.service.app_user as app_user_service
-
+import app.service.collection as collection_service
+import app.service.config as config_service
+import app.service.document as document_service
+import app.service.event as event_service
+import app.service.family as family_service
+import app.service.token as token_service
+from app.clients.aws.client import get_s3_client
+from app.main import app
 from app.repository import (
+    app_user_repo,
+    collection_repo,
+    config_repo,
+    document_repo,
+    event_repo,
     family_repo,
     geography_repo,
     metadata_repo,
     organisation_repo,
-    collection_repo,
-    app_user_repo,
-    config_repo,
-    document_repo,
-    event_repo,
 )
 from unit_tests.mocks.repos import create_mock_family_repo
 from unit_tests.mocks.repos.app_user_repo import mock_app_user_repo
 from unit_tests.mocks.repos.collection_repo import mock_collection_repo
+from unit_tests.mocks.repos.config_repo import mock_config_repo
 from unit_tests.mocks.repos.document_repo import mock_document_repo
-
+from unit_tests.mocks.repos.event_repo import mock_event_repo
 from unit_tests.mocks.repos.geography_repo import mock_geography_repo
 from unit_tests.mocks.repos.metadata_repo import mock_metadata_repo
 from unit_tests.mocks.repos.organisation_repo import mock_organisation_repo
-from unit_tests.mocks.repos.config_repo import mock_config_repo
-from unit_tests.mocks.repos.event_repo import mock_event_repo
-
-from unit_tests.mocks.services.app_user_service import mock_app_user_service
-from unit_tests.mocks.services.family_service import mock_family_service
-from unit_tests.mocks.services.collection_service import mock_collection_service
-from unit_tests.mocks.services.document_service import mock_document_service
-from unit_tests.mocks.services.config_service import mock_config_service
 from unit_tests.mocks.services.analytics_service import mock_analytics_service
+from unit_tests.mocks.services.app_user_service import mock_app_user_service
+from unit_tests.mocks.services.collection_service import mock_collection_service
+from unit_tests.mocks.services.config_service import mock_config_service
+from unit_tests.mocks.services.document_service import mock_document_service
 from unit_tests.mocks.services.event_service import mock_event_service
+from unit_tests.mocks.services.family_service import mock_family_service
 
 
 @pytest.fixture

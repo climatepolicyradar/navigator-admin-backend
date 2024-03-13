@@ -1,8 +1,8 @@
 import os
 from typing import Tuple
-from app.clients.aws.client import AWSClient
-import app.clients.aws.s3bucket as s3_bucket
 
+import app.clients.aws.s3bucket as s3_bucket
+from app.clients.aws.client import AWSClient
 
 _CDN_URL: str = os.getenv("CDN_URL", "https://cdn.climatepolicyradar.org")
 _BUCKET_NAME = os.getenv("S3_DOCUMENT_BUCKET", "test-document-bucket")

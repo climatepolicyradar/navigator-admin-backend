@@ -87,7 +87,7 @@ Currently the deployment is manual, this required the following steps:
 
 - Create a new tagged release [here](https://github.com/climatepolicyradar/navigator-admin-backend/releases)
 - Wait for the `semver` Action to run in github - this creates and pushes the
-image into ECR
+  image into ECR
 - Log into the AWS console in the environment you wish to deploy.
 - In AppRunner - find the running images and hit the `Deploy` button.
 

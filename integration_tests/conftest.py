@@ -2,21 +2,17 @@ import uuid
 from typing import Dict
 
 import pytest
+from db_client.models.base import Base
 from fastapi.testclient import TestClient
-from app.config import SQLALCHEMY_DATABASE_URI
-from sqlalchemy_utils import create_database, database_exists, drop_database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy_utils import create_database, database_exists, drop_database
 
 import app.clients.db.session as db_session
-from db_client.models.base import Base
 import app.service.token as token_service
+from app.config import SQLALCHEMY_DATABASE_URI
 from app.main import app
-from app.repository import family_repo, collection_repo, document_repo, event_repo
-from integration_tests.mocks.bad_family_repo import (
-    mock_bad_family_repo,
-    mock_family_count_none,
-)
+from app.repository import collection_repo, document_repo, event_repo, family_repo
 from integration_tests.mocks.bad_collection_repo import (
     mock_bad_collection_repo,
     mock_collection_count_none,
@@ -29,14 +25,16 @@ from integration_tests.mocks.bad_event_repo import (
     mock_bad_event_repo,
     mock_event_count_none,
 )
+from integration_tests.mocks.bad_family_repo import (
+    mock_bad_family_repo,
+    mock_family_count_none,
+)
 from integration_tests.mocks.rollback_collection_repo import (
     mock_rollback_collection_repo,
 )
-from integration_tests.mocks.rollback_document_repo import (
-    mock_rollback_document_repo,
-)
-from integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
+from integration_tests.mocks.rollback_document_repo import mock_rollback_document_repo
 from integration_tests.mocks.rollback_event_repo import mock_rollback_event_repo
+from integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
 
 
 def get_test_db_url() -> str:

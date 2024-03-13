@@ -1,8 +1,10 @@
 from typing import cast
+
 import jwt
 import pytest
-from app.errors import TokenError
+
 import app.service.token as token_service
+from app.errors import TokenError
 
 
 @pytest.mark.parametrize(

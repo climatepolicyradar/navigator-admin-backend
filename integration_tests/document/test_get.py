@@ -15,7 +15,7 @@ def test_get_all_documents(client: TestClient, test_db: Session, user_header_tok
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert type(data) is list
+    assert isinstance(data, list)
     assert len(data) == 2
     ids_found = set([f["import_id"] for f in data])
     expected_ids = set(["D.0.0.1", "D.0.0.2"])
