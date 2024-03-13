@@ -5,10 +5,21 @@ bootstrap:
 	pip3 install poetry
 	poetry install
 
-git_hooks:
-	# Install & run git pre-commit hooks
-	poetry run pre-commit install --install-hooks
-	pre-commit run --all-files
+install_trunk:
+	$(eval trunk_installed=$(shell trunk --version > /dev/null 2>&1 ; echo $$? ))
+ifneq ($(trunk_installed),0)
+	$(eval OS_NAME=$(shell uname -s | tr A-Z a-z))
+ifeq ($(OS_NAME),linux)
+	curl https://get.trunk.io -fsSL | bash
+endif
+ifeq ($(OS_NAME),darwin)
+	brew install trunk-io
+endif
+endif
+
+git_hooks: install_trunk
+	trunk fmt
+	trunk check
 
 build:
 	docker build -t navigator-admin-backend .
