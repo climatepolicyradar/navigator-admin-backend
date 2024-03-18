@@ -230,7 +230,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
     # User Language changed?
     existing_language = _get_existing_language(db, original_fd)
     new_language = _get_requested_language(db, new_values)
-    lang_idempotent = _is_language_idempotent(existing_language, new_language)
+    has_language_changed = _is_language_equal(existing_language, new_language)
 
     update_slug = original_pd.title != new_values["title"]
 
@@ -255,7 +255,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
     ]
 
     # Update logic to only perform update if not idempotent.
-    if not lang_idempotent:
+    if not has_language_changed:
         if new_language is not None:
             if existing_language is not None:
                 command = (
@@ -330,10 +330,11 @@ def _get_requested_language(db: Session, new_values: dict) -> Optional[Language]
     return new_language
 
 
-def _is_language_idempotent(
+def _is_language_equal(
     existing_language: Optional[Language],
     requested_language: Optional[Language],
 ) -> bool:
+    """Check whether the language is idempotent."""
     if (existing_language == requested_language) is None:
         return True
 
