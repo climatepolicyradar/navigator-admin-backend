@@ -40,9 +40,17 @@ run:
 
 start: build_dev run
 
-restart:
-	docker stop navigator-admin-backend && docker rm navigator-admin-backend && make start && docker logs -f navigator-admin-backend
+start_local: build
+	# - docker stop navigator-admin-backend
+	docker run -p 8888:8888 \
+	--name navigator-admin-backend \
+	--network=navigator-backend_default \
+	-e ADMIN_POSTGRES_HOST=backend_db \
+	-e SECRET_KEY="secret_test_key" \
+	-d navigator-admin-backend
 
+restart: build
+	docker stop navigator-admin-backend && docker rm navigator-admin-backend && make start_local && docker logs -f navigator-admin-backend
 
 show_logs: 
 	- docker compose logs -f
