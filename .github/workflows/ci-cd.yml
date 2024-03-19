@@ -117,6 +117,8 @@ jobs:
 
   release:
     needs: tag
+    permissions:
+      contents: write
     uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@main
     with:
       new_tag: ${{ needs.tag.outputs.new_tag }}
