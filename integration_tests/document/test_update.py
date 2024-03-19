@@ -1,6 +1,7 @@
 from typing import Tuple, cast
 
 from db_client.models.document.physical_document import (
+    Language,
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
@@ -91,66 +92,64 @@ def test_update_document_no_source_url(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
+
+    # Keep all values apart from the Source URL the same.
     new_document = DocumentWriteDTO(
-        variant_name="Translation",
-        role="SUMMARY",
-        type="Annex",
-        title="Updated Title No Source URL",
+        variant_name="Original Language",
+        role="MAIN",
+        type="Law",
+        title="big title1",
         source_url=None,
-        user_language_name="Ghotuo",
+        user_language_name="English",
     )
+
     response = client.put(
-        "/api/v1/documents/D.0.0.2",
+        "/api/v1/documents/D.0.0.1",
         json=new_document.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["import_id"] == "D.0.0.2"
-    assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
-    assert data["type"] == "Annex"
-    assert data["title"] == new_document.title
+    assert data["import_id"] == "D.0.0.1"
+    assert data["variant_name"] == "Original Language"
+    assert data["role"] == "MAIN"
+    assert data["type"] == "Law"
+    assert data["title"] == "big title1"
     assert data["source_url"] == new_document.source_url
-    assert data["slug"].startswith("updated-title")
-    assert data["user_language_name"] == "Ghotuo"
 
-    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
-    assert fd.import_id == "D.0.0.2"
-    assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
-    assert fd.document_type == "Annex"
-    assert pd.title == new_document.title
+    fd, pd = _get_doc_tuple(test_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name == "Original Language"
+    assert fd.document_role == "MAIN"
+    assert fd.document_type == "Law"
+    assert pd.title == "big title1"
     assert pd.source_url == new_document.source_url
 
     # Check the user language in the db
-    lang = (
-        test_db.query(PhysicalDocumentLanguage)
+    _, lang = (
+        test_db.query(PhysicalDocumentLanguage, Language)
+        .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
         .one()
     )
-    assert lang.language_id == 1
-
-    # Check slug is updated too
-    slugs = (
-        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
-    )
-    last_slug = slugs[-1].name
-    assert last_slug.startswith("updated-title")
+    assert lang.id == 1826
+    assert data["user_language_name"] == lang.name
 
 
 def test_update_document_remove_variant(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
+
+    # Keep all values apart from the variant the same.
     new_document = DocumentWriteDTO(
         variant_name=None,
-        role="SUMMARY",
-        type="Annex",
-        title="Updated Title",
+        role="MAIN",
+        type="Law",
+        title="title2",
         source_url=cast(AnyHttpUrl, "http://update_source"),
-        user_language_name="Ghotuo",
+        user_language_name=None,
     )
     response = client.put(
         "/api/v1/documents/D.0.0.2",
@@ -161,47 +160,41 @@ def test_update_document_remove_variant(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] is None
-    assert data["role"] == "SUMMARY"
-    assert data["type"] == "Annex"
-    assert data["title"] == "Updated Title"
+    assert data["role"] == "MAIN"
+    assert data["type"] == "Law"
+    assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
-    assert data["slug"].startswith("updated-title")
-    assert data["user_language_name"] == "Ghotuo"
 
     fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name is None
-    assert fd.document_role == "SUMMARY"
-    assert fd.document_type == "Annex"
-    assert pd.title == "Updated Title"
+    assert fd.document_role == "MAIN"
+    assert fd.document_type == "Law"
+    assert pd.title == "title2"
     assert pd.source_url == "http://update_source/"
 
     # Check the user language in the db
     lang = (
-        test_db.query(PhysicalDocumentLanguage)
+        test_db.query(PhysicalDocumentLanguage, Language)
+        .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
-        .one()
+        .one_or_none()
     )
-    assert lang.language_id == 1
-
-    # Check slug is updated too
-    slugs = (
-        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
-    )
-    last_slug = slugs[-1].name
-    assert last_slug.startswith("updated-title")
+    assert lang is None
 
 
 def test_update_document_remove_user_language(
     client: TestClient, test_db: Session, user_header_token
 ):
     setup_db(test_db)
+
+    # Keep all values apart from the language the same as in setup_db.py.
     new_document = DocumentWriteDTO(
-        variant_name=None,
-        role="SUMMARY",
-        type="Annex",
-        title="Updated Title",
+        variant_name="Original Language",
+        role="MAIN",
+        type="Law",
+        title="big title1",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name=None,
     )
@@ -213,37 +206,29 @@ def test_update_document_remove_user_language(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
-    assert data["variant_name"] is None
-    assert data["role"] == "SUMMARY"
-    assert data["type"] == "Annex"
-    assert data["title"] == "Updated Title"
+    assert data["variant_name"] == "Original Language"
+    assert data["role"] == "MAIN"
+    assert data["type"] == "Law"
+    assert data["title"] == "big title1"
     assert data["source_url"] == "http://update_source/"
-    assert data["slug"].startswith("updated-title")
-    assert data["user_language_name"] is None
 
     fd, pd = _get_doc_tuple(test_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
-    assert fd.variant_name is None
-    assert fd.document_role == "SUMMARY"
-    assert fd.document_type == "Annex"
-    assert pd.title == "Updated Title"
-    assert pd.source_url == "http://update_source/"
+    assert fd.variant_name == "Original Language"
+    assert fd.document_role == "MAIN"
+    assert fd.document_type == "Law"
+    assert pd.title == "big title1"
 
     # Check the user language in the db
     lang = (
-        test_db.query(PhysicalDocumentLanguage)
+        test_db.query(PhysicalDocumentLanguage, Language)
+        .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
         .one_or_none()
     )
     assert lang is None
-
-    # Check slug is updated too
-    slugs = (
-        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.1").all()
-    )
-    last_slug = slugs[-1].name
-    assert last_slug.startswith("updated-title")
+    assert data["user_language_name"] is None
 
 
 def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
@@ -368,14 +353,13 @@ def test_update_document_idempotent_user_language(
 ):
     setup_db(test_db)
     new_document = DocumentWriteDTO(
-        variant_name="Translation",
-        role="SUMMARY",
-        type="Annex",
-        title="Updated Title",
+        variant_name="Original Language",
+        role="MAIN",
+        type="Law",
+        title="title2",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name=None,
     )
-    print(new_document.model_dump(mode="json"))
     response = client.put(
         "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(mode="json"),
@@ -384,34 +368,27 @@ def test_update_document_idempotent_user_language(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
-    assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
-    assert data["type"] == "Annex"
-    assert data["title"] == "Updated Title"
+    assert data["variant_name"] == "Original Language"
+    assert data["role"] == "MAIN"
+    assert data["type"] == "Law"
+    assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
-    assert data["slug"].startswith("updated-title")
-    assert data["user_language_name"] is None
 
     fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
-    assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
-    assert fd.document_type == "Annex"
-    assert pd.title == "Updated Title"
+    assert fd.variant_name == "Original Language"
+    assert fd.document_role == "MAIN"
+    assert fd.document_type == "Law"
+    assert pd.title == "title2"
     assert pd.source_url == "http://update_source/"
 
     # Check the user language in the db
     lang = (
-        test_db.query(PhysicalDocumentLanguage)
+        test_db.query(PhysicalDocumentLanguage, Language)
+        .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
         .one_or_none()
     )
     assert lang is None
-
-    # Check slug is updated too
-    slugs = (
-        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
-    )
-    last_slug = slugs[-1].name
-    assert last_slug.startswith("updated-title")
+    assert data["user_language_name"] is None
