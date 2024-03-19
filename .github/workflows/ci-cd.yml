@@ -104,6 +104,8 @@ jobs:
 
   tag:
     needs: build
+    permissions:
+      contents: write
     uses: climatepolicyradar/reusable-workflows/.github/workflows/tag.yml@main
     with:
       repo-name: navigator-admin-backend
