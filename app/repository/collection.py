@@ -4,14 +4,11 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
-from db_client.models.app.counters import CountedEntity
-from db_client.models.app.users import Organisation
-from db_client.models.law_policy import Collection
-from db_client.models.law_policy.collection import (
-    CollectionFamily,
-    CollectionOrganisation,
-)
-from db_client.models.law_policy.family import Family
+from db_client.models.dfce import Collection
+from db_client.models.dfce.collection import CollectionFamily, CollectionOrganisation
+from db_client.models.dfce.family import Family
+from db_client.models.organisation.counters import CountedEntity
+from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import desc, or_

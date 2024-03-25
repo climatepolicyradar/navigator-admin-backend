@@ -1,4 +1,4 @@
-from db_client.models.law_policy import Family, FamilyEvent
+from db_client.models.dfce import Family, FamilyEvent
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient

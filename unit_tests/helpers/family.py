@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from db_client.models.law_policy.family import FamilyCategory
+from db_client.models.dfce.family import FamilyCategory
 
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 

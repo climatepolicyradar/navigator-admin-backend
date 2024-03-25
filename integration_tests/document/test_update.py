@@ -1,12 +1,12 @@
 from typing import Tuple, cast
 
+from db_client.models.dfce.family import FamilyDocument, Slug
 from db_client.models.document.physical_document import (
     Language,
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.law_policy.family import FamilyDocument, Slug
 from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import AnyHttpUrl
