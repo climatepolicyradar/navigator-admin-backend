@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from db_client.models.law_policy import FamilyEvent
-from db_client.models.law_policy.family import EventStatus
+from db_client.models.dfce import FamilyEvent
+from db_client.models.dfce.family import EventStatus
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient

@@ -1,17 +1,17 @@
 import logging
 from typing import Any, Optional
 
-from db_client.models.app.users import Organisation
 from db_client.models.base import AnyModel
-from db_client.models.document.physical_document import Language
-from db_client.models.law_policy.family import (
+from db_client.models.dfce.family import (
     FamilyDocumentRole,
     FamilyDocumentType,
     FamilyEventType,
     Variant,
 )
-from db_client.models.law_policy.geography import Geography
-from db_client.models.law_policy.metadata import MetadataOrganisation, MetadataTaxonomy
+from db_client.models.dfce.geography import Geography
+from db_client.models.dfce.metadata import MetadataOrganisation, MetadataTaxonomy
+from db_client.models.document.physical_document import Language
+from db_client.models.organisation.users import Organisation
 from sqlalchemy.orm import Session
 
 from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData

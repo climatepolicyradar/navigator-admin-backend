@@ -1,4 +1,4 @@
-from db_client.models.law_policy.collection import Collection
+from db_client.models.dfce.collection import Collection
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session

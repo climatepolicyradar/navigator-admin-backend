@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from db_client.models.law_policy.family import DocumentStatus
+from db_client.models.dfce import DocumentStatus
 from pydantic import AnyHttpUrl, BaseModel
 
 

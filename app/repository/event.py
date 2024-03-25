@@ -4,8 +4,8 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
-from db_client.models.app.counters import CountedEntity
-from db_client.models.law_policy import EventStatus, Family, FamilyDocument, FamilyEvent
+from db_client.models.dfce import EventStatus, Family, FamilyDocument, FamilyEvent
+from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import or_

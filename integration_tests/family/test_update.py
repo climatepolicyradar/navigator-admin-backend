@@ -1,8 +1,8 @@
 from typing import Optional
 
-from db_client.models.law_policy.collection import CollectionFamily
-from db_client.models.law_policy.family import Family, FamilyCategory, Slug
-from db_client.models.law_policy.metadata import FamilyMetadata
+from db_client.models.dfce.collection import CollectionFamily
+from db_client.models.dfce.family import Family, FamilyCategory, Slug
+from db_client.models.dfce.metadata import FamilyMetadata
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session

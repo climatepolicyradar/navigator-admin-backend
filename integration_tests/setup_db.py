@@ -1,17 +1,11 @@
 from typing import cast
 
-from db_client.models.app.users import AppUser, Organisation, OrganisationUser
-from db_client.models.document.physical_document import (
-    LanguageSource,
-    PhysicalDocument,
-    PhysicalDocumentLanguage,
-)
-from db_client.models.law_policy.collection import (
+from db_client.models.dfce.collection import (
     Collection,
     CollectionFamily,
     CollectionOrganisation,
 )
-from db_client.models.law_policy.family import (
+from db_client.models.dfce.family import (
     EventStatus,
     Family,
     FamilyDocument,
@@ -19,11 +13,17 @@ from db_client.models.law_policy.family import (
     FamilyOrganisation,
     Slug,
 )
-from db_client.models.law_policy.metadata import (
+from db_client.models.dfce.metadata import (
     FamilyMetadata,
     MetadataOrganisation,
     MetadataTaxonomy,
 )
+from db_client.models.document.physical_document import (
+    LanguageSource,
+    PhysicalDocument,
+    PhysicalDocumentLanguage,
+)
+from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 

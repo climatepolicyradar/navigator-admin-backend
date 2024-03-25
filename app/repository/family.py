@@ -4,10 +4,8 @@ import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
-from db_client.models.app.counters import CountedEntity
-from db_client.models.app.users import Organisation
-from db_client.models.law_policy.collection import CollectionFamily
-from db_client.models.law_policy.family import (
+from db_client.models.dfce.collection import CollectionFamily
+from db_client.models.dfce.family import (
     DocumentStatus,
     Family,
     FamilyDocument,
@@ -15,8 +13,10 @@ from db_client.models.law_policy.family import (
     FamilyStatus,
     Slug,
 )
-from db_client.models.law_policy.geography import Geography
-from db_client.models.law_policy.metadata import FamilyMetadata, MetadataOrganisation
+from db_client.models.dfce.geography import Geography
+from db_client.models.dfce.metadata import FamilyMetadata, MetadataOrganisation
+from db_client.models.organisation.counters import CountedEntity
+from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import desc, or_

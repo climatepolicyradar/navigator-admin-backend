@@ -1,15 +1,15 @@
 import logging
 from typing import Optional, Tuple, Union, cast
 
-from db_client.models.app.counters import CountedEntity
+from db_client.models.dfce import FamilyDocument
+from db_client.models.dfce.family import DocumentStatus, Slug
 from db_client.models.document.physical_document import (
     Language,
     LanguageSource,
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.law_policy import FamilyDocument
-from db_client.models.law_policy.family import DocumentStatus, Slug
+from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
 from sqlalchemy import func
