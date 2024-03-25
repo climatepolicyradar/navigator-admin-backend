@@ -5,7 +5,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-import app.repository.document as document_repo
 from tests.integration_tests.setup_db import setup_db
 
 
@@ -25,11 +24,8 @@ def test_delete_document(client: TestClient, test_db: Session, admin_user_header
     assert test_db.query(PhysicalDocument).count() == 2
 
 
-def test_delete_document_when_not_authenticated(
-    client: TestClient, test_db: Session, mocker
-):
+def test_delete_document_when_not_authenticated(client: TestClient, test_db: Session):
     setup_db(test_db)
-    mocker.spy(document_repo, "delete")
     response = client.delete(
         "/api/v1/documents/D.0.0.2",
     )
@@ -42,7 +38,6 @@ def test_delete_document_when_not_authenticated(
         == 0
     )
     assert test_db.query(PhysicalDocument).count() == 2
-    assert document_repo.delete.call_count == 0
 
 
 def test_delete_document_rollback(

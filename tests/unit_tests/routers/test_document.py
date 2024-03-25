@@ -4,7 +4,6 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-import app.service.document as document_service
 from tests.unit_tests.helpers.document import (
     create_document_create_dto,
     create_document_write_dto,
@@ -18,7 +17,7 @@ def test_get_all_when_ok(client: TestClient, user_header_token, document_service
     assert isinstance(data, list)
     assert len(data) > 0
     assert data[0]["import_id"] == "test"
-    assert document_service.all.call_count == 1
+    assert document_service_mock.all.call_count == 1
 
 
 def test_get_when_ok(client: TestClient, document_service_mock, user_header_token):

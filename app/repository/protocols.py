@@ -8,6 +8,11 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 class FamilyRepo(Protocol):
     """The interface definition for a FamilyRepo"""
 
+    # set some attributes for testing purposes...
+    return_empty: bool = False
+    throw_repository_error: bool = False
+    throw_timeout_error: bool = False
+
     @staticmethod
     def all(db: Session) -> list[FamilyReadDTO]:
         """Returns all the families"""

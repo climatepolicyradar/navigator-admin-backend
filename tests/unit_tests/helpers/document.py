@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, cast
+from typing import Optional, Union, cast
 
 from db_client.models.dfce.family import DocumentStatus
 from pydantic import AnyHttpUrl
@@ -11,9 +11,11 @@ def create_document_create_dto(
     family_import_id="test.family.1.0",
     title: str = "title",
     variant_name: Optional[str] = "Original Language",
-    source_url: Optional[AnyHttpUrl] = cast(AnyHttpUrl, "http://source"),
+    source_url: Optional[Union[str, AnyHttpUrl]] = "http://source",
     user_language_name: Optional[str] = None,
 ) -> DocumentCreateDTO:
+    if source_url is not None:
+        source_url = cast(AnyHttpUrl, source_url)
     return DocumentCreateDTO(
         family_import_id=family_import_id,
         variant_name=variant_name,

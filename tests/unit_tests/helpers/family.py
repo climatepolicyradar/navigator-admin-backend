@@ -14,13 +14,13 @@ def create_family_dto(
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     slug: str = "slug",
-    collections: Optional[list[str]] = ["x.y.z.1", "x.y.z.2"],
+    collections: Optional[list[str]] = None,
 ) -> FamilyReadDTO:
     if metadata is None:
         metadata = {}
 
     if collections is None:
-        collections = []
+        collections = ["x.y.z.1", "x.y.z.2"]
 
     return FamilyReadDTO(
         import_id=import_id,
@@ -48,10 +48,12 @@ def create_family_create_dto(
     geography: str = "CHN",
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
-    collections: list[str] = [],
+    collections: Optional[list[str]] = None,
 ) -> FamilyCreateDTO:
     if metadata is None:
         metadata = {}
+    if collections is None:
+        collections = []
     return FamilyCreateDTO(
         title=title,
         summary=summary,
@@ -68,10 +70,12 @@ def create_family_write_dto(
     geography: str = "CHN",
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
-    collections: list[str] = [],
+    collections: Optional[list[str]] = None,
 ) -> FamilyWriteDTO:
     if metadata is None:
         metadata = {}
+    if collections is None:
+        collections = []
     return FamilyWriteDTO(
         title=title,
         summary=summary,

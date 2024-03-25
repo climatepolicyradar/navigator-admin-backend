@@ -90,13 +90,13 @@ def geography_repo_mock(monkeypatch, mocker):
 @pytest.fixture
 def family_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
-    create_mock_family_repo(family_repo, monkeypatch, mocker)
 
     # set some attributes for testing purposes...
     family_repo.return_empty = False
     family_repo.throw_repository_error = False
     family_repo.throw_timeout_error = False
 
+    create_mock_family_repo(family_repo, monkeypatch, mocker)
     yield family_repo
 
 
