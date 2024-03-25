@@ -10,7 +10,6 @@ RUN poetry config virtualenvs.create false && poetry install --no-directory --no
 
 # Now code
 COPY ./app ./app
-COPY ./unit_tests ./unit_tests
-COPY ./integration_tests ./integration_tests
+COPY ./tests ./tests
 
 CMD python app/main.py
