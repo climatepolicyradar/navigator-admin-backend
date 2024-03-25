@@ -35,7 +35,8 @@ unit_test:
 integration_test:
 	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests
 
-test: unit_test integration_test
+test:
+	docker compose run --rm navigator-admin-backend pytest -vvv tests
 
 run: 
 	docker compose -f docker-compose.yml up -d --remove-orphans
