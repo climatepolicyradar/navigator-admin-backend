@@ -31,22 +31,22 @@ from app.repository import (
     metadata_repo,
     organisation_repo,
 )
-from unit_tests.mocks.repos import create_mock_family_repo
-from unit_tests.mocks.repos.app_user_repo import mock_app_user_repo
-from unit_tests.mocks.repos.collection_repo import mock_collection_repo
-from unit_tests.mocks.repos.config_repo import mock_config_repo
-from unit_tests.mocks.repos.document_repo import mock_document_repo
-from unit_tests.mocks.repos.event_repo import mock_event_repo
-from unit_tests.mocks.repos.geography_repo import mock_geography_repo
-from unit_tests.mocks.repos.metadata_repo import mock_metadata_repo
-from unit_tests.mocks.repos.organisation_repo import mock_organisation_repo
-from unit_tests.mocks.services.analytics_service import mock_analytics_service
-from unit_tests.mocks.services.app_user_service import mock_app_user_service
-from unit_tests.mocks.services.collection_service import mock_collection_service
-from unit_tests.mocks.services.config_service import mock_config_service
-from unit_tests.mocks.services.document_service import mock_document_service
-from unit_tests.mocks.services.event_service import mock_event_service
-from unit_tests.mocks.services.family_service import mock_family_service
+from tests.unit_tests.mocks.repos import create_mock_family_repo
+from tests.unit_tests.mocks.repos.app_user_repo import mock_app_user_repo
+from tests.unit_tests.mocks.repos.collection_repo import mock_collection_repo
+from tests.unit_tests.mocks.repos.config_repo import mock_config_repo
+from tests.unit_tests.mocks.repos.document_repo import mock_document_repo
+from tests.unit_tests.mocks.repos.event_repo import mock_event_repo
+from tests.unit_tests.mocks.repos.geography_repo import mock_geography_repo
+from tests.unit_tests.mocks.repos.metadata_repo import mock_metadata_repo
+from tests.unit_tests.mocks.repos.organisation_repo import mock_organisation_repo
+from tests.unit_tests.mocks.services.analytics_service import mock_analytics_service
+from tests.unit_tests.mocks.services.app_user_service import mock_app_user_service
+from tests.unit_tests.mocks.services.collection_service import mock_collection_service
+from tests.unit_tests.mocks.services.config_service import mock_config_service
+from tests.unit_tests.mocks.services.document_service import mock_document_service
+from tests.unit_tests.mocks.services.event_service import mock_event_service
+from tests.unit_tests.mocks.services.family_service import mock_family_service
 
 
 @pytest.fixture
@@ -93,9 +93,9 @@ def family_repo_mock(monkeypatch, mocker):
     create_mock_family_repo(family_repo, monkeypatch, mocker)
 
     # set some attributes for testing purposes...
-    setattr(family_repo, "return_empty", False)
-    setattr(family_repo, "throw_repository_error", False)
-    setattr(family_repo, "throw_timeout_error", False)
+    family_repo.return_empty = False
+    family_repo.throw_repository_error = False
+    family_repo.throw_timeout_error = False
 
     yield family_repo
 

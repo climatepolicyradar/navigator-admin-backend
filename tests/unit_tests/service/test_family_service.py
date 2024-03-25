@@ -11,15 +11,17 @@ import pytest
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from unit_tests.helpers.family import create_family_dto
+from tests.unit_tests.helpers.family import create_family_dto
 
 USER_EMAIL = "test@cpr.org"
 ORG_ID = 1
 
 
 def to_write_dto(
-    dto: FamilyReadDTO, collections: Optional[list[str]] = ["x.y.z.2", "x.y.z.3"]
+    dto: FamilyReadDTO, collections: Optional[list[str]] = None
 ) -> FamilyWriteDTO:
+    if collections is None:
+        collections = ["x.y.z.2", "x.y.z.3"]
     if collections is None:
         collections = dto.collections
     return FamilyWriteDTO(

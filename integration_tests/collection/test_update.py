@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
-from unit_tests.helpers.collection import create_collection_write_dto
+from tests.unit_tests.helpers.collection import create_collection_write_dto
 
 
 def test_update_collection(client: TestClient, test_db: Session, user_header_token):

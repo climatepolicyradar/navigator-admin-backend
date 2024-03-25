@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import setup_db
-from unit_tests.helpers.event import create_event_create_dto
+from tests.unit_tests.helpers.event import create_event_create_dto
 
 
 def test_create_event(client: TestClient, test_db: Session, user_header_token):

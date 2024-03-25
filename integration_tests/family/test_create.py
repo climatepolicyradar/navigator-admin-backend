@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import setup_db
-from unit_tests.helpers.family import create_family_create_dto
+from tests.unit_tests.helpers.family import create_family_create_dto
 
 
 def test_create_family(client: TestClient, test_db: Session, user_header_token):

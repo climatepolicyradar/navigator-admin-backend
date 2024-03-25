@@ -5,7 +5,7 @@ from sqlalchemy import exc
 
 from app.errors import RepositoryError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
-from unit_tests.helpers.event import create_event_read_dto
+from tests.unit_tests.helpers.event import create_event_read_dto
 
 
 def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):

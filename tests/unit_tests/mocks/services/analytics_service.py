@@ -2,7 +2,7 @@ from pytest import MonkeyPatch
 
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
-from unit_tests.helpers.analytics import create_summary_dto
+from tests.unit_tests.helpers.analytics import create_summary_dto
 
 
 def mock_analytics_service(analytics_service, monkeypatch: MonkeyPatch, mocker):

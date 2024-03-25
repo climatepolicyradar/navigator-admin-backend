@@ -4,7 +4,7 @@ from pytest import MonkeyPatch
 
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
-from unit_tests.helpers.document import create_document_read_dto
+from tests.unit_tests.helpers.document import create_document_read_dto
 
 
 def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):

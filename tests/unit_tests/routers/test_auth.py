@@ -1,7 +1,7 @@
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from unit_tests.mocks.repos.app_user_repo import PLAIN_PASSWORD, VALID_USERNAME
+from tests.unit_tests.mocks.repos.app_user_repo import PLAIN_PASSWORD, VALID_USERNAME
 
 
 def test_get_token(client: TestClient, app_user_repo_mock):

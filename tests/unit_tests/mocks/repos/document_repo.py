@@ -5,7 +5,7 @@ from sqlalchemy import exc
 
 from app.errors import RepositoryError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO
-from unit_tests.helpers.document import create_document_read_dto
+from tests.unit_tests.helpers.document import create_document_read_dto
 
 
 def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):

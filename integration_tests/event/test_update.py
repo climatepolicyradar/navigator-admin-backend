@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import EXPECTED_EVENTS, setup_db
-from unit_tests.helpers.event import create_event_write_dto
+from tests.unit_tests.helpers.event import create_event_write_dto
 
 
 def _get_event_tuple(test_db: Session, import_id: str) -> FamilyEvent:

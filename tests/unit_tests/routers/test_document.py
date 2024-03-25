@@ -5,7 +5,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 import app.service.document as document_service
-from unit_tests.helpers.document import (
+from tests.unit_tests.helpers.document import (
     create_document_create_dto,
     create_document_write_dto,
 )

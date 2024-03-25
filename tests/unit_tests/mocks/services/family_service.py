@@ -4,7 +4,7 @@ from pytest import MonkeyPatch
 
 from app.errors import RepositoryError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
-from unit_tests.helpers.family import create_family_dto
+from tests.unit_tests.helpers.family import create_family_dto
 
 
 def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
