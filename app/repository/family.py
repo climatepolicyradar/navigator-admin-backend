@@ -16,7 +16,7 @@ from db_client.models.dfce.family import (
 )
 from db_client.models.dfce.geography import Geography
 from db_client.models.dfce.metadata import FamilyMetadata, MetadataOrganisation
-from db_client.models.organisation.corpus import Corpus, CorpusType
+from db_client.models.organisation.corpus import Corpus
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
@@ -377,8 +377,10 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     )
     db.flush()
 
+    # TODO Validate that the metadata being added conforms to corpus type. PDCT-945
+
     # Add the metadata
-    # Old schema (to be removed in PDCT-937).
+    # tax to be removed in PDCT-937.
     tax = (
         db.query(MetadataOrganisation)
         .filter(MetadataOrganisation.organisation_id == org_id)
@@ -387,20 +389,10 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     db.add(
         FamilyMetadata(
             family_import_id=new_family.import_id,
-            taxonomy_id=tax.taxonomy_id,
+            taxonomy_id=tax.taxonomy_id,  # TODO Remove as part PDCT-937
             value=family.metadata,
         )
     )
-
-    # New schema.
-    db.add(
-        CorpusType(
-            name=new_fam_corpus.title,
-            description=new_fam_corpus.description,
-            valid_metadata=family.metadata,
-        )
-    )
-
     db.flush()
 
     # Add any collections.
