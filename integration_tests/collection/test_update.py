@@ -1,4 +1,4 @@
-from db_client.models.law_policy.collection import (
+from db_client.models.dfce.collection import (
     Collection,
     CollectionFamily,
     CollectionOrganisation,

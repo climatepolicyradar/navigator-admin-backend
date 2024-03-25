@@ -1,6 +1,6 @@
 from typing import Optional
 
-from db_client.models.app.users import Organisation
+from db_client.models.organisation.users import Organisation
 from sqlalchemy.orm import Session
 
 

@@ -1,4 +1,4 @@
-from db_client.models.law_policy import FamilyEvent
+from db_client.models.dfce import FamilyEvent
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session

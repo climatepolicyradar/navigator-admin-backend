@@ -1,9 +1,4 @@
-from db_client.models.law_policy import (
-    DocumentStatus,
-    Family,
-    FamilyDocument,
-    FamilyStatus,
-)
+from db_client.models.dfce import DocumentStatus, Family, FamilyDocument, FamilyStatus
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session

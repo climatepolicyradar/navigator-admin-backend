@@ -1,6 +1,6 @@
 from typing import Optional
 
-from db_client.models.law_policy.geography import Geography
+from db_client.models.dfce.geography import Geography
 from sqlalchemy.orm import Session
 
 

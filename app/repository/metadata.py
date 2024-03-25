@@ -1,6 +1,6 @@
 from typing import Optional
 
-from db_client.models.law_policy.metadata import MetadataOrganisation, MetadataTaxonomy
+from db_client.models.dfce.metadata import MetadataOrganisation, MetadataTaxonomy
 from sqlalchemy.orm import Session
 
 from app.model.general import Json
