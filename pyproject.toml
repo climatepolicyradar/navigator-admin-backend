@@ -72,3 +72,4 @@ exclude = "^/alembic/versions/"
 include = ["app", "unit_tests", "integration_tests"]
 exclude = ["**/__pycache__"]
 pythonVersion = "3.9"
+venv = "admin-backend"
