@@ -4,10 +4,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from tests.unit_tests.helpers.document import (
-    create_document_create_dto,
-    create_document_write_dto,
-)
+from tests.helpers.document import create_document_create_dto, create_document_write_dto
 
 
 def test_get_all_when_ok(client: TestClient, user_header_token, document_service_mock):

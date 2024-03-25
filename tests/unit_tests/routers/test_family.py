@@ -10,10 +10,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from tests.unit_tests.helpers.family import (
-    create_family_create_dto,
-    create_family_write_dto,
-)
+from tests.helpers.family import create_family_create_dto, create_family_write_dto
 
 
 def test_get_all_when_ok(client: TestClient, family_service_mock, user_header_token):

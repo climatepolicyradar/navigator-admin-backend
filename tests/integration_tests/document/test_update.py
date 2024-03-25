@@ -13,8 +13,8 @@ from pydantic import AnyHttpUrl
 from sqlalchemy.orm import Session
 
 from app.model.document import DocumentWriteDTO
+from tests.helpers.document import create_document_write_dto
 from tests.integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
-from tests.unit_tests.helpers.document import create_document_write_dto
 
 
 def _get_doc_tuple(

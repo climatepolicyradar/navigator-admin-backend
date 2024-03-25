@@ -7,7 +7,7 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
-from tests.unit_tests.helpers.collection import create_collection_write_dto
+from tests.helpers.collection import create_collection_write_dto
 from tests.unit_tests.mocks.repos.collection_repo import (
     create_collection_read_dto as create_dto,
 )

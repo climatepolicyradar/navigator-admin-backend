@@ -10,7 +10,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from tests.unit_tests.helpers.collection import create_collection_write_dto
+from tests.helpers.collection import create_collection_write_dto
 
 
 def test_get_all_when_ok(

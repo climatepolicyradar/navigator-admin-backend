@@ -11,7 +11,7 @@ import pytest
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from tests.unit_tests.helpers.family import create_family_dto
+from tests.helpers.family import create_family_dto
 
 USER_EMAIL = "test@cpr.org"
 ORG_ID = 1

@@ -4,7 +4,7 @@ from pytest import MonkeyPatch
 
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
-from tests.unit_tests.helpers.event import create_event_read_dto
+from tests.helpers.event import create_event_read_dto
 
 
 def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):

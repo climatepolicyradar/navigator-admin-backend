@@ -4,7 +4,7 @@ from pytest import MonkeyPatch
 
 from app.errors import RepositoryError
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
-from tests.unit_tests.helpers.collection import create_collection_read_dto
+from tests.helpers.collection import create_collection_read_dto
 
 ORG_ID = 1
 INCORRECT_ORG_ID = 1234

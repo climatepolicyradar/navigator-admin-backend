@@ -7,8 +7,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from tests.helpers.event import create_event_write_dto
 from tests.integration_tests.setup_db import EXPECTED_EVENTS, setup_db
-from tests.unit_tests.helpers.event import create_event_write_dto
 
 
 def _get_event_tuple(test_db: Session, import_id: str) -> FamilyEvent:

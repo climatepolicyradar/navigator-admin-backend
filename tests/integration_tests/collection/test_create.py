@@ -3,8 +3,8 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from tests.helpers.collection import create_collection_create_dto
 from tests.integration_tests.setup_db import setup_db
-from tests.unit_tests.helpers.collection import create_collection_create_dto
 
 
 def test_create_collection(client: TestClient, test_db: Session, user_header_token):

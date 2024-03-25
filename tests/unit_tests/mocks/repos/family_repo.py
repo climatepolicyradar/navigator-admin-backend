@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
-from tests.unit_tests.helpers.family import create_family_dto
+from tests.helpers.family import create_family_dto
 
 
 def _maybe_throw():

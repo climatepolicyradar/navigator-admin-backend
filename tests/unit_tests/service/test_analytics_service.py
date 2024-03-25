@@ -5,7 +5,7 @@ import pytest
 import app.service.analytics as analytics_service
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
-from tests.unit_tests.helpers.analytics import (
+from tests.helpers.analytics import (
     EXPECTED_NUM_COLLECTIONS,
     EXPECTED_NUM_DOCUMENTS,
     EXPECTED_NUM_EVENTS,

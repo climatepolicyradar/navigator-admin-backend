@@ -3,7 +3,7 @@ import pytest
 import app.service.document as doc_service
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentReadDTO, DocumentWriteDTO
-from tests.unit_tests.helpers.document import create_document_create_dto
+from tests.helpers.document import create_document_create_dto
 
 
 def _to_write_dto(dto: DocumentReadDTO) -> DocumentWriteDTO:
