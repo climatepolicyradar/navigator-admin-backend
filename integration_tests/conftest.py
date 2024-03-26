@@ -93,6 +93,8 @@ def data_db(scope="function"):
     # Save DATABASE_URL
     saved = os.environ["DATABASE_URL"]
     os.environ["DATABASE_URL"] = test_db_url
+    test_session = None
+    connection = None
     try:
         test_engine = create_engine(test_db_url)
         connection = test_engine.connect()
@@ -111,8 +113,10 @@ def data_db(scope="function"):
     finally:
         # restore DATABASE_URL
         os.environ["DATABASE_URL"] = saved
-        test_session.close()
-        connection.close()
+        if test_session is not None:
+            test_session.close()
+        if connection is not None:
+            connection.close()
         # Drop the test database
         drop_database(test_db_url)
 
