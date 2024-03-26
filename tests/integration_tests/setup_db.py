@@ -25,16 +25,16 @@ from db_client.models.document.physical_document import (
     PhysicalDocumentLanguage,
 )
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+DEFAULT_GEO_ID = 1
 EXPECTED_NUM_FAMILIES = 3
 EXPECTED_FAMILIES = [
     {
         "import_id": "A.0.0.1",
         "title": "apple",
         "summary": "",
-        "geography": "South Asia",
+        "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [3], "color": ["red"]},
@@ -50,7 +50,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.2",
         "title": "apple orange banana",
         "summary": "apple",
-        "geography": "South Asia",
+        "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [4], "color": ["green"]},
@@ -66,7 +66,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.3",
         "title": "title",
         "summary": "orange peas",
-        "geography": "South Asia",
+        "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [100], "color": ["blue"]},
@@ -190,12 +190,6 @@ EXPECTED_ANALYTICS_SUMMARY = {
 
 
 def setup_db(test_db: Session, configure_empty: bool = False):
-    test_dir_path = os.path.dirname(os.path.dirname(__file__))
-    integration_test_dir_path = os.path.join(test_dir_path, "integration_tests")
-    with open(os.path.join(integration_test_dir_path, "default-data.sql")) as file:
-        query = text(file.read())
-        test_db.execute(query)
-
     setup_test_data(test_db, configure_empty)
 
 
@@ -249,12 +243,15 @@ def _get_org_id_from_name(test_db: Session, name: str) -> int:
 
 def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Now an organisation
-    org = Organisation(
-        name="CCLW",
-        description="for testing",
-        organisation_type="test organisation",
+    org = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
+    # Remove default taxonomy from CCLW
+    # org.taxonomy_collection
+    mo = (
+        test_db.query(MetadataOrganisation)
+        .filter(MetadataOrganisation.organisation_id == org.id)
+        .one()
     )
-    test_db.add(org)
+    test_db.delete(mo)
     another_org = Organisation(
         name="Another org",
         description="because we will have more than one org",
@@ -365,7 +362,7 @@ def _setup_family_data(
                 import_id=data["import_id"],
                 title=data["title"],
                 description=data["summary"],
-                geography_id=1,
+                geography_id=DEFAULT_GEO_ID,
                 family_category=data["category"],
             )
         )
@@ -396,6 +393,7 @@ def _setup_family_data(
     test_db.flush()
 
     # Now a MetadataOrganisation
+    # Remove the standard CCLW taxonomy
     mo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=default_org_id)
     test_db.add(mo)
     test_db.flush()

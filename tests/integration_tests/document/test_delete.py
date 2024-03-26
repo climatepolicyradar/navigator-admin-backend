@@ -8,84 +8,84 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
-def test_delete_document(client: TestClient, test_db: Session, admin_user_header_token):
-    setup_db(test_db)
+def test_delete_document(client: TestClient, data_db: Session, admin_user_header_token):
+    setup_db(data_db)
     response = client.delete(
         "/api/v1/documents/D.0.0.2", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_200_OK
-    assert test_db.query(FamilyDocument).count() == 2
+    assert data_db.query(FamilyDocument).count() == 2
     assert (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 1
     )
-    assert test_db.query(PhysicalDocument).count() == 2
+    assert data_db.query(PhysicalDocument).count() == 2
 
 
-def test_delete_document_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_delete_document_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.delete(
         "/api/v1/documents/D.0.0.2",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert test_db.query(FamilyDocument).count() == 2
+    assert data_db.query(FamilyDocument).count() == 2
     assert (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 0
     )
-    assert test_db.query(PhysicalDocument).count() == 2
+    assert data_db.query(PhysicalDocument).count() == 2
 
 
 def test_delete_document_rollback(
     client: TestClient,
-    test_db: Session,
+    data_db: Session,
     rollback_document_repo,
     admin_user_header_token,
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.delete(
         "/api/v1/documents/D.0.0.2", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-    assert test_db.query(FamilyDocument).count() == 2
+    assert data_db.query(FamilyDocument).count() == 2
     assert (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 0
     )
-    assert test_db.query(PhysicalDocument).count() == 2
+    assert data_db.query(PhysicalDocument).count() == 2
     assert rollback_document_repo.delete.call_count == 1
 
 
 def test_delete_document_when_not_found(
-    client: TestClient, test_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, admin_user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.delete(
         "/api/v1/documents/D.0.0.22", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Document not deleted: D.0.0.22"
-    assert test_db.query(FamilyDocument).count() == 2
+    assert data_db.query(FamilyDocument).count() == 2
     assert (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 0
     )
-    assert test_db.query(PhysicalDocument).count() == 2
+    assert data_db.query(PhysicalDocument).count() == 2
 
 
 def test_delete_document_when_db_error(
-    client: TestClient, test_db: Session, bad_document_repo, admin_user_header_token
+    client: TestClient, data_db: Session, bad_document_repo, admin_user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.delete(
         "/api/v1/documents/D.0.0.1", headers=admin_user_header_token
     )

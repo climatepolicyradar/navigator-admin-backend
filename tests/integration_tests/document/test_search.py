@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
-def test_search_document(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_search_document(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/?q=title",
         headers=user_header_token,
@@ -24,8 +24,8 @@ def test_search_document(client: TestClient, test_db: Session, user_header_token
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_document_when_not_authorised(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_search_document_when_not_authorised(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/?q=orange",
     )
@@ -33,9 +33,9 @@ def test_search_document_when_not_authorised(client: TestClient, test_db: Sessio
 
 
 def test_search_document_when_nothing_found(
-    client: TestClient, test_db: Session, user_header_token, caplog
+    client: TestClient, data_db: Session, user_header_token, caplog
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     with caplog.at_level(logging.INFO):
         response = client.get(
             "/api/v1/documents/?q=chicken",
@@ -49,9 +49,9 @@ def test_search_document_when_nothing_found(
 
 
 def test_search_document_when_db_error(
-    client: TestClient, test_db: Session, bad_document_repo, user_header_token
+    client: TestClient, data_db: Session, bad_document_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/?q=chicken",
         headers=user_header_token,
@@ -63,9 +63,9 @@ def test_search_document_when_db_error(
 
 
 def test_search_document_with_max_results(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/?q=title&max_results=1",
         headers=user_header_token,
@@ -82,9 +82,9 @@ def test_search_document_with_max_results(
 
 
 def test_search_document_when_invalid_params(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/?wrong=param",
         headers=user_header_token,

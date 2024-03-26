@@ -7,8 +7,8 @@ from tests.integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 # --- GET ALL
 
 
-def test_get_all_documents(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_get_all_documents(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents",
         headers=user_header_token,
@@ -33,8 +33,8 @@ def test_get_all_documents(client: TestClient, test_db: Session, user_header_tok
     assert expected_data[1] == EXPECTED_DOCUMENTS[1]
 
 
-def test_get_all_documents_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_get_all_documents_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents",
     )
@@ -44,8 +44,8 @@ def test_get_all_documents_when_not_authenticated(client: TestClient, test_db: S
 # --- GET
 
 
-def test_get_document(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_get_document(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/D.0.0.1",
         headers=user_header_token,
@@ -61,8 +61,8 @@ def test_get_document(client: TestClient, test_db: Session, user_header_token):
     assert expected_data == EXPECTED_DOCUMENTS[0]
 
 
-def test_get_document_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_get_document_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/D.0.0.1",
     )
@@ -70,9 +70,9 @@ def test_get_document_when_not_authenticated(client: TestClient, test_db: Sessio
 
 
 def test_get_document_when_not_found(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/D.0.0.8",
         headers=user_header_token,
@@ -83,9 +83,9 @@ def test_get_document_when_not_found(
 
 
 def test_get_document_when_id_invalid(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/A008",
         headers=user_header_token,
@@ -97,9 +97,9 @@ def test_get_document_when_id_invalid(
 
 
 def test_get_document_when_db_error(
-    client: TestClient, test_db: Session, bad_document_repo, user_header_token
+    client: TestClient, data_db: Session, bad_document_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/documents/A.0.0.8",
         headers=user_header_token,

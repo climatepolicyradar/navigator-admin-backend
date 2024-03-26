@@ -19,8 +19,8 @@ def _get_event_tuple(test_db: Session, import_id: str) -> FamilyEvent:
     return fe
 
 
-def test_update_event(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_update_event(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     new_event = create_event_write_dto(title="Updated Title")
     response = client.put(
         "/api/v1/events/E.0.0.2",
@@ -40,7 +40,7 @@ def test_update_event(client: TestClient, test_db: Session, user_header_token):
     # Get the record in the FamilyEvent table we want to update in the database and
     # check the types of the values are correct and that the values have been
     # successfully updated.
-    fe = _get_event_tuple(test_db, "E.0.0.2")
+    fe = _get_event_tuple(data_db, "E.0.0.2")
     assert isinstance(fe.date, datetime) is True
     assert isinstance(fe.status, EventStatus) is True
     assert (
@@ -68,8 +68,8 @@ def test_update_event(client: TestClient, test_db: Session, user_header_token):
     assert fe.status == EventStatus.OK
 
 
-def test_update_event_when_not_authorised(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_update_event_when_not_authorised(client: TestClient, data_db: Session):
+    setup_db(data_db)
     new_event = create_event_write_dto(
         title="Updated Title",
     )
@@ -78,9 +78,9 @@ def test_update_event_when_not_authorised(client: TestClient, test_db: Session):
 
 
 def test_update_event_idempotent(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     event = EXPECTED_EVENTS[1]
     response = client.put(
         f"/api/v1/events/{event['import_id']}",
@@ -92,14 +92,14 @@ def test_update_event_idempotent(
     data = response.json()
     assert data["event_title"] == EXPECTED_EVENTS[1]["event_title"]
 
-    fe = _get_event_tuple(test_db, EXPECTED_EVENTS[1]["import_id"])
+    fe = _get_event_tuple(data_db, EXPECTED_EVENTS[1]["import_id"])
     assert fe.title == EXPECTED_EVENTS[1]["event_title"]
 
 
 def test_update_event_rollback(
-    client: TestClient, test_db: Session, rollback_event_repo, user_header_token
+    client: TestClient, data_db: Session, rollback_event_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_event = create_event_write_dto(
         title="Updated Title",
     )
@@ -110,16 +110,16 @@ def test_update_event_rollback(
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
-    pd = _get_event_tuple(test_db, "E.0.0.2")
+    pd = _get_event_tuple(data_db, "E.0.0.2")
     assert pd.title != "Updated Title"
 
     assert rollback_event_repo.update.call_count == 1
 
 
 def test_update_event_when_not_found(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_event = create_event_write_dto(
         title="Updated Title",
     )
@@ -134,9 +134,9 @@ def test_update_event_when_not_found(
 
 
 def test_update_event_when_db_error(
-    client: TestClient, test_db: Session, bad_event_repo, user_header_token
+    client: TestClient, data_db: Session, bad_event_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
 
     new_event = create_event_write_dto(
         title="Updated Title",
