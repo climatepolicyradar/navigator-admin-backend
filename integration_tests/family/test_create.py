@@ -1,8 +1,9 @@
 from typing import Optional
 
 from db_client.models.dfce.collection import CollectionFamily
-from db_client.models.dfce.family import Family, Slug
+from db_client.models.dfce.family import Family, FamilyCorpus, FamilyOrganisation, Slug
 from db_client.models.dfce.metadata import FamilyMetadata
+from db_client.models.organisation.corpus import Corpus
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -24,15 +25,17 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_201_CREATED
-    import_id = response.json()
-    assert import_id == "CCLW.family.i00000001.n0000"
-    actual_family = data_db.query(Family).filter(Family.import_id == import_id).one()
+    expected_import_id = "CCLW.family.i00000001.n0000"
+    assert response.json() == expected_import_id
+    actual_family = (
+        data_db.query(Family).filter(Family.import_id == expected_import_id).one()
+    )
 
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
     metadata = (
         data_db.query(FamilyMetadata)
-        .filter(FamilyMetadata.family_import_id == import_id)
+        .filter(FamilyMetadata.family_import_id == expected_import_id)
         .one()
     )
     assert metadata.value is not None
@@ -40,11 +43,28 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
 
     db_collection: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)
-        .filter(CollectionFamily.family_import_id == "CCLW.family.i00000001.n0000")
+        .filter(CollectionFamily.family_import_id == expected_import_id)
         .all()
     )
+    assert db_collection is not None
     assert len(db_collection) == 1
     assert db_collection[0].collection_import_id == "C.0.0.3"
+
+    # New schema tests.
+    fc = (
+        data_db.query(FamilyCorpus)
+        .filter(FamilyCorpus.family_import_id == expected_import_id)
+        .all()
+    )
+    assert len(fc) == 1
+    assert fc[-1].corpus_import_id is not None
+    org_id = (
+        data_db.query(FamilyOrganisation.organisation_id)
+        .filter(FamilyOrganisation.family_import_id == expected_import_id)
+        .scalar()
+    )
+    corpus = data_db.query(Corpus).filter(Corpus.organisation_id == org_id).one()
+    assert fc[-1].corpus_import_id == corpus.import_id
 
 
 def test_create_family_when_not_authorised(client: TestClient, data_db: Session):
