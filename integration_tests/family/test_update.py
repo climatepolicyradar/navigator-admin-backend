@@ -1,18 +1,20 @@
 from typing import Optional
 
 from db_client.models.dfce.collection import CollectionFamily
-from db_client.models.dfce.family import Family, FamilyCategory, Slug
+from db_client.models.dfce.family import Family, FamilyCategory, Geography, Slug
 from db_client.models.dfce.metadata import FamilyMetadata
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
+from integration_tests.setup_db import DEFAULT_GEO_ID, EXPECTED_FAMILIES, setup_db
 from unit_tests.helpers.family import create_family_write_dto
 
+USA_GEO_ID = 212
 
-def test_update_family(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+
+def test_update_family(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="apple",
         summary="just a test",
@@ -35,18 +37,18 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
     assert data["collections"] == ["C.0.0.3"]
 
     db_family: Family = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
     )
     assert db_family.title == "apple"
     assert db_family.description == "just a test"
-    assert db_family.geography_id == 210
+    assert db_family.geography_id == USA_GEO_ID
     assert db_family.family_category == "UNFCCC"
-    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
     assert str(db_slug[-1].name) == data["slug"]
 
     db_collection: Optional[list[CollectionFamily]] = (
-        test_db.query(CollectionFamily)
+        data_db.query(CollectionFamily)
         .filter(CollectionFamily.collection_import_id == "C.0.0.3")
         .all()
     )
@@ -54,8 +56,8 @@ def test_update_family(client: TestClient, test_db: Session, user_header_token):
     assert db_collection[0].family_import_id == "A.0.0.1"
 
 
-def test_update_family_slug(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_update_family_slug(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="",
@@ -64,6 +66,7 @@ def test_update_family_slug(client: TestClient, test_db: Session, user_header_to
         metadata={"color": ["red"], "size": [3]},
         collections=["C.0.0.2"],
     )
+
     response = client.put(
         "/api/v1/families/A.0.0.1",
         json=new_family.model_dump(),
@@ -79,18 +82,22 @@ def test_update_family_slug(client: TestClient, test_db: Session, user_header_to
     assert data["collections"] == ["C.0.0.2"]
 
     db_family: Family = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
     )
     assert db_family.title == "Updated Title"
     assert db_family.description == ""
-    assert db_family.geography_id == 1
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    )
+
+    assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
-    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 2
     assert str(db_slug[-1].name).startswith("updated-title")
 
     db_collection: Optional[list[CollectionFamily]] = (
-        test_db.query(CollectionFamily)
+        data_db.query(CollectionFamily)
         .filter(CollectionFamily.family_import_id == "A.0.0.1")
         .all()
     )
@@ -99,9 +106,9 @@ def test_update_family_slug(client: TestClient, test_db: Session, user_header_to
 
 
 def test_update_family_remove_collections(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="apple",
         summary="",
@@ -125,18 +132,21 @@ def test_update_family_remove_collections(
     assert data["collections"] == []
 
     db_family: Family = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
     )
     assert db_family.title == "apple"
     assert db_family.description == ""
-    assert db_family.geography_id == 1
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    )
+    assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
-    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
     assert str(db_slug[-1].name) == "Slug1"
 
     db_collection: CollectionFamily = (
-        test_db.query(CollectionFamily)
+        data_db.query(CollectionFamily)
         .filter(CollectionFamily.family_import_id == "A.0.0.1")
         .one_or_none()
     )
@@ -144,9 +154,9 @@ def test_update_family_remove_collections(
 
 
 def test_update_family_append_collections(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="apple",
         summary="",
@@ -170,18 +180,22 @@ def test_update_family_append_collections(
     assert data["collections"] == ["C.0.0.2", "C.0.0.3"]
 
     db_family: Family = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
     )
     assert db_family.title == "apple"
     assert db_family.description == ""
-    assert db_family.geography_id == 1
+
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    )
+    assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
-    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
     assert str(db_slug[-1].name) == "Slug1"
 
     db_collections: Optional[list[CollectionFamily]] = (
-        test_db.query(CollectionFamily)
+        data_db.query(CollectionFamily)
         .filter(CollectionFamily.family_import_id == "A.0.0.1")
         .all()
     )
@@ -191,9 +205,9 @@ def test_update_family_append_collections(
 
 
 def test_update_family_when_user_org_different_to_family_org(
-    client: TestClient, test_db: Session, non_cclw_user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
@@ -215,18 +229,18 @@ def test_update_family_when_user_org_different_to_family_org(
     )
 
     db_family: Family = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
     )
     assert db_family.title == "apple orange banana"
     assert db_family.description == "apple"
-    assert db_family.geography_id == 1
+    assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == "UNFCCC"
 
 
 def test_update_family_when_collection_org_different_to_family_org(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_write_dto(
         metadata={"color": ["pink"], "size": [0]},
         collections=["C.0.0.1", "C.0.0.2", "C.0.0.3"],
@@ -244,18 +258,18 @@ def test_update_family_when_collection_org_different_to_family_org(
     )
 
     db_families: Optional[list[Family]] = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.1").all()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.1").all()
     )
     assert len(db_families) == 1
     db_family = db_families[0]
     assert db_family.title == "apple"
     assert db_family.description == ""
-    assert db_family.geography_id == 1
+    assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == "UNFCCC"
 
 
-def test_update_family_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_update_family_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
@@ -268,9 +282,9 @@ def test_update_family_when_not_authenticated(client: TestClient, test_db: Sessi
 
 
 def test_update_family_idempotent_when_ok(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     family = EXPECTED_FAMILIES[1]
     response = client.put(
         f"/api/v1/families/{family['import_id']}",
@@ -284,13 +298,13 @@ def test_update_family_idempotent_when_ok(
     assert data["geography"] == EXPECTED_FAMILIES[1]["geography"]
     assert data["category"] == EXPECTED_FAMILIES[1]["category"]
     db_family: Family = (
-        test_db.query(Family)
+        data_db.query(Family)
         .filter(Family.import_id == EXPECTED_FAMILIES[1]["import_id"])
         .one()
     )
     assert db_family.title == EXPECTED_FAMILIES[1]["title"]
     assert db_family.description == EXPECTED_FAMILIES[1]["summary"]
-    assert db_family.geography_id == 1
+    assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
 
 
@@ -332,9 +346,9 @@ def test_update_family_idempotent_when_ok(
 
 
 def test_update_family_when_not_found(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
@@ -351,9 +365,9 @@ def test_update_family_when_not_found(
 
 
 def test_update_family_when_db_error(
-    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+    client: TestClient, data_db: Session, bad_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
@@ -370,9 +384,9 @@ def test_update_family_when_db_error(
 
 
 def test_update_family__invalid_geo(
-    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+    client: TestClient, data_db: Session, bad_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
@@ -390,9 +404,9 @@ def test_update_family__invalid_geo(
 
 
 def test_update_family_metadata_if_changed(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     expected_meta = {"color": ["pink"], "size": [23]}
     response = client.get(
         "/api/v1/families/A.0.0.2",
@@ -411,7 +425,7 @@ def test_update_family_metadata_if_changed(
     assert expected_meta == data["metadata"]
 
     metadata: FamilyMetadata = (
-        test_db.query(FamilyMetadata)
+        data_db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == "A.0.0.2")
         .one()
     )

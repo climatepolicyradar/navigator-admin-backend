@@ -37,8 +37,8 @@ def _get_doc_tuple(
     return fd, pd
 
 
-def test_update_document(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_update_document(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="Translation",
         role="SUMMARY",
@@ -63,7 +63,7 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
     assert data["slug"].startswith("updated-title")
     assert data["user_language_name"] == "Ghotuo"
 
-    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
@@ -73,7 +73,7 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
 
     # Check the user language in the db
     lang = (
-        test_db.query(PhysicalDocumentLanguage)
+        data_db.query(PhysicalDocumentLanguage)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
         .one()
@@ -82,16 +82,16 @@ def test_update_document(client: TestClient, test_db: Session, user_header_token
 
     # Check slug is updated too
     slugs = (
-        test_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
+        data_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
     )
     last_slug = slugs[-1].name
     assert last_slug.startswith("updated-title")
 
 
 def test_update_document_no_source_url(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
 
     # Keep all values apart from the Source URL the same.
     new_document = DocumentWriteDTO(
@@ -117,7 +117,7 @@ def test_update_document_no_source_url(
     assert data["title"] == "big title1"
     assert data["source_url"] == new_document.source_url
 
-    fd, pd = _get_doc_tuple(test_db, "D.0.0.1")
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
@@ -127,7 +127,7 @@ def test_update_document_no_source_url(
 
     # Check the user language in the db
     _, lang = (
-        test_db.query(PhysicalDocumentLanguage, Language)
+        data_db.query(PhysicalDocumentLanguage, Language)
         .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
@@ -138,9 +138,9 @@ def test_update_document_no_source_url(
 
 
 def test_update_document_remove_variant(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
 
     # Keep all values apart from the variant the same.
     new_document = DocumentWriteDTO(
@@ -165,7 +165,7 @@ def test_update_document_remove_variant(
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
 
-    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name is None
     assert fd.document_role == "MAIN"
@@ -175,7 +175,7 @@ def test_update_document_remove_variant(
 
     # Check the user language in the db
     lang = (
-        test_db.query(PhysicalDocumentLanguage, Language)
+        data_db.query(PhysicalDocumentLanguage, Language)
         .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
@@ -185,9 +185,9 @@ def test_update_document_remove_variant(
 
 
 def test_update_document_remove_user_language(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
 
     # Keep all values apart from the language the same as in setup_db.py.
     new_document = DocumentWriteDTO(
@@ -212,7 +212,7 @@ def test_update_document_remove_user_language(
     assert data["title"] == "big title1"
     assert data["source_url"] == "http://update_source/"
 
-    fd, pd = _get_doc_tuple(test_db, "D.0.0.1")
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
@@ -221,7 +221,7 @@ def test_update_document_remove_user_language(
 
     # Check the user language in the db
     lang = (
-        test_db.query(PhysicalDocumentLanguage, Language)
+        data_db.query(PhysicalDocumentLanguage, Language)
         .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
@@ -231,8 +231,8 @@ def test_update_document_remove_user_language(
     assert data["user_language_name"] is None
 
 
-def test_update_document_when_not_authorised(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_update_document_when_not_authorised(client: TestClient, data_db: Session):
+    setup_db(data_db)
     new_document = create_document_write_dto(
         title="Updated Title",
     )
@@ -243,9 +243,9 @@ def test_update_document_when_not_authorised(client: TestClient, test_db: Sessio
 
 
 def test_update_document_idempotent(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     doc = EXPECTED_DOCUMENTS[0]
     document = {
         "variant_name": doc["variant_name"],
@@ -266,14 +266,14 @@ def test_update_document_idempotent(
     data = response.json()
     assert data["title"] == EXPECTED_DOCUMENTS[0]["title"]
 
-    _, pd = _get_doc_tuple(test_db, EXPECTED_DOCUMENTS[0]["import_id"])
+    _, pd = _get_doc_tuple(data_db, EXPECTED_DOCUMENTS[0]["import_id"])
     assert pd.title == EXPECTED_DOCUMENTS[0]["title"]
 
 
 def test_update_document_rollback(
-    client: TestClient, test_db: Session, rollback_document_repo, user_header_token
+    client: TestClient, data_db: Session, rollback_document_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_write_dto(
         title="Updated Title",
     )
@@ -284,16 +284,16 @@ def test_update_document_rollback(
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
-    _, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    _, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert pd.title != "Updated Title"
 
     assert rollback_document_repo.update.call_count == 1
 
 
 def test_update_document_when_not_found(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_write_dto(
         title="Updated Title",
     )
@@ -308,9 +308,9 @@ def test_update_document_when_not_found(
 
 
 def test_update_document_when_db_error(
-    client: TestClient, test_db: Session, bad_document_repo, user_header_token
+    client: TestClient, data_db: Session, bad_document_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
 
     new_document = create_document_write_dto(
         title="Updated Title",
@@ -327,9 +327,9 @@ def test_update_document_when_db_error(
 
 
 def test_update_document_blank_variant(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="",
         role="SUMMARY",
@@ -349,9 +349,9 @@ def test_update_document_blank_variant(
 
 
 def test_update_document_idempotent_user_language(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="Original Language",
         role="MAIN",
@@ -374,7 +374,7 @@ def test_update_document_idempotent_user_language(
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
 
-    fd, pd = _get_doc_tuple(test_db, "D.0.0.2")
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
@@ -384,7 +384,7 @@ def test_update_document_idempotent_user_language(
 
     # Check the user language in the db
     lang = (
-        test_db.query(PhysicalDocumentLanguage, Language)
+        data_db.query(PhysicalDocumentLanguage, Language)
         .join(Language, PhysicalDocumentLanguage.language_id == Language.id)
         .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
         .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)

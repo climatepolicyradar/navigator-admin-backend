@@ -1,7 +1,9 @@
+import os
 import uuid
 from typing import Dict
 
 import pytest
+from db_client import run_migrations
 from db_client.models.base import Base
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -72,11 +74,59 @@ def test_db(scope="function"):
 
 
 @pytest.fixture
-def client(test_db, monkeypatch):
+def data_db(scope="function"):
+    """
+    Create a fresh test database for each test.
+
+    This will populate the db using the alembic migrations.
+    Therefore it is slower but contains data.
+
+    Note: use with `data_client`
+
+    """
+    test_db_url = get_test_db_url()
+
+    # Create the test database
+    if database_exists(test_db_url):
+        drop_database(test_db_url)
+    create_database(test_db_url)
+    # Save DATABASE_URL
+    saved = os.environ["DATABASE_URL"]
+    os.environ["DATABASE_URL"] = test_db_url
+    test_session = None
+    connection = None
+    try:
+        test_engine = create_engine(test_db_url)
+        connection = test_engine.connect()
+
+        run_migrations(test_engine)
+
+        test_session_maker = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=test_engine,
+        )
+        test_session = test_session_maker()
+
+        # Run the tests
+        yield test_session
+    finally:
+        # restore DATABASE_URL
+        os.environ["DATABASE_URL"] = saved
+        if test_session is not None:
+            test_session.close()
+        if connection is not None:
+            connection.close()
+        # Drop the test database
+        drop_database(test_db_url)
+
+
+@pytest.fixture
+def client(data_db, monkeypatch):
     """Get a TestClient instance that reads/write to the test database."""
 
     def get_test_db():
-        return test_db
+        return data_db
 
     monkeypatch.setattr(db_session, "get_db", get_test_db)
 
