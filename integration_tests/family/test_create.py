@@ -33,7 +33,6 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
 
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
-    assert actual_family.organisation_id is not None
 
     metadata = (
         data_db.query(FamilyMetadata)
@@ -52,6 +51,14 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
     assert len(db_collection) == 1
     assert db_collection[0].collection_import_id == "C.0.0.3"
 
+    # Old schema test.
+    org_id = (
+        data_db.query(FamilyOrganisation.organisation_id)
+        .filter(FamilyOrganisation.family_import_id == expected_import_id)
+        .scalar()
+    )
+    assert org_id is not None
+
     # New schema tests.
     fc = (
         data_db.query(FamilyCorpus)
@@ -60,11 +67,6 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
     )
     assert len(fc) == 1
     assert fc[-1].corpus_import_id is not None
-    org_id = (
-        data_db.query(FamilyOrganisation.organisation_id)
-        .filter(FamilyOrganisation.family_import_id == expected_import_id)
-        .scalar()
-    )
     corpus = data_db.query(Corpus).filter(Corpus.organisation_id == org_id).one()
     assert fc[-1].corpus_import_id == corpus.import_id
 
