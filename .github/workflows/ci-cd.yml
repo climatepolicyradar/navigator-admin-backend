@@ -46,28 +46,19 @@ jobs:
   check-auto-tagging-will-work:
     if: ${{ ! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main') }}
     runs-on: ubuntu-latest
+    # User controlled input needs to be santitised beforehand e.g., by adding an
+    # intermediate env var to prevent the workflow being exposed to a critical
+    # command injection attack
+    env:
+      PR_BODY: "${{ github.event.pull_request.body }}"
+      PR_NUMBER: "${{ github.event.pull_request.number }}"
     steps:
-      - name: Dump GitHub context
-        shell: sh
-        env:
-          PR_BODY: "${{ github.event.pull_request.body }}"
-          PR_NUMBER: "${{ github.event.pull_request.number }}"
-        run: |
-          echo "$PR_BODY"
-          echo "$PR_NUMBER"
-
       - name: Determine new tag version
         id: determine_next_tag_from_pr
         uses: climatepolicyradar/get-next-tag-from-pr-body@main
-        # User controlled input needs to be santitised beforehand e.g., by adding an
-        # intermediate env var to prevent the workflow being exposed to a critical
-        # command injection attack
-        env:
-          PR_BODY: "${{ github.event.pull_request.body }}"
-          PR_NUMBER: "${{ github.event.pull_request.number }}"
         with:
-          body: "${PR_BODY}"
-          number: "${PR_NUMBER}"
+          body: "${{ env.PR_BODY }}"
+          number: "${{ env.PR_NUMBER }}"
 
       # - name: Echo next tag
       #   run: echo ${{ steps.determine_next_tag_from_pr.outputs.new_tag }}
