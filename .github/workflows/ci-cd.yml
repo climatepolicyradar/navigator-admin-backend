@@ -50,11 +50,14 @@ jobs:
       - name: Dump GitHub context
         shell: sh
         env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          PR_BODY: "${{ github.event.pull_request.body }}"
+          PR_NUMBER: "${{ github.event.pull_request.number }}"
+        run: |
+          echo "$PR_BODY"
+          echo "$PR_NUMBER"
 
       - name: Determine new tag version
-        id: determine_next_tag
+        id: determine_next_tag_from_pr
         uses: climatepolicyradar/get-next-tag-from-pr-body@main
         # User controlled input needs to be santitised beforehand e.g., by adding an
         # intermediate env var to prevent the workflow being exposed to a critical
@@ -67,7 +70,7 @@ jobs:
           pr_number: ${{ env.pr_number }}
 
       # - name: Echo next tag
-      #   run: echo ${{ steps.determine_next_tag.outputs.new_tag }}
+      #   run: echo ${{ steps.determine_next_tag_from_pr.outputs.new_tag }}
 
   build:
     if: ${{ ! startsWith(github.ref, 'refs/tags') }}
