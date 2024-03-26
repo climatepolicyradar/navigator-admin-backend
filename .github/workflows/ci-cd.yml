@@ -68,7 +68,7 @@ jobs:
           PR_BODY: "${{ github.event.pull_request.body }}"
           PR_NUMBER: "${{ github.event.pull_request.number }}"
         with:
-          pr_body: ${{ env.pr_body }}
+          pr_body: "${{ env.pr_body }}"
           pr_number: ${{ env.pr_number }}
 
       # - name: Echo next tag
