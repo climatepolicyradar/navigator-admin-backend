@@ -58,12 +58,18 @@ jobs:
           echo "${PR_BODY}"
           echo ${PR_NUMBER}
 
-      # - name: Determine new tag version
-      #   id: determine_next_tag
-      #   uses: climatepolicyradar/get-next-tag-from-pr-body@main
-      #   with:
-      #     pr_body: ${{ github.event.pull_request.body }}
-      #     pr_number: ${{ github.event.pull_request.number }}
+      - name: Determine new tag version
+        id: determine_next_tag
+        uses: climatepolicyradar/get-next-tag-from-pr-body@main
+        # User controlled input needs to be santitised beforehand e.g., by adding an
+        # intermediate env var to prevent the workflow being exposed to a critical
+        # command injection attack
+        env:
+          PR_BODY: "${{ github.event.pull_request.body }}"
+          PR_NUMBER: "${{ github.event.pull_request.number }}"
+        with:
+          pr_body: ${{ env.pr_body }}
+          pr_number: ${{ env.pr_number }}
 
       # - name: Echo next tag
       #   run: echo ${{ steps.determine_next_tag.outputs.new_tag }}
