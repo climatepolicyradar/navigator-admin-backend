@@ -1,8 +1,7 @@
 from pytest import MonkeyPatch
 
+import tests.unit_tests.mocks.repos.family_repo as mock_repo  # type: ignore
 from app.repository.protocols import FamilyRepo
-
-from . import family_repo as mock_repo
 
 mock_repo: FamilyRepo
 
