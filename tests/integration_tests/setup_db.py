@@ -1,4 +1,3 @@
-import os
 from typing import cast
 
 from db_client.models.dfce.collection import (
