@@ -304,10 +304,7 @@ def test_update_family_idempotent_when_ok(
     )
     assert db_family.title == EXPECTED_FAMILIES[1]["title"]
     assert db_family.description == EXPECTED_FAMILIES[1]["summary"]
-    expected_geo = (
-        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
-    )
-    assert db_family.geography_id == expected_geo.id
+    assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
 
 
