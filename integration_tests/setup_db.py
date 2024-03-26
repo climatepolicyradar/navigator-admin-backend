@@ -65,7 +65,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.3",
         "title": "title",
         "summary": "orange peas",
-        "geography": "South Asia",
+        "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [100], "color": ["blue"]},
