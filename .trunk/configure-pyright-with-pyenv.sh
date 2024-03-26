@@ -7,7 +7,7 @@ venv_name=$(grep -m 1 venv pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | 
 # Check if pyrightconfig already exists.
 if [[ ! -f pyrightconfig.json ]]; then
 	# Check if pyenv-pyright plugin is installed
-	if ! command -v pyenv >/dev/null; then
+	if ! command -v pyenv 1>/dev/null; then
 		echo "pyenv not installed. Please install pyenv..."
 		exit 1
 	fi
