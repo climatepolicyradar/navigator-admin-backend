@@ -24,10 +24,8 @@ from db_client.models.document.physical_document import (
     PhysicalDocumentLanguage,
 )
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.service import organisation
 
 DEFAULT_GEO_ID = 1
 EXPECTED_NUM_FAMILIES = 3
@@ -36,7 +34,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.1",
         "title": "apple",
         "summary": "",
-        "geography": "South Asia",
+        "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [3], "color": ["red"]},
@@ -52,7 +50,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.2",
         "title": "apple orange banana",
         "summary": "apple",
-        "geography": "South Asia",
+        "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [4], "color": ["green"]},

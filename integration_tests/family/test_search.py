@@ -58,8 +58,8 @@ def test_search_family_with_max_results(
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1
 
-    expected_ids = set(["A.0.0.2"])
-    assert ids_found.symmetric_difference(expected_ids) == set([])
+    # We cannot check the id returned as although the search is ordered
+    # it is based on modified time which can be the same.
 
 
 def test_search_family_when_not_authenticated(client: TestClient, data_db: Session):
