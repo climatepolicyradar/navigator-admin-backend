@@ -33,6 +33,8 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
 
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
+    assert actual_family.organisation_id is not None
+
     metadata = (
         data_db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == expected_import_id)
