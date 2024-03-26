@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 14.10 (Debian 14.10-1.pgdg120+1)
--- Dumped by pg_dump version 14.9 (Ubuntu 14.9-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 15.6 (Ubuntu 15.6-0ubuntu0.23.10.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -221,6 +221,34 @@ CREATE TABLE public.collection_organisation (
 ALTER TABLE public.collection_organisation OWNER TO navigator;
 
 --
+-- Name: corpus; Type: TABLE; Schema: public; Owner: navigator
+--
+
+CREATE TABLE public.corpus (
+    import_id text NOT NULL,
+    title text NOT NULL,
+    description text NOT NULL,
+    organisation_id integer NOT NULL,
+    corpus_type_name text NOT NULL
+);
+
+
+ALTER TABLE public.corpus OWNER TO navigator;
+
+--
+-- Name: corpus_type; Type: TABLE; Schema: public; Owner: navigator
+--
+
+CREATE TABLE public.corpus_type (
+    name text NOT NULL,
+    description text NOT NULL,
+    valid_metadata jsonb NOT NULL
+);
+
+
+ALTER TABLE public.corpus_type OWNER TO navigator;
+
+--
 -- Name: entity_counter; Type: TABLE; Schema: public; Owner: navigator
 --
 
@@ -273,6 +301,18 @@ CREATE TABLE public.family (
 
 
 ALTER TABLE public.family OWNER TO navigator;
+
+--
+-- Name: family_corpus; Type: TABLE; Schema: public; Owner: navigator
+--
+
+CREATE TABLE public.family_corpus (
+    family_import_id text NOT NULL,
+    corpus_import_id text NOT NULL
+);
+
+
+ALTER TABLE public.family_corpus OWNER TO navigator;
 
 --
 -- Name: family_document; Type: TABLE; Schema: public; Owner: navigator
@@ -385,8 +425,8 @@ CREATE TABLE public.geo_statistics (
     federal boolean NOT NULL,
     federal_details text NOT NULL,
     political_groups text NOT NULL,
-    global_emissions_percent double precision,
-    climate_risk_index double precision,
+    global_emissions_percent text,
+    climate_risk_index text,
     worldbank_income_group text NOT NULL,
     visibility_status text NOT NULL
 );
@@ -649,6 +689,7 @@ CREATE TABLE public.slug (
     name text NOT NULL,
     family_import_id text,
     family_document_import_id text,
+    created timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT ck_slug__must_reference_exactly_one_entity CHECK ((num_nonnulls(family_import_id, family_document_import_id) = 1))
 );
 
@@ -765,6 +806,22 @@ ALTER TABLE ONLY public.collection_organisation
 
 
 --
+-- Name: corpus pk_corpus; Type: CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.corpus
+    ADD CONSTRAINT pk_corpus PRIMARY KEY (import_id);
+
+
+--
+-- Name: corpus_type pk_corpus_type; Type: CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.corpus_type
+    ADD CONSTRAINT pk_corpus_type PRIMARY KEY (name);
+
+
+--
 -- Name: entity_counter pk_entity_counter; Type: CONSTRAINT; Schema: public; Owner: navigator
 --
 
@@ -778,6 +835,14 @@ ALTER TABLE ONLY public.entity_counter
 
 ALTER TABLE ONLY public.family
     ADD CONSTRAINT pk_family PRIMARY KEY (import_id);
+
+
+--
+-- Name: family_corpus pk_family_corpus; Type: CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.family_corpus
+    ADD CONSTRAINT pk_family_corpus PRIMARY KEY (family_import_id);
 
 
 --
@@ -905,7 +970,7 @@ ALTER TABLE ONLY public.physical_document
 --
 
 ALTER TABLE ONLY public.physical_document_language
-    ADD CONSTRAINT pk_physical_document_language PRIMARY KEY (language_id, document_id);
+    ADD CONSTRAINT pk_physical_document_language PRIMARY KEY (language_id, document_id, source);
 
 
 --
@@ -1046,11 +1111,43 @@ ALTER TABLE ONLY public.collection_organisation
 
 
 --
+-- Name: corpus fk_corpus__corpus_type_name__corpus_type; Type: FK CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.corpus
+    ADD CONSTRAINT fk_corpus__corpus_type_name__corpus_type FOREIGN KEY (corpus_type_name) REFERENCES public.corpus_type(name);
+
+
+--
+-- Name: corpus fk_corpus__organisation_id__organisation; Type: FK CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.corpus
+    ADD CONSTRAINT fk_corpus__organisation_id__organisation FOREIGN KEY (organisation_id) REFERENCES public.organisation(id);
+
+
+--
 -- Name: family fk_family__geography_id__geography; Type: FK CONSTRAINT; Schema: public; Owner: navigator
 --
 
 ALTER TABLE ONLY public.family
     ADD CONSTRAINT fk_family__geography_id__geography FOREIGN KEY (geography_id) REFERENCES public.geography(id);
+
+
+--
+-- Name: family_corpus fk_family_corpus__corpus_import_id__corpus; Type: FK CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.family_corpus
+    ADD CONSTRAINT fk_family_corpus__corpus_import_id__corpus FOREIGN KEY (corpus_import_id) REFERENCES public.corpus(import_id);
+
+
+--
+-- Name: family_corpus fk_family_corpus__family_import_id__family; Type: FK CONSTRAINT; Schema: public; Owner: navigator
+--
+
+ALTER TABLE ONLY public.family_corpus
+    ADD CONSTRAINT fk_family_corpus__family_import_id__family FOREIGN KEY (family_import_id) REFERENCES public.family(import_id);
 
 
 --
@@ -1240,4 +1337,3 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
-
