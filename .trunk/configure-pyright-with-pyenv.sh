@@ -13,7 +13,8 @@ if [[ ! -f pyrightconfig.json ]]; then
 	fi
 
 	pyenv_root=$(pyenv root)
-	if [ -z $(ls -A "${pyenv_root}"/plugins/pyenv-pyright) ]; then
+	dir_exists=$(ls -A "${pyenv_root}"/plugins/pyenv-pyright)
+	if [[ -z ${dir_exists} ]]; then
 		git clone https://github.com/alefpereira/pyenv-pyright.git "${pyenv_root}"/plugins/pyenv-pyright
 	fi
 
