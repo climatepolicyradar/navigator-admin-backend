@@ -1,7 +1,7 @@
 from typing import Optional
 
 from db_client.models.dfce.collection import CollectionFamily
-from db_client.models.dfce.family import Family, FamilyCategory, Slug, Geography
+from db_client.models.dfce.family import Family, FamilyCategory, Geography, Slug
 from db_client.models.dfce.metadata import FamilyMetadata
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from integration_tests.setup_db import DEFAULT_GEO_ID, EXPECTED_FAMILIES, setup_db
 from unit_tests.helpers.family import create_family_write_dto
-
 
 USA_GEO_ID = 212
 
@@ -87,7 +86,9 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
     )
     assert db_family.title == "Updated Title"
     assert db_family.description == ""
-    expected_geo = data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    )
 
     assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
@@ -135,7 +136,9 @@ def test_update_family_remove_collections(
     )
     assert db_family.title == "apple"
     assert db_family.description == ""
-    expected_geo = data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    )
     assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
@@ -182,7 +185,9 @@ def test_update_family_append_collections(
     assert db_family.title == "apple"
     assert db_family.description == ""
 
-    expected_geo = data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    )
     assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
@@ -299,7 +304,9 @@ def test_update_family_idempotent_when_ok(
     )
     assert db_family.title == EXPECTED_FAMILIES[1]["title"]
     assert db_family.description == EXPECTED_FAMILIES[1]["summary"]
-    expected_geo = data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+    )
     assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
 

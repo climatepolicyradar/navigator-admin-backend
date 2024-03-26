@@ -26,7 +26,6 @@ from db_client.models.document.physical_document import (
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
 
-
 DEFAULT_GEO_ID = 1
 EXPECTED_NUM_FAMILIES = 3
 EXPECTED_FAMILIES = [
@@ -246,7 +245,11 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     org = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
     # Remove default taxonomy from CCLW
     # org.taxonomy_collection
-    mo = test_db.query(MetadataOrganisation).filter(MetadataOrganisation.organisation_id==org.id).one()
+    mo = (
+        test_db.query(MetadataOrganisation)
+        .filter(MetadataOrganisation.organisation_id == org.id)
+        .one()
+    )
     test_db.delete(mo)
     another_org = Organisation(
         name="Another org",

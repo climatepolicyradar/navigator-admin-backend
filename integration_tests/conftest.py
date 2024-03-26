@@ -1,9 +1,9 @@
-import uuid
 import os
+import uuid
 from typing import Dict
 
-from db_client import run_migrations
 import pytest
+from db_client import run_migrations
 from db_client.models.base import Base
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
