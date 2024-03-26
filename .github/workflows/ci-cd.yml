@@ -66,8 +66,8 @@ jobs:
           PR_BODY: "${{ github.event.pull_request.body }}"
           PR_NUMBER: "${{ github.event.pull_request.number }}"
         with:
-          body: "${{ env.PR_BODY }}"
-          number: ${{ env.PR_NUMBER }}
+          body: "${PR_BODY}"
+          number: "${PR_NUMBER}"
 
       # - name: Echo next tag
       #   run: echo ${{ steps.determine_next_tag_from_pr.outputs.new_tag }}
