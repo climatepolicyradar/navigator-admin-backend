@@ -16,7 +16,7 @@ if [[ ! -f pyrightconfig.json ]]; then
 	if [ -z $(ls -A "${pyenv_root}"/plugins/pyenv-pyright) ]; then
 		git clone https://github.com/alefpereira/pyenv-pyright.git "${pyenv_root}"/plugins/pyenv-pyright
 	fi
-	
+
 	# Generate the pyrightconfig.json file.
 	pyenv pyright "${venv_name}"
 	pyenv local "${venv_name}"
