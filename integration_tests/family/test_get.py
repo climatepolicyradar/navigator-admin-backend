@@ -7,8 +7,8 @@ from integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 # --- GET ALL
 
 
-def test_get_all_families(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_get_all_families(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families",
         headers=user_header_token,
@@ -37,8 +37,8 @@ def test_get_all_families(client: TestClient, test_db: Session, user_header_toke
     assert expected_data[2] == EXPECTED_FAMILIES[2]
 
 
-def test_get_all_families_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_get_all_families_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families",
     )
@@ -48,8 +48,8 @@ def test_get_all_families_when_not_authenticated(client: TestClient, test_db: Se
 # --- GET
 
 
-def test_get_family(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_get_family(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/A.0.0.1",
         headers=user_header_token,
@@ -65,8 +65,8 @@ def test_get_family(client: TestClient, test_db: Session, user_header_token):
     assert expected_data == EXPECTED_FAMILIES[0]
 
 
-def test_get_family_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_get_family_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/A.0.0.1",
     )
@@ -74,9 +74,9 @@ def test_get_family_when_not_authenticated(client: TestClient, test_db: Session)
 
 
 def test_get_family_when_not_found(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/A.0.0.8",
         headers=user_header_token,
@@ -87,9 +87,9 @@ def test_get_family_when_not_found(
 
 
 def test_get_family_when_invalid_id(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/A008",
         headers=user_header_token,
@@ -101,9 +101,9 @@ def test_get_family_when_invalid_id(
 
 
 def test_get_family_when_db_error(
-    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+    client: TestClient, data_db: Session, bad_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/A.0.0.8",
         headers=user_header_token,

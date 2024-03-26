@@ -11,8 +11,8 @@ from integration_tests.setup_db import (
 # --- GET ALL
 
 
-def test_get_all_analytics(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_get_all_analytics(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/analytics",
         headers=user_header_token,
@@ -20,8 +20,8 @@ def test_get_all_analytics(client: TestClient, test_db: Session, user_header_tok
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_get_all_analytics_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_get_all_analytics_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/analytics",
     )
@@ -31,8 +31,8 @@ def test_get_all_analytics_when_not_authenticated(client: TestClient, test_db: S
 # --- GET SUMMARY
 
 
-def test_get_analytics_summary(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_get_analytics_summary(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/analytics/summary",
         headers=user_header_token,
@@ -49,9 +49,9 @@ def test_get_analytics_summary(client: TestClient, test_db: Session, user_header
 
 
 def test_get_analytics_summary_when_not_authenticated(
-    client: TestClient, test_db: Session
+    client: TestClient, data_db: Session
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/analytics/summary",
     )
@@ -59,9 +59,9 @@ def test_get_analytics_summary_when_not_authenticated(
 
 
 def test_get_analytics_summary_when_not_found(
-    client: TestClient, test_db: Session, collection_count_none, user_header_token
+    client: TestClient, data_db: Session, collection_count_none, user_header_token
 ):
-    setup_db(test_db, configure_empty=True)
+    setup_db(data_db, configure_empty=True)
     response = client.get(
         "/api/v1/analytics/summary",
         headers=user_header_token,
@@ -72,9 +72,9 @@ def test_get_analytics_summary_when_not_found(
 
 
 def test_get_analytics_when_collection_db_error(
-    client: TestClient, test_db: Session, bad_collection_repo, user_header_token
+    client: TestClient, data_db: Session, bad_collection_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/analytics/summary",
         headers=user_header_token,
@@ -85,9 +85,9 @@ def test_get_analytics_when_collection_db_error(
 
 
 def test_get_analytics_when_family_db_error(
-    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+    client: TestClient, data_db: Session, bad_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/analytics/summary",
         headers=user_header_token,
@@ -98,9 +98,9 @@ def test_get_analytics_when_family_db_error(
 
 
 def test_get_analytics_when_document_db_error(
-    client: TestClient, test_db: Session, bad_document_repo, user_header_token
+    client: TestClient, data_db: Session, bad_document_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/analytics/summary",
         headers=user_header_token,

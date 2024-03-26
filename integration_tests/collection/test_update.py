@@ -11,8 +11,8 @@ from integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
 from unit_tests.helpers.collection import create_collection_write_dto
 
 
-def test_update_collection(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_update_collection(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
@@ -28,24 +28,24 @@ def test_update_collection(client: TestClient, test_db: Session, user_header_tok
     assert data["description"] == "just a test"
 
     db_collection: Collection = (
-        test_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
+        data_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
     )
     assert db_collection.title == "Updated Title"
     assert db_collection.description == "just a test"
-    families = test_db.query(CollectionFamily).filter(
+    families = data_db.query(CollectionFamily).filter(
         CollectionFamily.collection_import_id == "C.0.0.2"
     )
     assert families.count() == 2
     org: CollectionOrganisation = (
-        test_db.query(CollectionOrganisation)
+        data_db.query(CollectionOrganisation)
         .filter(CollectionOrganisation.collection_import_id == "C.0.0.2")
         .one()
     )
     assert org is not None
 
 
-def test_update_collection_when_not_authorised(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_update_collection_when_not_authorised(client: TestClient, data_db: Session):
+    setup_db(data_db)
     new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
@@ -57,9 +57,9 @@ def test_update_collection_when_not_authorised(client: TestClient, test_db: Sess
 
 
 def test_update_collection_idempotent(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     collection = EXPECTED_COLLECTIONS[1]
     response = client.put(
         f"/api/v1/collections/{collection['import_id']}",
@@ -71,7 +71,7 @@ def test_update_collection_idempotent(
     assert data["title"] == EXPECTED_COLLECTIONS[1]["title"]
     assert data["description"] == EXPECTED_COLLECTIONS[1]["description"]
     db_collection: Collection = (
-        test_db.query(Collection)
+        data_db.query(Collection)
         .filter(Collection.import_id == EXPECTED_COLLECTIONS[1]["import_id"])
         .one()
     )
@@ -80,9 +80,9 @@ def test_update_collection_idempotent(
 
 
 def test_update_collection_rollback(
-    client: TestClient, test_db: Session, rollback_collection_repo, user_header_token
+    client: TestClient, data_db: Session, rollback_collection_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
@@ -95,17 +95,17 @@ def test_update_collection_rollback(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
     db_collection: Collection = (
-        test_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
+        data_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
     )
     assert db_collection.title != "Updated Title"
     assert db_collection.description != "just a test"
 
-    families = test_db.query(CollectionFamily).filter(
+    families = data_db.query(CollectionFamily).filter(
         CollectionFamily.collection_import_id == "C.0.0.2"
     )
     assert families.count() == 2
     org: CollectionOrganisation = (
-        test_db.query(CollectionOrganisation)
+        data_db.query(CollectionOrganisation)
         .filter(CollectionOrganisation.collection_import_id == "C.0.0.2")
         .one()
     )
@@ -114,9 +114,9 @@ def test_update_collection_rollback(
 
 
 def test_update_collection_when_not_found(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",
@@ -132,9 +132,9 @@ def test_update_collection_when_not_found(
 
 
 def test_update_collection_when_db_error(
-    client: TestClient, test_db: Session, bad_collection_repo, user_header_token
+    client: TestClient, data_db: Session, bad_collection_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_collection = create_collection_write_dto(
         title="Updated Title",
         description="just a test",

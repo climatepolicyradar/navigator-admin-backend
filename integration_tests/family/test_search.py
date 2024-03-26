@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from integration_tests.setup_db import setup_db
 
 
-def test_search_family_using_q(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_search_family_using_q(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/?q=orange",
         headers=user_header_token,
@@ -25,9 +25,9 @@ def test_search_family_using_q(client: TestClient, test_db: Session, user_header
 
 
 def test_search_family_with_specific_param(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/?summary=apple",
         headers=user_header_token,
@@ -44,9 +44,9 @@ def test_search_family_with_specific_param(
 
 
 def test_search_family_with_max_results(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/?q=orange&max_results=1",
         headers=user_header_token,
@@ -62,8 +62,8 @@ def test_search_family_with_max_results(
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_family_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_search_family_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/?q=orange",
     )
@@ -71,9 +71,9 @@ def test_search_family_when_not_authenticated(client: TestClient, test_db: Sessi
 
 
 def test_search_family_when_not_found(
-    client: TestClient, test_db: Session, user_header_token, caplog
+    client: TestClient, data_db: Session, user_header_token, caplog
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     with caplog.at_level(logging.INFO):
         response = client.get(
             "/api/v1/families/?q=chicken",
@@ -87,9 +87,9 @@ def test_search_family_when_not_found(
 
 
 def test_search_family_when_invalid_params(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/?wrong=param",
         headers=user_header_token,
@@ -100,9 +100,9 @@ def test_search_family_when_invalid_params(
 
 
 def test_search_family_when_db_error(
-    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+    client: TestClient, data_db: Session, bad_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/families/?q=error",
         headers=user_header_token,

@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from integration_tests.setup_db import setup_db
 
 
-def test_search_event(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_search_event(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/events/?q=Amended",
         headers=user_header_token,
@@ -24,8 +24,8 @@ def test_search_event(client: TestClient, test_db: Session, user_header_token):
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_event_when_not_authorised(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_search_event_when_not_authorised(client: TestClient, data_db: Session):
+    setup_db(data_db)
     response = client.get(
         "/api/v1/events/?q=cabbages",
     )
@@ -33,9 +33,9 @@ def test_search_event_when_not_authorised(client: TestClient, test_db: Session):
 
 
 def test_search_event_when_nothing_found(
-    client: TestClient, test_db: Session, user_header_token, caplog
+    client: TestClient, data_db: Session, user_header_token, caplog
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     with caplog.at_level(logging.INFO):
         response = client.get(
             "/api/v1/events/?q=lemon",
@@ -48,9 +48,9 @@ def test_search_event_when_nothing_found(
 
 
 def test_search_document_when_db_error(
-    client: TestClient, test_db: Session, bad_event_repo, user_header_token
+    client: TestClient, data_db: Session, bad_event_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/events/?q=lemon",
         headers=user_header_token,
@@ -62,9 +62,9 @@ def test_search_document_when_db_error(
 
 
 def test_search_document_with_max_results(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/events/?q=Amended&max_results=1",
         headers=user_header_token,
@@ -81,9 +81,9 @@ def test_search_document_with_max_results(
 
 
 def test_search_document_when_invalid_params(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     response = client.get(
         "/api/v1/events/?wrong=param",
         headers=user_header_token,

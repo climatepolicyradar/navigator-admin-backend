@@ -11,8 +11,8 @@ from integration_tests.setup_db import setup_db
 from unit_tests.helpers.family import create_family_create_dto
 
 
-def test_create_family(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_create_family(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     test_meta = {"color": ["blue"], "size": [888]}
     new_family = create_family_create_dto(
         title="Title",
@@ -26,12 +26,12 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
     assert response.status_code == status.HTTP_201_CREATED
     import_id = response.json()
     assert import_id == "CCLW.family.i00000001.n0000"
-    actual_family = test_db.query(Family).filter(Family.import_id == import_id).one()
+    actual_family = data_db.query(Family).filter(Family.import_id == import_id).one()
 
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
     metadata = (
-        test_db.query(FamilyMetadata)
+        data_db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == import_id)
         .one()
     )
@@ -39,7 +39,7 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
     assert metadata.value == test_meta
 
     db_collection: Optional[list[CollectionFamily]] = (
-        test_db.query(CollectionFamily)
+        data_db.query(CollectionFamily)
         .filter(CollectionFamily.family_import_id == "CCLW.family.i00000001.n0000")
         .all()
     )
@@ -47,8 +47,8 @@ def test_create_family(client: TestClient, test_db: Session, user_header_token):
     assert db_collection[0].collection_import_id == "C.0.0.3"
 
 
-def test_create_family_when_not_authorised(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_create_family_when_not_authorised(client: TestClient, data_db: Session):
+    setup_db(data_db)
     test_meta = {"color": "blue", "size": 888}
     new_family = create_family_create_dto(
         title="Title",
@@ -63,9 +63,9 @@ def test_create_family_when_not_authorised(client: TestClient, test_db: Session)
 
 
 def test_create_family_rollback(
-    client: TestClient, test_db: Session, rollback_family_repo, user_header_token
+    client: TestClient, data_db: Session, rollback_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
@@ -76,19 +76,19 @@ def test_create_family_rollback(
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     actual_family = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.9").one_or_none()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.9").one_or_none()
     )
     assert actual_family is None
-    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.9").all()
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.9").all()
     # Ensure no slug was created
     assert len(db_slug) == 0
     assert rollback_family_repo.create.call_count == 1
 
 
 def test_create_family_when_db_error(
-    client: TestClient, test_db: Session, bad_family_repo, user_header_token
+    client: TestClient, data_db: Session, bad_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
@@ -104,9 +104,9 @@ def test_create_family_when_db_error(
 
 
 def test_create_family_when_invalid_geo(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
@@ -121,9 +121,9 @@ def test_create_family_when_invalid_geo(
 
 
 def test_create_family_when_invalid_category(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
@@ -138,9 +138,9 @@ def test_create_family_when_invalid_category(
 
 
 def test_create_family_when_invalid_collection_id(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
@@ -157,9 +157,9 @@ def test_create_family_when_invalid_collection_id(
 
 
 def test_create_family_when_invalid_collection_org(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",

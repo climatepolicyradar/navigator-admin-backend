@@ -10,8 +10,8 @@ from integration_tests.setup_db import setup_db
 from unit_tests.helpers.document import create_document_create_dto
 
 
-def test_create_document(client: TestClient, test_db: Session, user_header_token):
-    setup_db(test_db)
+def test_create_document(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
@@ -21,7 +21,7 @@ def test_create_document(client: TestClient, test_db: Session, user_header_token
     assert response.status_code == status.HTTP_201_CREATED
     created_import_id = response.json()
     actual_fd = (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == created_import_id)
         .one()
     )
@@ -30,7 +30,7 @@ def test_create_document(client: TestClient, test_db: Session, user_header_token
     assert actual_fd.variant_name is not None
 
     actual_pd = (
-        test_db.query(PhysicalDocument)
+        data_db.query(PhysicalDocument)
         .filter(PhysicalDocument.id == actual_fd.physical_document_id)
         .one()
     )
@@ -38,7 +38,7 @@ def test_create_document(client: TestClient, test_db: Session, user_header_token
     assert actual_pd.title == "Title"
 
     slug = (
-        test_db.query(Slug)
+        data_db.query(Slug)
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
@@ -47,9 +47,9 @@ def test_create_document(client: TestClient, test_db: Session, user_header_token
 
 
 def test_create_document_null_variant(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(
         title="Title", family_import_id="A.0.0.3", variant_name=None
     )
@@ -61,7 +61,7 @@ def test_create_document_null_variant(
     assert response.status_code == status.HTTP_201_CREATED
     created_import_id = response.json()
     actual_fd = (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == created_import_id)
         .one()
     )
@@ -70,7 +70,7 @@ def test_create_document_null_variant(
     assert actual_fd.variant_name is None
 
     actual_pd = (
-        test_db.query(PhysicalDocument)
+        data_db.query(PhysicalDocument)
         .filter(PhysicalDocument.id == actual_fd.physical_document_id)
         .one()
     )
@@ -78,7 +78,7 @@ def test_create_document_null_variant(
     assert actual_pd.title == "Title"
 
     slug = (
-        test_db.query(Slug)
+        data_db.query(Slug)
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
@@ -87,9 +87,9 @@ def test_create_document_null_variant(
 
 
 def test_create_document_null_user_language_name(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(
         title="Title", family_import_id="A.0.0.3", user_language_name=None
     )
@@ -102,21 +102,21 @@ def test_create_document_null_user_language_name(
 
     created_import_id = response.json()
     actual_fd = (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == created_import_id)
         .one()
     )
     assert actual_fd is not None
 
     language = (
-        test_db.query(PhysicalDocumentLanguage)
+        data_db.query(PhysicalDocumentLanguage)
         .filter(PhysicalDocumentLanguage.document_id == actual_fd.physical_document_id)
         .one_or_none()
     )
     assert language is None
 
     actual_pd = (
-        test_db.query(PhysicalDocument)
+        data_db.query(PhysicalDocument)
         .filter(PhysicalDocument.id == actual_fd.physical_document_id)
         .one()
     )
@@ -124,7 +124,7 @@ def test_create_document_null_user_language_name(
     assert actual_pd.title == "Title"
 
     slug = (
-        test_db.query(Slug)
+        data_db.query(Slug)
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
@@ -133,9 +133,9 @@ def test_create_document_null_user_language_name(
 
 
 def test_create_document_null_source_url(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(
         title="Title", family_import_id="A.0.0.3", source_url=None
     )
@@ -147,7 +147,7 @@ def test_create_document_null_source_url(
     assert response.status_code == status.HTTP_201_CREATED
     created_import_id = response.json()
     actual_fd = (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == created_import_id)
         .one()
     )
@@ -155,7 +155,7 @@ def test_create_document_null_source_url(
     assert actual_fd is not None
 
     actual_pd = (
-        test_db.query(PhysicalDocument)
+        data_db.query(PhysicalDocument)
         .filter(PhysicalDocument.id == actual_fd.physical_document_id)
         .one()
     )
@@ -163,7 +163,7 @@ def test_create_document_null_source_url(
     assert actual_pd.source_url is None
 
     slug = (
-        test_db.query(Slug)
+        data_db.query(Slug)
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
@@ -171,8 +171,8 @@ def test_create_document_null_source_url(
     assert slug.name.startswith("title")
 
 
-def test_create_document_when_not_authenticated(client: TestClient, test_db: Session):
-    setup_db(test_db)
+def test_create_document_when_not_authenticated(client: TestClient, data_db: Session):
+    setup_db(data_db)
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
@@ -182,9 +182,9 @@ def test_create_document_when_not_authenticated(client: TestClient, test_db: Ses
 
 
 def test_create_document_rollback(
-    client: TestClient, test_db: Session, rollback_document_repo, user_header_token
+    client: TestClient, data_db: Session, rollback_document_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
@@ -193,7 +193,7 @@ def test_create_document_rollback(
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     actual_fd = (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == "A.0.0.9")
         .one_or_none()
     )
@@ -202,9 +202,9 @@ def test_create_document_rollback(
 
 
 def test_create_document_when_db_error(
-    client: TestClient, test_db: Session, bad_document_repo, user_header_token
+    client: TestClient, data_db: Session, bad_document_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
@@ -218,9 +218,9 @@ def test_create_document_when_db_error(
 
 
 def test_create_document_when_family_invalid(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(title="Title", family_import_id="invalid")
     response = client.post(
         "/api/v1/documents",
@@ -233,9 +233,9 @@ def test_create_document_when_family_invalid(
 
 
 def test_create_document_when_family_missing(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(
         title="Title",
     )
@@ -252,9 +252,9 @@ def test_create_document_when_family_missing(
 
 
 def test_create_document_when_empty_variant(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(title="Empty variant", variant_name="")
     response = client.post(
         "/api/v1/documents",
@@ -267,9 +267,9 @@ def test_create_document_when_empty_variant(
 
 
 def test_create_document_when_invalid_variant(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(
         title="Title", family_import_id="A.0.0.3", variant_name="Invalid"
     )
@@ -284,9 +284,9 @@ def test_create_document_when_invalid_variant(
 
 
 def test_document_status_is_created_on_create(
-    client: TestClient, test_db: Session, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_document = create_document_create_dto(title="Title", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/documents",
@@ -296,7 +296,7 @@ def test_document_status_is_created_on_create(
     assert response.status_code == status.HTTP_201_CREATED
     created_import_id = response.json()
     actual_fd = (
-        test_db.query(FamilyDocument)
+        data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == created_import_id)
         .one()
     )
