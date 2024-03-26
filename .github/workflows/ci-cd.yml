@@ -55,10 +55,10 @@ jobs:
     steps:
       - name: Determine new tag version
         id: determine_next_tag_from_pr
-        uses: climatepolicyradar/get-next-tag-from-pr-body@main
+        uses: climatepolicyradar/get-next-tag-from-pr-body@PDCT-851/fail-the-auto-tagging-build-during-a-pr-if-no-semver-boxes-ticked
         with:
-          PR_BODY: "${{ env.PR_BODY }}"
-          PR_NUMBER: "${{ env.PR_NUMBER }}"
+          pr_body: "${{ env.PR_BODY }}"
+          pr_number: "${{ env.PR_NUMBER }}"
 
       # - name: Echo next tag
       #   run: echo ${{ steps.determine_next_tag_from_pr.outputs.new_tag }}
