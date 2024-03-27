@@ -56,7 +56,7 @@ jobs:
           pr_body: "${{ env.PR_BODY }}"
           pr_number: "${{ github.event.pull_request.number }}"
 
-      - name: Next tag deduced
+      - name: Next tag found
         run: echo ${{ steps.determine_next_tag_from_pr.outputs.new_tag }}
 
   build:
