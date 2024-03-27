@@ -114,6 +114,7 @@ jobs:
 
   release:
     needs: tag
+    if: ${{ needs.tag.outputs.new_tag != 'Skip' }}
     permissions:
       contents: write
     uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@main
