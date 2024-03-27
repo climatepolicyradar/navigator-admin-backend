@@ -30,12 +30,13 @@ build_dev:
 	docker compose build
 
 unit_test:
-	docker compose run --rm navigator-admin-backend pytest -vvv unit_tests
+	docker compose run --rm navigator-admin-backend pytest -vvv tests/unit_tests
 
 integration_test:
-	docker compose run --rm navigator-admin-backend pytest -vvv integration_tests
+	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests
 
-test: unit_test integration_test
+test:
+	docker compose run --rm navigator-admin-backend pytest -vvv tests
 
 run: 
 	docker compose -f docker-compose.yml up -d --remove-orphans
