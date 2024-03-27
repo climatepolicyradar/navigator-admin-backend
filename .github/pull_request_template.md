@@ -12,6 +12,7 @@ Please include:
 Please select the option below that is most relevant from the list below. This
 will be used to generate the next tag version name during auto-tagging.
 
+- [ ] Skip auto-tagging
 - [ ] Patch
 - [ ] Minor version
 - [ ] Major version
