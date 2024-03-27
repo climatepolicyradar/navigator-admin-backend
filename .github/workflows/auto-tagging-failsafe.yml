@@ -19,28 +19,6 @@ jobs:
     env:
       PR_BODY: "${{ github.event.pull_request.body }}"
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
-
-      - name: Debug
-        run: |
-          echo "${{ github.event.pull_request }}"
-          echo "${PR_BODY}"
-
       - name: Determine new tag version from PR body
         id: determine_next_tag_from_pr
         uses: climatepolicyradar/get-next-tag-from-pr-body@PDCT-851/fail-the-auto-tagging-build-during-a-pr-if-no-semver-boxes-ticked
