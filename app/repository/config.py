@@ -9,9 +9,8 @@ from db_client.models.dfce.family import (
     Variant,
 )
 from db_client.models.dfce.geography import Geography
-from db_client.models.dfce.metadata import MetadataOrganisation, MetadataTaxonomy
 from db_client.models.document.physical_document import Language
-from db_client.models.organisation.users import Organisation
+from db_client.models.organisation import Corpus, CorpusType, Organisation
 from sqlalchemy.orm import Session
 
 from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData
@@ -55,12 +54,12 @@ def _get_organisation_taxonomy_by_name(
     :return TaxonomyConfig: the TaxonomyConfig from the db
     """
     metadata = (
-        db.query(MetadataTaxonomy.valid_metadata)
+        db.query(CorpusType.valid_metadata)
         .join(
-            MetadataOrganisation,
-            MetadataOrganisation.taxonomy_id == MetadataTaxonomy.id,
+            Corpus,
+            Corpus.corpus_type_name == CorpusType.name,
         )
-        .join(Organisation, Organisation.id == MetadataOrganisation.organisation_id)
+        .join(Organisation, Organisation.id == Corpus.organisation_id)
         .filter_by(name=org_name)
         .one_or_none()
     )

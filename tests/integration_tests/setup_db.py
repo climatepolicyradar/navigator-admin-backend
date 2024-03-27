@@ -23,6 +23,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
+from db_client.models.organisation import Corpus, CorpusType
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
 
@@ -243,7 +244,8 @@ def _get_org_id_from_name(test_db: Session, name: str) -> int:
 def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Now an organisation
     org = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
-    # Remove default taxonomy from CCLW
+
+    # Remove default taxonomy from CCLW - old schema
     # org.taxonomy_collection
     mo = (
         test_db.query(MetadataOrganisation)
@@ -251,6 +253,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         .one()
     )
     test_db.delete(mo)
+
     another_org = Organisation(
         name="Another org",
         description="because we will have more than one org",
@@ -391,14 +394,41 @@ def _setup_family_data(
     test_db.add(tax)
     test_db.flush()
 
-    # Now a MetadataOrganisation
-    # Remove the standard CCLW taxonomy
+    # Old Schema modification (to be removed)
+    # MetadataOrganisation
     mo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=default_org_id)
     test_db.add(mo)
     test_db.flush()
 
     omo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=other_org_id)
     test_db.add(omo)
+    test_db.flush()
+
+    # New Schema modification
+    # CorpusType
+    cclw_ct = (
+        test_db.query(CorpusType)
+        .join(Corpus, Corpus.corpus_type_name == CorpusType.name)
+        .filter(Corpus.organisation_id == default_org_id)
+        .one()
+    )
+    cclw_ct.valid_metadata = tax.valid_metadata
+    test_db.add(cclw_ct)
+    test_db.flush()
+
+    test_db.add(
+        CorpusType(name="other-type", description="", valid_metadata=tax.valid_metadata)
+    )
+    test_db.flush()
+    test_db.add(
+        Corpus(
+            import_id="OTHER.corpus.1.0",
+            title="Test Corpus",
+            description="",
+            organisation_id=other_org_id,
+            corpus_type_name="other-type",
+        )
+    )
     test_db.flush()
 
     # Now add the metadata onto the families
