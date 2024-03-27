@@ -37,11 +37,8 @@ jobs:
       - name: Build docker compose
         run: make build_dev
 
-      - name: Run Unit Tests
-        run: make unit_test
-
-      - name: Run Integration Tests
-        run: make integration_test
+      - name: Run Unit & Integration Tests
+        run: make test
 
   check-auto-tagging-will-work:
     if: ${{ ! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main') }}
@@ -51,17 +48,16 @@ jobs:
     # command injection attack
     env:
       PR_BODY: "${{ github.event.pull_request.body }}"
-      PR_NUMBER: "${{ github.event.pull_request.number }}"
     steps:
       - name: Determine new tag version
         id: determine_next_tag_from_pr
         uses: climatepolicyradar/get-next-tag-from-pr-body@PDCT-851/fail-the-auto-tagging-build-during-a-pr-if-no-semver-boxes-ticked
         with:
           pr_body: "${{ env.PR_BODY }}"
-          pr_number: "${{ env.PR_NUMBER }}"
+          pr_number: "${{ github.event.pull_request.number }}"
 
-      # - name: Echo next tag
-      #   run: echo ${{ steps.determine_next_tag_from_pr.outputs.new_tag }}
+      - name: Echo next tag
+        run: echo ${{ steps.determine_next_tag_from_pr.outputs.new_tag }}
 
   build:
     if: ${{ ! startsWith(github.ref, 'refs/tags') }}
