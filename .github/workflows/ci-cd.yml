@@ -49,6 +49,12 @@ jobs:
     env:
       PR_BODY: "${{ github.event.pull_request.body }}"
     steps:
+      - name: Debug
+        run: |
+          echo "${GITHUB_CONTEXT}"
+          echo "${{ github.event.pull_request }}"
+          echo "${PR_BODY}"
+
       - name: Determine new tag version from PR body
         id: determine_next_tag_from_pr
         uses: climatepolicyradar/get-next-tag-from-pr-body@PDCT-851/fail-the-auto-tagging-build-during-a-pr-if-no-semver-boxes-ticked
