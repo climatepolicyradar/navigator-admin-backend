@@ -6,13 +6,27 @@ on:
     branches:
       - main
   pull_request:
+    # By default, a workflow only runs when a pull_request event's activity type is opened,
+    # synchronize, or reopened.
+    types: [opened, synchronize, reopened, edited]
     branches:
       - main
 
 permissions: read-all
 
 jobs:
+  check-auto-tagging-will-work:
+    if: |
+      github.event_name == 'pull_request' &&
+      (! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main'))
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/check-auto-tagging-will-work.yml@v3
+
   code-quality:
+    if: |
+      always() &&
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+    needs:
+      - check-auto-tagging-will-work
     permissions:
       # For trunk to post annotations
       checks: write
@@ -21,6 +35,11 @@ jobs:
     uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@v3
 
   test:
+    if: |
+      always() &&
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+    needs:
+      - check-auto-tagging-will-work
     runs-on: ubuntu-latest
     steps:
       - name: Install latest Docker Compose
