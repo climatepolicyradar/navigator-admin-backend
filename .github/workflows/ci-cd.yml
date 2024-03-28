@@ -39,6 +39,8 @@ jobs:
           fi
 
   code-quality:
+    needs:
+      - check-auto-tagging-will-work
     permissions:
       # For trunk to post annotations
       checks: write
@@ -48,6 +50,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    needs:
+      - check-auto-tagging-will-work
     if: ${{ github.event_name == 'pull_request' && github.event.action != 'edited' }}
     steps:
       - name: Install latest Docker Compose
