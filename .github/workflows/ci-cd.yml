@@ -11,7 +11,6 @@ on:
 
 permissions: read-all
 
-# https://github.com/marketplace/actions/docker-layer-caching
 jobs:
   code-quality:
     permissions:
@@ -19,7 +18,7 @@ jobs:
       checks: write
       # For repo checkout
       contents: read
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@v1
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@v3
 
   test:
     runs-on: ubuntu-latest
@@ -93,7 +92,7 @@ jobs:
       - code-quality
       - test
     if: ${{ startsWith(github.ref, 'refs/tags') }}
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@v1
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@v3
     secrets: inherit
     with:
       repo-name: navigator-admin-backend
@@ -103,7 +102,7 @@ jobs:
     needs: build
     permissions:
       contents: write
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/tag.yml@v1
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/tag.yml@v3
     with:
       repo-name: navigator-admin-backend
       semver-tag: main-${GITHUB_SHA::8}
@@ -117,6 +116,6 @@ jobs:
     if: ${{ needs.tag.outputs.new_tag != 'Skip' }}
     permissions:
       contents: write
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@v1
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@v3
     with:
       new_tag: ${{ needs.tag.outputs.new_tag }}
