@@ -52,7 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - check-auto-tagging-will-work
-    if: ${{ github.event_name == 'pull_request' && github.event.action != 'edited' }}
     steps:
       - name: Install latest Docker Compose
         uses: ndeloof/install-compose-action@v0.0.1
