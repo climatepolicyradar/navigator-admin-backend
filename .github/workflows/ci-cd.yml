@@ -6,6 +6,9 @@ on:
     branches:
       - main
   pull_request:
+    # By default, a workflow only runs when a pull_request event's activity type is opened,
+    # synchronize, or reopened.
+    types: [opened, synchronize, reopened, edited]
     branches:
       - main
 
@@ -23,6 +26,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'edited' }}
     steps:
       - name: Install latest Docker Compose
         uses: ndeloof/install-compose-action@v0.0.1
