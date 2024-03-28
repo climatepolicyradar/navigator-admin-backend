@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Determine new tag version from PR body
         id: determine_next_tag_from_pr
-        uses: climatepolicyradar/get-next-tag-from-pr-body@v2
+        uses: climatepolicyradar/get-next-tag-from-pr-body@main
         with:
           pr_body: "${{ env.PR_BODY }}"
           pr_number: "${{ github.event.pull_request.number }}"
