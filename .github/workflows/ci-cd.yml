@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    tags: ["v*"]
+    tags: [v*]
     branches:
       - main
   pull_request:
@@ -37,11 +37,8 @@ jobs:
       - name: Build docker compose
         run: make build_dev
 
-      - name: Run Unit Tests
-        run: make unit_test
-
-      - name: Run Integration Tests
-        run: make integration_test
+      - name: Run Unit & Integration Tests
+        run: make test
 
   build:
     if: ${{ ! startsWith(github.ref, 'refs/tags') }}
@@ -117,6 +114,7 @@ jobs:
 
   release:
     needs: tag
+    if: ${{ needs.tag.outputs.new_tag != 'Skip' }}
     permissions:
       contents: write
     uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@main
