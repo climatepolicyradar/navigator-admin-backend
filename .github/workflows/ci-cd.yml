@@ -16,6 +16,28 @@ permissions: read-all
 
 # https://github.com/marketplace/actions/docker-layer-caching
 jobs:
+  check-auto-tagging-will-work:
+    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'edited') && (! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main')) }}
+    runs-on: ubuntu-latest
+    # User controlled input needs to be santitised beforehand e.g., by adding an
+    # intermediate env var to prevent the workflow being exposed to a critical
+    # command injection attack
+    env:
+      PR_BODY: "${{ github.event.pull_request.body }}"
+    steps:
+      - name: Determine new tag version from PR body
+        id: determine_next_tag_from_pr
+        uses: climatepolicyradar/get-next-tag-from-pr-body@v2
+        with:
+          pr_body: "${{ env.PR_BODY }}"
+          pr_number: "${{ github.event.pull_request.number }}"
+
+      - name: Next tag found?
+        run: |
+          if [[ -z "${{ steps.determine_next_tag_from_pr.outputs.new_tag }}" ]]; then
+            exit 1;
+          fi
+
   code-quality:
     permissions:
       # For trunk to post annotations
