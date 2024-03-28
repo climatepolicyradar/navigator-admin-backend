@@ -17,7 +17,7 @@ permissions: read-all
 # https://github.com/marketplace/actions/docker-layer-caching
 jobs:
   check-auto-tagging-will-work:
-    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'edited') && (! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main')) }}
+    if: ${{ (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'edited')) && (! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main')) }}
     runs-on: ubuntu-latest
     # User controlled input needs to be santitised beforehand e.g., by adding an
     # intermediate env var to prevent the workflow being exposed to a critical
