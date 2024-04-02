@@ -44,10 +44,9 @@ def _get_query(db: Session) -> Query:
         db.query(Family, Geography, FamilyMetadata, Organisation)
         .join(Geography, Family.geography_id == Geography.id)
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
-        .join(
-            FamilyOrganisation, FamilyOrganisation.family_import_id == Family.import_id
-        )
-        .join(Organisation, FamilyOrganisation.organisation_id == Organisation.id)
+        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+        .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Corpus.organisation_id == Organisation.id)
     )
 
 
@@ -62,6 +61,7 @@ def _family_org_from_dto(
             geography_id=geo_id,
             family_category=dto.category,
         ),
+        # TODO: Remove use of FamilyOrganisation
         FamilyOrganisation(family_import_id="", organisation_id=org_id),
     )
 
@@ -383,7 +383,7 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     # tax to be removed in PDCT-937.
     tax = (
         db.query(MetadataOrganisation)
-        .filter(MetadataOrganisation.organisation_id == org_id)
+        .filter(MetadataOrganisation.organisation_id == org_id)  # TODO: Remove
         .one()
     )
     db.add(
@@ -457,8 +457,9 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
 
     return (
         db.query(Organisation)
-        .join(FamilyOrganisation, FamilyOrganisation.organisation_id == Organisation.id)
-        .filter(FamilyOrganisation.family_import_id == family_import_id)
+        .join(Corpus, Corpus.organisation_id == Organisation.id)
+        .join(FamilyCorpus, FamilyCorpus.corpus_import_id == Corpus.import_id)
+        .filter(FamilyCorpus.family_import_id == family_import_id)
         .group_by(Organisation.id)
         .one()
     )

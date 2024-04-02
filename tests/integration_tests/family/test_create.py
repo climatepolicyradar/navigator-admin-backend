@@ -53,8 +53,10 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
 
     # Old schema test.
     org_id = (
-        data_db.query(FamilyOrganisation.organisation_id)
-        .filter(FamilyOrganisation.family_import_id == expected_import_id)
+        data_db.query(FamilyOrganisation.organisation_id)  # To be removed
+        .filter(
+            FamilyOrganisation.family_import_id == expected_import_id
+        )  # To be removed
         .scalar()
     )
     assert org_id is not None
