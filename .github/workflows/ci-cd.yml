@@ -2,26 +2,44 @@ name: CI/CD
 
 on:
   push:
-    tags: ["v*"]
+    tags: [v*]
     branches:
       - main
   pull_request:
+    # By default, a workflow only runs when a pull_request event's activity type is opened,
+    # synchronize, or reopened.
+    types: [opened, synchronize, reopened, edited]
     branches:
       - main
 
 permissions: read-all
 
-# https://github.com/marketplace/actions/docker-layer-caching
 jobs:
+  check-auto-tagging-will-work:
+    if: |
+      github.event_name == 'pull_request' &&
+      (! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main'))
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/check-auto-tagging-will-work.yml@v3
+
   code-quality:
+    if: |
+      always() &&
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+    needs:
+      - check-auto-tagging-will-work
     permissions:
       # For trunk to post annotations
       checks: write
       # For repo checkout
       contents: read
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@main
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@v3
 
   test:
+    if: |
+      always() &&
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+    needs:
+      - check-auto-tagging-will-work
     runs-on: ubuntu-latest
     steps:
       - name: Install latest Docker Compose
@@ -37,11 +55,8 @@ jobs:
       - name: Build docker compose
         run: make build_dev
 
-      - name: Run Unit Tests
-        run: make unit_test
-
-      - name: Run Integration Tests
-        run: make integration_test
+      - name: Run Unit & Integration Tests
+        run: make test
 
   build:
     if: ${{ ! startsWith(github.ref, 'refs/tags') }}
@@ -96,7 +111,7 @@ jobs:
       - code-quality
       - test
     if: ${{ startsWith(github.ref, 'refs/tags') }}
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@main
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@v3
     secrets: inherit
     with:
       repo-name: navigator-admin-backend
@@ -106,7 +121,7 @@ jobs:
     needs: build
     permissions:
       contents: write
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/tag.yml@main
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/tag.yml@v3
     with:
       repo-name: navigator-admin-backend
       semver-tag: main-${GITHUB_SHA::8}
@@ -117,8 +132,9 @@ jobs:
 
   release:
     needs: tag
+    if: ${{ needs.tag.outputs.new_tag != 'Skip' }}
     permissions:
       contents: write
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@main
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@v3
     with:
       new_tag: ${{ needs.tag.outputs.new_tag }}
