@@ -417,16 +417,24 @@ def delete(db: Session, import_id: str) -> bool:
     if found is None:
         return False
 
-    # Soft delete all documents associated with the family.
-    result = db.execute(
-        db_update(FamilyDocument)
+    # Only perform if we have docs associated with this family
+    family_doc_count = (
+        db.query(FamilyDocument)
         .filter(FamilyDocument.family_import_id == import_id)
-        .values(document_status=DocumentStatus.DELETED)
+        .count()
     )
-    if result.rowcount == 0:  # type: ignore
-        msg = f"Could not soft delete documents in family : {import_id}"
-        _LOGGER.error(msg)
-        raise RepositoryError(msg)
+
+    if family_doc_count > 0:
+        # Soft delete all documents associated with the family.
+        result = db.execute(
+            db_update(FamilyDocument)
+            .filter(FamilyDocument.family_import_id == import_id)
+            .values(document_status=DocumentStatus.DELETED)
+        )
+        if result.rowcount == 0:  # type: ignore
+            msg = f"Could not soft delete documents in family : {import_id}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
 
     # Check family has been soft deleted if all documents have also been soft deleted.
     fam_deleted = db.query(Family).filter(Family.import_id == import_id).one()
