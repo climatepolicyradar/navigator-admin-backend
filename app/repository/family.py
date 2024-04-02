@@ -50,7 +50,6 @@ def _get_query(db: Session) -> Query:
     )
 
 
-# TODO: Remove use of FamilyOrganisation
 def _family_org_from_dto(
     dto: FamilyCreateDTO, geo_id: int, org_id: int
 ) -> Tuple[Family, Organisation]:
@@ -62,6 +61,7 @@ def _family_org_from_dto(
             geography_id=geo_id,
             family_category=dto.category,
         ),
+        # TODO: Remove use of FamilyOrganisation
         FamilyOrganisation(family_import_id="", organisation_id=org_id),
     )
 

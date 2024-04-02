@@ -248,8 +248,8 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Remove default taxonomy from CCLW - old schema
     # TODO: Remove this deletion in Milestone 4
     mo = (
-        test_db.query(MetadataOrganisation)
-        .filter(MetadataOrganisation.organisation_id == org.id)
+        test_db.query(MetadataOrganisation)  # remove
+        .filter(MetadataOrganisation.organisation_id == org.id)  # remove
         .one()
     )
     test_db.delete(mo)
