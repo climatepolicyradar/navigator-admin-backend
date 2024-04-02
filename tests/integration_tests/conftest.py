@@ -1,12 +1,13 @@
 import os
 import uuid
-from typing import Dict
+from typing import Dict, Generator
 
 import pytest
 from db_client import run_migrations
 from db_client.models.base import Base
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
@@ -81,8 +82,46 @@ def test_db(scope="function"):
         drop_database(test_db_url)
 
 
+@pytest.fixture(scope="session")
+def data_db_engine() -> Generator[Engine, None, None]:
+    test_db_url = get_test_db_url()
+
+    if database_exists(test_db_url):
+        drop_database(test_db_url)
+    create_database(test_db_url)
+
+    saved_db_url = os.environ["DATABASE_URL"]
+    os.environ["DATABASE_URL"] = test_db_url
+
+    test_engine = create_engine(test_db_url)
+    connection = test_engine.connect()
+
+    run_migrations(test_engine)
+
+    yield test_engine
+
+    connection.close()
+    os.environ["DATABASE_URL"] = saved_db_url
+    drop_database(test_db_url)
+
+
+@pytest.fixture(scope="function")
+def data_db(data_db_engine):
+    connection = data_db_engine.connect()
+    transaction = connection.begin()
+
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=connection)
+    session = SessionLocal()
+
+    yield session
+
+    session.close()
+    transaction.rollback()
+    connection.close()
+
+
 @pytest.fixture
-def data_db(scope="function"):
+def data_db_slow(scope="function"):
     """
     Create a fresh test database for each test.
 
