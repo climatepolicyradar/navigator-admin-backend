@@ -24,7 +24,8 @@ jobs:
   code-quality:
     if: |
       always() &&
-      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success') &&
+      ! startsWith(github.ref, 'refs/tags')
     needs:
       - check-auto-tagging-will-work
     permissions:
@@ -37,7 +38,8 @@ jobs:
   test:
     if: |
       always() &&
-      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success') &&
+      ! startsWith(github.ref, 'refs/tags')
     needs:
       - check-auto-tagging-will-work
     runs-on: ubuntu-latest
@@ -110,13 +112,7 @@ jobs:
           fi
 
   manual-semver:
-    if: |
-      always() &&
-      (needs.code-quality.result == 'success' && needs.test.result == 'success') &&
-      startsWith(github.ref, 'refs/tags')
-    needs:
-      - code-quality
-      - test
+    if: ${{ always() && startsWith(github.ref, 'refs/tags') }}
     uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@v3
     secrets: inherit
     with:
