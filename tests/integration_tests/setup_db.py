@@ -374,6 +374,16 @@ def _setup_family_data(
     test_db.add(dummy_tax)
     test_db.flush()
 
+    # Old Schema modification (to be removed)
+    # MetadataOrganisation
+    mo = MetadataOrganisation(taxonomy_id=dummy_tax.id, organisation_id=default_org_id)
+    test_db.add(mo)
+    test_db.flush()
+
+    omo = MetadataOrganisation(taxonomy_id=dummy_tax.id, organisation_id=other_org_id)
+    test_db.add(omo)
+    # End of "to be removed"
+
     # New Schema modification
     # CorpusType
     cclw_ct = (
