@@ -124,6 +124,7 @@ jobs:
       semver-tag: main-${GITHUB_SHA::8}
 
   tag:
+    if: ${{ always() && (needs.build.result == 'success')}}
     needs: build
     permissions:
       contents: write
@@ -137,8 +138,8 @@ jobs:
       DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
 
   release:
+    if: ${{ always() && (needs.tag.result == 'success' && needs.tag.outputs.new_tag != 'Skip')}}
     needs: tag
-    if: ${{ needs.tag.outputs.new_tag != 'Skip' }}
     permissions:
       contents: write
     uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@v3
