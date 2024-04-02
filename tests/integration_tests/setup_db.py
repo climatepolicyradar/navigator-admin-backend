@@ -8,9 +8,9 @@ from db_client.models.dfce.collection import (
 from db_client.models.dfce.family import (
     EventStatus,
     Family,
+    FamilyCorpus,
     FamilyDocument,
     FamilyEvent,
-    FamilyOrganisation,
     Slug,
 )
 from db_client.models.dfce.metadata import (
@@ -246,7 +246,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     org = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
 
     # Remove default taxonomy from CCLW - old schema
-    # org.taxonomy_collection
+    # TODO: Remove this deletion in Milestone 4
     mo = (
         test_db.query(MetadataOrganisation)
         .filter(MetadataOrganisation.organisation_id == org.id)
@@ -356,52 +356,22 @@ def _setup_family_data(
 ) -> None:
     if configure_empty is True:
         return None
-
-    for index in range(EXPECTED_NUM_FAMILIES):
-        data = EXPECTED_FAMILIES[index]
-        test_db.add(
-            Family(
-                import_id=data["import_id"],
-                title=data["title"],
-                description=data["summary"],
-                geography_id=DEFAULT_GEO_ID,
-                family_category=data["category"],
-            )
-        )
-
-        # Link the families to the org
-        test_db.add(
-            FamilyOrganisation(
-                family_import_id=data["import_id"],
-                organisation_id=_get_org_id_from_name(test_db, data["organisation"]),
-            )
-        )
-
-    # Now a Taxonomy
-    tax = MetadataTaxonomy(
-        description="test meta",
-        valid_metadata={
-            "color": {
-                "allow_any": False,
-                "allowed_values": ["green", "red", "pink", "blue"],
-            },
-            "size": {
-                "allow_any": True,
-                "allowed_values": [],
-            },
+    # Now a CorpusType
+    valid_metadata = {
+        "color": {
+            "allow_any": False,
+            "allowed_values": ["green", "red", "pink", "blue"],
         },
+        "size": {
+            "allow_any": True,
+            "allowed_values": [],
+        },
+    }
+    dummy_tax = MetadataTaxonomy(
+        id=99, description="to go", valid_metadata=valid_metadata
     )
-    test_db.add(tax)
-    test_db.flush()
 
-    # Old Schema modification (to be removed)
-    # MetadataOrganisation
-    mo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=default_org_id)
-    test_db.add(mo)
-    test_db.flush()
-
-    omo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=other_org_id)
-    test_db.add(omo)
+    test_db.add(dummy_tax)
     test_db.flush()
 
     # New Schema modification
@@ -412,12 +382,12 @@ def _setup_family_data(
         .filter(Corpus.organisation_id == default_org_id)
         .one()
     )
-    cclw_ct.valid_metadata = tax.valid_metadata
+    cclw_ct.valid_metadata = valid_metadata
     test_db.add(cclw_ct)
     test_db.flush()
 
     test_db.add(
-        CorpusType(name="other-type", description="", valid_metadata=tax.valid_metadata)
+        CorpusType(name="other-type", description="", valid_metadata=valid_metadata)
     )
     test_db.flush()
     test_db.add(
@@ -431,13 +401,42 @@ def _setup_family_data(
     )
     test_db.flush()
 
+    for index in range(EXPECTED_NUM_FAMILIES):
+        data = EXPECTED_FAMILIES[index]
+        test_db.add(
+            Family(
+                import_id=data["import_id"],
+                title=data["title"],
+                description=data["summary"],
+                geography_id=DEFAULT_GEO_ID,
+                family_category=data["category"],
+            )
+        )
+
+        corpus = (
+            test_db.query(Corpus)
+            .filter(
+                Corpus.organisation_id
+                == _get_org_id_from_name(test_db, data["organisation"])
+            )
+            .one()
+        )
+
+        # Link the families to the corpus
+        test_db.add(
+            FamilyCorpus(
+                family_import_id=data["import_id"],
+                corpus_import_id=corpus.import_id,
+            )
+        )
+
     # Now add the metadata onto the families
     for index in range(EXPECTED_NUM_FAMILIES):
         data = EXPECTED_FAMILIES[index]
         test_db.add(
             FamilyMetadata(
                 family_import_id=data["import_id"],
-                taxonomy_id=tax.id,
+                taxonomy_id=dummy_tax.id,  # soon no longer needed
                 value=data["metadata"],
             )
         )
