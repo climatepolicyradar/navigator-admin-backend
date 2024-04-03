@@ -24,7 +24,8 @@ jobs:
   code-quality:
     if: |
       always() &&
-      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success') &&
+      ! startsWith(github.ref, 'refs/tags')
     needs:
       - check-auto-tagging-will-work
     permissions:
@@ -37,7 +38,8 @@ jobs:
   test:
     if: |
       always() &&
-      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success')
+      (needs.check-auto-tagging-will-work.result == 'skipped' || needs.check-auto-tagging-will-work.result == 'success') &&
+      ! startsWith(github.ref, 'refs/tags')
     needs:
       - check-auto-tagging-will-work
     runs-on: ubuntu-latest
@@ -59,7 +61,10 @@ jobs:
         run: make test
 
   build:
-    if: ${{ ! startsWith(github.ref, 'refs/tags') }}
+    if: |
+      always() &&
+      (needs.code-quality.result == 'success' && needs.test.result == 'success') &&
+      ! startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
     needs:
       - code-quality
@@ -107,10 +112,7 @@ jobs:
           fi
 
   manual-semver:
-    needs:
-      - code-quality
-      - test
-    if: ${{ startsWith(github.ref, 'refs/tags') }}
+    if: ${{ always() && startsWith(github.ref, 'refs/tags') }}
     uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@v3
     secrets: inherit
     with:
@@ -118,6 +120,7 @@ jobs:
       semver-tag: main-${GITHUB_SHA::8}
 
   tag:
+    if: ${{ always() && (needs.build.result == 'success')}}
     needs: build
     permissions:
       contents: write
@@ -131,8 +134,8 @@ jobs:
       DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
 
   release:
+    if: ${{ always() && (needs.tag.result == 'success' && needs.tag.outputs.new_tag != 'Skip')}}
     needs: tag
-    if: ${{ needs.tag.outputs.new_tag != 'Skip' }}
     permissions:
       contents: write
     uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@v3

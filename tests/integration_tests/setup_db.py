@@ -8,9 +8,9 @@ from db_client.models.dfce.collection import (
 from db_client.models.dfce.family import (
     EventStatus,
     Family,
+    FamilyCorpus,
     FamilyDocument,
     FamilyEvent,
-    FamilyOrganisation,
     Slug,
 )
 from db_client.models.dfce.metadata import (
@@ -23,6 +23,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
+from db_client.models.organisation import Corpus, CorpusType
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
 
@@ -243,14 +244,16 @@ def _get_org_id_from_name(test_db: Session, name: str) -> int:
 def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Now an organisation
     org = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
-    # Remove default taxonomy from CCLW
-    # org.taxonomy_collection
+
+    # Remove default taxonomy from CCLW - old schema
+    # TODO: Remove this deletion in Milestone 4
     mo = (
-        test_db.query(MetadataOrganisation)
-        .filter(MetadataOrganisation.organisation_id == org.id)
+        test_db.query(MetadataOrganisation)  # remove
+        .filter(MetadataOrganisation.organisation_id == org.id)  # remove
         .one()
     )
     test_db.delete(mo)
+
     another_org = Organisation(
         name="Another org",
         description="because we will have more than one org",
@@ -353,6 +356,60 @@ def _setup_family_data(
 ) -> None:
     if configure_empty is True:
         return None
+    # Now a CorpusType
+    valid_metadata = {
+        "color": {
+            "allow_any": False,
+            "allowed_values": ["green", "red", "pink", "blue"],
+        },
+        "size": {
+            "allow_any": True,
+            "allowed_values": [],
+        },
+    }
+    dummy_tax = MetadataTaxonomy(
+        id=99, description="to go", valid_metadata=valid_metadata
+    )
+
+    test_db.add(dummy_tax)
+    test_db.flush()
+
+    # Old Schema modification (to be removed)
+    # MetadataOrganisation
+    mo = MetadataOrganisation(taxonomy_id=dummy_tax.id, organisation_id=default_org_id)
+    test_db.add(mo)
+    test_db.flush()
+
+    omo = MetadataOrganisation(taxonomy_id=dummy_tax.id, organisation_id=other_org_id)
+    test_db.add(omo)
+    # End of "to be removed"
+
+    # New Schema modification
+    # CorpusType
+    cclw_ct = (
+        test_db.query(CorpusType)
+        .join(Corpus, Corpus.corpus_type_name == CorpusType.name)
+        .filter(Corpus.organisation_id == default_org_id)
+        .one()
+    )
+    cclw_ct.valid_metadata = valid_metadata
+    test_db.add(cclw_ct)
+    test_db.flush()
+
+    test_db.add(
+        CorpusType(name="other-type", description="", valid_metadata=valid_metadata)
+    )
+    test_db.flush()
+    test_db.add(
+        Corpus(
+            import_id="OTHER.corpus.1.0",
+            title="Test Corpus",
+            description="",
+            organisation_id=other_org_id,
+            corpus_type_name="other-type",
+        )
+    )
+    test_db.flush()
 
     for index in range(EXPECTED_NUM_FAMILIES):
         data = EXPECTED_FAMILIES[index]
@@ -366,40 +423,22 @@ def _setup_family_data(
             )
         )
 
-        # Link the families to the org
-        test_db.add(
-            FamilyOrganisation(
-                family_import_id=data["import_id"],
-                organisation_id=_get_org_id_from_name(test_db, data["organisation"]),
+        corpus = (
+            test_db.query(Corpus)
+            .filter(
+                Corpus.organisation_id
+                == _get_org_id_from_name(test_db, data["organisation"])
             )
+            .one()
         )
 
-    # Now a Taxonomy
-    tax = MetadataTaxonomy(
-        description="test meta",
-        valid_metadata={
-            "color": {
-                "allow_any": False,
-                "allowed_values": ["green", "red", "pink", "blue"],
-            },
-            "size": {
-                "allow_any": True,
-                "allowed_values": [],
-            },
-        },
-    )
-    test_db.add(tax)
-    test_db.flush()
-
-    # Now a MetadataOrganisation
-    # Remove the standard CCLW taxonomy
-    mo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=default_org_id)
-    test_db.add(mo)
-    test_db.flush()
-
-    omo = MetadataOrganisation(taxonomy_id=tax.id, organisation_id=other_org_id)
-    test_db.add(omo)
-    test_db.flush()
+        # Link the families to the corpus
+        test_db.add(
+            FamilyCorpus(
+                family_import_id=data["import_id"],
+                corpus_import_id=corpus.import_id,
+            )
+        )
 
     # Now add the metadata onto the families
     for index in range(EXPECTED_NUM_FAMILIES):
@@ -407,7 +446,7 @@ def _setup_family_data(
         test_db.add(
             FamilyMetadata(
                 family_import_id=data["import_id"],
-                taxonomy_id=tax.id,
+                taxonomy_id=dummy_tax.id,  # soon no longer needed
                 value=data["metadata"],
             )
         )

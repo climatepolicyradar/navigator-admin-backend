@@ -7,15 +7,18 @@ venv_name=$(grep -m 1 venv pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | 
 # Check if pyrightconfig already exists.
 if [[ ! -f pyrightconfig.json ]]; then
 	# Check if pyenv-pyright plugin is installed
-	if ! command -v pyenv 1>/dev/null; then
+	if ! command -v pyenv &>/dev/null; then
 		echo "pyenv not installed. Please install pyenv..."
 		exit 1
 	fi
 
 	pyenv_root=$(pyenv root)
-	dir_exists=$(ls -A "${pyenv_root}"/plugins/pyenv-pyright)
-	if [[ -z ${dir_exists} ]]; then
-		git clone https://github.com/alefpereira/pyenv-pyright.git "${pyenv_root}"/plugins/pyenv-pyright
+	dir_path="${pyenv_root}"/plugins/pyenv-pyright
+	if [[ ! -d ${dir_path} ]]; then
+		# trunk-ignore(shellcheck/SC2312)
+		if [[ -n $(ls -A "${dir_path}") ]]; then
+			git clone https://github.com/alefpereira/pyenv-pyright.git "${dir_path}"
+		fi
 	fi
 
 	# Generate the pyrightconfig.json file.
