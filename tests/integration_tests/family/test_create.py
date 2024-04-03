@@ -1,7 +1,7 @@
 from typing import Optional
 
 from db_client.models.dfce.collection import CollectionFamily
-from db_client.models.dfce.family import Family, FamilyCorpus, FamilyOrganisation, Slug
+from db_client.models.dfce.family import Family, FamilyCorpus, Slug
 from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.organisation.corpus import Corpus
 from fastapi import status
@@ -51,16 +51,6 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
     assert len(db_collection) == 1
     assert db_collection[0].collection_import_id == "C.0.0.3"
 
-    # Old schema test.
-    org_id = (
-        data_db.query(FamilyOrganisation.organisation_id)  # To be removed
-        .filter(
-            FamilyOrganisation.family_import_id == expected_import_id
-        )  # To be removed
-        .scalar()
-    )
-    assert org_id is not None
-
     # New schema tests.
     fc = (
         data_db.query(FamilyCorpus)
@@ -69,7 +59,11 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
     )
     assert len(fc) == 1
     assert fc[-1].corpus_import_id is not None
-    corpus = data_db.query(Corpus).filter(Corpus.organisation_id == org_id).one()
+    corpus = (
+        data_db.query(Corpus)
+        .filter(Corpus.organisation_id == fc[-1].corpus_import_id)
+        .one()
+    )
     assert fc[-1].corpus_import_id == corpus.import_id
 
 
