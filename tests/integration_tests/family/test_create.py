@@ -60,9 +60,11 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
     assert len(fc) == 1
     assert fc[-1].corpus_import_id is not None
     corpus = (
-        data_db.query(Corpus).filter(Corpus.import_id == fc[-1].corpus_import_id).one()
+        data_db.query(Corpus)
+        .filter(Corpus.import_id == fc[-1].corpus_import_id)
+        .one_or_none()
     )
-    assert len(corpus) == 1
+    assert corpus is not None
 
 
 def test_create_family_when_not_authorised(client: TestClient, data_db: Session):
