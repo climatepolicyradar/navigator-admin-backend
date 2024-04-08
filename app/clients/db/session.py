@@ -29,7 +29,7 @@ def with_transaction(module_name):
         def wrapper(*args, **kwargs):
             db = get_db()
             try:
-                db.begin()
+                db.begin_nested()
                 result = func(*args, **kwargs, db=db)
                 db.commit()
                 return result

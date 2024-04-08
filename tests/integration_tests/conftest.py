@@ -7,7 +7,7 @@ from db_client import run_migrations
 from db_client.models.base import Base
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
@@ -83,7 +83,7 @@ def test_db(scope="function"):
 
 
 @pytest.fixture(scope="session")
-def data_db_engine() -> Generator[Engine, None, None]:
+def data_db_connection() -> Generator[Connection, None, None]:
     test_db_url = get_test_db_url()
 
     if database_exists(test_db_url):
@@ -94,30 +94,30 @@ def data_db_engine() -> Generator[Engine, None, None]:
     os.environ["DATABASE_URL"] = test_db_url
 
     test_engine = create_engine(test_db_url)
-    connection = test_engine.connect()
 
     run_migrations(test_engine)
+    connection = test_engine.connect()
 
-    yield test_engine
-
+    yield connection
     connection.close()
+
     os.environ["DATABASE_URL"] = saved_db_url
     drop_database(test_db_url)
 
 
 @pytest.fixture(scope="function")
-def data_db(data_db_engine):
-    connection = data_db_engine.connect()
-    transaction = connection.begin()
+def data_db(data_db_connection):
+    transaction = data_db_connection.begin()
 
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=connection)
+    SessionLocal = sessionmaker(
+        autocommit=False, autoflush=False, bind=data_db_connection
+    )
     session = SessionLocal()
 
     yield session
 
     session.close()
     transaction.rollback()
-    connection.close()
 
 
 @pytest.fixture
