@@ -1,11 +1,25 @@
 # Autoformatter friendly markdownlint config (all formatting rules disabled)
 default: true
-blank_lines: false
-bullet: false
-html: false
-indentation: false
-line_length: false
-spaces: false
-url: false
-whitespace: false
-tables: false
+
+MD013:
+  # Number of characters
+  line_length: 80
+
+  # Number of characters for headings
+  heading_line_length: 80
+
+  # Number of characters for code blocks
+  code_block_line_length: 80
+
+  # Include code blocks
+  headings: true
+
+  # Don't include tables
+  tables: false
+  code_blocks: false
+
+  # Strict length checking
+  strict: false
+
+  # Stern length checking
+  stern: false
