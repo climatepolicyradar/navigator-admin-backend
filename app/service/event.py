@@ -76,7 +76,9 @@ def validate_import_id(import_id: str) -> None:
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
+def create(
+    event: EventCreateDTO, context=None, db: Session = db_session.get_db()
+) -> str:
     """
         Creates a new event with the values passed.
 
@@ -87,6 +89,8 @@ def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
     None if unsuccessful.
     """
     id.validate(event.family_import_id)
+    if context is not None:
+        context.error = f"Could not create event for family {event.family_import_id}"
 
     family = family_service.get(event.family_import_id)
     if family is None:
@@ -100,7 +104,10 @@ def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    import_id: str, event: EventWriteDTO, db: Session = db_session.get_db()
+    import_id: str,
+    event: EventWriteDTO,
+    context=None,
+    db: Session = db_session.get_db(),
 ) -> Optional[EventReadDTO]:
     """
     Updates a single event with the values passed.
@@ -111,20 +118,17 @@ def update(
     :return Optional[EventReadDTO]: The updated event or None if not updated.
     """
     validate_import_id(import_id)
+    if context is not None:
+        context.error = f"Error when updating event {import_id}"
 
-    try:
-        if event_repo.update(db, import_id, event):
-            db.commit()
-            return get(import_id)
-
-    except exc.SQLAlchemyError:
-        _LOGGER.exception(f"While updating event {import_id}")
-        raise RepositoryError(f"Error when updating event {import_id}")
+    event_repo.update(db, import_id, event)
+    db.commit()
+    return get(import_id)
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
+def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the event specified by the import_id.
 
@@ -134,6 +138,8 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
+    if context is not None:
+        context.error = f"Could not delete event {import_id}"
     return event_repo.delete(db, import_id)
 
 

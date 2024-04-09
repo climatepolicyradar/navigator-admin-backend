@@ -33,6 +33,8 @@ def test_delete_collection_rollback(
     admin_user_header_token,
 ):
     setup_db(data_db)
+    n = data_db.query(Collection).count()
+    assert n == EXPECTED_NUM_COLLECTIONS
     response = client.delete(
         "/api/v1/collections/C.0.0.2", headers=admin_user_header_token
     )

@@ -26,7 +26,11 @@ def test_get_all_documents(client: TestClient, data_db: Session, user_header_tok
     assert all(field in col for col in sdata for field in ("created", "last_modified"))
 
     expected_data = [
-        {k: v for k, v in col.items() if k not in ("created", "last_modified")}
+        {
+            k: v
+            for k, v in col.items()
+            if k not in ("created", "last_modified", "physical_id")
+        }
         for col in sdata
     ]
     assert expected_data[0] == EXPECTED_DOCUMENTS[0]
@@ -56,7 +60,9 @@ def test_get_document(client: TestClient, data_db: Session, user_header_token):
 
     assert all(field in data for field in ("created", "last_modified"))
     expected_data = {
-        k: v for k, v in data.items() if k not in ("created", "last_modified")
+        k: v
+        for k, v in data.items()
+        if k not in ("created", "last_modified", "physical_id")
     }
     assert expected_data == EXPECTED_DOCUMENTS[0]
 
