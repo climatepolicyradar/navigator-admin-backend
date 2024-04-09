@@ -93,6 +93,7 @@ def update(
     import_id: str,
     user_email: str,
     family_dto: FamilyWriteDTO,
+    context,
     db: Session = db_session.get_db(),
 ) -> Optional[FamilyReadDTO]:
     """
@@ -106,6 +107,8 @@ def update(
 
     # Validate import_id
     validate_import_id(import_id)
+    if context is not None:
+        context.error = f"Could not update family {import_id}"
 
     # Validate category
     category.validate(family_dto.category)
@@ -143,15 +146,18 @@ def update(
         _LOGGER.error(msg)
         raise ValidationError(msg)
 
-    if family_repo.update(db, import_id, family_dto, geo_id):
-        db.commit()
-        return get(import_id)
+    family_repo.update(db, import_id, family_dto, geo_id)
+    db.commit()
+    return get(import_id)
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    family: FamilyCreateDTO, user_email: str, db: Session = db_session.get_db()
+    family: FamilyCreateDTO,
+    user_email: str,
+    context=None,
+    db: Session = db_session.get_db(),
 ) -> str:
     """
     Creates a new Family with the values passed.
@@ -161,6 +167,9 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
+
+    if context is not None:
+        context.error = f"Could not create a family for {family.title}"
 
     # Get the organisation from the user's email
     org_id = app_user.get_organisation(db, user_email)
@@ -193,7 +202,7 @@ def create(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
+def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the Family specified by the import_id.
 
@@ -203,12 +212,10 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
-    try:
-        return family_repo.delete(db, import_id)
-    except exc.SQLAlchemyError:
-        msg = f"Unable to delete family {import_id}"
-        _LOGGER.exception(msg)
-        raise RepositoryError(msg)
+    if context is not None:
+        context.error = f"Unable to delete family {import_id}"
+
+    return family_repo.delete(db, import_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

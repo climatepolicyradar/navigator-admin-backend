@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import Session, sessionmaker
@@ -6,6 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
 from app.errors import RepositoryError
 
+session_context = threading.local()
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,
@@ -24,13 +26,14 @@ def get_db() -> Session:
     return SessionLocal()
 
 
-def with_transaction(module_name):
+def with_transaction(module_name, context=session_context):
     def inner(func):
         def wrapper(*args, **kwargs):
+            context.error = None
             db = get_db()
             try:
-                db.begin()
-                result = func(*args, **kwargs, db=db)
+                db.begin_nested()
+                result = func(*args, **kwargs, context=context, db=db)
                 db.commit()
                 return result
             except exc.SQLAlchemyError as e:
@@ -39,7 +42,9 @@ def with_transaction(module_name):
                     msg, extra={"failing_module": module_name, "func": func.__name__}
                 )
                 db.rollback()
-                raise RepositoryError(str(e))
+                if context.error is not None:
+                    raise RepositoryError(context.error) from e
+                raise RepositoryError(str(e)) from e
             finally:
                 db.close()
 

@@ -91,7 +91,10 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    import_id: str, collection: CollectionWriteDTO, db: Session = db_session.get_db()
+    import_id: str,
+    collection: CollectionWriteDTO,
+    context=None,
+    db: Session = db_session.get_db(),
 ) -> Optional[CollectionReadDTO]:
     """
     Updates a single collection with the values passed.
@@ -107,20 +110,21 @@ def update(
     # org_id = organisation.get_id(db, collection.organisation)
 
     validate_import_id(import_id)
-    try:
-        with db_session.get_db() as db:
-            if collection_repo.update(db, import_id, collection):
-                db.commit()
-                return get(import_id)
-    except exc.SQLAlchemyError:
-        _LOGGER.exception(f"When updating collection '{import_id}'")
-        raise RepositoryError(f"Error when updating collection '{import_id}'")
+    if context is not None:
+        context.error = f"Error when updating collection '{import_id}'"
+
+    collection_repo.update(db, import_id, collection)
+    db.commit()
+    return get(import_id)
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    collection: CollectionCreateDTO, user_email: str, db: Session = db_session.get_db()
+    collection: CollectionCreateDTO,
+    user_email: str,
+    context=None,
+    db: Session = db_session.get_db(),
 ) -> str:
     """
     Creates a new collection with the values passed.
@@ -130,22 +134,17 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_id for the collection.
     """
-    try:
-        # Get the organisation from the user's email
-        org_id = app_user.get_organisation(db, user_email)
+    # Get the organisation from the user's email
+    org_id = app_user.get_organisation(db, user_email)
+    if context is not None:
+        context.error = f"Error when creating collection '{collection.description}'"
 
-        return collection_repo.create(db, collection, org_id)
-
-    except exc.SQLAlchemyError:
-        _LOGGER.exception(f"When creating collection '{collection.description}'")
-        raise RepositoryError(
-            f"Error when creating collection '{collection.description}'"
-        )
+    return collection_repo.create(db, collection, org_id)
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
+def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the collection specified by the import_id.
 
@@ -155,6 +154,8 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
+    if context is not None:
+        context.error = f"Could not delete collection {import_id}"
     return collection_repo.delete(db, import_id)
 
 

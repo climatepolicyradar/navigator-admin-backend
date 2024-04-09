@@ -36,6 +36,9 @@ Please select the option(s) below that are most relevant:
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
+- [ ] GitHub workflow update
+- [ ] Documentation update
+- [ ] Remove legacy code
 
 ## How Has This Been Tested?
 

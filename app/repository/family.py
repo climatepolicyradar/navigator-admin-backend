@@ -10,12 +10,11 @@ from db_client.models.dfce.family import (
     Family,
     FamilyCorpus,
     FamilyDocument,
-    FamilyOrganisation,
     FamilyStatus,
     Slug,
 )
 from db_client.models.dfce.geography import Geography
-from db_client.models.dfce.metadata import FamilyMetadata, MetadataOrganisation
+from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.organisation.corpus import Corpus
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
@@ -50,22 +49,6 @@ def _get_query(db: Session) -> Query:
     )
 
 
-def _family_org_from_dto(
-    dto: FamilyCreateDTO, geo_id: int, org_id: int
-) -> Tuple[Family, Organisation]:
-    return (
-        Family(
-            import_id="",
-            title=dto.title,
-            description=dto.summary,
-            geography_id=geo_id,
-            family_category=dto.category,
-        ),
-        # TODO: Remove use of FamilyOrganisation
-        FamilyOrganisation(family_import_id="", organisation_id=org_id),
-    )
-
-
 def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyReadDTO:
     f = fam_geo_meta_org[0]
     geo_value = cast(str, fam_geo_meta_org[1].value)
@@ -79,7 +62,7 @@ def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyRea
         category=str(f.family_category),
         status=str(f.family_status),
         metadata=metadata,
-        slug=str(f.slugs[0].name if len(f.slugs) > 0 else ""),
+        slug=str(f.slugs[-1].name if len(f.slugs) > 0 else ""),
         events=[str(e.import_id) for e in f.events],
         published_date=f.published_date,
         last_updated_date=f.last_updated_date,
@@ -343,15 +326,15 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     :return bool: True if new Family was created otherwise False.
     """
     try:
-        new_family, new_fam_org = _family_org_from_dto(family, geo_id, org_id)
-        new_family.import_id = cast(
-            Column, generate_import_id(db, CountedEntity.Family, org_id)
+        import_id = cast(Column, generate_import_id(db, CountedEntity.Family, org_id))
+        new_family = Family(
+            import_id=import_id,
+            title=family.title,
+            description=family.summary,
+            geography_id=geo_id,
+            family_category=family.category,
         )
         db.add(new_family)
-
-        # Old schema (to be removed in PDCT-937).
-        new_fam_org.family_import_id = new_family.import_id
-        db.add(new_fam_org)
 
         # New schema.
         new_fam_corpus = db.query(Corpus).filter(Corpus.organisation_id == org_id).one()
@@ -380,16 +363,9 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     # TODO Validate that the metadata being added conforms to corpus type. PDCT-945
 
     # Add the metadata
-    # tax to be removed in PDCT-937.
-    tax = (
-        db.query(MetadataOrganisation)
-        .filter(MetadataOrganisation.organisation_id == org_id)  # TODO: Remove
-        .one()
-    )
     db.add(
         FamilyMetadata(
             family_import_id=new_family.import_id,
-            taxonomy_id=tax.taxonomy_id,  # TODO Remove as part PDCT-937
             value=family.metadata,
         )
     )

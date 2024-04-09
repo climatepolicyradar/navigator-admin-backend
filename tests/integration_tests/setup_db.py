@@ -13,11 +13,7 @@ from db_client.models.dfce.family import (
     FamilyEvent,
     Slug,
 )
-from db_client.models.dfce.metadata import (
-    FamilyMetadata,
-    MetadataOrganisation,
-    MetadataTaxonomy,
-)
+from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.document.physical_document import (
     LanguageSource,
     PhysicalDocument,
@@ -116,7 +112,6 @@ EXPECTED_DOCUMENTS = [
         "role": "MAIN",
         "type": "Law",
         "slug": "",
-        "physical_id": 1,
         "title": "big title1",
         "md5_sum": "sum1",
         "cdn_object": "obj1",
@@ -133,7 +128,6 @@ EXPECTED_DOCUMENTS = [
         "role": "MAIN",
         "type": "Law",
         "slug": "",
-        "physical_id": 2,
         "title": "title2",
         "md5_sum": "sum2",
         "cdn_object": "obj2",
@@ -244,15 +238,6 @@ def _get_org_id_from_name(test_db: Session, name: str) -> int:
 def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Now an organisation
     org = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
-
-    # Remove default taxonomy from CCLW - old schema
-    # TODO: Remove this deletion in Milestone 4
-    mo = (
-        test_db.query(MetadataOrganisation)  # remove
-        .filter(MetadataOrganisation.organisation_id == org.id)  # remove
-        .one()
-    )
-    test_db.delete(mo)
 
     another_org = Organisation(
         name="Another org",
@@ -367,22 +352,6 @@ def _setup_family_data(
             "allowed_values": [],
         },
     }
-    dummy_tax = MetadataTaxonomy(
-        id=99, description="to go", valid_metadata=valid_metadata
-    )
-
-    test_db.add(dummy_tax)
-    test_db.flush()
-
-    # Old Schema modification (to be removed)
-    # MetadataOrganisation
-    mo = MetadataOrganisation(taxonomy_id=dummy_tax.id, organisation_id=default_org_id)
-    test_db.add(mo)
-    test_db.flush()
-
-    omo = MetadataOrganisation(taxonomy_id=dummy_tax.id, organisation_id=other_org_id)
-    test_db.add(omo)
-    # End of "to be removed"
 
     # New Schema modification
     # CorpusType
@@ -446,7 +415,6 @@ def _setup_family_data(
         test_db.add(
             FamilyMetadata(
                 family_import_id=data["import_id"],
-                taxonomy_id=dummy_tax.id,  # soon no longer needed
                 value=data["metadata"],
             )
         )
