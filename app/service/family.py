@@ -203,7 +203,7 @@ def create(
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(
-    import_id: str, context=None, db: Session = db_session.get_db()
+    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
 ) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
@@ -221,6 +221,14 @@ def delete(
     family = get(import_id)
     if family is None:
         return None
+
+    # Validate family belongs to same org as current user.
+    user_org_id = app_user.get_organisation(db, user_email)
+    org_id = organisation.get_id(db, family.organisation)
+    if org_id != user_org_id:
+        msg = "Current user does not belong to the organisation that owns family "
+        msg += import_id
+        raise ValidationError(msg)
 
     return family_repo.delete(db, import_id)
 
