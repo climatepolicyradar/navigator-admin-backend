@@ -2,7 +2,7 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError
+from app.errors import RepositoryError, ValidationError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
 from tests.helpers.family import create_family_dto
 
@@ -11,11 +11,14 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     family_service.missing = False
     family_service.invalid_collections = False
     family_service.throw_repository_error = False
+    family_service.throw_validation_error = False
     family_service.throw_timeout_error = False
 
     def maybe_throw():
         if family_service.throw_repository_error:
             raise RepositoryError("bad repo")
+        if family_service.throw_validation_error:
+            raise ValidationError("invalid")
 
     def maybe_timeout():
         if family_service.throw_timeout_error:
@@ -56,7 +59,8 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
             raise RepositoryError("bad-db")
         return "new-import-id"
 
-    def mock_delete_family(import_id: str) -> bool:
+    def mock_delete_family(import_id: str, user_email: str) -> Optional[bool]:
+        maybe_throw()
         return not family_service.missing
 
     def mock_count_collection() -> Optional[int]:
