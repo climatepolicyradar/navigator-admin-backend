@@ -93,3 +93,18 @@ def test_delete_document_when_db_error(
     data = response.json()
     assert data["detail"] == "Bad Repo"
     assert bad_document_repo.delete.call_count == 1
+
+
+def test_delete_document_when_org_mismatch(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    response = client.delete(
+        "/api/v1/documents/D.0.0.1", headers=non_cclw_user_header_token
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert (
+        data["detail"]
+        == "Current user does not belong to the organisation that owns document D.0.0.1"
+    )
