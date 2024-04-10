@@ -5,6 +5,8 @@ from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentReadDTO, DocumentWriteDTO
 from tests.helpers.document import create_document_create_dto
 
+USER_EMAIL = "test@cpr.org"
+
 
 def _to_write_dto(dto: DocumentReadDTO) -> DocumentWriteDTO:
     return DocumentWriteDTO(
@@ -47,7 +49,7 @@ def test_get(document_repo_mock):
 def test_get_returns_none(document_repo_mock):
     document_repo_mock.return_empty = True
     result = doc_service.get("id.1.2.3")
-    assert result is not None
+    assert result is None
     assert document_repo_mock.get.call_count == 1
 
 
@@ -94,25 +96,59 @@ def test_search_missing(document_repo_mock):
 # --- DELETE
 
 
-def test_delete(document_repo_mock):
-    ok = doc_service.delete("a.b.c.d")
+def test_delete(document_repo_mock, family_repo_mock, app_user_repo_mock):
+    ok = doc_service.delete("a.b.c.d", USER_EMAIL)
     assert ok
+    assert document_repo_mock.get.call_count == 1
+    assert family_repo_mock.get.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
     assert document_repo_mock.delete.call_count == 1
 
 
-def test_delete_when_missing(document_repo_mock):
+def test_delete_when_missing(
+    document_repo_mock, family_repo_mock, organisation_repo_mock, app_user_repo_mock
+):
     document_repo_mock.return_empty = True
-    ok = doc_service.delete("a.b.c.d")
+    ok = doc_service.delete("a.b.c.d", USER_EMAIL)
     assert not ok
-    assert document_repo_mock.delete.call_count == 1
+    assert document_repo_mock.get.call_count == 1
+    assert family_repo_mock.get.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert organisation_repo_mock.get_id_from_name.call_count == 0
+    assert document_repo_mock.delete.call_count == 0
 
 
-def test_delete_raises_when_invalid_id(document_repo_mock):
+def test_delete_raises_when_invalid_id(
+    document_repo_mock, family_repo_mock, app_user_repo_mock, organisation_repo_mock
+):
     import_id = "invalid"
     with pytest.raises(ValidationError) as e:
-        doc_service.delete(import_id)
+        doc_service.delete(import_id, USER_EMAIL)
     expected_msg = f"The import id {import_id} is invalid!"
     assert e.value.message == expected_msg
+    assert document_repo_mock.get.call_count == 0
+    assert family_repo_mock.get.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert organisation_repo_mock.get_id_from_name.call_count == 0
+    assert document_repo_mock.delete.call_count == 0
+
+
+def test_delete_raises_when_organisation_invalid(
+    document_repo_mock, family_repo_mock, organisation_repo_mock, app_user_repo_mock
+):
+    organisation_repo_mock.error = True
+    app_user_repo_mock.error = True
+    with pytest.raises(ValidationError) as e:
+        ok = doc_service.delete("a.b.c.d", USER_EMAIL)
+        assert not ok
+
+    expected_msg = "The organisation name CCLW is invalid!"
+    assert e.value.message == expected_msg
+
+    assert document_repo_mock.get.call_count == 1
+    assert family_repo_mock.get.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert document_repo_mock.delete.call_count == 0
 
 
