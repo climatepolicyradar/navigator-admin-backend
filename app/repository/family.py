@@ -10,6 +10,7 @@ from db_client.models.dfce.family import (
     Family,
     FamilyCorpus,
     FamilyDocument,
+    FamilyEvent,
     FamilyStatus,
     Slug,
 )
@@ -407,15 +408,45 @@ def delete(db: Session, import_id: str) -> bool:
             .filter(FamilyDocument.family_import_id == import_id)
             .values(document_status=DocumentStatus.DELETED)
         )
+
         if result.rowcount == 0:  # type: ignore
             msg = f"Could not soft delete documents in family : {import_id}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
 
+    elif family_doc_count == 0 and found.family_status == FamilyStatus.CREATED:
+        commands = [
+            db_delete(CollectionFamily).where(
+                CollectionFamily.family_import_id == import_id
+            ),
+            db_delete(FamilyEvent).where(FamilyEvent.family_import_id == import_id),
+            db_delete(FamilyCorpus).where(FamilyCorpus.family_import_id == import_id),
+            db_delete(Slug).where(Slug.family_import_id == import_id),
+            db_delete(FamilyMetadata).where(
+                FamilyMetadata.family_import_id == import_id
+            ),
+            db_delete(Family).where(Family.import_id == import_id),
+        ]
+
+        for c in commands:
+            result = db.execute(c)
+            # Keep this for debug.
+            _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
+        db.commit()
+
+        fam_deleted = (
+            db.query(Family).filter(Family.import_id == import_id).one_or_none()
+        )
+        if fam_deleted is not None:
+            msg = f"Could not hard delete family: {import_id}"
+            _LOGGER.error(msg)
+
+        return bool(fam_deleted is None)
+
     # Check family has been soft deleted if all documents have also been soft deleted.
     fam_deleted = db.query(Family).filter(Family.import_id == import_id).one()
     if fam_deleted.family_status != FamilyStatus.DELETED:  # type: ignore
-        msg = f"Could not soft delete family : {import_id}"
+        msg = f"Could not soft delete family: {import_id}"
         _LOGGER.error(msg)
         raise RepositoryError(msg)
 

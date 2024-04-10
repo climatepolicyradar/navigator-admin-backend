@@ -1,4 +1,14 @@
-from db_client.models.dfce import DocumentStatus, Family, FamilyDocument, FamilyStatus
+from db_client.models.dfce import (
+    CollectionFamily,
+    DocumentStatus,
+    Family,
+    FamilyDocument,
+    FamilyEvent,
+    FamilyMetadata,
+    FamilyStatus,
+    Slug,
+)
+from db_client.models.dfce.family import FamilyCorpus
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -6,7 +16,9 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
-def test_delete_family(client: TestClient, data_db: Session, admin_user_header_token):
+def test_delete_family_with_docs(
+    client: TestClient, data_db: Session, admin_user_header_token
+):
     setup_db(data_db)
     response = client.delete(
         "/api/v1/families/A.0.0.3", headers=admin_user_header_token
@@ -15,6 +27,7 @@ def test_delete_family(client: TestClient, data_db: Session, admin_user_header_t
     assert data_db.query(Family).count() == 3
     assert (
         data_db.query(FamilyDocument)
+        .filter(FamilyDocument.family_import_id == "A.0.0.3")
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 2
@@ -22,6 +35,52 @@ def test_delete_family(client: TestClient, data_db: Session, admin_user_header_t
     family = data_db.query(Family).filter(Family.import_id == "A.0.0.3").all()
     assert len(family) == 1
     assert family[0].family_status == FamilyStatus.DELETED
+
+
+def test_delete_family_without_docs(
+    client: TestClient, data_db: Session, admin_user_header_token
+):
+    setup_db(data_db)
+    response = client.delete(
+        "/api/v1/families/A.0.0.2", headers=admin_user_header_token
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert data_db.query(Family).count() == 2
+    family = data_db.query(Family).filter(Family.import_id == "A.0.0.2").all()
+    assert len(family) == 0
+
+    # Check all the links have been properly removed.
+    assert (
+        data_db.query(CollectionFamily)
+        .filter(CollectionFamily.family_import_id == "A.0.0.2")
+        .count()
+        == 0
+    )
+    assert (
+        data_db.query(FamilyEvent)
+        .filter(FamilyEvent.family_import_id == "A.0.0.2")
+        .count()
+        == 0
+    )
+    assert (
+        data_db.query(FamilyDocument)
+        .filter(FamilyDocument.family_import_id == "A.0.0.2")
+        .count()
+        == 0
+    )
+    assert (
+        data_db.query(FamilyCorpus)
+        .filter(FamilyCorpus.family_import_id == "A.0.0.2")
+        .count()
+        == 0
+    )
+    assert data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").count() == 0
+    assert (
+        data_db.query(FamilyMetadata)
+        .filter(FamilyDocument.family_import_id == "A.0.0.2")
+        .count()
+        == 0
+    )
 
 
 def test_delete_family_when_not_authenticated(client: TestClient, data_db: Session):
