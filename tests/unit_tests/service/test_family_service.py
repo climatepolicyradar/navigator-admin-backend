@@ -117,11 +117,11 @@ def test_delete(family_repo_mock):
     assert family_repo_mock.delete.call_count == 1
 
 
-def test_delete_missing(family_repo_mock):
+def test_delete_when_family_missing(family_repo_mock):
     family_repo_mock.return_empty = True
     ok = family_service.delete("a.b.c.d")
     assert not ok
-    assert family_repo_mock.delete.call_count == 1
+    assert family_repo_mock.delete.call_count == 0
 
 
 def test_delete_raises_when_invalid_id(family_repo_mock):

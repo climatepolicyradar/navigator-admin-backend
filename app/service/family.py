@@ -202,7 +202,9 @@ def create(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(
+    import_id: str, context=None, db: Session = db_session.get_db()
+) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
 
@@ -214,6 +216,11 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     id.validate(import_id)
     if context is not None:
         context.error = f"Unable to delete family {import_id}"
+
+    # Get family we're going to delete.
+    family = get(import_id)
+    if family is None:
+        return None
 
     return family_repo.delete(db, import_id)
 
