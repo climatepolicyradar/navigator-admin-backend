@@ -131,3 +131,18 @@ def test_delete_family_when_db_error(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
+
+
+def test_delete_family_when_org_mismatch(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    response = client.delete(
+        "/api/v1/families/A.0.0.1", headers=non_cclw_user_header_token
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert (
+        data["detail"]
+        == "Current user does not belong to the organisation that owns family A.0.0.1"
+    )
