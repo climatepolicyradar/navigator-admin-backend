@@ -12,7 +12,7 @@ import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
-from app.service import id
+from app.service import app_user, family, id, organisation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +142,9 @@ def create(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(
+    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
+) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
 
@@ -154,6 +156,25 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     id.validate(import_id)
     if context is not None:
         context.error = f"Could not delete document {import_id}"
+
+    # Get family document we're going to delete.
+    doc = get(import_id)
+    if doc is None:
+        return None
+
+    # Get family we're going to delete.
+    fam = family.get(doc.family_import_id)
+    if fam is None:
+        return None
+
+    # Validate family document belongs to same org as current user.
+    user_org_id = app_user.get_organisation(db, user_email)
+    org_id = organisation.get_id(db, fam.organisation)
+    if org_id != user_org_id:
+        msg = "Current user does not belong to the organisation that owns document "
+        msg += import_id
+        raise ValidationError(msg)
+
     return document_repo.delete(db, import_id)
 
 

@@ -190,9 +190,7 @@ async def create_document(
 @r.delete(
     "/documents/{import_id}",
 )
-async def delete_document(
-    import_id: str,
-) -> None:
+async def delete_document(request: Request, import_id: str) -> None:
     """
     Deletes a specific document given the import id.
 
@@ -200,7 +198,7 @@ async def delete_document(
     :raises HTTPException: If the document is not found a 404 is returned.
     """
     try:
-        document_deleted = document_service.delete(import_id)
+        document_deleted = document_service.delete(import_id, request.state.user.email)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
