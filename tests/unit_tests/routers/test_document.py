@@ -179,6 +179,15 @@ def test_delete_document_fails_if_not_admin(
     assert document_service_mock.delete.call_count == 0
 
 
+def test_delete_fails_when_org_mismatch(
+    client: TestClient, document_service_mock, user_header_token
+):
+    document_service_mock.throw_validation_error = True
+    response = client.delete("/api/v1/documents/fam1", headers=user_header_token)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert document_service_mock.delete.call_count == 1
+
+
 def test_delete_when_not_found(
     client: TestClient, document_service_mock, admin_user_header_token
 ):
