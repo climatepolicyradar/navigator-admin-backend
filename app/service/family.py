@@ -17,6 +17,7 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from app.service import (
     app_user,
+    authorisation,
     category,
     collection,
     geography,
@@ -223,14 +224,11 @@ def delete(
         return None
 
     # Validate family belongs to same org as current user.
-    user_org_id = app_user.get_organisation(db, user_email)
-    org_id = organisation.get_id(db, family.organisation)
-    if org_id != user_org_id:
-        msg = "Current user does not belong to the organisation that owns family "
-        msg += import_id
-        raise ValidationError(msg)
-
-    return family_repo.delete(db, import_id)
+    authenticated = authorisation.is_user_authorised_to_make_changes(
+        db, user_email, family.organisation, "family", import_id
+    )
+    if authenticated:
+        return family_repo.delete(db, import_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
