@@ -17,7 +17,7 @@ from app.api.api_v1.query_params import (
     set_default_query_params,
     validate_query_params,
 )
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
 families_router = r = APIRouter()
@@ -175,9 +175,7 @@ async def create_family(
 @r.delete(
     "/families/{import_id}",
 )
-async def delete_family(
-    import_id: str,
-) -> None:
+async def delete_family(request: Request, import_id: str) -> None:
     """
     Deletes a specific family given the import id.
 
@@ -185,13 +183,15 @@ async def delete_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     """
     try:
-        family_deleted = family_service.delete(import_id)
+        family_deleted = family_service.delete(import_id, request.state.user.email)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
 
     if not family_deleted:
         raise HTTPException(

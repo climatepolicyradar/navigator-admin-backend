@@ -8,6 +8,7 @@ from db_client.models.organisation.authorisation import (
 
 from app.errors import AuthorisationError
 from app.model.jwt_user import JWTUser
+from app.service import app_user, organisation
 
 
 def http_method_to_operation(method: str) -> AuthOperation:
@@ -68,3 +69,16 @@ def is_authorised(user: JWTUser, entity: AuthEndpoint, op: AuthOperation) -> Non
         return
 
     raise AuthorisationError(f"User {user.email} is not authorised to {op} a {entity}")
+
+
+def is_user_authorised_to_make_changes(
+    db, user_email: str, org_name: str, entity: str, import_id: str
+) -> bool:
+    """Validate entity belongs to same org as current user."""
+    user_org_id = app_user.get_organisation(db, user_email)
+    org_id = organisation.get_id(db, org_name)
+    if org_id != user_org_id:
+        msg = f"User '{user_email}' is not authorised to make changes to {entity} '{import_id}'"
+        raise AuthorisationError(msg)
+
+    return bool(org_id == user_org_id)

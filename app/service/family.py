@@ -17,6 +17,7 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from app.service import (
     app_user,
+    authorisation,
     category,
     collection,
     geography,
@@ -203,7 +204,7 @@ def create(
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(
-    import_id: str, context=None, db: Session = db_session.get_db()
+    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
 ) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
@@ -222,7 +223,12 @@ def delete(
     if family is None:
         return None
 
-    return family_repo.delete(db, import_id)
+    # Validate family belongs to same org as current user.
+    authenticated = authorisation.is_user_authorised_to_make_changes(
+        db, user_email, family.organisation, "family", import_id
+    )
+    if authenticated:
+        return family_repo.delete(db, import_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
