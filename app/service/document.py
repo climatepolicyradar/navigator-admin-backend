@@ -10,9 +10,10 @@ import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
+from app.enums import Entity
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
-from app.service import app_user, family, id, organisation
+from app.service import authorisation, family, id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,14 +169,11 @@ def delete(
         return None
 
     # Validate family document belongs to same org as current user.
-    user_org_id = app_user.get_organisation(db, user_email)
-    org_id = organisation.get_id(db, fam.organisation)
-    if org_id != user_org_id:
-        msg = "Current user does not belong to the organisation that owns document "
-        msg += import_id
-        raise ValidationError(msg)
-
-    return document_repo.delete(db, import_id)
+    authenticated = authorisation.is_user_authorised_to_make_changes(
+        db, user_email, fam.organisation, Entity.DOCUMENT.value.lower(), import_id
+    )
+    if authenticated:
+        return document_repo.delete(db, import_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
