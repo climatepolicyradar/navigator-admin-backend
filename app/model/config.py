@@ -30,11 +30,21 @@ class CorpusData(BaseModel):
     taxonomy: TaxonomyData
 
 
+# TODO: Remove this in subsequent deploy see PDCT-1052
+class OrganisationConfig(BaseModel):
+    """Definition of stats used on homepage"""
+
+    taxonomy: TaxonomyData
+    corpora: Sequence[CorpusData]
+
+
 class ConfigReadDTO(BaseModel):
-    """Definition of the new Config which includes corpora."""
+    """Definition of the new Config which just includes taxonomy."""
 
     geographies: Sequence[dict]
-    organisations: Mapping[str, Sequence[CorpusData]]
+    taxonomies: Mapping[
+        str, OrganisationConfig
+    ]  # TODO: Will be Mapping[str, Sequence[CorpusData]] after PDCT-1052 finished
     languages: Mapping[str, str]
     document: DocumentConfig
     event: EventConfig
