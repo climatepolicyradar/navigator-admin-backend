@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
-from tests.helpers.family import create_family_dto
+from tests.helpers.family import create_family_read_dto
 
 
 def _maybe_throw():
@@ -19,13 +19,13 @@ def _maybe_timeout():
 
 
 def all(db: Session):
-    return [create_family_dto("test")]
+    return [create_family_read_dto("test")]
 
 
 def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     _maybe_throw()
     if family_repo.return_empty is False:
-        return create_family_dto(import_id)
+        return create_family_read_dto(import_id)
 
 
 def search(
@@ -36,8 +36,8 @@ def search(
     if family_repo.return_empty:
         return []
     if "title" in query_params.keys():
-        return [create_family_dto("search1")]
-    return [create_family_dto("search1"), create_family_dto("search2")]
+        return [create_family_read_dto("search1")]
+    return [create_family_read_dto("search1"), create_family_read_dto("search2")]
 
 
 def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
