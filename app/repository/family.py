@@ -79,6 +79,7 @@ def _family_to_dto(
         ],
         organisation=org,
         corpus_id=cast(str, corpus.import_id),
+        corpus_title=cast(str, corpus.title),
         corpus_type=cast(str, corpus.corpus_type_name),
         created=cast(datetime, fam.created),
         last_modified=cast(datetime, fam.last_modified),
