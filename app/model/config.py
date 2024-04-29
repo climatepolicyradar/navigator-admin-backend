@@ -19,11 +19,32 @@ class DocumentConfig(BaseModel):
     variants: Sequence[str]
 
 
+class CorpusData(BaseModel):
+    """Contains the Corpus and CorpusType info"""
+
+    corpus_import_id: str
+    title: str
+    description: str
+    corpus_type: str
+    corpus_type_description: str
+    taxonomy: TaxonomyData
+
+
+# TODO: Remove this in subsequent deploy see PDCT-1052
+class OrganisationConfig(BaseModel):
+    """Definition of stats used on homepage"""
+
+    taxonomy: TaxonomyData
+    corpora: Sequence[CorpusData]
+
+
 class ConfigReadDTO(BaseModel):
     """Definition of the new Config which just includes taxonomy."""
 
     geographies: Sequence[dict]
-    taxonomies: Mapping[str, TaxonomyData]
+    taxonomies: Mapping[
+        str, OrganisationConfig
+    ]  # TODO: Will be Mapping[str, Sequence[CorpusData]] after PDCT-1052 finished
     languages: Mapping[str, str]
     document: DocumentConfig
     event: EventConfig

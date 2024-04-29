@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Optional
+from dataclasses import asdict
+from typing import Any, Optional, Sequence
 
 from db_client.models.base import AnyModel
 from db_client.models.dfce.family import (
@@ -9,11 +10,19 @@ from db_client.models.dfce.family import (
     Variant,
 )
 from db_client.models.dfce.geography import Geography
+from db_client.models.dfce.taxonomy_entry import TaxonomyEntry
 from db_client.models.document.physical_document import Language
 from db_client.models.organisation import Corpus, CorpusType, Organisation
 from sqlalchemy.orm import Session
 
-from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig, TaxonomyData
+from app.model.config import (
+    ConfigReadDTO,
+    CorpusData,
+    DocumentConfig,
+    EventConfig,
+    OrganisationConfig,
+    TaxonomyData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +76,48 @@ def _get_organisation_taxonomy_by_name(
         return metadata[0]
 
 
+def _to_corpus_data(row, event_types) -> CorpusData:
+    return CorpusData(
+        corpus_import_id=row.corpus_import_id,
+        title=row.title,
+        description=row.description,
+        corpus_type=row.corpus_type,
+        corpus_type_description=row.corpus_type_description,
+        taxonomy={
+            **row.taxonomy,
+            "event_types": asdict(event_types),
+        },
+    )
+
+
+def get_corpora_for_org(db: Session, org_name: str) -> Sequence[CorpusData]:
+    corpora = (
+        db.query(
+            Corpus.import_id.label("corpus_import_id"),
+            Corpus.title.label("title"),
+            Corpus.description.label("description"),
+            Corpus.corpus_type_name.label("corpus_type"),
+            CorpusType.description.label("corpus_type_description"),
+            CorpusType.valid_metadata.label("taxonomy"),
+        )
+        .join(
+            Corpus,
+            Corpus.corpus_type_name == CorpusType.name,
+        )
+        .join(Organisation, Organisation.id == Corpus.organisation_id)
+        .filter(Organisation.name == org_name)
+        .all()
+    )
+
+    event_types = db.query(FamilyEventType).all()
+    entry = TaxonomyEntry(
+        allow_blanks=False,
+        allowed_values=[r.name for r in event_types],
+        allow_any=False,
+    )
+    return [_to_corpus_data(row, entry) for row in corpora]
+
+
 def get(db: Session) -> ConfigReadDTO:
     """
     Returns the configuration for the admin service.
@@ -76,13 +127,17 @@ def get(db: Session) -> ConfigReadDTO:
     """
 
     geographies = _tree_table_to_json(table=Geography, db=db)
-    taxonomies = {}
+    organisations = {}
 
     # Be resilient to an organisation not having a taxonomy
     for org in db.query(Organisation).all():
         tax = _get_organisation_taxonomy_by_name(db=db, org_name=org.name)
-        if tax is not None:
-            taxonomies[org.name] = tax
+        corp = get_corpora_for_org(db, org.name)
+        if tax is not None and corp is not None:
+            organisations[org.name] = OrganisationConfig(
+                taxonomy=tax,
+                corpora=corp,
+            )
 
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 
@@ -117,7 +172,7 @@ def get(db: Session) -> ConfigReadDTO:
     )
     return ConfigReadDTO(
         geographies=geographies,
-        taxonomies=taxonomies,
+        taxonomies=organisations,
         languages=languages,
         document=doc_config,
         event=event_config,
