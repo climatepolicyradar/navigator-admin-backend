@@ -4,7 +4,7 @@ from pytest import MonkeyPatch
 
 from app.errors import RepositoryError, ValidationError
 from app.model.family import FamilyReadDTO, FamilyWriteDTO
-from tests.helpers.family import create_family_dto
+from tests.helpers.family import create_family_read_dto
 
 
 def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
@@ -25,11 +25,11 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
             raise TimeoutError
 
     def mock_get_all_families():
-        return [create_family_dto("test")]
+        return [create_family_read_dto("test")]
 
     def mock_get_family(import_id: str) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
-            return create_family_dto(import_id)
+            return create_family_read_dto(import_id)
 
     def mock_search_families(q_params: dict) -> list[FamilyReadDTO]:
         if q_params["q"] == "empty":
@@ -37,13 +37,13 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
 
         maybe_throw()
         maybe_timeout()
-        return [create_family_dto("search1")]
+        return [create_family_read_dto("search1")]
 
     def mock_update_family(
         import_id: str, user_email: str, data: FamilyWriteDTO
     ) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
-            return create_family_dto(
+            return create_family_read_dto(
                 import_id,
                 data.title,
                 data.summary,
