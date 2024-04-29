@@ -38,6 +38,7 @@ def create_family_read_dto(
         collections=collections,
         organisation="CCLW",
         corpus_id="CCLW.corpus.i00000001.n0000",
+        corpus_title="CCLW national policies",
         corpus_type="Laws and Policies",
         created=datetime.now(),
         last_modified=datetime.now(),
