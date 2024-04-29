@@ -11,7 +11,7 @@ import pytest
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from tests.helpers.family import create_family_dto
+from tests.helpers.family import create_family_read_dto
 
 USER_EMAIL = "test@cpr.org"
 ORG_ID = 1
@@ -408,7 +408,7 @@ def test_create(
     app_user_repo_mock,
     collection_repo_mock,
 ):
-    new_family = create_family_dto(import_id="A.0.0.5")
+    new_family = create_family_read_dto(import_id="A.0.0.5")
     family = family_service.create(to_create_dto(new_family), USER_EMAIL)
     assert family is not None
 
@@ -426,7 +426,7 @@ def test_create_repo_fails(
     app_user_repo_mock,
     collection_repo_mock,
 ):
-    new_family = create_family_dto(import_id="a.b.c.d")
+    new_family = create_family_read_dto(import_id="a.b.c.d")
     family_repo_mock.return_empty = True
     family = family_service.create(to_create_dto(new_family), USER_EMAIL)
 
@@ -447,7 +447,7 @@ def test_create_raises_when_category_invalid(
     metadata_repo_mock,
     collection_repo_mock,
 ):
-    new_family = create_family_dto(import_id="A.0.0.5")
+    new_family = create_family_read_dto(import_id="A.0.0.5")
     new_family.category = "invalid"
     with pytest.raises(ValidationError) as e:
         family_service.create(to_create_dto(new_family), USER_EMAIL)
@@ -468,7 +468,7 @@ def test_create_raises_when_metadata_invalid(
     metadata_repo_mock,
     collection_repo_mock,
 ):
-    new_family = create_family_dto(import_id="A.0.0.5")
+    new_family = create_family_read_dto(import_id="A.0.0.5")
     metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.create(to_create_dto(new_family), USER_EMAIL)
@@ -489,7 +489,7 @@ def test_create_raises_when_collection_org_different_to_usr_org(
     metadata_repo_mock,
     collection_repo_mock,
 ):
-    new_family = create_family_dto(import_id="A.0.0.5")
+    new_family = create_family_read_dto(import_id="A.0.0.5")
     collection_repo_mock.alternative_org = True
     with pytest.raises(ValidationError) as e:
         family_service.create(to_create_dto(new_family), USER_EMAIL)
@@ -511,7 +511,7 @@ def test_create_raises_when_collection_missing(
     metadata_repo_mock,
     collection_repo_mock,
 ):
-    new_family = create_family_dto(import_id="A.0.0.5")
+    new_family = create_family_read_dto(import_id="A.0.0.5")
     collection_repo_mock.missing = True
     with pytest.raises(ValidationError) as e:
         family_service.create(to_create_dto(new_family), USER_EMAIL)

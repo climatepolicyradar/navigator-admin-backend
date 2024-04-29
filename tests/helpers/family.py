@@ -6,7 +6,7 @@ from db_client.models.dfce.family import FamilyCategory
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
 
-def create_family_dto(
+def create_family_read_dto(
     import_id: str,
     title: str = "title",
     summary: str = "summary",
@@ -37,6 +37,8 @@ def create_family_dto(
         documents=["doc1", "doc2"],
         collections=collections,
         organisation="CCLW",
+        corpus_id="CCLW.corpus.i00000001.n0000",
+        corpus_type="Laws and Policies",
         created=datetime.now(),
         last_modified=datetime.now(),
     )

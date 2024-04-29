@@ -23,6 +23,8 @@ class FamilyReadDTO(BaseModel):
     documents: list[str]
     collections: list[str]
     organisation: str
+    corpus_id: str
+    corpus_type: str
     created: datetime
     last_modified: datetime
 
