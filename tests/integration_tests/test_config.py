@@ -4,10 +4,6 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
 
-EXPECTED_CCLW_TAXONOMY = {"color", "size"}
-EXPECTED_CCLW_COLOURS = ["green", "red", "pink", "blue"]
-EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type"}
-
 
 def test_get_config_has_expected_keys(
     client: TestClient, data_db: Session, user_header_token
@@ -23,7 +19,7 @@ def test_get_config_has_expected_keys(
     keys = data.keys()
 
     assert "geographies" in keys
-    assert "taxonomies" in keys
+    assert "organisations" in keys
     assert "languages" in keys
     assert "document" in keys
     assert "event" in keys
@@ -44,19 +40,16 @@ def test_get_config_has_correct_organisations(
     # Now sanity check the data
     #
     # Organisations.
-    LEN_ORG_CONFIG = 2
+    assert "CCLW" in data["organisations"].keys()
+    cclw_corporas = data["organisations"]["CCLW"]
+    assert len(cclw_corporas) == 1
 
-    assert "CCLW" in data["taxonomies"].keys()
-    cclw_org = data["taxonomies"]["CCLW"]
-    assert len(cclw_org) == LEN_ORG_CONFIG
-
-    assert "UNFCCC" in data["taxonomies"]
-    unfccc_org = data["taxonomies"]["UNFCCC"]
-    assert len(unfccc_org) == LEN_ORG_CONFIG
+    assert "UNFCCC" in data["organisations"]
+    unfccc_corporas = data["organisations"]["UNFCCC"]
+    assert len(unfccc_corporas) == 1
 
 
-# TODO: Remove as part of PDCT-1052
-def test_get_config_cclw_old_taxonomy_correct(
+def test_get_config_cclw_corpora_correct(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
@@ -68,44 +61,28 @@ def test_get_config_cclw_old_taxonomy_correct(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
 
-    # Now sanity check the old taxonomy data
-    assert "CCLW" in data["taxonomies"].keys()
-    cclw_org = data["taxonomies"]["CCLW"]
-    assert len(cclw_org) == 2
+    # Now sanity check the new corpora data
+    assert "CCLW" in data["organisations"].keys()
+    cclw_corporas = data["organisations"]["CCLW"]
+    assert len(cclw_corporas) == 1
 
-    cclw_taxonomy = cclw_org["taxonomy"]
-    assert set(cclw_taxonomy) == EXPECTED_CCLW_TAXONOMY
+    assert cclw_corporas[0]["corpus_import_id"] == "CCLW.corpus.i00000001.n0000"
+    assert cclw_corporas[0]["corpus_type"] == "Laws and Policies"
+    assert cclw_corporas[0]["corpus_type_description"] == "Laws and policies"
+    assert cclw_corporas[0]["description"] == "CCLW national policies"
+    assert cclw_corporas[0]["title"] == "CCLW national policies"
+
+    cclw_taxonomy = cclw_corporas[0]["taxonomy"]
+    expected_cclw_taxonomy = {"color", "size"}
+    expected_cclw_taxonomy.add("event_types")
+    assert set(cclw_taxonomy) ^ expected_cclw_taxonomy == set()
+
+    expected_cclw_colours = ["green", "red", "pink", "blue"]
     cclw_taxonomy_colours = cclw_taxonomy["color"]["allowed_values"]
-    assert set(cclw_taxonomy_colours) ^ set(EXPECTED_CCLW_COLOURS) == set()
+    assert set(cclw_taxonomy_colours) ^ set(expected_cclw_colours) == set()
 
 
-# TODO: Remove as part of PDCT-1052
-def test_get_config_unfccc_old_taxonomy_correct(
-    client: TestClient, data_db: Session, user_header_token
-):
-    setup_db(data_db)
-
-    response = client.get(
-        "/api/v1/config",
-        headers=user_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-
-    # Now sanity check the old taxonomy data
-    assert "UNFCCC" in data["taxonomies"]
-    unfccc_org = data["taxonomies"]["UNFCCC"]
-    assert len(unfccc_org) == 2
-
-    unfccc_taxonomy = unfccc_org["taxonomy"]
-    assert set(unfccc_taxonomy) == EXPECTED_UNFCCC_TAXONOMY
-    assert set(unfccc_taxonomy["author_type"]["allowed_values"]) == {
-        "Party",
-        "Non-Party",
-    }
-
-
-def test_get_config_cclw_new_taxonomy_correct(
+def test_get_config_unfccc_corpora_correct(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
@@ -118,49 +95,19 @@ def test_get_config_cclw_new_taxonomy_correct(
     data = response.json()
 
     # Now sanity check the new corpora data
-    assert "CCLW" in data["taxonomies"].keys()
-    cclw_org = data["taxonomies"]["CCLW"]
-    assert len(cclw_org) == 2
+    assert "UNFCCC" in data["organisations"]
+    unfccc_corporas = data["organisations"]["UNFCCC"]
+    assert len(unfccc_corporas) == 1
 
-    EXPECTED_CCLW_TAXONOMY.add("event_types")
+    assert unfccc_corporas[0]["corpus_import_id"] == "UNFCCC.corpus.i00000001.n0000"
+    assert unfccc_corporas[0]["corpus_type"] == "Intl. agreements"
+    assert unfccc_corporas[0]["corpus_type_description"] == "Intl. agreements"
+    assert unfccc_corporas[0]["description"] == "UNFCCC Submissions"
+    assert unfccc_corporas[0]["title"] == "UNFCCC Submissions"
 
-    cclw_corpora = cclw_org["corpora"]
-    assert len(cclw_corpora) == 1
-    assert cclw_corpora[0]["corpus_import_id"] == "CCLW.corpus.i00000001.n0000"
-    assert cclw_corpora[0]["corpus_type"] == "Laws and Policies"
-    assert cclw_corpora[0]["corpus_type_description"] == "Laws and policies"
-    assert cclw_corpora[0]["description"] == "CCLW national policies"
-    assert cclw_corpora[0]["title"] == "CCLW national policies"
-    assert set(cclw_corpora[0]["taxonomy"]) ^ EXPECTED_CCLW_TAXONOMY == set()
-
-
-def test_get_config_unfccc_new_taxonomy_correct(
-    client: TestClient, data_db: Session, user_header_token
-):
-    setup_db(data_db)
-
-    response = client.get(
-        "/api/v1/config",
-        headers=user_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-
-    # Now sanity check the new corpora data
-    assert "UNFCCC" in data["taxonomies"]
-    unfccc_org = data["taxonomies"]["UNFCCC"]
-    assert len(unfccc_org) == 2
-
-    EXPECTED_UNFCCC_TAXONOMY.add("event_types")
-
-    unfccc_corpora = unfccc_org["corpora"]
-    assert len(unfccc_corpora) == 1
-    assert unfccc_corpora[0]["corpus_import_id"] == "UNFCCC.corpus.i00000001.n0000"
-    assert unfccc_corpora[0]["corpus_type"] == "Intl. agreements"
-    assert unfccc_corpora[0]["corpus_type_description"] == "Intl. agreements"
-    assert unfccc_corpora[0]["description"] == "UNFCCC Submissions"
-    assert unfccc_corpora[0]["title"] == "UNFCCC Submissions"
-    assert set(unfccc_corpora[0]["taxonomy"]) ^ EXPECTED_UNFCCC_TAXONOMY == set()
+    expected_unfccc_taxonomy = {"author", "author_type"}
+    expected_unfccc_taxonomy.add("event_types")
+    assert set(unfccc_corporas[0]["taxonomy"]) ^ expected_unfccc_taxonomy == set()
 
 
 def test_config_languages(client: TestClient, data_db: Session, user_header_token):

@@ -20,7 +20,6 @@ from app.model.config import (
     CorpusData,
     DocumentConfig,
     EventConfig,
-    OrganisationConfig,
     TaxonomyData,
 )
 
@@ -129,15 +128,9 @@ def get(db: Session) -> ConfigReadDTO:
     geographies = _tree_table_to_json(table=Geography, db=db)
     organisations = {}
 
-    # Be resilient to an organisation not having a taxonomy
     for org in db.query(Organisation).all():
-        tax = _get_organisation_taxonomy_by_name(db=db, org_name=org.name)
         corp = get_corpora_for_org(db, org.name)
-        if tax is not None and corp is not None:
-            organisations[org.name] = OrganisationConfig(
-                taxonomy=tax,
-                corpora=corp,
-            )
+        organisations[org.name] = corp
 
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 
@@ -172,7 +165,7 @@ def get(db: Session) -> ConfigReadDTO:
     )
     return ConfigReadDTO(
         geographies=geographies,
-        taxonomies=organisations,
+        organisations=organisations,
         languages=languages,
         document=doc_config,
         event=event_config,
