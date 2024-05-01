@@ -23,7 +23,7 @@ class FamilyReadDTO(BaseModel):
     documents: list[str]
     collections: list[str]
     organisation: str
-    corpus_id: str
+    corpus_import_id: str
     corpus_title: str
     corpus_type: str
     created: datetime
@@ -63,3 +63,4 @@ class FamilyCreateDTO(BaseModel):
     category: str
     metadata: Json
     collections: list[str]
+    corpus_import_id: str

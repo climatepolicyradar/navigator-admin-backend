@@ -78,7 +78,7 @@ def _family_to_dto(
             )
         ],
         organisation=org,
-        corpus_id=cast(str, corpus.import_id),
+        corpus_import_id=cast(str, corpus.import_id),
         corpus_title=cast(str, corpus.title),
         corpus_type=cast(str, corpus.corpus_type_name),
         created=cast(datetime, fam.created),
@@ -343,12 +343,11 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
         )
         db.add(new_family)
 
-        # New schema.
-        new_fam_corpus = db.query(Corpus).filter(Corpus.organisation_id == org_id).one()
+        # Add corpus - family link.
         db.add(
             FamilyCorpus(
                 family_import_id=new_family.import_id,
-                corpus_import_id=new_fam_corpus.import_id,
+                corpus_import_id=family.corpus_import_id,
             )
         )
 

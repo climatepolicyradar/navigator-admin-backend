@@ -19,6 +19,7 @@ from app.service import (
     app_user,
     category,
     collection,
+    corpus,
     geography,
     id,
     metadata,
@@ -194,6 +195,14 @@ def create(
     ]
     if len(collections_not_in_user_org) > 0 and any(collections_not_in_user_org):
         msg = "Organisation mismatch between some collections and the current user"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
+
+    # Validate that the corpus we want to add the new family to exists and is from the
+    # same organisation as the user.
+    corpus.validate(family.corpus_import_id)
+    if corpus.get_corpus_org_id(db, family.corpus_import_id) != org_id:
+        msg = "Organisation mismatch between selected corpus and the current user"
         _LOGGER.error(msg)
         raise ValidationError(msg)
 
