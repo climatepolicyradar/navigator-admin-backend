@@ -167,7 +167,6 @@ def test_create_family_when_invalid_collection_id(
         metadata={"color": ["pink"], "size": [0]},
         collections=["col1"],
     )
-    # new_family.category = "invalid"
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
@@ -186,7 +185,6 @@ def test_create_family_when_invalid_collection_org(
         metadata={"color": ["pink"], "size": [0]},
         collections=["C.0.0.1"],
     )
-    # new_family.category = "invalid"
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
@@ -195,4 +193,25 @@ def test_create_family_when_invalid_collection_org(
     assert (
         data["detail"]
         == "Organisation mismatch between some collections and the current user"
+    )
+
+
+def test_create_family_when_invalid_corpus_org(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_family = create_family_create_dto(
+        title="Title",
+        summary="test test test",
+        metadata={"color": ["pink"], "size": [0]},
+        corpus_import_id="UNFCCC.corpus.i00000001.n0000",
+    )
+    response = client.post(
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+    )
+    assert response.status_code == 400
+    data = response.json()
+    assert (
+        data["detail"]
+        == "Organisation mismatch between selected corpus and the current user"
     )
