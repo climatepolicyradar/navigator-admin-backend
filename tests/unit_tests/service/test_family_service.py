@@ -42,6 +42,7 @@ def to_create_dto(dto: FamilyReadDTO) -> FamilyCreateDTO:
         category=dto.category,
         metadata=dto.metadata,
         collections=dto.collections,
+        corpus_import_id=dto.corpus_import_id,
     )
 
 
