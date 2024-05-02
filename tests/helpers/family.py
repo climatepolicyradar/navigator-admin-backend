@@ -37,7 +37,7 @@ def create_family_read_dto(
         documents=["doc1", "doc2"],
         collections=collections,
         organisation="CCLW",
-        corpus_id="CCLW.corpus.i00000001.n0000",
+        corpus_import_id="CCLW.corpus.i00000001.n0000",
         corpus_title="CCLW national policies",
         corpus_type="Laws and Policies",
         created=datetime.now(),
@@ -52,6 +52,7 @@ def create_family_create_dto(
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     collections: Optional[list[str]] = None,
+    corpus_import_id: str = "CCLW.corpus.i00000001.n0000",
 ) -> FamilyCreateDTO:
     if metadata is None:
         metadata = {}
@@ -64,6 +65,7 @@ def create_family_create_dto(
         category=category,
         metadata=metadata,
         collections=collections,
+        corpus_import_id=corpus_import_id,
     )
 
 

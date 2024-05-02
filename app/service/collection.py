@@ -88,6 +88,17 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def validate_multiple_ids(import_ids: set[str]) -> None:
+    """
+    Validates a set of import ids for a collection.
+
+    :param set[str] import_ids: A set of import ids to check.
+    :raises ValidationError: raised if any of the import_ids are invalid.
+    """
+    id.validate_multiple_ids(import_ids)
+
+
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
