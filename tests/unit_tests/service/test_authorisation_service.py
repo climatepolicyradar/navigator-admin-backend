@@ -3,7 +3,7 @@ import pytest
 import app.service.authentication as auth_service
 import app.service.token as token_service
 from app.errors import AuthenticationError, RepositoryError
-from tests.unit_tests.mocks.repos.app_user_repo import (
+from tests.mocks.repos.app_user_repo import (
     HASH_PASSWORD,
     PLAIN_PASSWORD,
     VALID_USERNAME,
