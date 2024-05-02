@@ -150,7 +150,9 @@ def test_update(
     assert family is not None
     family_repo_mock.get.call_count = 0
 
-    result = family_service.update("a.b.c.d", USER_EMAIL, to_write_dto(family))
+    result = family_service.update(
+        "a.b.c.d", USER_EMAIL, to_write_dto(family), context=None
+    )
     assert result is not None
 
     assert family_repo_mock.update.call_count == 1
