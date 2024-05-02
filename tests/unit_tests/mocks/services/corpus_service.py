@@ -18,7 +18,7 @@ def mock_corpus_service(corpus_service, monkeypatch: MonkeyPatch, mocker):
 
     def mock_get_corpus_org_id():
         if corpus_service.org_mismatch:
-            raise AuthorisationError("Org mismatch between corpus and user")
+            raise AuthorisationError("Org mismatch")
 
     monkeypatch.setattr(corpus_service, "validate", mock_validate)
     mocker.spy(corpus_service, "validate")

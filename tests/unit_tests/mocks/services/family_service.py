@@ -55,9 +55,9 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
 
     def mock_create_family(data: FamilyCreateDTO, user_email: str) -> str:
         if not family_service.valid:
-            raise ValidationError("Invalid collection IDs")
+            raise ValidationError("Invalid data")
         if family_service.org_mismatch:
-            raise AuthorisationError("Org mismatch between corpus and user")
+            raise AuthorisationError("Org mismatch")
         if family_service.missing:
             raise RepositoryError("bad-db")
         return "new-import-id"
