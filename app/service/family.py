@@ -94,7 +94,7 @@ def update(
     import_id: str,
     user_email: str,
     family_dto: FamilyWriteDTO,
-    context,
+    context=None,
     db: Session = db_session.get_db(),
 ) -> Optional[FamilyReadDTO]:
     """
