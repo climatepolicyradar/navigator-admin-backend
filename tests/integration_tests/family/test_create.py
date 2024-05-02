@@ -135,7 +135,7 @@ def test_create_family_when_invalid_geo(
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["detail"] == "The geography value UK is invalid!"
 
@@ -152,7 +152,7 @@ def test_create_family_when_invalid_category(
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["detail"] == "Invalid is not a valid FamilyCategory"
 
@@ -170,7 +170,7 @@ def test_create_family_when_invalid_collection_id(
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["detail"] == "The import ids are invalid: ['col1']"
 
@@ -188,7 +188,7 @@ def test_create_family_when_invalid_collection_org(
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
         data["detail"]
@@ -209,7 +209,7 @@ def test_create_family_when_invalid_corpus_org(
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
         data["detail"]

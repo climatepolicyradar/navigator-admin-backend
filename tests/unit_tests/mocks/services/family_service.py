@@ -2,13 +2,15 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from tests.helpers.family import create_family_read_dto
 
 
 def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     family_service.missing = False
+    family_service.org_mismatch = False
+    family_service.valid = True
     family_service.invalid_collections = False
     family_service.throw_repository_error = False
     family_service.throw_timeout_error = False
@@ -52,6 +54,10 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
             )
 
     def mock_create_family(data: FamilyCreateDTO, user_email: str) -> str:
+        if not family_service.valid:
+            raise ValidationError("Invalid collection IDs")
+        if family_service.org_mismatch:
+            raise AuthorisationError("Org mismatch between corpus and user")
         if family_service.missing:
             raise RepositoryError("bad-db")
         return "new-import-id"

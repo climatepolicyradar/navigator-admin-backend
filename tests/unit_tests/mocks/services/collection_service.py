@@ -15,6 +15,7 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
     collection_service.throw_repository_error = False
     collection_service.throw_timeout_error = False
     collection_service.invalid_org = False
+    collection_service.valid = True
 
     def maybe_throw():
         if collection_service.throw_repository_error:
