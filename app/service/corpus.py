@@ -38,9 +38,10 @@ def validate(db: Session, corpus_import_id: str) -> bool:
         if is_valid:
             return is_valid
 
-        msg = f"Corpus '{corpus_import_id}' not found"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
     except Exception as e:
+        _LOGGER.error(e)
         raise RepositoryError(e)
+
+    msg = f"Corpus '{corpus_import_id}' not found"
+    _LOGGER.error(msg)
+    raise ValidationError(msg)

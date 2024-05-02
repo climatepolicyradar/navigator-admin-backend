@@ -17,7 +17,7 @@ from app.api.api_v1.query_params import (
     set_default_query_params,
     validate_query_params,
 )
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
 families_router = r = APIRouter()
@@ -162,6 +162,8 @@ async def create_family(
     """
     try:
         family = family_service.create(new_family, request.state.user.email)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
