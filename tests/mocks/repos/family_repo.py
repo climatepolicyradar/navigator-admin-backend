@@ -19,13 +19,13 @@ def _maybe_timeout():
 
 
 def all(db: Session):
-    return [create_family_read_dto("test")]
+    return [create_family_read_dto("test", collections=["x.y.z.1", "x.y.z.2"])]
 
 
 def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     _maybe_throw()
     if family_repo.return_empty is False:
-        return create_family_read_dto(import_id)
+        return create_family_read_dto(import_id, collections=["x.y.z.1", "x.y.z.2"])
 
 
 def search(
@@ -36,8 +36,11 @@ def search(
     if family_repo.return_empty:
         return []
     if "title" in query_params.keys():
-        return [create_family_read_dto("search1")]
-    return [create_family_read_dto("search1"), create_family_read_dto("search2")]
+        return [create_family_read_dto("search1", collections=["x.y.z.1", "x.y.z.2"])]
+    return [
+        create_family_read_dto("search1", collections=["x.y.z.1", "x.y.z.2"]),
+        create_family_read_dto("search2", collections=["x.y.z.1", "x.y.z.2"]),
+    ]
 
 
 def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
