@@ -93,8 +93,10 @@ def validate(db: Session, import_ids: set[str]) -> bool:
         check the existence of.
     :return bool: Return whether or not all the IDs exists in the DB.
     """
-    collections = [col[0] for col in db.query(Collection.import_id).distinct().all()]
-    return bool(import_ids.issubset(collections))
+    matches_in_set = (
+        db.query(Collection).filter(Collection.import_id.in_(import_ids)).count()
+    )
+    return bool(len(import_ids) == matches_in_set)
 
 
 def all(db: Session) -> list[CollectionReadDTO]:

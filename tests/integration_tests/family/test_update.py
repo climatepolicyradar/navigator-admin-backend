@@ -112,7 +112,7 @@ def test_update_family_remove_collections(
     new_family = create_family_write_dto(
         title="apple",
         summary="",
-        geography="South Asia",
+        geography="Other",
         category=FamilyCategory.UNFCCC,
         metadata={"color": ["red"], "size": [3]},
         collections=[],
@@ -126,7 +126,7 @@ def test_update_family_remove_collections(
     data = response.json()
     assert data["title"] == "apple"
     assert data["summary"] == ""
-    assert data["geography"] == "South Asia"
+    assert data["geography"] == "Other"
     assert data["category"] == "UNFCCC"
     assert data["slug"] == "Slug1"
     assert data["collections"] == []
@@ -137,7 +137,7 @@ def test_update_family_remove_collections(
     assert db_family.title == "apple"
     assert db_family.description == ""
     expected_geo = (
-        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+        data_db.query(Geography).filter(Geography.display_value == "Other").one()
     )
     assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
@@ -160,7 +160,7 @@ def test_update_family_append_collections(
     new_family = create_family_write_dto(
         title="apple",
         summary="",
-        geography="South Asia",
+        geography="Other",
         category=FamilyCategory.UNFCCC,
         metadata={"color": ["red"], "size": [3]},
         collections=["C.0.0.2", "C.0.0.3"],
@@ -174,7 +174,7 @@ def test_update_family_append_collections(
     data = response.json()
     assert data["title"] == "apple"
     assert data["summary"] == ""
-    assert data["geography"] == "South Asia"
+    assert data["geography"] == "Other"
     assert data["category"] == "UNFCCC"
     assert data["slug"] == "Slug1"
     assert data["collections"] == ["C.0.0.2", "C.0.0.3"]
@@ -186,7 +186,7 @@ def test_update_family_append_collections(
     assert db_family.description == ""
 
     expected_geo = (
-        data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
+        data_db.query(Geography).filter(Geography.display_value == "Other").one()
     )
     assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
@@ -202,6 +202,51 @@ def test_update_family_append_collections(
     assert len(db_collections) == 2
     assert db_collections[0].collection_import_id == "C.0.0.2"
     assert db_collections[1].collection_import_id == "C.0.0.3"
+
+
+def test_update_family_collections_to_one_that_does_not_exist(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_family = create_family_write_dto(
+        title="apple",
+        summary="",
+        geography="Other",
+        category=FamilyCategory.UNFCCC,
+        metadata={"color": ["red"], "size": [3]},
+        collections=["C.0.0.2", "X.Y.Z.3"],
+    )
+    response = client.put(
+        "/api/v1/families/A.0.0.1",
+        json=new_family.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["detail"] == "One or more of the collections to update does not exist"
+
+    db_family: Family = (
+        data_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
+    )
+    assert db_family.title == "apple"
+    assert db_family.description == ""
+
+    expected_geo = (
+        data_db.query(Geography).filter(Geography.display_value == "Other").one()
+    )
+    assert db_family.geography_id == expected_geo.id
+    assert db_family.family_category == "UNFCCC"
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
+    assert len(db_slug) == 1
+    assert str(db_slug[-1].name) == "Slug1"
+
+    db_collections: Optional[list[CollectionFamily]] = (
+        data_db.query(CollectionFamily)
+        .filter(CollectionFamily.family_import_id == "A.0.0.1")
+        .all()
+    )
+    assert len(db_collections) == 1
+    assert db_collections[0].collection_import_id == "C.0.0.2"
 
 
 def test_update_family_when_user_org_different_to_family_org(
