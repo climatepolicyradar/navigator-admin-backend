@@ -136,8 +136,8 @@ def update(
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
     all_cols_to_modify = set(family.collections).union(set(family_dto.collections))
-
-    id.validate_multiple_ids(all_cols_to_modify)
+    collection.validate_multiple_ids(all_cols_to_modify)
+    collection.validate(all_cols_to_modify, db)
 
     collections_not_in_user_org = [
         collection.get_org_from_id(db, c) != org_id for c in all_cols_to_modify
@@ -187,6 +187,7 @@ def create(
     # Validate collection ids.
     collections = set(family.collections)
     collection.validate_multiple_ids(collections)
+    collection.validate(collections, db)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user.
