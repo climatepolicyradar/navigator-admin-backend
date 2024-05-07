@@ -64,6 +64,14 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
             return None
         return 11
 
+    def mock_validate() -> Optional[int]:
+        maybe_throw()
+        if collection_service.missing is False:
+            raise RepositoryError(
+                "One or more of the collections to update does not exist"
+            )
+        return True
+
     def mock_get_org_from_id() -> Optional[int]:
         maybe_throw()
         if collection_service.missing:
@@ -92,6 +100,9 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
 
     monkeypatch.setattr(collection_service, "count", mock_count_collection)
     mocker.spy(collection_service, "count")
+
+    monkeypatch.setattr(collection_service, "validate", mock_validate)
+    mocker.spy(collection_service, "validate")
 
     monkeypatch.setattr(collection_service, "get_org_from_id", mock_get_org_from_id)
     mocker.spy(collection_service, "get_org_from_id")

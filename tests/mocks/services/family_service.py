@@ -24,11 +24,11 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
             raise TimeoutError
 
     def mock_get_all_families():
-        return [create_family_read_dto("test")]
+        return [create_family_read_dto("test", collections=["x.y.z.1", "x.y.z.2"])]
 
     def mock_get_family(import_id: str) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
-            return create_family_read_dto(import_id)
+            return create_family_read_dto(import_id, collections=["x.y.z.1", "x.y.z.2"])
 
     def mock_search_families(q_params: dict) -> list[FamilyReadDTO]:
         if q_params["q"] == "empty":
@@ -36,7 +36,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
 
         maybe_throw()
         maybe_timeout()
-        return [create_family_read_dto("search1")]
+        return [create_family_read_dto("search1", collections=["x.y.z.1", "x.y.z.2"])]
 
     def mock_update_family(
         import_id: str, user_email: str, data: FamilyWriteDTO

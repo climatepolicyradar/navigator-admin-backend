@@ -13,7 +13,7 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
-from app.errors import RepositoryError
+from app.errors import RepositoryError, ValidationError
 from app.model.collection import (
     CollectionCreateDTO,
     CollectionReadDTO,
@@ -89,14 +89,28 @@ def validate_import_id(import_id: str) -> None:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def validate_multiple_ids(import_ids: set[str]) -> None:
+def validate_multiple_ids(
+    import_ids: set[str], db: Session = db_session.get_db()
+) -> None:
     """
-    Validates a set of import ids for a collection.
+    Validates a set of collection import ids.
 
     :param set[str] import_ids: A set of import ids to check.
     :raises ValidationError: raised if any of the import_ids are invalid.
     """
     id.validate_multiple_ids(import_ids)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def validate(import_ids: set[str], db: Session = db_session.get_db()) -> None:
+    """
+    Verifies that a set of collection import ids exist in the database.
+
+    :param set[str] import_ids: A set of import ids to check.
+    :raises ValidationError: raised if any of the import_ids don't exist.
+    """
+    if collection_repo.validate(db, import_ids) is False:
+        raise ValidationError("One or more of the collections to update does not exist")
 
 
 @db_session.with_transaction(__name__)

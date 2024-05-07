@@ -20,7 +20,7 @@ def create_family_read_dto(
         metadata = {}
 
     if collections is None:
-        collections = ["x.y.z.1", "x.y.z.2"]
+        collections = []
 
     return FamilyReadDTO(
         import_id=import_id,

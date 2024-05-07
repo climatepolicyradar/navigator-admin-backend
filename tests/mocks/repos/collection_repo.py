@@ -66,6 +66,12 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
             return 11
         return
 
+    def mock_validate(_, __) -> bool:
+        maybe_throw()
+        if collection_repo.missing:
+            return False
+        return True
+
     def mock_get_org_from_collection_id(_, import_id: str) -> Optional[int]:
         maybe_throw()
         if collection_repo.missing is True:
@@ -96,6 +102,9 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(collection_repo, "count", mock_get_count)
     mocker.spy(collection_repo, "count")
+
+    monkeypatch.setattr(collection_repo, "validate", mock_validate)
+    mocker.spy(collection_repo, "validate")
 
     monkeypatch.setattr(
         collection_repo, "get_org_from_collection_id", mock_get_org_from_collection_id
