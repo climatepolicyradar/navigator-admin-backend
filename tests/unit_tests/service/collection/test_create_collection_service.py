@@ -2,20 +2,8 @@ import pytest
 
 import app.service.collection as collection_service
 from app.errors import RepositoryError
-from app.model.collection import (
-    CollectionCreateDTO,
-    CollectionReadDTO,
-    CollectionWriteDTO,
-)
+from app.model.collection import CollectionCreateDTO, CollectionReadDTO
 from tests.mocks.repos.collection_repo import create_collection_read_dto as create_dto
-
-
-def _to_write_dto(dto: CollectionReadDTO) -> CollectionWriteDTO:
-    return CollectionWriteDTO(
-        title=dto.title,
-        description=dto.description,
-        organisation=dto.organisation,
-    )
 
 
 def _to_create_dto(dto: CollectionReadDTO) -> CollectionCreateDTO:

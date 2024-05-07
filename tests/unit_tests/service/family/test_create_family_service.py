@@ -4,34 +4,15 @@ Tests the family service.
 Uses a family repo mock and ensures that the repo is called.
 """
 
-from typing import Optional
-
 import pytest
 
 import app.service.family as family_service
 from app.errors import AuthorisationError, ValidationError
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from app.model.family import FamilyCreateDTO, FamilyReadDTO
 from tests.helpers.family import create_family_read_dto
 
 USER_EMAIL = "test@cpr.org"
 ORG_ID = 1
-
-
-def to_write_dto(
-    dto: FamilyReadDTO, collections: Optional[list[str]] = None
-) -> FamilyWriteDTO:
-    if collections is None:
-        collections = ["x.y.z.2", "x.y.z.3"]
-    if collections is None:
-        collections = dto.collections
-    return FamilyWriteDTO(
-        title=dto.title,
-        summary=dto.summary,
-        geography=dto.geography,
-        category=dto.category,
-        metadata=dto.metadata,
-        collections=collections,
-    )
 
 
 def to_create_dto(dto: FamilyReadDTO) -> FamilyCreateDTO:

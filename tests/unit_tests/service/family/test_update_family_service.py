@@ -10,7 +10,7 @@ import pytest
 
 import app.service.family as family_service
 from app.errors import ValidationError
-from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from app.model.family import FamilyReadDTO, FamilyWriteDTO
 
 USER_EMAIL = "test@cpr.org"
 ORG_ID = 1
@@ -30,18 +30,6 @@ def to_write_dto(
         category=dto.category,
         metadata=dto.metadata,
         collections=collections,
-    )
-
-
-def to_create_dto(dto: FamilyReadDTO) -> FamilyCreateDTO:
-    return FamilyCreateDTO(
-        title=dto.title,
-        summary=dto.summary,
-        geography=dto.geography,
-        category=dto.category,
-        metadata=dto.metadata,
-        collections=dto.collections,
-        corpus_import_id=dto.corpus_import_id,
     )
 
 

@@ -2,17 +2,7 @@ import pytest
 
 import app.service.event as event_service
 from app.errors import RepositoryError, ValidationError
-from app.model.event import EventReadDTO, EventWriteDTO
 from tests.helpers.event import create_event_create_dto
-
-
-def _to_write_dto(dto: EventReadDTO) -> EventWriteDTO:
-    return EventWriteDTO(
-        event_title=dto.event_title,
-        date=dto.date,
-        event_type_value=dto.event_type_value,
-    )
-
 
 # --- CREATE
 

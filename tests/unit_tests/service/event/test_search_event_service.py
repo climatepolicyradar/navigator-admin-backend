@@ -2,16 +2,6 @@ import pytest
 
 import app.service.event as event_service
 from app.errors import RepositoryError
-from app.model.event import EventReadDTO, EventWriteDTO
-
-
-def _to_write_dto(dto: EventReadDTO) -> EventWriteDTO:
-    return EventWriteDTO(
-        event_title=dto.event_title,
-        date=dto.date,
-        event_type_value=dto.event_type_value,
-    )
-
 
 # --- SEARCH
 

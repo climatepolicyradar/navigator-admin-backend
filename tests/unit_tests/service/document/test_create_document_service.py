@@ -2,19 +2,7 @@ import pytest
 
 import app.service.document as doc_service
 from app.errors import RepositoryError, ValidationError
-from app.model.document import DocumentReadDTO, DocumentWriteDTO
 from tests.helpers.document import create_document_create_dto
-
-
-def _to_write_dto(dto: DocumentReadDTO) -> DocumentWriteDTO:
-    return DocumentWriteDTO(
-        variant_name=dto.variant_name,
-        role=dto.role,
-        type=dto.type,
-        title=dto.title,
-        source_url=dto.source_url,
-        user_language_name=dto.user_language_name,
-    )
 
 
 def test_document_service_get_upload_details(test_s3_client):
