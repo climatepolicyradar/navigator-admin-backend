@@ -20,7 +20,6 @@ from app.model.config import (
     CorpusData,
     DocumentConfig,
     EventConfig,
-    OrganisationConfig,
     TaxonomyData,
 )
 
@@ -90,7 +89,7 @@ def _to_corpus_data(row, event_types) -> CorpusData:
     )
 
 
-def get_corpora_for_org(db: Session, org_name: str) -> Sequence[CorpusData]:
+def get_corpora_for_org(db: Session, org_id: int) -> Sequence[CorpusData]:
     corpora = (
         db.query(
             Corpus.import_id.label("corpus_import_id"),
@@ -105,7 +104,7 @@ def get_corpora_for_org(db: Session, org_name: str) -> Sequence[CorpusData]:
             Corpus.corpus_type_name == CorpusType.name,
         )
         .join(Organisation, Organisation.id == Corpus.organisation_id)
-        .filter(Organisation.name == org_name)
+        .filter(Organisation.id == org_id)
         .all()
     )
 
@@ -118,7 +117,7 @@ def get_corpora_for_org(db: Session, org_name: str) -> Sequence[CorpusData]:
     return [_to_corpus_data(row, entry) for row in corpora]
 
 
-def get(db: Session) -> ConfigReadDTO:
+def get(db: Session, org_id: int) -> ConfigReadDTO:
     """
     Returns the configuration for the admin service.
 
@@ -127,17 +126,15 @@ def get(db: Session) -> ConfigReadDTO:
     """
 
     geographies = _tree_table_to_json(table=Geography, db=db)
-    organisations = {}
+    taxonomies = {}
 
     # Be resilient to an organisation not having a taxonomy
     for org in db.query(Organisation).all():
         tax = _get_organisation_taxonomy_by_name(db=db, org_name=org.name)
-        corp = get_corpora_for_org(db, org.name)
-        if tax is not None and corp is not None:
-            organisations[org.name] = OrganisationConfig(
-                taxonomy=tax,
-                corpora=corp,
-            )
+        if tax is not None:
+            taxonomies[org.name] = tax
+
+    corpora = get_corpora_for_org(db, org_id)
 
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 
@@ -172,7 +169,8 @@ def get(db: Session) -> ConfigReadDTO:
     )
     return ConfigReadDTO(
         geographies=geographies,
-        taxonomies=organisations,
+        taxonomies=taxonomies,
+        corpora=corpora,
         languages=languages,
         document=doc_config,
         event=event_config,
