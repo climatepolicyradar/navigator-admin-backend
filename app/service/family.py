@@ -12,7 +12,7 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from app.service import (
@@ -20,6 +20,7 @@ from app.service import (
     authorisation,
     category,
     collection,
+    corpus,
     geography,
     id,
     metadata,
@@ -94,7 +95,7 @@ def update(
     import_id: str,
     user_email: str,
     family_dto: FamilyWriteDTO,
-    context,
+    context=None,
     db: Session = db_session.get_db(),
 ) -> Optional[FamilyReadDTO]:
     """
@@ -136,8 +137,8 @@ def update(
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
     all_cols_to_modify = set(family.collections).union(set(family_dto.collections))
-
-    id.validate_multiple_ids(all_cols_to_modify)
+    collection.validate_multiple_ids(all_cols_to_modify)
+    collection.validate(all_cols_to_modify, db)
 
     collections_not_in_user_org = [
         collection.get_org_from_id(db, c) != org_id for c in all_cols_to_modify
@@ -186,7 +187,8 @@ def create(
 
     # Validate collection ids.
     collections = set(family.collections)
-    id.validate_multiple_ids(collections)
+    collection.validate_multiple_ids(collections)
+    collection.validate(collections, db)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user.
@@ -196,7 +198,15 @@ def create(
     if len(collections_not_in_user_org) > 0 and any(collections_not_in_user_org):
         msg = "Organisation mismatch between some collections and the current user"
         _LOGGER.error(msg)
-        raise ValidationError(msg)
+        raise AuthorisationError(msg)
+
+    # Validate that the corpus we want to add the new family to exists and is from the
+    # same organisation as the user.
+    corpus.validate(db, family.corpus_import_id)
+    if corpus.get_corpus_org_id(db, family.corpus_import_id) != org_id:
+        msg = "Organisation mismatch between selected corpus and the current user"
+        _LOGGER.error(msg)
+        raise AuthorisationError(msg)
 
     return family_repo.create(db, family, geo_id, org_id)
 

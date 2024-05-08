@@ -14,6 +14,7 @@ import app.service.analytics as analytics_service
 import app.service.app_user as app_user_service
 import app.service.collection as collection_service
 import app.service.config as config_service
+import app.service.corpus as corpus_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
@@ -24,6 +25,7 @@ from app.repository import (
     app_user_repo,
     collection_repo,
     config_repo,
+    corpus_repo,
     document_repo,
     event_repo,
     family_repo,
@@ -31,22 +33,24 @@ from app.repository import (
     metadata_repo,
     organisation_repo,
 )
-from tests.unit_tests.mocks.repos import create_mock_family_repo
-from tests.unit_tests.mocks.repos.app_user_repo import mock_app_user_repo
-from tests.unit_tests.mocks.repos.collection_repo import mock_collection_repo
-from tests.unit_tests.mocks.repos.config_repo import mock_config_repo
-from tests.unit_tests.mocks.repos.document_repo import mock_document_repo
-from tests.unit_tests.mocks.repos.event_repo import mock_event_repo
-from tests.unit_tests.mocks.repos.geography_repo import mock_geography_repo
-from tests.unit_tests.mocks.repos.metadata_repo import mock_metadata_repo
-from tests.unit_tests.mocks.repos.organisation_repo import mock_organisation_repo
-from tests.unit_tests.mocks.services.analytics_service import mock_analytics_service
-from tests.unit_tests.mocks.services.app_user_service import mock_app_user_service
-from tests.unit_tests.mocks.services.collection_service import mock_collection_service
-from tests.unit_tests.mocks.services.config_service import mock_config_service
-from tests.unit_tests.mocks.services.document_service import mock_document_service
-from tests.unit_tests.mocks.services.event_service import mock_event_service
-from tests.unit_tests.mocks.services.family_service import mock_family_service
+from tests.mocks.repos import create_mock_family_repo
+from tests.mocks.repos.app_user_repo import mock_app_user_repo
+from tests.mocks.repos.collection_repo import mock_collection_repo
+from tests.mocks.repos.config_repo import mock_config_repo
+from tests.mocks.repos.corpus_repo import mock_corpus_repo
+from tests.mocks.repos.document_repo import mock_document_repo
+from tests.mocks.repos.event_repo import mock_event_repo
+from tests.mocks.repos.geography_repo import mock_geography_repo
+from tests.mocks.repos.metadata_repo import mock_metadata_repo
+from tests.mocks.repos.organisation_repo import mock_organisation_repo
+from tests.mocks.services.analytics_service import mock_analytics_service
+from tests.mocks.services.app_user_service import mock_app_user_service
+from tests.mocks.services.collection_service import mock_collection_service
+from tests.mocks.services.config_service import mock_config_service
+from tests.mocks.services.corpus_service import mock_corpus_service
+from tests.mocks.services.document_service import mock_document_service
+from tests.mocks.services.event_service import mock_event_service
+from tests.mocks.services.family_service import mock_family_service
 
 
 @pytest.fixture
@@ -128,6 +132,13 @@ def event_repo_mock(monkeypatch, mocker):
     yield event_repo
 
 
+@pytest.fixture
+def corpus_repo_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_corpus_repo(corpus_repo, monkeypatch, mocker)
+    yield corpus_repo
+
+
 # ----- Mock services
 
 
@@ -180,6 +191,13 @@ def event_service_mock(monkeypatch, mocker):
     yield event_service
 
 
+@pytest.fixture
+def corpus_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_corpus_service(corpus_service, monkeypatch, mocker)
+    yield corpus_service
+
+
 # ----- User tokens
 
 
@@ -193,6 +211,13 @@ def superuser_header_token() -> Dict[str, str]:
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("test@cpr.org", False, {"is_admin": False})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def non_cclw_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("unfccc@cpr.org", False, {"is_admin": False})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 

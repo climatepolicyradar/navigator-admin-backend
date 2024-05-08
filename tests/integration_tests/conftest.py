@@ -16,30 +16,23 @@ import app.service.token as token_service
 from app.config import SQLALCHEMY_DATABASE_URI
 from app.main import app
 from app.repository import collection_repo, document_repo, event_repo, family_repo
-from tests.integration_tests.mocks.bad_collection_repo import (
+from tests.mocks.repos.bad_collection_repo import (
     mock_bad_collection_repo,
     mock_collection_count_none,
 )
-from tests.integration_tests.mocks.bad_document_repo import (
+from tests.mocks.repos.bad_document_repo import (
     mock_bad_document_repo,
     mock_document_count_none,
 )
-from tests.integration_tests.mocks.bad_event_repo import (
-    mock_bad_event_repo,
-    mock_event_count_none,
-)
-from tests.integration_tests.mocks.bad_family_repo import (
+from tests.mocks.repos.bad_event_repo import mock_bad_event_repo, mock_event_count_none
+from tests.mocks.repos.bad_family_repo import (
     mock_bad_family_repo,
     mock_family_count_none,
 )
-from tests.integration_tests.mocks.rollback_collection_repo import (
-    mock_rollback_collection_repo,
-)
-from tests.integration_tests.mocks.rollback_document_repo import (
-    mock_rollback_document_repo,
-)
-from tests.integration_tests.mocks.rollback_event_repo import mock_rollback_event_repo
-from tests.integration_tests.mocks.rollback_family_repo import mock_rollback_family_repo
+from tests.mocks.repos.rollback_collection_repo import mock_rollback_collection_repo
+from tests.mocks.repos.rollback_document_repo import mock_rollback_document_repo
+from tests.mocks.repos.rollback_event_repo import mock_rollback_event_repo
+from tests.mocks.repos.rollback_family_repo import mock_rollback_family_repo
 
 
 def get_test_db_url() -> str:

@@ -162,6 +162,8 @@ async def create_family(
     """
     try:
         family = family_service.create(new_family, request.state.user.email)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
