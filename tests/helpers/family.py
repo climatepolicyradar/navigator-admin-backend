@@ -6,7 +6,7 @@ from db_client.models.dfce.family import FamilyCategory
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 
 
-def create_family_dto(
+def create_family_read_dto(
     import_id: str,
     title: str = "title",
     summary: str = "summary",
@@ -20,7 +20,7 @@ def create_family_dto(
         metadata = {}
 
     if collections is None:
-        collections = ["x.y.z.1", "x.y.z.2"]
+        collections = []
 
     return FamilyReadDTO(
         import_id=import_id,
@@ -37,6 +37,9 @@ def create_family_dto(
         documents=["doc1", "doc2"],
         collections=collections,
         organisation="CCLW",
+        corpus_import_id="CCLW.corpus.i00000001.n0000",
+        corpus_title="CCLW national policies",
+        corpus_type="Laws and Policies",
         created=datetime.now(),
         last_modified=datetime.now(),
     )
@@ -49,6 +52,7 @@ def create_family_create_dto(
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     collections: Optional[list[str]] = None,
+    corpus_import_id: str = "CCLW.corpus.i00000001.n0000",
 ) -> FamilyCreateDTO:
     if metadata is None:
         metadata = {}
@@ -61,6 +65,7 @@ def create_family_create_dto(
         category=category,
         metadata=metadata,
         collections=collections,
+        corpus_import_id=corpus_import_id,
     )
 
 

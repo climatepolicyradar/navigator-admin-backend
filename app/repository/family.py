@@ -33,7 +33,7 @@ from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Organisation]
+FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Corpus, Organisation]
 
 
 def _get_query(db: Session) -> Query:
@@ -41,7 +41,7 @@ def _get_query(db: Session) -> Query:
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
     return (
-        db.query(Family, Geography, FamilyMetadata, Organisation)
+        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
         .join(Geography, Family.geography_id == Geography.id)
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
@@ -50,33 +50,39 @@ def _get_query(db: Session) -> Query:
     )
 
 
-def _family_to_dto(db: Session, fam_geo_meta_org: FamilyGeoMetaOrg) -> FamilyReadDTO:
-    f = fam_geo_meta_org[0]
-    geo_value = cast(str, fam_geo_meta_org[1].value)
-    metadata = cast(dict, fam_geo_meta_org[2].value)
-    org = cast(str, fam_geo_meta_org[3].name)
+def _family_to_dto(
+    db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
+) -> FamilyReadDTO:
+    fam, geo, meta, corpus, org = fam_geo_meta_corp_org
+
+    geo_value = cast(str, geo.value)
+    metadata = cast(dict, meta.value)
+    org = cast(str, org.name)
     return FamilyReadDTO(
-        import_id=str(f.import_id),
-        title=str(f.title),
-        summary=str(f.description),
+        import_id=str(fam.import_id),
+        title=str(fam.title),
+        summary=str(fam.description),
         geography=geo_value,
-        category=str(f.family_category),
-        status=str(f.family_status),
+        category=str(fam.family_category),
+        status=str(fam.family_status),
         metadata=metadata,
-        slug=str(f.slugs[-1].name if len(f.slugs) > 0 else ""),
-        events=[str(e.import_id) for e in f.events],
-        published_date=f.published_date,
-        last_updated_date=f.last_updated_date,
-        documents=[str(d.import_id) for d in f.family_documents],
+        slug=str(fam.slugs[-1].name if len(fam.slugs) > 0 else ""),
+        events=[str(e.import_id) for e in fam.events],
+        published_date=fam.published_date,
+        last_updated_date=fam.last_updated_date,
+        documents=[str(d.import_id) for d in fam.family_documents],
         collections=[
             c.collection_import_id
             for c in db.query(CollectionFamily).filter(
-                f.import_id == CollectionFamily.family_import_id
+                fam.import_id == CollectionFamily.family_import_id
             )
         ],
         organisation=org,
-        created=cast(datetime, f.created),
-        last_modified=cast(datetime, f.last_modified),
+        corpus_import_id=cast(str, corpus.import_id),
+        corpus_title=cast(str, corpus.title),
+        corpus_type=cast(str, corpus.corpus_type_name),
+        created=cast(datetime, fam.created),
+        last_modified=cast(datetime, fam.last_modified),
     )
 
 
@@ -337,12 +343,11 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
         )
         db.add(new_family)
 
-        # New schema.
-        new_fam_corpus = db.query(Corpus).filter(Corpus.organisation_id == org_id).one()
+        # Add corpus - family link.
         db.add(
             FamilyCorpus(
                 family_import_id=new_family.import_id,
-                corpus_import_id=new_fam_corpus.import_id,
+                corpus_import_id=family.corpus_import_id,
             )
         )
 

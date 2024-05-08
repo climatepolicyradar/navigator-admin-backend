@@ -85,6 +85,20 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
     )
 
 
+def validate(db: Session, import_ids: set[str]) -> bool:
+    """Validate whether the given collection import IDs exist in the DB.
+
+    :param Session db: The DB session to connect to.
+    :param set[str] import_ids: The collection import IDs we want to
+        check the existence of.
+    :return bool: Return whether or not all the IDs exists in the DB.
+    """
+    matches_in_set = (
+        db.query(Collection).filter(Collection.import_id.in_(import_ids)).count()
+    )
+    return bool(len(import_ids) == matches_in_set)
+
+
 def all(db: Session) -> list[CollectionReadDTO]:
     """
     Returns all the collections.
