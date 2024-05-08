@@ -24,6 +24,7 @@ def test_get_config_has_expected_keys(
 
     assert "geographies" in keys
     assert "taxonomies" in keys
+    assert "corpora" in keys
     assert "languages" in keys
     assert "document" in keys
     assert "event" in keys
