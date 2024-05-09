@@ -71,10 +71,7 @@ def test_get_config_cclw_old_taxonomy_correct(
 
     # Now sanity check the old taxonomy data
     assert "CCLW" in data["taxonomies"].keys()
-    cclw_org = data["taxonomies"]["CCLW"]
-    assert len(cclw_org) == 2
-
-    cclw_taxonomy = cclw_org["taxonomy"]
+    cclw_taxonomy = data["taxonomies"]["CCLW"]
     assert set(cclw_taxonomy) == EXPECTED_CCLW_TAXONOMY
     cclw_taxonomy_colours = cclw_taxonomy["color"]["allowed_values"]
     assert set(cclw_taxonomy_colours) ^ set(EXPECTED_CCLW_COLOURS) == set()
@@ -95,10 +92,7 @@ def test_get_config_unfccc_old_taxonomy_correct(
 
     # Now sanity check the old taxonomy data
     assert "UNFCCC" in data["taxonomies"]
-    unfccc_org = data["taxonomies"]["UNFCCC"]
-    assert len(unfccc_org) == 2
-
-    unfccc_taxonomy = unfccc_org["taxonomy"]
+    unfccc_taxonomy = data["taxonomies"]["UNFCCC"]
     assert set(unfccc_taxonomy) == EXPECTED_UNFCCC_TAXONOMY
     assert set(unfccc_taxonomy["author_type"]["allowed_values"]) == {
         "Party",
@@ -184,7 +178,7 @@ def test_get_config_unfccc_corpora_correct(
     # Now sanity check the new corpora data
     unfccc_corporas = data["corpora"]
 
-    assert unfccc_corporas[0]["corpus_import_id"] == "UNFCCC.corpus.i00000001.n0000"
+    assert unfccc_corporas[0]["corpus_import_id"] == "UNFCCC.corpus.1.0"
     assert unfccc_corporas[0]["corpus_type"] == "Intl. agreements"
     assert unfccc_corporas[0]["corpus_type_description"] == "Intl. agreements"
     assert unfccc_corporas[0]["description"] == "UNFCCC Submissions"

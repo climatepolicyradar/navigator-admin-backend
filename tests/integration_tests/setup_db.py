@@ -380,11 +380,11 @@ def _setup_family_data(
     test_db.flush()
     test_db.add(
         Corpus(
-            import_id="OTHER.corpus.1.0",
-            title="Test Corpus",
-            description="",
+            import_id="UNFCCC.corpus.1.0",
+            title="UNFCCC Submissions",
+            description="UNFCCC Submissions",
             organisation_id=other_org_id,
-            corpus_type_name="other-type",
+            corpus_type_name="Intl. agreements",
         )
     )
     test_db.flush()
