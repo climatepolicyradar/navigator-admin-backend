@@ -11,11 +11,12 @@ def mock_config_service(config_service, monkeypatch: MonkeyPatch, mocker):
         if config_service.throw_repository_error:
             raise RepositoryError("bad repo")
 
-    def mock_get_config() -> ConfigReadDTO:
+    def mock_get_config(_) -> ConfigReadDTO:
         maybe_throw()
         return ConfigReadDTO(
             geographies=[],
             taxonomies={},
+            corpora=[],
             languages={},
             document=DocumentConfig(roles=[], types=[], variants=[]),
             event=EventConfig(types=[]),
