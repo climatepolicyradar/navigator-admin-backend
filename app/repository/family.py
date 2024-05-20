@@ -123,8 +123,6 @@ def all(db: Session, org_id: int, is_superuser: bool) -> list[FamilyReadDTO]:
     :param db Session: the database connection
     :return Optional[FamilyResponse]: All of things
     """
-    _LOGGER.error(is_superuser)
-    _LOGGER.error(org_id)
     if is_superuser:
         family_geo_metas = _get_query(db).order_by(desc(Family.last_modified)).all()
     else:
