@@ -57,7 +57,7 @@ def all(user_email: str) -> list[FamilyReadDTO]:
     """
     with db_session.get_db() as db:
         org_id = app_user.get_organisation(db, user_email)
-        is_superuser = app_user.is_superuser(db, user_email)
+        is_superuser: bool = app_user.is_superuser(db, user_email)
         return family_repo.all(db, org_id, is_superuser)
 
 
