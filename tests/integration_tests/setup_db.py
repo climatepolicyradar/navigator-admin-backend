@@ -72,10 +72,10 @@ EXPECTED_FAMILIES = [
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"size": [100], "color": ["blue"]},
-        "organisation": "CCLW",
-        "corpus_import_id": "CCLW.corpus.i00000001.n0000",
-        "corpus_title": "CCLW national policies",
-        "corpus_type": "Laws and Policies",
+        "organisation": "UNFCCC",
+        "corpus_import_id": "UNFCCC.corpus.i00000001.n0000",
+        "corpus_title": "UNFCCC Submissions",
+        "corpus_type": "Intl. agreements",
         "slug": "Slug3",
         "events": ["E.0.0.3"],
         "published_date": "2018-12-24T04:59:33Z",
@@ -246,7 +246,8 @@ def _get_org_id_from_name(test_db: Session, name: str) -> int:
 
 def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Now an organisation
-    org = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
+    cclw = test_db.query(Organisation).filter(Organisation.name == "CCLW").one()
+    unfccc = test_db.query(Organisation).filter(Organisation.name == "UNFCCC").one()
 
     another_org = Organisation(
         name="Another org",
@@ -261,13 +262,20 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         test_db,
         "test@cpr.org",
         "CCLWTestUser",
-        org.id,
+        cclw.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
     )
     _add_app_user(
         test_db,
         "unfccc@cpr.org",
-        "NonCCLWTestUser",
+        "UNFCCCTestUser",
+        unfccc.id,
+        "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+    )
+    _add_app_user(
+        test_db,
+        "another@cpr.org",
+        "AnotherTestUser",
         another_org.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
     )
@@ -275,25 +283,25 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         test_db,
         "test1@cpr.org",
         "TestInactive",
-        org.id,
+        cclw.id,
         hashed_pass="$2b$12$q.UbWEdeibUuApI2QDbmQeG5WmAPfNmooG1cAoCWjyJXvgiAVVdlK",
         is_active=False,
     )
     _add_app_user(
-        test_db, "test2@cpr.org", "TestHashedPassEmpty", org.id, hashed_pass=""
+        test_db, "test2@cpr.org", "TestHashedPassEmpty", cclw.id, hashed_pass=""
     )
     _add_app_user(
         test_db,
         "test3@cpr.org",
         "TestPassMismatch",
-        org.id,
+        cclw.id,
         hashed_pass="$2b$12$WZq1rRMvU.Tv1VutLw.rju/Ez5ETkYqP3KufdcSFJm3GTRZP8E52C",
     )
     _add_app_user(
         test_db,
         "admin@cpr.org",
         "Admin",
-        org.id,
+        cclw.id,
         hashed_pass="$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
         is_admin=True,
     )
@@ -301,12 +309,12 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         test_db,
         "super@cpr.org",
         "Super",
-        org.id,
+        cclw.id,
         hashed_pass="$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
         is_super=True,
     )
 
-    return cast(int, org.id), cast(int, another_org.id)
+    return cast(int, cclw.id), cast(int, another_org.id)
 
 
 def _setup_collection_data(

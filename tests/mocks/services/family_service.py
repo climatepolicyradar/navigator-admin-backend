@@ -23,7 +23,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
         if family_service.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all_families():
+    def mock_get_all_families(_):
         return [create_family_read_dto("test", collections=["x.y.z.1", "x.y.z.2"])]
 
     def mock_get_family(import_id: str) -> Optional[FamilyReadDTO]:

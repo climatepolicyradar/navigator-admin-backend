@@ -178,7 +178,7 @@ def test_get_config_unfccc_corpora_correct(
     # Now sanity check the new corpora data
     unfccc_corporas = data["corpora"]
 
-    assert unfccc_corporas[0]["corpus_import_id"] == "UNFCCC.corpus.1.0"
+    assert unfccc_corporas[0]["corpus_import_id"] == "UNFCCC.corpus.i00000001.n0000"
     assert unfccc_corporas[0]["corpus_type"] == "Intl. agreements"
     assert unfccc_corporas[0]["corpus_type_description"] == "Intl. agreements"
     assert unfccc_corporas[0]["description"] == "UNFCCC Submissions"
