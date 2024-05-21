@@ -93,42 +93,26 @@ def _to_corpus_data(row, event_types) -> CorpusData:
 def get_corpora(
     db: Session, user_email: str, is_superuser: bool
 ) -> Sequence[CorpusData]:
-    if is_superuser:
-        corpora = (
-            db.query(
-                Corpus.import_id.label("corpus_import_id"),
-                Corpus.title.label("title"),
-                Corpus.description.label("description"),
-                Corpus.corpus_type_name.label("corpus_type"),
-                CorpusType.description.label("corpus_type_description"),
-                CorpusType.valid_metadata.label("taxonomy"),
-            )
-            .join(
-                Corpus,
-                Corpus.corpus_type_name == CorpusType.name,
-            )
-            .join(Organisation, Organisation.id == Corpus.organisation_id)
-            .all()
+    corpora = (
+        db.query(
+            Corpus.import_id.label("corpus_import_id"),
+            Corpus.title.label("title"),
+            Corpus.description.label("description"),
+            Corpus.corpus_type_name.label("corpus_type"),
+            CorpusType.description.label("corpus_type_description"),
+            CorpusType.valid_metadata.label("taxonomy"),
         )
+        .join(
+            Corpus,
+            Corpus.corpus_type_name == CorpusType.name,
+        )
+        .join(Organisation, Organisation.id == Corpus.organisation_id)
+    )
+    if is_superuser:
+        corpora = corpora.all()
     else:
         org_id = app_user.get_org_id(db, user_email)
-        corpora = (
-            db.query(
-                Corpus.import_id.label("corpus_import_id"),
-                Corpus.title.label("title"),
-                Corpus.description.label("description"),
-                Corpus.corpus_type_name.label("corpus_type"),
-                CorpusType.description.label("corpus_type_description"),
-                CorpusType.valid_metadata.label("taxonomy"),
-            )
-            .join(
-                Corpus,
-                Corpus.corpus_type_name == CorpusType.name,
-            )
-            .join(Organisation, Organisation.id == Corpus.organisation_id)
-            .filter(Organisation.id == org_id)
-            .all()
-        )
+        corpora = corpora.filter(Organisation.id == org_id).all()
 
     event_types = db.query(FamilyEventType).all()
     entry = TaxonomyEntry(
