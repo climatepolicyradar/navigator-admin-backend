@@ -14,7 +14,7 @@ class FamilyRepo(Protocol):
     throw_timeout_error: bool = False
 
     @staticmethod
-    def all(db: Session) -> list[FamilyReadDTO]:
+    def all(db: Session, org_id: int, is_superuser: bool) -> list[FamilyReadDTO]:
         """Returns all the families"""
         ...
 

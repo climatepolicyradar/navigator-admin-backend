@@ -116,14 +116,22 @@ def _update_intention(
     return update_title, update_basics, update_metadata, update_collections
 
 
-def all(db: Session) -> list[FamilyReadDTO]:
+def all(db: Session, org_id: int, is_superuser: bool) -> list[FamilyReadDTO]:
     """
     Returns all the families.
 
     :param db Session: the database connection
     :return Optional[FamilyResponse]: All of things
     """
-    family_geo_metas = _get_query(db).order_by(desc(Family.last_modified)).all()
+    if is_superuser:
+        family_geo_metas = _get_query(db).order_by(desc(Family.last_modified)).all()
+    else:
+        family_geo_metas = (
+            _get_query(db)
+            .filter(Organisation.id == org_id)
+            .order_by(desc(Family.last_modified))
+            .all()
+        )
 
     if not family_geo_metas:
         return []

@@ -10,3 +10,8 @@ def get_organisation(db: Session, user_email: str) -> int:
     if org_id is None:
         raise ValidationError(f"Could not get the organisation for user {user_email}")
     return org_id
+
+
+def is_superuser(db: Session, user_email: str) -> bool:
+    """Determine a user's superuser status"""
+    return app_user_repo.is_superuser(db, user_email)
