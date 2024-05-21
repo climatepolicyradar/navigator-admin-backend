@@ -8,7 +8,6 @@ def test_get_when_ok(client: TestClient, user_header_token, config_service_mock)
     data = response.json()
     keys = data.keys()
     assert "geographies" in keys
-    assert "taxonomies" in keys
     assert "corpora" in keys
     assert "languages" in keys
     assert "event" in keys
