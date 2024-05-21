@@ -29,13 +29,13 @@ build:
 build_dev:
 	docker compose build
 
-unit_test:
+unit_test: build
 	docker compose run --rm navigator-admin-backend pytest -vvv tests/unit_tests
 
-integration_test:
+integration_test: build_dev
 	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests
 
-test:
+test: build_dev
 	docker compose run --rm navigator-admin-backend pytest -vvv tests
 
 run: 
