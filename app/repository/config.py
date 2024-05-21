@@ -176,7 +176,6 @@ def get(db: Session, user_email: str) -> ConfigReadDTO:
     )
     return ConfigReadDTO(
         geographies=geographies,
-        taxonomies=taxonomies,
         corpora=corpora,
         languages=languages,
         document=doc_config,
