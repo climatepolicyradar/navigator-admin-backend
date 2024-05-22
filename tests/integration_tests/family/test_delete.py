@@ -77,7 +77,7 @@ def test_delete_family_without_docs(
     assert data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").count() == 0
     assert (
         data_db.query(FamilyMetadata)
-        .filter(FamilyDocument.family_import_id == "A.0.0.2")
+        .filter(FamilyMetadata.family_import_id == "A.0.0.2")
         .count()
         == 0
     )
