@@ -387,6 +387,38 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     return cast(str, new_family.import_id)
 
 
+def hard_delete(db: Session, import_id: str):
+    """Forces a hard delete of the family.
+
+    :param db Session: the database connection
+    :param str import_id: The family import id to delete.
+    :return bool: True if deleted False if not.
+    """
+    commands = [
+        db_delete(CollectionFamily).where(
+            CollectionFamily.family_import_id == import_id
+        ),
+        db_delete(FamilyEvent).where(FamilyEvent.family_import_id == import_id),
+        db_delete(FamilyCorpus).where(FamilyCorpus.family_import_id == import_id),
+        db_delete(Slug).where(Slug.family_import_id == import_id),
+        db_delete(FamilyMetadata).where(FamilyMetadata.family_import_id == import_id),
+        db_delete(Family).where(Family.import_id == import_id),
+    ]
+
+    for c in commands:
+        result = db.execute(c)
+        # Keep this for debug.
+        _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
+    db.commit()
+
+    fam_deleted = db.query(Family).filter(Family.import_id == import_id).one_or_none()
+    if fam_deleted is not None:
+        msg = f"Could not hard delete family: {import_id}"
+        _LOGGER.error(msg)
+
+    return bool(fam_deleted is None)
+
+
 def delete(db: Session, import_id: str) -> bool:
     """
     Deletes a single family by the import id.
@@ -400,53 +432,35 @@ def delete(db: Session, import_id: str) -> bool:
         return False
 
     # Only perform if we have docs associated with this family
-    family_doc_count = (
+    family_docs = (
         db.query(FamilyDocument)
         .filter(FamilyDocument.family_import_id == import_id)
-        .count()
+        .all()
     )
 
-    if family_doc_count > 0:
-        # Soft delete all documents associated with the family.
-        result = db.execute(
-            db_update(FamilyDocument)
-            .filter(FamilyDocument.family_import_id == import_id)
-            .values(document_status=DocumentStatus.DELETED)
-        )
+    if len(family_docs) == 0 and found.family_status == FamilyStatus.CREATED:
+        return hard_delete(db, import_id)
 
-        if result.rowcount == 0:  # type: ignore
-            msg = f"Could not soft delete documents in family : {import_id}"
-            _LOGGER.error(msg)
-            raise RepositoryError(msg)
+    # Soft delete all documents associated with the family.
+    for doc in family_docs:
+        doc.document_status = DocumentStatus.DELETED
+        db.add(doc)
 
-    elif family_doc_count == 0 and found.family_status == FamilyStatus.CREATED:
-        commands = [
-            db_delete(CollectionFamily).where(
-                CollectionFamily.family_import_id == import_id
-            ),
-            db_delete(FamilyEvent).where(FamilyEvent.family_import_id == import_id),
-            db_delete(FamilyCorpus).where(FamilyCorpus.family_import_id == import_id),
-            db_delete(Slug).where(Slug.family_import_id == import_id),
-            db_delete(FamilyMetadata).where(
-                FamilyMetadata.family_import_id == import_id
-            ),
-            db_delete(Family).where(Family.import_id == import_id),
-        ]
+    db.flush()
 
-        for c in commands:
-            result = db.execute(c)
-            # Keep this for debug.
-            _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
-        db.commit()
+    # The below code is preserved in this comment while we decide
+    # what is wrong.
+    # TODO: remove
+    # result = db.execute(
+    #     db_update(FamilyDocument)
+    #     .filter(FamilyDocument.family_import_id == import_id)
+    #     .values(document_status=DocumentStatus.DELETED)
+    # )
 
-        fam_deleted = (
-            db.query(Family).filter(Family.import_id == import_id).one_or_none()
-        )
-        if fam_deleted is not None:
-            msg = f"Could not hard delete family: {import_id}"
-            _LOGGER.error(msg)
-
-        return bool(fam_deleted is None)
+    # if result.rowcount == 0:  # type: ignore
+    #     msg = f"Could not soft delete documents in family : {import_id}"
+    #     _LOGGER.error(msg)
+    #     raise RepositoryError(msg)
 
     # Check family has been soft deleted if all documents have also been soft deleted.
     fam_deleted = db.query(Family).filter(Family.import_id == import_id).one()
