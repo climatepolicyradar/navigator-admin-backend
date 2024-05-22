@@ -10,7 +10,7 @@ import app.service.family as family_service
 from app.errors import ValidationError
 from tests.helpers.family import create_family_write_dto
 
-USER_EMAIL = "test@cpr.org"
+USER_EMAIL = "cclw@cpr.org"
 ORG_ID = 1
 
 
@@ -29,7 +29,6 @@ def test_update(
     assert family_repo_mock.get.call_count == 1
     assert family is not None
     family_repo_mock.get.call_count = 0
-    print(family_repo_mock.get.call_count)
 
     updated_family = create_family_write_dto(
         title="UPDATED TITLE", collections=["x.y.z.2", "x.y.z.3"]

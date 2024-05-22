@@ -22,6 +22,7 @@ from app.model.config import (
     EventConfig,
     TaxonomyData,
 )
+from app.repository import app_user
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +90,9 @@ def _to_corpus_data(row, event_types) -> CorpusData:
     )
 
 
-def get_corpora_for_org(db: Session, org_id: int) -> Sequence[CorpusData]:
+def get_corpora(
+    db: Session, user_email: str, is_superuser: bool
+) -> Sequence[CorpusData]:
     corpora = (
         db.query(
             Corpus.import_id.label("corpus_import_id"),
@@ -104,9 +107,12 @@ def get_corpora_for_org(db: Session, org_id: int) -> Sequence[CorpusData]:
             Corpus.corpus_type_name == CorpusType.name,
         )
         .join(Organisation, Organisation.id == Corpus.organisation_id)
-        .filter(Organisation.id == org_id)
-        .all()
     )
+    if is_superuser:
+        corpora = corpora.all()
+    else:
+        org_id = app_user.get_org_id(db, user_email)
+        corpora = corpora.filter(Organisation.id == org_id).all()
 
     event_types = db.query(FamilyEventType).all()
     entry = TaxonomyEntry(
@@ -117,7 +123,7 @@ def get_corpora_for_org(db: Session, org_id: int) -> Sequence[CorpusData]:
     return [_to_corpus_data(row, entry) for row in corpora]
 
 
-def get(db: Session, org_id: int) -> ConfigReadDTO:
+def get(db: Session, user_email: str) -> ConfigReadDTO:
     """
     Returns the configuration for the admin service.
 
@@ -134,7 +140,8 @@ def get(db: Session, org_id: int) -> ConfigReadDTO:
         if tax is not None:
             taxonomies[org.name] = tax
 
-    corpora = get_corpora_for_org(db, org_id)
+    is_superuser = app_user.is_superuser(db, user_email)
+    corpora = get_corpora(db, user_email, is_superuser)
 
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 
@@ -169,7 +176,6 @@ def get(db: Session, org_id: int) -> ConfigReadDTO:
     )
     return ConfigReadDTO(
         geographies=geographies,
-        taxonomies=taxonomies,
         corpora=corpora,
         languages=languages,
         document=doc_config,

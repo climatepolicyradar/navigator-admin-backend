@@ -74,11 +74,11 @@ actions:
     - trunk-announce
   enabled:
     - trunk-check-pre-commit
-    - configure-pyright-with-pyenv
+    - configure-pyright
     - trunk-fmt-pre-commit
     - trunk-upgrade-available
   definitions:
-    - id: configure-pyright-with-pyenv
-      run: source .trunk/configure-pyright-with-pyenv.sh
+    - id: configure-pyright
+      run: source .trunk/configure-pyright.sh
       triggers:
         - git_hooks: [pre-commit]
