@@ -4,7 +4,6 @@ from typing import Dict, Generator
 
 import pytest
 from db_client import run_migrations
-from db_client.models.base import Base
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Connection
@@ -39,8 +38,8 @@ def get_test_db_url() -> str:
     return SQLALCHEMY_DATABASE_URI + f"_test_{uuid.uuid4()}"
 
 
-@pytest.fixture
-def test_db(scope="function"):
+@pytest.fixture(scope="function")
+def slow_db(monkeypatch):
     """Create a fresh test database for each test."""
 
     test_db_url = get_test_db_url()
@@ -55,7 +54,8 @@ def test_db(scope="function"):
     try:
         test_engine = create_engine(test_db_url)
         connection = test_engine.connect()
-        Base.metadata.create_all(test_engine)  # type: ignore
+
+        run_migrations(test_engine)
         test_session_maker = sessionmaker(
             autocommit=False,
             autoflush=False,
@@ -63,6 +63,10 @@ def test_db(scope="function"):
         )
         test_session = test_session_maker()
 
+        def get_test_db():
+            return test_session
+
+        monkeypatch.setattr(db_session, "get_db", get_test_db)
         # Run the tests
         yield test_session
     finally:
@@ -99,28 +103,31 @@ def data_db_connection() -> Generator[Connection, None, None]:
 
 
 @pytest.fixture(scope="function")
-def data_db(data_db_connection):
+def data_db(data_db_connection, monkeypatch):
+
     transaction = data_db_connection.begin()
+    print(f"This test is being performed with transaction {transaction}")
 
     SessionLocal = sessionmaker(
         autocommit=False, autoflush=False, bind=data_db_connection
     )
     session = SessionLocal()
 
+    def get_test_db():
+        return session
+
+    monkeypatch.setattr(db_session, "get_db", get_test_db)
+
     yield session
 
     session.close()
+    print(f"This test is finished and being rolledback with transaction {transaction}")
     transaction.rollback()
 
 
 @pytest.fixture
-def client(data_db, monkeypatch):
+def client():
     """Get a TestClient instance that reads/write to the test database."""
-
-    def get_test_db():
-        return data_db
-
-    monkeypatch.setattr(db_session, "get_db", get_test_db)
 
     yield TestClient(app)
 
