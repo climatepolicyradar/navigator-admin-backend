@@ -10,6 +10,22 @@ def get_user_by_email(db: Session, email: str) -> MaybeAppUser:
     return db.query(AppUser).filter(AppUser.email == email).one()
 
 
+def is_superuser(db: Session, email: str) -> bool:
+    """Check whether user with email address is a superuser.
+
+    :param db Session: DB session to connect use.
+    :param email str: User email.
+    :return bool: Whether the user is a superuser or not.
+    """
+    return (
+        db.query(AppUser)
+        .filter(AppUser.email == email)
+        .filter(AppUser.is_superuser == True)  # noqa: E712
+        .count()
+        > 0
+    )
+
+
 def is_active(db: Session, email: str) -> bool:
     # NOTE: DO NOT be tempted to fix the below to "is True" - this breaks things
     return (

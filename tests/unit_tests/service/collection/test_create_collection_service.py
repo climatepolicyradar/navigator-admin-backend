@@ -6,7 +6,7 @@ from tests.helpers.collection import create_collection_create_dto
 
 # --- CREATE
 
-USER_EMAIL = "test@cpr.org"
+USER_EMAIL = "cclw@cpr.org"
 
 
 def test_create(collection_repo_mock, app_user_repo_mock):

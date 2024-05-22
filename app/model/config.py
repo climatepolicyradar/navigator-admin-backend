@@ -34,9 +34,6 @@ class ConfigReadDTO(BaseModel):
     """Definition of the new Config which just includes taxonomy."""
 
     geographies: Sequence[dict]
-    taxonomies: Mapping[
-        str, TaxonomyData
-    ]  # TODO: Will be Mapping[str, Sequence[CorpusData]] after PDCT-1052 finished
     corpora: Sequence[CorpusData]
     languages: Mapping[str, str]
     document: DocumentConfig

@@ -10,7 +10,7 @@ import app.service.family as family_service
 from app.errors import AuthorisationError, ValidationError
 from tests.helpers.family import create_family_create_dto
 
-USER_EMAIL = "test@cpr.org"
+USER_EMAIL = "cclw@cpr.org"
 ORG_ID = 1
 
 

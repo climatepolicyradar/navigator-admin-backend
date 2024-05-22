@@ -50,14 +50,16 @@ def get(import_id: str) -> Optional[FamilyReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def all() -> list[FamilyReadDTO]:
+def all(user_email: str) -> list[FamilyReadDTO]:
     """
     Gets the entire list of families from the repository.
 
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
-        return family_repo.all(db)
+        org_id = app_user.get_organisation(db, user_email)
+        is_superuser: bool = app_user.is_superuser(db, user_email)
+        return family_repo.all(db, org_id, is_superuser)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

@@ -61,13 +61,18 @@ async def get_family(
     "/families",
     response_model=list[FamilyReadDTO],
 )
-async def get_all_families() -> list[FamilyReadDTO]:
+async def get_all_families(request: Request) -> list[FamilyReadDTO]:
     """
     Returns all families
 
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
-    return family_service.all()
+    try:
+        return family_service.all(request.state.user.email)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
 
 
 @r.get(
