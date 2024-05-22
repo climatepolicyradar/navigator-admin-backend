@@ -27,6 +27,15 @@ def get_db() -> Session:
 
 
 def with_transaction(module_name, context=session_context):
+    """Wraps a function with this standard transaction handler.
+
+    Note: You still need to call commit() in the `func` if you require
+    any changes to persist.
+
+    :param _type_ module_name: The name of the module, used for logging context.
+    :param _type_ context: any context object to propagate to `func`, defaults to session_context
+    """
+
     def inner(func):
         def wrapper(*args, **kwargs):
             context.error = None
