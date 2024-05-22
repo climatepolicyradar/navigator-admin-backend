@@ -260,7 +260,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     # Also link to the test users
     _add_app_user(
         test_db,
-        "test@cpr.org",
+        "cclw@cpr.org",
         "CCLWTestUser",
         cclw.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
@@ -380,21 +380,6 @@ def _setup_family_data(
     )
     cclw_ct.valid_metadata = valid_metadata
     test_db.add(cclw_ct)
-    test_db.flush()
-
-    test_db.add(
-        CorpusType(name="other-type", description="", valid_metadata=valid_metadata)
-    )
-    test_db.flush()
-    test_db.add(
-        Corpus(
-            import_id="UNFCCC.corpus.1.0",
-            title="UNFCCC Submissions",
-            description="UNFCCC Submissions",
-            organisation_id=other_org_id,
-            corpus_type_name="Intl. agreements",
-        )
-    )
     test_db.flush()
 
     for index in range(EXPECTED_NUM_FAMILIES):

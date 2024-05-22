@@ -1,10 +1,13 @@
+import logging
 from typing import Union, cast
 
 from fastapi import HTTPException, status
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_query_params_as_dict(query_params) -> dict[str, Union[str, int]]:
-    print(query_params)
+    _LOGGER.debug("Query params: %s", query_params)
     return {k: query_params[k] for k in query_params.keys()}
 
 

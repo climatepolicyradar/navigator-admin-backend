@@ -8,7 +8,7 @@ from tests.integration_tests.setup_db import setup_db
 def test_login_ok(client: TestClient, data_db: Session):
     setup_db(data_db)
 
-    form_data = {"username": "test@cpr.org", "password": "scruffycode"}
+    form_data = {"username": "cclw@cpr.org", "password": "scruffycode"}
 
     response = client.post(
         "/api/tokens",
