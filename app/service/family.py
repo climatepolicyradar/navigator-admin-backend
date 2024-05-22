@@ -232,7 +232,9 @@ def delete(
     if family is None:
         return None
 
-    return family_repo.delete(db, import_id)
+    result = family_repo.delete(db, import_id)
+    db.commit()  # TODO: Temporary fix
+    return result
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
