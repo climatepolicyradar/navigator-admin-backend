@@ -99,28 +99,31 @@ def data_db_connection() -> Generator[Connection, None, None]:
 
 
 @pytest.fixture(scope="function")
-def data_db(data_db_connection):
+def data_db(data_db_connection, monkeypatch):
+
     transaction = data_db_connection.begin()
+    print(f"This test is being performed with transaction {transaction}")
 
     SessionLocal = sessionmaker(
         autocommit=False, autoflush=False, bind=data_db_connection
     )
     session = SessionLocal()
 
+    def get_test_db():
+        return session
+
+    monkeypatch.setattr(db_session, "get_db", get_test_db)
+
     yield session
 
     session.close()
+    print(f"This test is finished and being rolledback with transaction {transaction}")
     transaction.rollback()
 
 
 @pytest.fixture
-def client(data_db, monkeypatch):
+def client(data_db):
     """Get a TestClient instance that reads/write to the test database."""
-
-    def get_test_db():
-        return data_db
-
-    monkeypatch.setattr(db_session, "get_db", get_test_db)
 
     yield TestClient(app)
 
