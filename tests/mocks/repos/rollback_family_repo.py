@@ -1,3 +1,12 @@
+"""
+For the family repo - do that actual db operation then raise to force a rollback.
+
+Note this relies on the actual operation not doing the commit - rather the wrapper
+at the service layer (with_transaction). However, we have a bug that means this
+still needs fixing. See PDCT-1115
+
+"""
+
 from typing import Optional
 
 from pytest import MonkeyPatch
