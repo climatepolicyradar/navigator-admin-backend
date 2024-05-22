@@ -454,7 +454,7 @@ def delete(db: Session, import_id: str) -> bool:
         doc.document_status = DocumentStatus.DELETED
         db.add(doc)
 
-    db.flush()
+    db.commit()  # TODO: Fix PDCT-1115
 
     # The below code is preserved in this comment while we decide
     # what is wrong.
