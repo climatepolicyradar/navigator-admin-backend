@@ -18,7 +18,7 @@ def _maybe_timeout():
         raise TimeoutError
 
 
-def all(db: Session, org_id: str, is_superuser: bool):
+def all(db: Session, org_id: Optional[int]):
     _maybe_throw()
     return [create_family_read_dto("test", collections=["x.y.z.1", "x.y.z.2"])]
 
@@ -59,7 +59,7 @@ def delete(db: Session, import_id: str) -> bool:
     return family_repo.return_empty is False
 
 
-def count(db: Session, org_id: str, is_superuser: bool) -> Optional[int]:
+def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     _maybe_throw()
     if family_repo.return_empty:
         return

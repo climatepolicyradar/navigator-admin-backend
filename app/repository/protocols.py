@@ -15,7 +15,7 @@ class FamilyRepo(Protocol):
     is_superuser: bool = False
 
     @staticmethod
-    def all(db: Session, org_id: int, is_superuser: bool) -> list[FamilyReadDTO]:
+    def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
         """Returns all the families"""
         ...
 
@@ -49,6 +49,6 @@ class FamilyRepo(Protocol):
         ...
 
     @staticmethod
-    def count(db: Session, org_id: int, is_superuser: bool) -> Optional[int]:
+    def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         """Counts all the families"""
         ...

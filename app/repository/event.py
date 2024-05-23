@@ -242,18 +242,17 @@ def delete(db: Session, import_id: str) -> bool:
     return True
 
 
-def count(db: Session, org_id: int, is_superuser: bool) -> Optional[int]:
+def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     """
     Counts the number of family events in the repository.
 
     :param db Session: The database connection.
-    :param org_id int: the ID of the organisation the user belongs to
-    :param is_superuser bool: whether the user is a superuser
+    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :return Optional[int]: The number of family events in the repository
         or nothing.
     """
     try:
-        if is_superuser:
+        if org_id is None:
             n_events = _get_query(db).count()
         else:
             n_events = _get_query(db).filter(Organisation.id == org_id).count()

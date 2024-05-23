@@ -194,9 +194,8 @@ def count(user_email: str) -> Optional[int]:
     """
     try:
         with db_session.get_db() as db:
-            org_id = app_user.get_organisation(db, user_email)
-            is_superuser: bool = app_user.is_superuser(db, user_email)
-            return collection_repo.count(db, org_id, is_superuser)
+            org_id = app_user.restrict_entities_to_user_org(db, user_email)
+            return collection_repo.count(db, org_id)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))

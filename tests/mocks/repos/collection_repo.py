@@ -28,7 +28,7 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
         if collection_repo.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all(_, org_id: str, is_superuser: bool) -> list[CollectionReadDTO]:
+    def mock_get_all(_, org_id: Optional[int]) -> list[CollectionReadDTO]:
         maybe_throw()
         return [
             create_collection_read_dto(import_id="id1"),
@@ -62,7 +62,7 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not collection_repo.return_empty
 
-    def mock_get_count(_, org_id: str, is_superuser: bool) -> Optional[int]:
+    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         maybe_throw()
         if collection_repo.return_empty is False:
             if collection_repo.is_superuser:

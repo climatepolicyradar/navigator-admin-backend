@@ -57,7 +57,7 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not event_repo.return_empty
 
-    def mock_get_count(_, org_id: str, is_superuser: bool) -> Optional[int]:
+    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         maybe_throw()
         if not event_repo.return_empty:
             if event_repo.is_superuser:

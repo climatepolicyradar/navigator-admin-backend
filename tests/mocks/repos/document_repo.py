@@ -22,7 +22,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
         if document_repo.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all(_, org_id: str, is_superuser: bool) -> list[DocumentReadDTO]:
+    def mock_get_all(_, org_id: Optional[int]) -> list[DocumentReadDTO]:
         maybe_throw()
         values = []
         for x in range(3):
@@ -57,7 +57,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not document_repo.return_empty
 
-    def mock_get_count(_, org_id: str, is_superuser: bool) -> Optional[int]:
+    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         maybe_throw()
         if not document_repo.return_empty:
             if document_repo.is_superuser:
