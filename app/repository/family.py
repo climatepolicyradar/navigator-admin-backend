@@ -121,6 +121,7 @@ def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     Returns all the families.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[FamilyResponse]: All of things
     """
     if org_id is None:
@@ -159,7 +160,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]]
+    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
@@ -167,6 +168,7 @@ def search(
     :param db Session: the database connection
     :param dict query_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
+    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.

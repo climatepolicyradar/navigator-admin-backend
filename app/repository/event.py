@@ -111,13 +111,16 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
     return _event_to_dto(family_event_meta)
 
 
-def search(db: Session, query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
+def search(
+    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+) -> list[EventReadDTO]:
     """
     Get family events matching a search term on the event title or type.
 
     :param db Session: The database connection.
     :param dict query_params: Any search terms to filter on specified
         fields (title & event type name by default if 'q' specified).
+    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.

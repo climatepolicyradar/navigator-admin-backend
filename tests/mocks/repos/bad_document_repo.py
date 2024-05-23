@@ -13,7 +13,7 @@ def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get(_, import_id: str) -> Optional[DocumentReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_search(_, q: str) -> list[DocumentReadDTO]:
+    def mock_search(_, q: str, org_id: Optional[int]) -> list[DocumentReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_update(_, import_id, data: DocumentReadDTO) -> Optional[DocumentReadDTO]:

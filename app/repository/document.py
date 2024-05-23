@@ -162,7 +162,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]]
+    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[DocumentReadDTO]:
     """
     Gets a list of documents from the repository searching the title.
@@ -170,6 +170,7 @@ def search(
     :param db Session: the database connection
     :param dict query_params: Any search terms to filter on specified
         fields (title by default if 'q' specified).
+    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.

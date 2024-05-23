@@ -34,7 +34,9 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         if not collection_service.missing:
             return create_collection_read_dto(import_id)
 
-    def mock_search_collections(q_params: dict) -> list[CollectionReadDTO]:
+    def mock_search_collections(
+        q_params: dict, user_email: str
+    ) -> list[CollectionReadDTO]:
         maybe_throw()
         maybe_timeout()
         if collection_service.missing:

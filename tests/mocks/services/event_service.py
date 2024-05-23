@@ -29,7 +29,7 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         if not event_service.missing:
             return create_event_read_dto(import_id)
 
-    def mock_search_events(q: dict) -> list[EventReadDTO]:
+    def mock_search_events(q: dict, user_email: str) -> list[EventReadDTO]:
         maybe_throw()
         maybe_timeout()
         if event_service.missing:

@@ -34,7 +34,7 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         dto = create_event_read_dto(import_id)
         return dto
 
-    def mock_search(_, q: dict) -> list[EventReadDTO]:
+    def mock_search(_, q: dict, org_id: Optional[int]) -> list[EventReadDTO]:
         maybe_throw()
         maybe_timeout()
         if not event_repo.return_empty:

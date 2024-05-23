@@ -46,7 +46,9 @@ def all() -> list[EventReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
+def search(
+    query_params: dict[str, Union[str, int]], user_email: str
+) -> list[EventReadDTO]:
     """
     Searches for the search term against events on specified fields.
 
@@ -56,11 +58,13 @@ def search(query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
+    :param str user_email: The email address of the current user.
     :return list[EventReadDTO]: The list of events matching the given
         search terms.
     """
     with db_session.get_db() as db:
-        return event_repo.search(db, query_params)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return event_repo.search(db, query_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

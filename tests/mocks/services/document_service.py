@@ -30,7 +30,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         if not document_service.missing:
             return create_document_read_dto(import_id)
 
-    def mock_search_documents(q_params: dict) -> list[DocumentReadDTO]:
+    def mock_search_documents(q_params: dict, user_email: str) -> list[DocumentReadDTO]:
         if document_service.missing:
             return []
 
