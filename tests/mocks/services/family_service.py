@@ -65,7 +65,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_delete_family(import_id: str) -> bool:
         return not family_service.missing
 
-    def mock_count_collection() -> Optional[int]:
+    def mock_count_collection(user_email: str) -> Optional[int]:
         maybe_throw()
         if family_service.missing:
             return None

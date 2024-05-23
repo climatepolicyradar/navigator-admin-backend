@@ -57,7 +57,7 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not event_service.missing
 
-    def mock_count_event() -> Optional[int]:
+    def mock_count_event(user_email: str) -> Optional[int]:
         maybe_throw()
         if event_service.missing:
             return None

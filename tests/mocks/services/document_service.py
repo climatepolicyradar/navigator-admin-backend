@@ -63,7 +63,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not document_service.missing
 
-    def mock_count_collection() -> Optional[int]:
+    def mock_count_collection(user_email: str) -> Optional[int]:
         maybe_throw()
         if document_service.missing:
             return None

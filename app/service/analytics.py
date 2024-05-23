@@ -21,17 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def summary() -> SummaryDTO:
+def summary(user_email: str) -> SummaryDTO:
     """
     Gets an analytics summary from the repository.
 
     :return SummaryDTO: The analytics summary found.
     """
     try:
-        n_collections = collection_service.count()
-        n_families = family_service.count()
-        n_documents = document_service.count()
-        n_events = event_service.count()
+        n_collections = collection_service.count(user_email)
+        n_families = family_service.count(user_email)
+        n_documents = document_service.count(user_email)
+        n_events = event_service.count(user_email)
 
         return SummaryDTO(
             n_documents=n_documents,
