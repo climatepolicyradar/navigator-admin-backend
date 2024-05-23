@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 import app.service.analytics as analytics_service
 from app.errors import RepositoryError
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
     "/analytics/summary",
     response_model=SummaryDTO,
 )
-async def get_analytics_summary() -> SummaryDTO:
+async def get_analytics_summary(request: Request) -> SummaryDTO:
     """
     Returns an analytics summary.
 
@@ -25,7 +25,7 @@ async def get_analytics_summary() -> SummaryDTO:
     data in key (str): value (int) form.
     """
     try:
-        summary_dto = analytics_service.summary()
+        summary_dto = analytics_service.summary(request.state.user.email)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message

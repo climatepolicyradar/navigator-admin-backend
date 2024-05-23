@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import EventStatus, Family, FamilyDocument, FamilyEvent
+from db_client.models.organisation import Organisation
 from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
@@ -241,16 +242,21 @@ def delete(db: Session, import_id: str) -> bool:
     return True
 
 
-def count(db: Session) -> Optional[int]:
+def count(db: Session, org_id: int, is_superuser: bool) -> Optional[int]:
     """
     Counts the number of family events in the repository.
 
     :param db Session: The database connection.
+    :param org_id int: the ID of the organisation the user belongs to
+    :param is_superuser bool: whether the user is a superuser
     :return Optional[int]: The number of family events in the repository
         or nothing.
     """
     try:
-        n_events = _get_query(db).count()
+        if is_superuser:
+            n_events = _get_query(db).count()
+        else:
+            n_events = _get_query(db).filter(Organisation.id == org_id).count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

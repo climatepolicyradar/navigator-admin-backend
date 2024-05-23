@@ -259,15 +259,20 @@ def delete(db: Session, import_id: str) -> bool:
     return result.rowcount > 0  # type: ignore
 
 
-def count(db: Session) -> Optional[int]:
+def count(db: Session, org_id: int, is_superuser: bool) -> Optional[int]:
     """
     Counts the number of collections in the repository.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
+    :param is_superuser bool: whether the user is a superuser
     :return Optional[int]: The number of collections in the repository or none.
     """
     try:
-        n_collections = _get_query(db).count()
+        if is_superuser:
+            n_collections = _get_query(db).count()
+        else:
+            n_collections = _get_query(db).filter(Organisation.id == org_id).count()
     except Exception as e:
         _LOGGER.error(e)
         return

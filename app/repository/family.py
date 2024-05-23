@@ -485,15 +485,20 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
     )
 
 
-def count(db: Session) -> Optional[int]:
+def count(db: Session, org_id: int, is_superuser: bool) -> Optional[int]:
     """
     Counts the number of families in the repository.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
+    :param is_superuser bool: whether the user is a superuser
     :return Optional[int]: The number of families in the repository or none.
     """
     try:
-        n_families = _get_query(db).count()
+        if is_superuser:
+            n_families = _get_query(db).count()
+        else:
+            n_families = _get_query(db).filter(Organisation.id == org_id).count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

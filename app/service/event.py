@@ -10,7 +10,7 @@ import app.repository.event as event_repo
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
-from app.service import id
+from app.service import app_user, id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,15 +144,18 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def count() -> Optional[int]:
+def count(user_email: str) -> Optional[int]:
     """
     Gets a count of events from the repository.
 
+    :param str user_email: The email address of the current user.
     :return Optional[int]: A count of events in the repository or none.
     """
     try:
         with db_session.get_db() as db:
-            return event_repo.count(db)
+            org_id = app_user.get_organisation(db, user_email)
+            is_superuser: bool = app_user.is_superuser(db, user_email)
+            return event_repo.count(db, org_id, is_superuser)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))

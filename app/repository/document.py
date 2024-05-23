@@ -9,6 +9,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
+from db_client.models.organisation import Organisation
 from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
@@ -434,15 +435,20 @@ def delete(db: Session, import_id: str) -> bool:
     return True
 
 
-def count(db: Session) -> Optional[int]:
+def count(db: Session, org_id: int, is_superuser: bool) -> Optional[int]:
     """
     Counts the number of documents in the repository.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
+    :param is_superuser bool: whether the user is a superuser
     :return Optional[int]: The number of documents in the repository or none.
     """
     try:
-        n_documents = db.query(FamilyDocument).count()
+        if is_superuser:
+            n_documents = _get_query(db).count()
+        else:
+            n_documents = _get_query(db).filter(Organisation.id == org_id).count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return
