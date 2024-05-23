@@ -157,10 +157,11 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
+        query = _get_query(db).filter(condition)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
         found = (
-            _get_query(db)
-            .filter(condition)
-            .order_by(desc(Collection.last_modified))
+            query.order_by(desc(Collection.last_modified))
             .limit(query_params["max_results"])
             .all()
         )
@@ -269,10 +270,10 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     :return Optional[int]: The number of collections in the repository or none.
     """
     try:
-        if org_id is None:
-            n_collections = _get_query(db).count()
-        else:
-            n_collections = _get_query(db).filter(Organisation.id == org_id).count()
+        query = _get_query(db)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
+        n_collections = query.count()
     except Exception as e:
         _LOGGER.error(e)
         return

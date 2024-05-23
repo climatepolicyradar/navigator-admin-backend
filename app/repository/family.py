@@ -124,15 +124,10 @@ def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     :param org_id int: the ID of the organisation the user belongs to
     :return Optional[FamilyResponse]: All of things
     """
-    if org_id is None:
-        family_geo_metas = _get_query(db).order_by(desc(Family.last_modified)).all()
-    else:
-        family_geo_metas = (
-            _get_query(db)
-            .filter(Organisation.id == org_id)
-            .order_by(desc(Family.last_modified))
-            .all()
-        )
+    query = _get_query(db)
+    if org_id is not None:
+        query = query.filter(Organisation.id == org_id)
+    family_geo_metas = query.order_by(desc(Family.last_modified)).all()
 
     if not family_geo_metas:
         return []
@@ -202,10 +197,11 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
+        query = _get_query(db).filter(condition)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
         found = (
-            _get_query(db)
-            .filter(condition)
-            .order_by(desc(Family.last_modified))
+            query.order_by(desc(Family.last_modified))
             .limit(query_params["max_results"])
             .all()
         )
@@ -510,10 +506,10 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     :return Optional[int]: The number of families in the repository or none.
     """
     try:
-        if org_id is None:
-            n_families = _get_query(db).count()
-        else:
-            n_families = _get_query(db).filter(Organisation.id == org_id).count()
+        query = _get_query(db)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
+        n_families = query.count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

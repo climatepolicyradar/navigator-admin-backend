@@ -184,9 +184,10 @@ def search(
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
         # TODO: Fix order by on search PDCT-672
-        result = (
-            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
-        )
+        query = _get_query(db).filter(condition)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
+        result = query.limit(query_params["max_results"]).all()
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -445,10 +446,10 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     :return Optional[int]: The number of documents in the repository or none.
     """
     try:
-        if org_id is None:
-            n_documents = _get_query(db).count()
-        else:
-            n_documents = _get_query(db).filter(Organisation.id == org_id).count()
+        query = _get_query(db)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
+        n_documents = query.count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return
