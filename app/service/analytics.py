@@ -28,7 +28,6 @@ def summary(user_email: str) -> SummaryDTO:
     Gets an analytics summary from the repository.
 
     :param user_email str: The email address of the current user.
-    :param db Session: The DB session to perform on.
     :return SummaryDTO: The analytics summary found.
     """
     try:
