@@ -20,7 +20,8 @@ def is_superuser(db: Session, user_email: str) -> bool:
 
 
 def restrict_entities_to_user_org(db: Session, user_email: str) -> Optional[int]:
+    org_id = get_organisation(db, user_email)
     superuser: bool = is_superuser(db, user_email)
     if superuser:
         return None
-    return get_organisation(db, user_email)
+    return org_id
