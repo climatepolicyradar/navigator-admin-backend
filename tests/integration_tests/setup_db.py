@@ -199,15 +199,19 @@ def setup_db(test_db: Session, configure_empty: bool = False):
 def setup_test_data(test_db: Session, configure_empty: bool = False):
     org_id, other_org_id = _setup_organisation(test_db)
 
+    assert test_db.query(Family).count() == 0
     _setup_family_data(test_db, org_id, other_org_id)
     test_db.commit()
 
+    assert test_db.query(Collection).count() == 0
     _setup_collection_data(test_db, configure_empty)
     test_db.commit()
 
+    assert test_db.query(FamilyDocument).count() == 0
     _setup_document_data(test_db, "A.0.0.3")
     test_db.commit()
 
+    assert test_db.query(FamilyEvent).count() == 0
     _setup_event_data(test_db)
     test_db.commit()
 
