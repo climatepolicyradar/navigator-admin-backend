@@ -18,16 +18,18 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
     collection_repo.throw_repository_error = False
     collection_repo.throw_timeout_error = False
     collection_repo.alternative_org = False
+    collection_repo.is_superuser = False
 
     def maybe_throw():
         if collection_repo.throw_repository_error:
-            raise RepositoryError("bad repo")
+            raise RepositoryError("bad collection repo")
 
     def maybe_timeout():
         if collection_repo.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all(_) -> list[CollectionReadDTO]:
+    def mock_get_all(_, org_id: Optional[int]) -> list[CollectionReadDTO]:
+        maybe_throw()
         return [
             create_collection_read_dto(import_id="id1"),
             create_collection_read_dto(import_id="id2"),
@@ -37,7 +39,7 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get(_, import_id: str) -> Optional[CollectionReadDTO]:
         return create_collection_read_dto(import_id=import_id)
 
-    def mock_search(_, q: str) -> list[CollectionReadDTO]:
+    def mock_search(_, q: str, org_id: Optional[int]) -> list[CollectionReadDTO]:
         maybe_throw()
         maybe_timeout()
         if not collection_repo.return_empty:
@@ -60,10 +62,12 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not collection_repo.return_empty
 
-    def mock_get_count(_) -> Optional[int]:
+    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         maybe_throw()
         if collection_repo.return_empty is False:
-            return 11
+            if collection_repo.is_superuser:
+                return 11
+            return 5
         return
 
     def mock_validate(_, __) -> bool:

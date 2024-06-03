@@ -13,7 +13,7 @@ def mock_bad_family_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get(_, import_id: str) -> Optional[FamilyReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_search(_, q: str) -> list[FamilyReadDTO]:
+    def mock_search(_, q: str, org_id: Optional[int]) -> list[FamilyReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_update(
@@ -27,7 +27,7 @@ def mock_bad_family_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_delete(_, import_id: str) -> bool:
         raise RepositoryError("Bad Repo")
 
-    def mock_get_count(_) -> Optional[int]:
+    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         raise RepositoryError("Bad Repo")
 
     monkeypatch.setattr(repo, "get", mock_get)
@@ -53,7 +53,8 @@ def mock_bad_family_repo(repo, monkeypatch: MonkeyPatch, mocker):
 
 
 def mock_family_count_none(repo, monkeypatch: MonkeyPatch, mocker):
-    def mock_get_count(_) -> Optional[int]:
+
+    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         return None
 
     monkeypatch.setattr(repo, "count", mock_get_count)

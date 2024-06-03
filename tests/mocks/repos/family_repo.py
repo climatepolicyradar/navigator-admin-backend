@@ -10,7 +10,7 @@ from tests.helpers.family import create_family_read_dto
 
 def _maybe_throw():
     if family_repo.throw_repository_error is True:
-        raise RepositoryError("bad repo")
+        raise RepositoryError("bad family repo")
 
 
 def _maybe_timeout():
@@ -18,7 +18,8 @@ def _maybe_timeout():
         raise TimeoutError
 
 
-def all(db: Session):
+def all(db: Session, org_id: Optional[int]):
+    _maybe_throw()
     return [create_family_read_dto("test", collections=["x.y.z.1", "x.y.z.2"])]
 
 
@@ -29,7 +30,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]]
+    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[FamilyReadDTO]:
     _maybe_throw()
     _maybe_timeout()
@@ -58,8 +59,10 @@ def delete(db: Session, import_id: str) -> bool:
     return family_repo.return_empty is False
 
 
-def count(db: Session) -> Optional[int]:
+def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     _maybe_throw()
-    if family_repo.return_empty is False:
+    if family_repo.return_empty:
+        return
+    if family_repo.is_superuser:
         return 22
-    return
+    return 11

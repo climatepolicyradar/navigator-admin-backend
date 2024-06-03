@@ -116,22 +116,18 @@ def _update_intention(
     return update_title, update_basics, update_metadata, update_collections
 
 
-def all(db: Session, org_id: int, is_superuser: bool) -> list[FamilyReadDTO]:
+def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     """
     Returns all the families.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[FamilyResponse]: All of things
     """
-    if is_superuser:
-        family_geo_metas = _get_query(db).order_by(desc(Family.last_modified)).all()
-    else:
-        family_geo_metas = (
-            _get_query(db)
-            .filter(Organisation.id == org_id)
-            .order_by(desc(Family.last_modified))
-            .all()
-        )
+    query = _get_query(db)
+    if org_id is not None:
+        query = query.filter(Organisation.id == org_id)
+    family_geo_metas = query.order_by(desc(Family.last_modified)).all()
 
     if not family_geo_metas:
         return []
@@ -159,7 +155,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]]
+    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
@@ -167,6 +163,7 @@ def search(
     :param db Session: the database connection
     :param dict query_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
+    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.
@@ -200,10 +197,11 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
+        query = _get_query(db).filter(condition)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
         found = (
-            _get_query(db)
-            .filter(condition)
-            .order_by(desc(Family.last_modified))
+            query.order_by(desc(Family.last_modified))
             .limit(query_params["max_results"])
             .all()
         )
@@ -499,15 +497,19 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
     )
 
 
-def count(db: Session) -> Optional[int]:
+def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     """
     Counts the number of families in the repository.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[int]: The number of families in the repository or none.
     """
     try:
-        n_families = _get_query(db).count()
+        query = _get_query(db)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
+        n_families = query.count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

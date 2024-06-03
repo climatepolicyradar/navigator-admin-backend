@@ -65,7 +65,7 @@ async def search_event(request: Request) -> list[EventReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        events_found = event_service.search(query_params)
+        events_found = event_service.search(query_params, request.state.user.email)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
