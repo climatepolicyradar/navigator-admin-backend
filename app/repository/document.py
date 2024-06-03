@@ -178,7 +178,7 @@ def all(db: Session) -> list[DocumentReadDTO]:
     if not result:
         return []
 
-    return [DocumentReadDTO(**dict(r)) for r in result]
+    return [_doc_to_dto(doc) for doc in result]
 
 
 def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
@@ -195,7 +195,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
         _LOGGER.error(e)
         return
 
-    return DocumentReadDTO(**dict(result))
+    return _doc_to_dto(result)
 
 
 def search(
@@ -230,7 +230,7 @@ def search(
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [DocumentReadDTO(**dict(r)) for r in result]
+    return [_doc_to_dto(doc) for doc in result]
 
 
 def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
