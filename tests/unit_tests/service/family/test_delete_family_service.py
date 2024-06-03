@@ -16,11 +16,12 @@ ORG_ID = 1
 # --- DELETE
 
 
-def test_delete(family_repo_mock, app_user_repo_mock):
+def test_delete(family_repo_mock, app_user_repo_mock, organisation_repo_mock):
     ok = family_service.delete("a.b.c.d", USER_EMAIL)
     assert ok
     assert family_repo_mock.get.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert family_repo_mock.delete.call_count == 1
 
 
