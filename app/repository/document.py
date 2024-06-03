@@ -146,25 +146,6 @@ def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
     )
 
 
-def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjects:
-    language = PhysicalDocumentLanguage(
-        language_id=db.query(Language.id)
-        .filter(Language.name == dto.user_language_name)
-        .scalar(),
-        document_id=None,
-        source=LanguageSource.USER,
-        visible=True,
-    )
-    fam_doc = FamilyDocument(**_dto_to_family_document_dict(dto))
-    phys_doc = PhysicalDocument(
-        id=None,
-        title=dto.title,
-        # TODO: More verification needed here: PDCT-865
-        source_url=str(dto.source_url) if dto.source_url is not None else None,
-    )
-    return language, fam_doc, phys_doc
-
-
 def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
     """
     Returns all the documents.
@@ -405,7 +386,7 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
     :return str: The import id
     """
     try:
-        language, family_doc, phys_doc = _document_tuple_from_dto(db, document)
+        language, family_doc, phys_doc = _document_tuple_from_create_dto(db, document)
 
         db.add(phys_doc)
         db.flush()
