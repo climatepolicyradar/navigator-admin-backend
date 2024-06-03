@@ -56,9 +56,8 @@ def all(user_email: str) -> list[FamilyReadDTO]:
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
-        org_id = app_user.get_organisation(db, user_email)
-        is_superuser: bool = app_user.is_superuser(db, user_email)
-        return family_repo.all(db, org_id, is_superuser)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return family_repo.all(db, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -235,18 +234,3 @@ def delete(
         return None
 
     return family_repo.delete(db, import_id)
-
-
-@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def count() -> Optional[int]:
-    """
-    Gets a count of families from the repository.
-
-    :return Optional[int]: The number of families in the repository or none.
-    """
-    try:
-        with db_session.get_db() as db:
-            return family_repo.count(db)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
