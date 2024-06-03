@@ -238,9 +238,28 @@ def delete(
     if family is None:
         return None
 
+<<<<<<< HEAD
     # Validate family belongs to same org as current user.
     authenticated = authorisation.is_user_authorised_to_make_changes(
         db, user_email, family.organisation, "family", import_id
     )
     if authenticated:
         return family_repo.delete(db, import_id)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def count() -> Optional[int]:
+    """
+    Gets a count of families from the repository.
+
+    :return Optional[int]: The number of families in the repository or none.
+    """
+    try:
+        with db_session.get_db() as db:
+            return family_repo.count(db)
+    except exc.SQLAlchemyError as e:
+        _LOGGER.error(e)
+        raise RepositoryError(str(e))
+=======
+    return family_repo.delete(db, import_id)
+>>>>>>> main

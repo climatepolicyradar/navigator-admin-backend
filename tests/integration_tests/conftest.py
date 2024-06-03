@@ -242,3 +242,10 @@ def admin_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("admin@cpr.org", False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
+
+
+@pytest.fixture
+def unfccc_admin_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("unfccc@cpr.org", False, {"is_admin": True})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
