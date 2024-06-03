@@ -17,11 +17,11 @@ from tests.integration_tests.setup_db import setup_db
 
 
 def test_delete_family_with_docs(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, unfccc_admin_user_header_token
 ):
     setup_db(data_db)
     response = client.delete(
-        "/api/v1/families/A.0.0.3", headers=admin_user_header_token
+        "/api/v1/families/A.0.0.3", headers=unfccc_admin_user_header_token
     )
     assert response.status_code == status.HTTP_200_OK
     assert data_db.query(Family).count() == 3
@@ -134,3 +134,18 @@ def test_delete_family_when_db_error(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
+
+
+def test_delete_family_when_org_mismatch(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    response = client.delete(
+        "/api/v1/families/A.0.0.1", headers=non_cclw_user_header_token
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    data = response.json()
+    assert (
+        data["detail"]
+        == "User 'unfccc@cpr.org' is not authorised to make changes to family 'A.0.0.1'"
+    )

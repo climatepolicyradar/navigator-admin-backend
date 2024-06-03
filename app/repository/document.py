@@ -2,7 +2,13 @@ import logging
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import FamilyDocument
-from db_client.models.dfce.family import DocumentStatus, Slug
+from db_client.models.dfce.family import (
+    Corpus,
+    DocumentStatus,
+    Family,
+    FamilyCorpus,
+    Slug,
+)
 from db_client.models.document.physical_document import (
     Language,
     LanguageSource,
@@ -68,6 +74,10 @@ def _get_query(db: Session) -> Query:
         )
         .select_from(FamilyDocument, PhysicalDocument)
         .filter(FamilyDocument.physical_document_id == PhysicalDocument.id)
+        .join(Family, Family.import_id == FamilyDocument.family_import_id)
+        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+        .join(Corpus, FamilyCorpus.corpus_import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Organisation.id == Corpus.organisation_id)
         .join(sq_slug, sq_slug.c.doc_id == FamilyDocument.import_id, isouter=True)
         .join(
             pdl_user,
