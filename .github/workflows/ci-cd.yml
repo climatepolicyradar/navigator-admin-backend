@@ -60,8 +60,11 @@ jobs:
       - name: Build docker compose
         run: make build_dev
 
-      - name: Run Unit & Integration Tests
-        run: make test
+      - name: Run Unit
+        run: make unit_test
+
+      - name: Integration Tests
+        run: make integration_test
 
   build:
     if: |
