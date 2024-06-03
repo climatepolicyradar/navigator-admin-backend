@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 import app.service.analytics as analytics_service
 from app.errors import RepositoryError
@@ -13,11 +13,8 @@ analytics_router = r = APIRouter()
 _LOGGER = logging.getLogger(__name__)
 
 
-@r.get(
-    "/analytics/summary",
-    response_model=SummaryDTO,
-)
-async def get_analytics_summary() -> SummaryDTO:
+@r.get("/analytics/summary", response_model=SummaryDTO)
+async def get_analytics_summary(request: Request) -> SummaryDTO:
     """
     Returns an analytics summary.
 
@@ -25,16 +22,18 @@ async def get_analytics_summary() -> SummaryDTO:
     data in key (str): value (int) form.
     """
     try:
-        summary_dto = analytics_service.summary()
+        summary_dto = analytics_service.summary(request.state.user.email)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
     if any(summary_value is None for _, summary_value in summary_dto):
+        msg = "Analytics summary not found"
+        _LOGGER.error(msg)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analytics summary not found",
+            detail=msg,
         )
 
     return summary_dto

@@ -141,18 +141,3 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     if context is not None:
         context.error = f"Could not delete event {import_id}"
     return event_repo.delete(db, import_id)
-
-
-@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def count() -> Optional[int]:
-    """
-    Gets a count of events from the repository.
-
-    :return Optional[int]: A count of events in the repository or none.
-    """
-    try:
-        with db_session.get_db() as db:
-            return event_repo.count(db)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
