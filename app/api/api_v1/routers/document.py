@@ -93,7 +93,7 @@ async def search_document(request: Request) -> list[DocumentReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        documents = document_service.search(query_params, request.state.user.email)
+        documents = document_service.search(query_params)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

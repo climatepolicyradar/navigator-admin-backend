@@ -29,7 +29,7 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         if not event_service.missing:
             return create_event_read_dto(import_id)
 
-    def mock_search_events(q: dict, user_email: str) -> list[EventReadDTO]:
+    def mock_search_events(q: dict) -> list[EventReadDTO]:
         maybe_throw()
         maybe_timeout()
         if event_service.missing:
@@ -57,6 +57,12 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not event_service.missing
 
+    def mock_count_event() -> Optional[int]:
+        maybe_throw()
+        if event_service.missing:
+            return None
+        return 5
+
     monkeypatch.setattr(event_service, "get", mock_get_event)
     mocker.spy(event_service, "get")
 
@@ -74,3 +80,6 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(event_service, "delete", mock_delete_event)
     mocker.spy(event_service, "delete")
+
+    monkeypatch.setattr(event_service, "count", mock_count_event)
+    mocker.spy(event_service, "count")

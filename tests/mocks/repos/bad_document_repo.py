@@ -13,7 +13,7 @@ def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get(_, import_id: str) -> Optional[DocumentReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_search(_, q: str, org_id: Optional[int]) -> list[DocumentReadDTO]:
+    def mock_search(_, q: str) -> list[DocumentReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_update(_, import_id, data: DocumentReadDTO) -> Optional[DocumentReadDTO]:
@@ -25,7 +25,7 @@ def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_delete(_, import_id: str) -> bool:
         raise RepositoryError("Bad Repo")
 
-    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
+    def mock_get_count(_) -> Optional[int]:
         raise RepositoryError("Bad Repo")
 
     monkeypatch.setattr(repo, "get", mock_get)
@@ -51,8 +51,7 @@ def mock_bad_document_repo(repo, monkeypatch: MonkeyPatch, mocker):
 
 
 def mock_document_count_none(repo, monkeypatch: MonkeyPatch, mocker):
-
-    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
+    def mock_get_count(_) -> Optional[int]:
         return None
 
     monkeypatch.setattr(repo, "count", mock_get_count)

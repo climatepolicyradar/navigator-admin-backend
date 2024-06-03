@@ -18,6 +18,7 @@ def mock_config_repo(config_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return ConfigReadDTO(
             geographies=[],
+            taxonomies={},
             corpora=[],
             languages={},
             document=DocumentConfig(roles=[], types=[], variants=[]),

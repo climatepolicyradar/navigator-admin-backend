@@ -9,6 +9,10 @@ import pytest
 import app.service.family as family_service
 from app.errors import ValidationError
 
+USER_EMAIL = "cclw@cpr.org"
+ORG_ID = 1
+
+
 # --- GET
 
 

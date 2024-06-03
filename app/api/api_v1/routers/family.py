@@ -29,7 +29,9 @@ _LOGGER = logging.getLogger(__name__)
     "/families/{import_id}",
     response_model=FamilyReadDTO,
 )
-async def get_family(import_id: str) -> FamilyReadDTO:
+async def get_family(
+    import_id: str,
+) -> FamilyReadDTO:
     """
     Returns a specific family given the import id.
 
@@ -55,7 +57,10 @@ async def get_family(import_id: str) -> FamilyReadDTO:
     return family
 
 
-@r.get("/families", response_model=list[FamilyReadDTO])
+@r.get(
+    "/families",
+    response_model=list[FamilyReadDTO],
+)
 async def get_all_families(request: Request) -> list[FamilyReadDTO]:
     """
     Returns all families
@@ -70,7 +75,10 @@ async def get_all_families(request: Request) -> list[FamilyReadDTO]:
         )
 
 
-@r.get("/families/", response_model=list[FamilyReadDTO])
+@r.get(
+    "/families/",
+    response_model=list[FamilyReadDTO],
+)
 async def search_family(request: Request) -> list[FamilyReadDTO]:
     """
     Searches for families matching URL parameters ("q" by default).
@@ -93,7 +101,7 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        families = family_service.search(query_params, request.state.user.email)
+        families = family_service.search(query_params)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -114,7 +122,10 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     return families
 
 
-@r.put("/families/{import_id}", response_model=FamilyReadDTO)
+@r.put(
+    "/families/{import_id}",
+    response_model=FamilyReadDTO,
+)
 async def update_family(
     request: Request,
     import_id: str,
@@ -168,10 +179,10 @@ async def create_family(
     return family
 
 
-@r.delete("/families/{import_id}")
-async def delete_family(
-    import_id: str,
-) -> None:
+@r.delete(
+    "/families/{import_id}",
+)
+async def delete_family(request: Request, import_id: str) -> None:
     """
     Deletes a specific family given the import id.
 
@@ -179,13 +190,15 @@ async def delete_family(
     :raises HTTPException: If the family is not found a 404 is returned.
     """
     try:
-        family_deleted = family_service.delete(import_id)
+        family_deleted = family_service.delete(import_id, request.state.user.email)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
 
     if not family_deleted:
         raise HTTPException(

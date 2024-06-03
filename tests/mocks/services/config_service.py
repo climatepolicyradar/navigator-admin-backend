@@ -15,6 +15,7 @@ def mock_config_service(config_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return ConfigReadDTO(
             geographies=[],
+            taxonomies={},
             corpora=[],
             languages={},
             document=DocumentConfig(roles=[], types=[], variants=[]),

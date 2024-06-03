@@ -17,6 +17,7 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from app.service import (
     app_user,
+    authorisation,
     category,
     collection,
     corpus,
@@ -56,14 +57,13 @@ def all(user_email: str) -> list[FamilyReadDTO]:
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user_email)
-        return family_repo.all(db, org_id)
+        org_id = app_user.get_organisation(db, user_email)
+        is_superuser: bool = app_user.is_superuser(db, user_email)
+        return family_repo.all(db, org_id, is_superuser)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(
-    query_params: dict[str, Union[str, int]], user_email: str
-) -> list[FamilyReadDTO]:
+def search(query_params: dict[str, Union[str, int]]) -> list[FamilyReadDTO]:
     """
     Searches for the search term against families on specified fields.
 
@@ -73,13 +73,11 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user_email)
-        return family_repo.search(db, query_params, org_id)
+        return family_repo.search(db, query_params)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -218,7 +216,7 @@ def create(
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(
-    import_id: str, context=None, db: Session = db_session.get_db()
+    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
 ) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
@@ -237,4 +235,24 @@ def delete(
     if family is None:
         return None
 
-    return family_repo.delete(db, import_id)
+    # Validate family belongs to same org as current user.
+    authenticated = authorisation.is_user_authorised_to_make_changes(
+        db, user_email, family.organisation, "family", import_id
+    )
+    if authenticated:
+        return family_repo.delete(db, import_id)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def count() -> Optional[int]:
+    """
+    Gets a count of families from the repository.
+
+    :return Optional[int]: The number of families in the repository or none.
+    """
+    try:
+        with db_session.get_db() as db:
+            return family_repo.count(db)
+    except exc.SQLAlchemyError as e:
+        _LOGGER.error(e)
+        raise RepositoryError(str(e))

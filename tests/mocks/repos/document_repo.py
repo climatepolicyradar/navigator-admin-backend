@@ -12,18 +12,16 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
     document_repo.return_empty = False
     document_repo.throw_repository_error = False
     document_repo.throw_timeout_error = False
-    document_repo.is_superuser = False
 
     def maybe_throw():
         if document_repo.throw_repository_error:
-            raise RepositoryError("bad document repo")
+            raise RepositoryError("bad repo")
 
     def maybe_timeout():
         if document_repo.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all(_, org_id: Optional[int]) -> list[DocumentReadDTO]:
-        maybe_throw()
+    def mock_get_all(_) -> list[DocumentReadDTO]:
         values = []
         for x in range(3):
             dto = create_document_read_dto(import_id=f"id{x}")
@@ -34,7 +32,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
         dto = create_document_read_dto(import_id)
         return dto
 
-    def mock_search(_, q: str, org_id: Optional[int]) -> list[DocumentReadDTO]:
+    def mock_search(_, q: str) -> list[DocumentReadDTO]:
         maybe_throw()
         maybe_timeout()
         if not document_repo.return_empty:
@@ -57,12 +55,10 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not document_repo.return_empty
 
-    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
+    def mock_get_count(_) -> Optional[int]:
         maybe_throw()
         if not document_repo.return_empty:
-            if document_repo.is_superuser:
-                return 33
-            return 11
+            return 33
         return
 
     monkeypatch.setattr(document_repo, "get", mock_get)

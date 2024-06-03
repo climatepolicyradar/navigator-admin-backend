@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import EventStatus, Family, FamilyDocument, FamilyEvent
-from db_client.models.organisation import Organisation
 from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
@@ -111,16 +110,13 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
     return _event_to_dto(family_event_meta)
 
 
-def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
-) -> list[EventReadDTO]:
+def search(db: Session, query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
     """
     Get family events matching a search term on the event title or type.
 
     :param db Session: The database connection.
     :param dict query_params: Any search terms to filter on specified
         fields (title & event type name by default if 'q' specified).
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.
@@ -135,10 +131,9 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
-        query = _get_query(db).filter(condition)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
-        found = query.limit(query_params["max_results"]).all()
+        found = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -246,20 +241,16 @@ def delete(db: Session, import_id: str) -> bool:
     return True
 
 
-def count(db: Session, org_id: Optional[int]) -> Optional[int]:
+def count(db: Session) -> Optional[int]:
     """
     Counts the number of family events in the repository.
 
     :param db Session: The database connection.
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :return Optional[int]: The number of family events in the repository
         or nothing.
     """
     try:
-        query = _get_query(db)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
-        n_events = query.count()
+        n_events = _get_query(db).count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

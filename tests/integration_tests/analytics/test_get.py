@@ -31,28 +31,7 @@ def test_get_all_analytics_when_not_authenticated(client: TestClient, data_db: S
 # --- GET SUMMARY
 
 
-def test_get_analytics_summary_super(
-    client: TestClient, data_db: Session, superuser_header_token
-):
-    setup_db(data_db)
-    response = client.get(
-        "/api/v1/analytics/summary",
-        headers=superuser_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-
-    data = response.json()
-    assert isinstance(data, dict)
-    assert list(data.keys()) == EXPECTED_ANALYTICS_SUMMARY_KEYS
-
-    assert dict(sorted(data.items())) == dict(
-        sorted(EXPECTED_ANALYTICS_SUMMARY.items())
-    )
-
-
-def test_get_analytics_summary_cclw(
-    client: TestClient, data_db: Session, user_header_token
-):
+def test_get_analytics_summary(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
     response = client.get(
         "/api/v1/analytics/summary",
@@ -64,34 +43,9 @@ def test_get_analytics_summary_cclw(
     assert isinstance(data, dict)
     assert list(data.keys()) == EXPECTED_ANALYTICS_SUMMARY_KEYS
 
-    assert dict(sorted(data.items())) == {
-        "n_collections": 2,
-        "n_documents": 2,
-        "n_events": 3,
-        "n_families": 2,
-    }
-
-
-def test_get_analytics_summary_unfccc(
-    client: TestClient, data_db: Session, non_cclw_user_header_token
-):
-    setup_db(data_db)
-    response = client.get(
-        "/api/v1/analytics/summary",
-        headers=non_cclw_user_header_token,
+    assert dict(sorted(data.items())) == dict(
+        sorted(EXPECTED_ANALYTICS_SUMMARY.items())
     )
-    assert response.status_code == status.HTTP_200_OK
-
-    data = response.json()
-    assert isinstance(data, dict)
-    assert list(data.keys()) == EXPECTED_ANALYTICS_SUMMARY_KEYS
-
-    assert dict(sorted(data.items())) == {
-        "n_collections": 0,
-        "n_documents": 2,
-        "n_events": 3,
-        "n_families": 1,
-    }
 
 
 def test_get_analytics_summary_when_not_authenticated(

@@ -10,7 +10,7 @@ import app.repository.event as event_repo
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
-from app.service import app_user, id
+from app.service import id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +46,7 @@ def all() -> list[EventReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(
-    query_params: dict[str, Union[str, int]], user_email: str
-) -> list[EventReadDTO]:
+def search(query_params: dict[str, Union[str, int]]) -> list[EventReadDTO]:
     """
     Searches for the search term against events on specified fields.
 
@@ -58,13 +56,11 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
     :return list[EventReadDTO]: The list of events matching the given
         search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user_email)
-        return event_repo.search(db, query_params, org_id)
+        return event_repo.search(db, query_params)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -145,3 +141,18 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     if context is not None:
         context.error = f"Could not delete event {import_id}"
     return event_repo.delete(db, import_id)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def count() -> Optional[int]:
+    """
+    Gets a count of events from the repository.
+
+    :return Optional[int]: A count of events in the repository or none.
+    """
+    try:
+        with db_session.get_db() as db:
+            return event_repo.count(db)
+    except exc.SQLAlchemyError as e:
+        _LOGGER.error(e)
+        raise RepositoryError(str(e))

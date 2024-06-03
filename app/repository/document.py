@@ -9,7 +9,6 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.organisation import Organisation
 from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
@@ -162,7 +161,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, query_params: dict[str, Union[str, int]]
 ) -> list[DocumentReadDTO]:
     """
     Gets a list of documents from the repository searching the title.
@@ -170,7 +169,6 @@ def search(
     :param db Session: the database connection
     :param dict query_params: Any search terms to filter on specified
         fields (title by default if 'q' specified).
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.
@@ -184,10 +182,9 @@ def search(
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
         # TODO: Fix order by on search PDCT-672
-        query = _get_query(db).filter(condition)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
-        result = query.limit(query_params["max_results"]).all()
+        result = (
+            _get_query(db).filter(condition).limit(query_params["max_results"]).all()
+        )
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -437,19 +434,15 @@ def delete(db: Session, import_id: str) -> bool:
     return True
 
 
-def count(db: Session, org_id: Optional[int]) -> Optional[int]:
+def count(db: Session) -> Optional[int]:
     """
     Counts the number of documents in the repository.
 
     :param db Session: the database connection
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :return Optional[int]: The number of documents in the repository or none.
     """
     try:
-        query = _get_query(db)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
-        n_documents = query.count()
+        n_documents = db.query(FamilyDocument).count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

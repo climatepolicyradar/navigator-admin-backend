@@ -13,7 +13,7 @@ def mock_analytics_service(analytics_service, monkeypatch: MonkeyPatch, mocker):
         if analytics_service.throw_repository_error:
             raise RepositoryError("bad repo")
 
-    def mock_get_summary(user_email: str) -> SummaryDTO:
+    def mock_get_summary() -> SummaryDTO:
         maybe_throw()
         if analytics_service.return_empty is True:
             return create_summary_dto(

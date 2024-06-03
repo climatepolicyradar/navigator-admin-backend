@@ -10,14 +10,13 @@ PLAIN_PASSWORD = "test-password"
 HASH_PASSWORD = auth_service.get_password_hash(PLAIN_PASSWORD)
 VALID_USERNAME = "bob@here.com"
 
-INVALID_ORG_ID = 1234
+ORG_ID = 1234
 
 
 def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
     app_user_repo.user_active = True
     app_user_repo.error = False
     app_user_repo.invalid_org = False
-    app_user_repo.is_superuser = False
 
     def mock_get_app_user_authorisation(
         _, __
@@ -35,28 +34,19 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_get_org_id(_, user_email: str) -> int:
         if app_user_repo.invalid_org is True:
-            return INVALID_ORG_ID
+            return ORG_ID
         return 1
 
     def mock_is_active(_, email: str) -> bool:
         return app_user_repo.user_active
 
-    def mock_is_superuser(_, email: str) -> bool:
-        return app_user_repo.is_superuser
-
     monkeypatch.setattr(app_user_repo, "get_user_by_email", mock_get_user_by_email)
-    mocker.spy(app_user_repo, "get_user_by_email")
-
     monkeypatch.setattr(app_user_repo, "get_org_id", mock_get_org_id)
-    mocker.spy(app_user_repo, "get_org_id")
-
     monkeypatch.setattr(app_user_repo, "is_active", mock_is_active)
-    mocker.spy(app_user_repo, "is_active")
-
     monkeypatch.setattr(
         app_user_repo, "get_app_user_authorisation", mock_get_app_user_authorisation
     )
+    mocker.spy(app_user_repo, "get_user_by_email")
+    mocker.spy(app_user_repo, "get_org_id")
+    mocker.spy(app_user_repo, "is_active")
     mocker.spy(app_user_repo, "get_app_user_authorisation")
-
-    monkeypatch.setattr(app_user_repo, "is_superuser", mock_is_superuser)
-    mocker.spy(app_user_repo, "is_superuser")
