@@ -20,13 +20,30 @@ def test_search_document_super(
     assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
-    assert len(ids_found) == 2
+    assert len(ids_found) == 3
 
-    expected_ids = set(["D.0.0.1", "D.0.0.2"])
+    expected_ids = set(["D.0.0.1", "D.0.0.2", "D.0.0.3"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_document_non_super(
+def test_search_document_cclw(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/documents/?q=title",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 1
+
+    expected_ids = set(["D.0.0.3"])
+    assert ids_found.symmetric_difference(expected_ids) == set([])
+
+
+def test_search_document_unfccc(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)

@@ -24,7 +24,7 @@ from db_client.models.organisation.users import AppUser, Organisation, Organisat
 from sqlalchemy.orm import Session
 
 DEFAULT_GEO_ID = 1
-EXPECTED_NUM_FAMILIES = 3
+
 EXPECTED_FAMILIES = [
     {
         "import_id": "A.0.0.1",
@@ -61,8 +61,8 @@ EXPECTED_FAMILIES = [
         "events": [],
         "published_date": None,
         "last_updated_date": None,
-        "documents": [],
-        "collections": [],
+        "documents": ["D.0.0.3"],
+        "collections": ["C.0.0.2"],
     },
     {
         "import_id": "A.0.0.3",
@@ -81,12 +81,11 @@ EXPECTED_FAMILIES = [
         "published_date": "2018-12-24T04:59:33Z",
         "last_updated_date": "2018-12-24T04:59:33Z",
         "documents": ["D.0.0.1", "D.0.0.2"],
-        "collections": ["C.0.0.2"],
+        "collections": ["C.0.0.4"],
     },
 ]
+EXPECTED_NUM_FAMILIES = len(EXPECTED_FAMILIES)
 
-
-EXPECTED_NUM_COLLECTIONS = 3
 EXPECTED_COLLECTIONS = [
     {
         "import_id": "C.0.0.1",
@@ -99,7 +98,7 @@ EXPECTED_COLLECTIONS = [
         "import_id": "C.0.0.2",
         "title": "Collection 2",
         "description": "description two",
-        "families": ["A.0.0.1", "A.0.0.3"],
+        "families": ["A.0.0.1", "A.0.0.2"],
         "organisation": "CCLW",
     },
     {
@@ -109,9 +108,17 @@ EXPECTED_COLLECTIONS = [
         "families": [],
         "organisation": "CCLW",
     },
+    {
+        "import_id": "C.0.0.4",
+        "title": "Collection 4",
+        "description": "description four",
+        "families": ["A.0.0.3"],
+        "organisation": "UNFCCC",
+    },
 ]
+EXPECTED_NUM_COLLECTIONS = len(EXPECTED_COLLECTIONS)
 
-EXPECTED_NUM_DOCUMENTS = 2
+
 EXPECTED_DOCUMENTS = [
     {
         "import_id": "D.0.0.1",
@@ -145,9 +152,26 @@ EXPECTED_DOCUMENTS = [
         "user_language_name": None,
         "calc_language_name": None,
     },
+    {
+        "import_id": "D.0.0.3",
+        "family_import_id": "A.0.0.2",
+        "variant_name": "Original Language",
+        "status": "Created",
+        "role": "MAIN",
+        "type": "Law",
+        "slug": "",
+        "title": "title3",
+        "md5_sum": "sum3",
+        "cdn_object": "obj3",
+        "source_url": "http://source3/",
+        "content_type": "application/pdf",
+        "user_language_name": None,
+        "calc_language_name": None,
+    },
 ]
+EXPECTED_NUM_DOCUMENTS = len(EXPECTED_DOCUMENTS)
 
-EXPECTED_NUM_EVENTS = 3
+
 EXPECTED_EVENTS = [
     {
         "import_id": "E.0.0.1",
@@ -177,6 +201,7 @@ EXPECTED_EVENTS = [
         "event_status": EventStatus.OK,
     },
 ]
+EXPECTED_NUM_EVENTS = len(EXPECTED_EVENTS)
 
 EXPECTED_ANALYTICS_SUMMARY_KEYS = [
     "n_documents",
@@ -208,7 +233,7 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     test_db.commit()
 
     assert test_db.query(FamilyDocument).count() == 0
-    _setup_document_data(test_db, "A.0.0.3")
+    _setup_document_data(test_db)
     test_db.commit()
 
     assert test_db.query(FamilyEvent).count() == 0
@@ -432,40 +457,41 @@ def _setup_family_data(
         )
 
 
-def _setup_document_data(
-    test_db: Session,
-    family_id: str,
-    configure_empty: bool = False,
-) -> None:
+def _setup_document_data(test_db: Session, configure_empty: bool = False) -> None:
     if configure_empty is True:
         return None
 
-    phys_docs = []
-    for index in range(EXPECTED_NUM_DOCUMENTS):
-        data = EXPECTED_DOCUMENTS[index]
-        pd = PhysicalDocument(
-            id=None,
-            title=data["title"],
-            md5_sum=data["md5_sum"],
-            cdn_object=data["cdn_object"],
-            source_url=data["source_url"],
-            content_type=data["content_type"],
-        )
-        test_db.add(pd)
-        test_db.flush()
-        phys_docs.append(pd.id)
+    family_ids = [f["import_id"] for f in EXPECTED_FAMILIES]
 
-        fd = FamilyDocument(
-            family_import_id=family_id,
-            physical_document_id=pd.id,
-            import_id=data["import_id"],
-            variant_name=data["variant_name"],
-            document_status=data["status"],
-            document_type=data["type"],
-            document_role=data["role"],
-        )
-        test_db.add(fd)
-        test_db.flush()
+    phys_docs = []
+    for _, data in enumerate(EXPECTED_DOCUMENTS):
+        for family_id in family_ids:
+            if family_id != data["family_import_id"]:
+                continue
+
+            pd = PhysicalDocument(
+                id=None,
+                title=data["title"],
+                md5_sum=data["md5_sum"],
+                cdn_object=data["cdn_object"],
+                source_url=data["source_url"],
+                content_type=data["content_type"],
+            )
+            test_db.add(pd)
+            test_db.flush()
+            phys_docs.append(pd.id)
+
+            fd = FamilyDocument(
+                family_import_id=family_id,
+                physical_document_id=pd.id,
+                import_id=data["import_id"],
+                variant_name=data["variant_name"],
+                document_status=data["status"],
+                document_type=data["type"],
+                document_role=data["role"],
+            )
+            test_db.add(fd)
+            test_db.flush()
 
     # Setup english as user language for first document
     test_db.add(
