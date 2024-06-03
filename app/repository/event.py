@@ -32,16 +32,16 @@ def _get_query(db: Session) -> Query:
     #       objects are returned.
     return (
         db.query(FamilyEvent, Family, FamilyDocument)
+        .join(Family, Family.import_id == FamilyDocument.family_import_id)
+        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+        .join(Corpus, FamilyCorpus.corpus_import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Organisation.id == Corpus.organisation_id)
         .filter(FamilyEvent.family_import_id == Family.import_id)
         .join(
             FamilyDocument,
             FamilyDocument.family_import_id == FamilyEvent.family_document_import_id,
             isouter=True,
         )
-        .join(Family, Family.import_id == FamilyDocument.family_import_id)
-        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
-        .join(Corpus, FamilyCorpus.corpus_import_id == FamilyCorpus.corpus_import_id)
-        .join(Organisation, Organisation.id == Corpus.organisation_id)
     )
 
 
