@@ -30,6 +30,8 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_get_all(_, org_id: Optional[int]) -> list[CollectionReadDTO]:
         maybe_throw()
+        if collection_repo.return_empty:
+            return []
         return [
             create_collection_read_dto(import_id="id1"),
             create_collection_read_dto(import_id="id2"),
