@@ -5,7 +5,9 @@ from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import EventStatus, Family, FamilyDocument, FamilyEvent
+from db_client.models.dfce.family import FamilyCorpus
 from db_client.models.organisation import Organisation
+from db_client.models.organisation.corpus import Corpus
 from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
@@ -22,7 +24,7 @@ from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyEventTuple = Tuple[FamilyEvent, Family, FamilyDocument]
+FamilyEventTuple = Tuple[FamilyEvent, Family, FamilyDocument, Organisation]
 
 
 def _get_query(db: Session) -> Query:
@@ -30,13 +32,17 @@ def _get_query(db: Session) -> Query:
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
     return (
-        db.query(FamilyEvent, Family, FamilyDocument)
+        db.query(FamilyEvent, Family, FamilyDocument, Organisation)
         .filter(FamilyEvent.family_import_id == Family.import_id)
         .join(
             FamilyDocument,
             FamilyDocument.family_import_id == FamilyEvent.family_document_import_id,
             isouter=True,
         )
+        .join(Family, FamilyEvent.family_import_id == Family.import_id)
+        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+        .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Corpus.organisation_id == Organisation.id)
     )
 
 
@@ -77,14 +83,19 @@ def _event_from_dto(dto: EventCreateDTO):
     return family_event
 
 
-def all(db: Session) -> list[EventReadDTO]:
+def all(db: Session, org_id: Optional[int]) -> list[EventReadDTO]:
     """
     Returns all family events.
 
     :param db Session: The database connection.
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[EventReadDTO]: All family events in the database.
     """
-    family_event_metas = _get_query(db).all()
+    query = _get_query(db)
+    if org_id is not None:
+        _LOGGER.error("FILTERING ON ORG ID %s", org_id)
+        query = query.filter(Organisation.id == org_id)
+    family_event_metas = query.all()
 
     if not family_event_metas:
         return []
@@ -258,8 +269,10 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     try:
         query = _get_query(db)
         if org_id is not None:
+            _LOGGER.error("FILTERING ON ORG ID %s", org_id)
             query = query.filter(Organisation.id == org_id)
         n_events = query.count()
+        _LOGGER.error(n_events)
     except NoResultFound as e:
         _LOGGER.error(e)
         return

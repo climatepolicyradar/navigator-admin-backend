@@ -99,14 +99,18 @@ def validate(db: Session, import_ids: set[str]) -> bool:
     return bool(len(import_ids) == matches_in_set)
 
 
-def all(db: Session) -> list[CollectionReadDTO]:
+def all(db: Session, org_id: Optional[int]) -> list[CollectionReadDTO]:
     """
     Returns all the collections.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[CollectionResponse]: All of things
     """
-    collections = _get_query(db).order_by(desc(Collection.last_modified)).all()
+    query = _get_query(db)
+    if org_id is not None:
+        query = query.filter(Organisation.id == org_id)
+    collections = query.order_by(desc(Collection.last_modified)).all()
 
     if not collections:
         return []
@@ -274,6 +278,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
         n_collections = query.count()
+        _LOGGER.error(n_collections)
     except Exception as e:
         _LOGGER.error(e)
         return

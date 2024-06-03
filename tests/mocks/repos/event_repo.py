@@ -22,8 +22,10 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         if event_repo.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all(_) -> list[EventReadDTO]:
+    def mock_get_all(_, org_id: Optional[int]) -> list[EventReadDTO]:
         maybe_throw()
+        if event_repo.return_empty:
+            return []
         values = []
         for x in range(3):
             dto = create_event_read_dto(import_id=f"id{x}")

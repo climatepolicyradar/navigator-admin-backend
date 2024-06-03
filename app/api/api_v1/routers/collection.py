@@ -58,14 +58,14 @@ async def get_collection(
     "/collections",
     response_model=list[CollectionReadDTO],
 )
-async def get_all_collections() -> list[CollectionReadDTO]:
+async def get_all_collections(request: Request) -> list[CollectionReadDTO]:
     """
     Returns all collections
 
     :return CollectionDTO: returns a CollectionDTO of the collection found.
     """
     try:
-        return collection_service.all()
+        return collection_service.all(request.state.user.email)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message

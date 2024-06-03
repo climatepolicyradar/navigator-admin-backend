@@ -54,14 +54,14 @@ async def get_document(
     "/documents",
     response_model=list[DocumentReadDTO],
 )
-async def get_all_documents() -> list[DocumentReadDTO]:
+async def get_all_documents(request: Request) -> list[DocumentReadDTO]:
     """
     Returns all documents
 
     :return DocumentDTO: returns a DocumentDTO of the document found.
     """
     try:
-        return document_service.all()
+        return document_service.all(request.state.user.email)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message

@@ -21,7 +21,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         if document_service.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all_documents() -> list[DocumentReadDTO]:
+    def mock_get_all_documents(user_email: str) -> list[DocumentReadDTO]:
         maybe_throw()
         return [create_document_read_dto("test")]
 

@@ -25,7 +25,7 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         if collection_service.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all_collections():
+    def mock_get_all_collections(user_email: str):
         maybe_throw()
         return [create_collection_read_dto("test")]
 

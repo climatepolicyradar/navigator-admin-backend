@@ -22,13 +22,13 @@ _LOGGER = logging.getLogger(__name__)
     "/events",
     response_model=list[EventReadDTO],
 )
-async def get_all_events() -> list[EventReadDTO]:
+async def get_all_events(request: Request) -> list[EventReadDTO]:
     """
     Returns all family events.
 
     :return EventDTO: returns a EventDTO if the event is found.
     """
-    found_events = event_service.all()
+    found_events = event_service.all(request.state.user.email)
 
     if not found_events:
         raise HTTPException(

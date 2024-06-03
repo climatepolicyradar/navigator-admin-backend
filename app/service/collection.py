@@ -45,15 +45,17 @@ def get(import_id: str) -> Optional[CollectionReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def all() -> list[CollectionReadDTO]:
+def all(user_email: str) -> list[CollectionReadDTO]:
     """
     Gets the entire list of collections from the repository.
 
+    :param str user_email: The email address of the current user.
     :return list[CollectionDTO]: The list of collections.
     """
     try:
         with db_session.get_db() as db:
-            return collection_repo.all(db)
+            org_id = app_user.restrict_entities_to_user_org(db, user_email)
+            return collection_repo.all(db, org_id)
     except exc.SQLAlchemyError:
         _LOGGER.exception("When getting all collections")
         raise RepositoryError("Error when getting all collection")

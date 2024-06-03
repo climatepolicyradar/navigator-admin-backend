@@ -138,15 +138,21 @@ def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjec
     return language, fam_doc, phys_doc
 
 
-def all(db: Session) -> list[DocumentReadDTO]:
+def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
     """
     Returns all the documents.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[DocumentResponse]: All of things
     """
+    query = _get_query(db)
+    if org_id is not None:
+        _LOGGER.error("FILTERING ON ORG ID %s", org_id)
+        query = query.filter(Organisation.id == org_id)
+
     # TODO: PDCT-672 .Add ordering e.g., order_by(desc(FamilyDocument.last_modified))
-    result = _get_query(db).all()
+    result = query.all()
 
     if not result:
         return []
@@ -458,8 +464,10 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     try:
         query = _get_query(db)
         if org_id is not None:
+            _LOGGER.error("FILTERING ON ORG ID %s", org_id)
             query = query.filter(Organisation.id == org_id)
         n_documents = query.count()
+        _LOGGER.error(n_documents)
     except NoResultFound as e:
         _LOGGER.error(e)
         return
