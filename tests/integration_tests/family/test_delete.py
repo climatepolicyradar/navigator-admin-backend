@@ -39,41 +39,41 @@ def test_delete_family_without_docs(
     client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
-    response = client.delete("/api/v1/families/A.0.0.2", headers=superuser_header_token)
+    response = client.delete("/api/v1/families/A.0.0.1", headers=superuser_header_token)
     assert response.status_code == status.HTTP_200_OK
     assert data_db.query(Family).count() == 2
-    family = data_db.query(Family).filter(Family.import_id == "A.0.0.2").all()
+    family = data_db.query(Family).filter(Family.import_id == "A.0.0.1").all()
     assert len(family) == 0
 
     # Check all the links have been properly removed.
     assert (
         data_db.query(CollectionFamily)
-        .filter(CollectionFamily.family_import_id == "A.0.0.2")
+        .filter(CollectionFamily.family_import_id == "A.0.0.1")
         .count()
         == 0
     )
     assert (
         data_db.query(FamilyEvent)
-        .filter(FamilyEvent.family_import_id == "A.0.0.2")
+        .filter(FamilyEvent.family_import_id == "A.0.0.1")
         .count()
         == 0
     )
     assert (
         data_db.query(FamilyDocument)
-        .filter(FamilyDocument.family_import_id == "A.0.0.2")
+        .filter(FamilyDocument.family_import_id == "A.0.0.1")
         .count()
         == 0
     )
     assert (
         data_db.query(FamilyCorpus)
-        .filter(FamilyCorpus.family_import_id == "A.0.0.2")
+        .filter(FamilyCorpus.family_import_id == "A.0.0.1")
         .count()
         == 0
     )
-    assert data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").count() == 0
+    assert data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").count() == 0
     assert (
         data_db.query(FamilyMetadata)
-        .filter(FamilyMetadata.family_import_id == "A.0.0.2")
+        .filter(FamilyMetadata.family_import_id == "A.0.0.1")
         .count()
         == 0
     )

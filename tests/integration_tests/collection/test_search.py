@@ -20,13 +20,13 @@ def test_search_collection_super(
     assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
-    assert len(ids_found) == 3
+    assert len(ids_found) == 4
 
-    expected_ids = set(["C.0.0.1", "C.0.0.2", "C.0.0.3"])
+    expected_ids = set(["C.0.0.1", "C.0.0.2", "C.0.0.3", "C.0.0.4"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_collection_non_super(
+def test_search_collection_cclw(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
@@ -42,6 +42,25 @@ def test_search_collection_non_super(
     assert len(ids_found) == 2
 
     expected_ids = set(["C.0.0.3", "C.0.0.2"])
+    assert ids_found.symmetric_difference(expected_ids) == set([])
+
+
+def test_search_collection_unfccc(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/collections/?q=description",
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 1
+
+    expected_ids = set(["C.0.0.4"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
@@ -83,7 +102,7 @@ def test_search_collection_when_db_error(
     assert bad_collection_repo.search.call_count == 1
 
 
-def test_search_collections_with_max_results(
+def test_search_collections_with_max_results_super(
     client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
@@ -96,9 +115,29 @@ def test_search_collections_with_max_results(
     assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
+    print(ids_found)
     assert len(ids_found) == 1
 
-    expected_ids = set(["C.0.0.2"])
+    expected_ids = set(["C.0.0.1"])
+    assert ids_found.symmetric_difference(expected_ids) == set([])
+
+
+def test_search_collections_with_max_results_cclw(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/collections/?q=description&max_results=1",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 1
+
+    expected_ids = set(["C.0.0.3"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
