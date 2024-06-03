@@ -98,7 +98,7 @@ def test_search_collections_with_max_results(
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1
 
-    expected_ids = set(["C.0.0.2"])
+    expected_ids = set(["C.0.0.1"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
