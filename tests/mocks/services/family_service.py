@@ -65,12 +65,6 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_delete_family(import_id: str) -> bool:
         return not family_service.missing
 
-    def mock_count_collection(user_email: str) -> Optional[int]:
-        maybe_throw()
-        if family_service.missing:
-            return None
-        return 22
-
     monkeypatch.setattr(family_service, "get", mock_get_family)
     mocker.spy(family_service, "get")
 
@@ -88,6 +82,3 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(family_service, "delete", mock_delete_family)
     mocker.spy(family_service, "delete")
-
-    monkeypatch.setattr(family_service, "count", mock_count_collection)
-    mocker.spy(family_service, "count")

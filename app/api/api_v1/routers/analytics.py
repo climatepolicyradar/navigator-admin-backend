@@ -13,10 +13,7 @@ analytics_router = r = APIRouter()
 _LOGGER = logging.getLogger(__name__)
 
 
-@r.get(
-    "/analytics/summary",
-    response_model=SummaryDTO,
-)
+@r.get("/analytics/summary", response_model=SummaryDTO)
 async def get_analytics_summary(request: Request) -> SummaryDTO:
     """
     Returns an analytics summary.
@@ -32,9 +29,11 @@ async def get_analytics_summary(request: Request) -> SummaryDTO:
         )
 
     if any(summary_value is None for _, summary_value in summary_dto):
+        msg = "Analytics summary not found"
+        _LOGGER.error(msg)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analytics summary not found",
+            detail=msg,
         )
 
     return summary_dto

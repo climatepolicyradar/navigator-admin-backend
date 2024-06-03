@@ -188,23 +188,6 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     return collection_repo.delete(db, import_id)
 
 
-@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def count(user_email: str) -> Optional[int]:
-    """
-    Gets a count of collections from the repository.
-
-    :param str user_email: The email address of the current user.
-    :return Optional[int]: The number of collections in the repository or none.
-    """
-    try:
-        with db_session.get_db() as db:
-            org_id = app_user.restrict_entities_to_user_org(db, user_email)
-            return collection_repo.count(db, org_id)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
-
-
 def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
     org = collection_repo.get_org_from_collection_id(db, collection_import_id)
     if org is None:

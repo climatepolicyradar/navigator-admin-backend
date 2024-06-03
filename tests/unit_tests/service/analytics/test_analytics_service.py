@@ -51,8 +51,8 @@ def test_summary_superuser(
     assert result is not None
 
     # Ensure the analytics service uses the other services to validate.
-    assert app_user_repo_mock.get_org_id.call_count == 4
-    assert app_user_repo_mock.is_superuser.call_count == 4
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -77,8 +77,8 @@ def test_summary_non_superuser(
     assert result is not None
 
     # Ensure the analytics service uses the other services to validate.
-    assert app_user_repo_mock.get_org_id.call_count == 4
-    assert app_user_repo_mock.is_superuser.call_count == 4
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -102,8 +102,8 @@ def test_summary_returns_none(
     )
 
     # Ensure the analytics service uses the other services to validate.
-    assert app_user_repo_mock.get_org_id.call_count == 4
-    assert app_user_repo_mock.is_superuser.call_count == 4
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
