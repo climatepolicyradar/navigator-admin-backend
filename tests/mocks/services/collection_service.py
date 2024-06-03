@@ -34,7 +34,9 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         if not collection_service.missing:
             return create_collection_read_dto(import_id)
 
-    def mock_search_collections(q_params: dict) -> list[CollectionReadDTO]:
+    def mock_search_collections(
+        q_params: dict, user_email: str
+    ) -> list[CollectionReadDTO]:
         maybe_throw()
         maybe_timeout()
         if collection_service.missing:
@@ -57,12 +59,6 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
     def mock_delete_collection(import_id: str) -> bool:
         maybe_throw()
         return not collection_service.missing
-
-    def mock_count_collection() -> Optional[int]:
-        maybe_throw()
-        if collection_service.missing:
-            return None
-        return 11
 
     def mock_validate() -> Optional[int]:
         maybe_throw()
@@ -97,9 +93,6 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
 
     monkeypatch.setattr(collection_service, "delete", mock_delete_collection)
     mocker.spy(collection_service, "delete")
-
-    monkeypatch.setattr(collection_service, "count", mock_count_collection)
-    mocker.spy(collection_service, "count")
 
     monkeypatch.setattr(collection_service, "validate", mock_validate)
     mocker.spy(collection_service, "validate")

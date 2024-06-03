@@ -12,16 +12,18 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     event_repo.return_empty = False
     event_repo.throw_repository_error = False
     event_repo.throw_timeout_error = False
+    event_repo.is_superuser = False
 
     def maybe_throw():
         if event_repo.throw_repository_error:
-            raise RepositoryError("bad repo")
+            raise RepositoryError("bad event repo")
 
     def maybe_timeout():
         if event_repo.throw_timeout_error:
             raise TimeoutError
 
     def mock_get_all(_) -> list[EventReadDTO]:
+        maybe_throw()
         values = []
         for x in range(3):
             dto = create_event_read_dto(import_id=f"id{x}")
@@ -32,7 +34,7 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         dto = create_event_read_dto(import_id)
         return dto
 
-    def mock_search(_, q: dict) -> list[EventReadDTO]:
+    def mock_search(_, q: dict, org_id: Optional[int]) -> list[EventReadDTO]:
         maybe_throw()
         maybe_timeout()
         if not event_repo.return_empty:
@@ -55,10 +57,12 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not event_repo.return_empty
 
-    def mock_get_count(_) -> Optional[int]:
+    def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         maybe_throw()
         if not event_repo.return_empty:
-            return 5
+            if event_repo.is_superuser:
+                return 5
+            return 2
         return
 
     monkeypatch.setattr(event_repo, "get", mock_get)

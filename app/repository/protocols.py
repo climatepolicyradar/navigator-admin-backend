@@ -12,9 +12,10 @@ class FamilyRepo(Protocol):
     return_empty: bool = False
     throw_repository_error: bool = False
     throw_timeout_error: bool = False
+    is_superuser: bool = False
 
     @staticmethod
-    def all(db: Session, org_id: int, is_superuser: bool) -> list[FamilyReadDTO]:
+    def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
         """Returns all the families"""
         ...
 
@@ -25,7 +26,7 @@ class FamilyRepo(Protocol):
 
     @staticmethod
     def search(
-        db: Session, query_params: dict[str, Union[str, int]]
+        db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
     ) -> list[FamilyReadDTO]:
         """Searches the families"""
         ...
@@ -48,6 +49,6 @@ class FamilyRepo(Protocol):
         ...
 
     @staticmethod
-    def count(db: Session) -> Optional[int]:
+    def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         """Counts all the families"""
         ...

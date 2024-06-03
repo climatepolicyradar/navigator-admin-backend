@@ -26,14 +26,14 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
         if family_service.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all_families(_):
+    def mock_get_all_families(user_email: str):
         return [create_family_read_dto("test", collections=["x.y.z.1", "x.y.z.2"])]
 
     def mock_get_family(import_id: str) -> Optional[FamilyReadDTO]:
         if not family_service.missing:
             return create_family_read_dto(import_id, collections=["x.y.z.1", "x.y.z.2"])
 
-    def mock_search_families(q_params: dict) -> list[FamilyReadDTO]:
+    def mock_search_families(q_params: dict, user_email: str) -> list[FamilyReadDTO]:
         if q_params["q"] == "empty":
             return []
 
@@ -69,12 +69,6 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not family_service.missing
 
-    def mock_count_collection() -> Optional[int]:
-        maybe_throw()
-        if family_service.missing:
-            return None
-        return 22
-
     monkeypatch.setattr(family_service, "get", mock_get_family)
     mocker.spy(family_service, "get")
 
@@ -92,6 +86,3 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(family_service, "delete", mock_delete_family)
     mocker.spy(family_service, "delete")
-
-    monkeypatch.setattr(family_service, "count", mock_count_collection)
-    mocker.spy(family_service, "count")

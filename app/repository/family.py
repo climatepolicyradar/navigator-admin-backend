@@ -116,22 +116,18 @@ def _update_intention(
     return update_title, update_basics, update_metadata, update_collections
 
 
-def all(db: Session, org_id: int, is_superuser: bool) -> list[FamilyReadDTO]:
+def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     """
     Returns all the families.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[FamilyResponse]: All of things
     """
-    if is_superuser:
-        family_geo_metas = _get_query(db).order_by(desc(Family.last_modified)).all()
-    else:
-        family_geo_metas = (
-            _get_query(db)
-            .filter(Organisation.id == org_id)
-            .order_by(desc(Family.last_modified))
-            .all()
-        )
+    query = _get_query(db)
+    if org_id is not None:
+        query = query.filter(Organisation.id == org_id)
+    family_geo_metas = query.order_by(desc(Family.last_modified)).all()
 
     if not family_geo_metas:
         return []
@@ -159,7 +155,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]]
+    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
@@ -167,6 +163,7 @@ def search(
     :param db Session: the database connection
     :param dict query_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
+    :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.
@@ -200,10 +197,11 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
+        query = _get_query(db).filter(condition)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
         found = (
-            _get_query(db)
-            .filter(condition)
-            .order_by(desc(Family.last_modified))
+            query.order_by(desc(Family.last_modified))
             .limit(query_params["max_results"])
             .all()
         )
@@ -395,6 +393,38 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     return cast(str, new_family.import_id)
 
 
+def hard_delete(db: Session, import_id: str):
+    """Forces a hard delete of the family.
+
+    :param db Session: the database connection
+    :param str import_id: The family import id to delete.
+    :return bool: True if deleted False if not.
+    """
+    commands = [
+        db_delete(CollectionFamily).where(
+            CollectionFamily.family_import_id == import_id
+        ),
+        db_delete(FamilyEvent).where(FamilyEvent.family_import_id == import_id),
+        db_delete(FamilyCorpus).where(FamilyCorpus.family_import_id == import_id),
+        db_delete(Slug).where(Slug.family_import_id == import_id),
+        db_delete(FamilyMetadata).where(FamilyMetadata.family_import_id == import_id),
+        db_delete(Family).where(Family.import_id == import_id),
+    ]
+
+    for c in commands:
+        result = db.execute(c)
+        # Keep this for debug.
+        _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
+    db.commit()
+
+    fam_deleted = db.query(Family).filter(Family.import_id == import_id).one_or_none()
+    if fam_deleted is not None:
+        msg = f"Could not hard delete family: {import_id}"
+        _LOGGER.error(msg)
+
+    return bool(fam_deleted is None)
+
+
 def delete(db: Session, import_id: str) -> bool:
     """
     Deletes a single family by the import id.
@@ -408,53 +438,35 @@ def delete(db: Session, import_id: str) -> bool:
         return False
 
     # Only perform if we have docs associated with this family
-    family_doc_count = (
+    family_docs = (
         db.query(FamilyDocument)
         .filter(FamilyDocument.family_import_id == import_id)
-        .count()
+        .all()
     )
 
-    if family_doc_count > 0:
-        # Soft delete all documents associated with the family.
-        result = db.execute(
-            db_update(FamilyDocument)
-            .filter(FamilyDocument.family_import_id == import_id)
-            .values(document_status=DocumentStatus.DELETED)
-        )
+    if len(family_docs) == 0 and found.family_status == FamilyStatus.CREATED:
+        return hard_delete(db, import_id)
 
-        if result.rowcount == 0:  # type: ignore
-            msg = f"Could not soft delete documents in family : {import_id}"
-            _LOGGER.error(msg)
-            raise RepositoryError(msg)
+    # Soft delete all documents associated with the family.
+    for doc in family_docs:
+        doc.document_status = DocumentStatus.DELETED
+        db.add(doc)
 
-    elif family_doc_count == 0 and found.family_status == FamilyStatus.CREATED:
-        commands = [
-            db_delete(CollectionFamily).where(
-                CollectionFamily.family_import_id == import_id
-            ),
-            db_delete(FamilyEvent).where(FamilyEvent.family_import_id == import_id),
-            db_delete(FamilyCorpus).where(FamilyCorpus.family_import_id == import_id),
-            db_delete(Slug).where(Slug.family_import_id == import_id),
-            db_delete(FamilyMetadata).where(
-                FamilyMetadata.family_import_id == import_id
-            ),
-            db_delete(Family).where(Family.import_id == import_id),
-        ]
+    db.commit()  # TODO: Fix PDCT-1115
 
-        for c in commands:
-            result = db.execute(c)
-            # Keep this for debug.
-            _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
-        db.commit()
+    # The below code is preserved in this comment while we decide
+    # what is wrong.
+    # TODO: remove
+    # result = db.execute(
+    #     db_update(FamilyDocument)
+    #     .filter(FamilyDocument.family_import_id == import_id)
+    #     .values(document_status=DocumentStatus.DELETED)
+    # )
 
-        fam_deleted = (
-            db.query(Family).filter(Family.import_id == import_id).one_or_none()
-        )
-        if fam_deleted is not None:
-            msg = f"Could not hard delete family: {import_id}"
-            _LOGGER.error(msg)
-
-        return bool(fam_deleted is None)
+    # if result.rowcount == 0:  # type: ignore
+    #     msg = f"Could not soft delete documents in family : {import_id}"
+    #     _LOGGER.error(msg)
+    #     raise RepositoryError(msg)
 
     # Check family has been soft deleted if all documents have also been soft deleted.
     fam_deleted = db.query(Family).filter(Family.import_id == import_id).one()
@@ -485,15 +497,19 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
     )
 
 
-def count(db: Session) -> Optional[int]:
+def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     """
     Counts the number of families in the repository.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[int]: The number of families in the repository or none.
     """
     try:
-        n_families = _get_query(db).count()
+        query = _get_query(db)
+        if org_id is not None:
+            query = query.filter(Organisation.id == org_id)
+        n_families = query.count()
     except NoResultFound as e:
         _LOGGER.error(e)
         return

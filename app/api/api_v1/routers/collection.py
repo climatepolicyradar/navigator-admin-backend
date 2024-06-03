@@ -99,7 +99,7 @@ async def search_collection(request: Request) -> list[CollectionReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        collections = collection_service.search(query_params)
+        collections = collection_service.search(query_params, request.state.user.email)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

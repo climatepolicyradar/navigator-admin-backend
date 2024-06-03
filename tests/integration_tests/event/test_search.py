@@ -7,7 +7,28 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
-def test_search_event(client: TestClient, data_db: Session, user_header_token):
+def test_search_event_super(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/events/?q=Amended",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 2
+
+    expected_ids = set(["E.0.0.2", "E.0.0.3"])
+    assert ids_found.symmetric_difference(expected_ids) == set([])
+
+
+def test_search_event_non_super(
+    client: TestClient, data_db: Session, user_header_token
+):
     setup_db(data_db)
     response = client.get(
         "/api/v1/events/?q=Amended",

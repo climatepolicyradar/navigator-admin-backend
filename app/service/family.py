@@ -57,13 +57,14 @@ def all(user_email: str) -> list[FamilyReadDTO]:
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
-        org_id = app_user.get_organisation(db, user_email)
-        is_superuser: bool = app_user.is_superuser(db, user_email)
-        return family_repo.all(db, org_id, is_superuser)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return family_repo.all(db, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(query_params: dict[str, Union[str, int]]) -> list[FamilyReadDTO]:
+def search(
+    query_params: dict[str, Union[str, int]], user_email: str
+) -> list[FamilyReadDTO]:
     """
     Searches for the search term against families on specified fields.
 
@@ -73,11 +74,13 @@ def search(query_params: dict[str, Union[str, int]]) -> list[FamilyReadDTO]:
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
+    :param str user_email: The email address of the current user.
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
     with db_session.get_db() as db:
-        return family_repo.search(db, query_params)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return family_repo.search(db, query_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

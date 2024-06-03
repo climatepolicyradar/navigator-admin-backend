@@ -353,7 +353,7 @@ def test_update_family_idempotent_when_ok(
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
 
 
-# TODO
+# TODO: Fix with PDCT-1115
 # def test_update_family_rollback(
 #     client: TestClient, test_db: Session, rollback_family_repo, user_header_token
 # ):

@@ -30,7 +30,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         if not document_service.missing:
             return create_document_read_dto(import_id)
 
-    def mock_search_documents(q_params: dict) -> list[DocumentReadDTO]:
+    def mock_search_documents(q_params: dict, user_email: str) -> list[DocumentReadDTO]:
         if document_service.missing:
             return []
 
@@ -63,12 +63,6 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return not document_service.missing
 
-    def mock_count_collection() -> Optional[int]:
-        maybe_throw()
-        if document_service.missing:
-            return None
-        return 33
-
     monkeypatch.setattr(document_service, "get", mock_get_document)
     mocker.spy(document_service, "get")
 
@@ -86,6 +80,3 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(document_service, "delete", mock_delete_document)
     mocker.spy(document_service, "delete")
-
-    monkeypatch.setattr(document_service, "count", mock_count_collection)
-    mocker.spy(document_service, "count")

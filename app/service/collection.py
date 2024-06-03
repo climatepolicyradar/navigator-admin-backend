@@ -60,7 +60,9 @@ def all() -> list[CollectionReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(query_params: dict[str, Union[str, int]]) -> list[CollectionReadDTO]:
+def search(
+    query_params: dict[str, Union[str, int]], user_email: str
+) -> list[CollectionReadDTO]:
     """
     Searches for the search term against collections on specified fields.
 
@@ -70,11 +72,13 @@ def search(query_params: dict[str, Union[str, int]]) -> list[CollectionReadDTO]:
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
+    :param str user_email: The email address of the current user.
     :return list[CollectionReadDTO]: The list of collections matching
         the given search terms.
     """
     with db_session.get_db() as db:
-        return collection_repo.search(db, query_params)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return collection_repo.search(db, query_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -182,21 +186,6 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     if context is not None:
         context.error = f"Could not delete collection {import_id}"
     return collection_repo.delete(db, import_id)
-
-
-@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def count() -> Optional[int]:
-    """
-    Gets a count of collections from the repository.
-
-    :return Optional[int]: The number of collections in the repository or none.
-    """
-    try:
-        with db_session.get_db() as db:
-            return collection_repo.count(db)
-    except exc.SQLAlchemyError as e:
-        _LOGGER.error(e)
-        raise RepositoryError(str(e))
 
 
 def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
