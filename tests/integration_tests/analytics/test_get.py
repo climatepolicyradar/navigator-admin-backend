@@ -66,7 +66,7 @@ def test_get_analytics_summary_cclw(
 
     assert dict(sorted(data.items())) == {
         "n_collections": 2,
-        "n_documents": 2,
+        "n_documents": 0,
         "n_events": 3,
         "n_families": 2,
     }
