@@ -39,7 +39,7 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get(_, import_id: str) -> Optional[CollectionReadDTO]:
         return create_collection_read_dto(import_id=import_id)
 
-    def mock_search(_, q: str) -> list[CollectionReadDTO]:
+    def mock_search(_, q: str, org_id: Optional[int]) -> list[CollectionReadDTO]:
         maybe_throw()
         maybe_timeout()
         if not collection_repo.return_empty:

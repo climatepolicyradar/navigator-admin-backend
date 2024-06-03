@@ -26,7 +26,7 @@ class FamilyRepo(Protocol):
 
     @staticmethod
     def search(
-        db: Session, query_params: dict[str, Union[str, int]]
+        db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
     ) -> list[FamilyReadDTO]:
         """Searches the families"""
         ...

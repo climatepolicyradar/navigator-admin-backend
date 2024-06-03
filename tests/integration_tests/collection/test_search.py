@@ -7,7 +7,28 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
-def test_search_collection(client: TestClient, data_db: Session, user_header_token):
+def test_search_collection_super(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/collections/?q=description",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 3
+
+    expected_ids = set(["C.0.0.1", "C.0.0.2", "C.0.0.3"])
+    assert ids_found.symmetric_difference(expected_ids) == set([])
+
+
+def test_search_collection_non_super(
+    client: TestClient, data_db: Session, user_header_token
+):
     setup_db(data_db)
     response = client.get(
         "/api/v1/collections/?q=description",
@@ -18,9 +39,9 @@ def test_search_collection(client: TestClient, data_db: Session, user_header_tok
     assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
-    assert len(ids_found) == 3
+    assert len(ids_found) == 2
 
-    expected_ids = set(["C.0.0.1", "C.0.0.2", "C.0.0.3"])
+    expected_ids = set(["C.0.0.3", "C.0.0.2"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
@@ -63,12 +84,12 @@ def test_search_collection_when_db_error(
 
 
 def test_search_collections_with_max_results(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     response = client.get(
         "/api/v1/collections/?q=description&max_results=1",
-        headers=user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -77,7 +98,7 @@ def test_search_collections_with_max_results(
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1
 
-    expected_ids = set(["C.0.0.1"])
+    expected_ids = set(["C.0.0.2"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
