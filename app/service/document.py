@@ -12,7 +12,7 @@ import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
-from app.service import id
+from app.service import app_user, id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,9 @@ def all() -> list[DocumentReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def search(query_params: dict[str, Union[str, int]]) -> list[DocumentReadDTO]:
+def search(
+    query_params: dict[str, Union[str, int]], user_email: str
+) -> list[DocumentReadDTO]:
     """
     Searches for the search term against documents on specified fields.
 
@@ -64,11 +66,13 @@ def search(query_params: dict[str, Union[str, int]]) -> list[DocumentReadDTO]:
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
+    :param str user_email: The email address of the current user.
     :return list[DocumentReadDTO]: The list of documents matching the
         given search terms.
     """
     with db_session.get_db() as db:
-        return document_repo.search(db, query_params)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return document_repo.search(db, query_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

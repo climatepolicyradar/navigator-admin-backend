@@ -34,7 +34,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
         dto = create_document_read_dto(import_id)
         return dto
 
-    def mock_search(_, q: str) -> list[DocumentReadDTO]:
+    def mock_search(_, q: str, org_id: Optional[int]) -> list[DocumentReadDTO]:
         maybe_throw()
         maybe_timeout()
         if not document_repo.return_empty:
