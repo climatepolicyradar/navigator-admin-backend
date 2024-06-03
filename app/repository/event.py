@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import EventStatus, Family, FamilyDocument, FamilyEvent
+from db_client.models.dfce.family import Corpus, FamilyCorpus
 from db_client.models.organisation import Organisation
 from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import Column, and_
@@ -37,6 +38,10 @@ def _get_query(db: Session) -> Query:
             FamilyDocument.family_import_id == FamilyEvent.family_document_import_id,
             isouter=True,
         )
+        .join(Family, Family.import_id == FamilyDocument.family_import_id)
+        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+        .join(Corpus, FamilyCorpus.corpus_import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Organisation.id == Corpus.organisation_id)
     )
 
 
