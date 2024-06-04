@@ -370,13 +370,15 @@ def _setup_collection_data(
             )
         )
 
-    test_db.add(
-        CollectionFamily(collection_import_id="C.0.0.2", family_import_id="A.0.0.1")
-    )
-
-    test_db.add(
-        CollectionFamily(collection_import_id="C.0.0.2", family_import_id="A.0.0.3")
-    )
+    for collection in EXPECTED_COLLECTIONS:
+        collection_families = collection["families"]
+        for family_import_id in collection_families:
+            test_db.add(
+                CollectionFamily(
+                    collection_import_id=collection["import_id"],
+                    family_import_id=family_import_id,
+                )
+            )
 
 
 def _setup_family_data(
