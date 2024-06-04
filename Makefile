@@ -36,7 +36,7 @@ integration_test: build_dev
 	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests
 
 test: build_dev
-	docker compose run --rm navigator-admin-backend pytest -vvv tests
+	docker compose run --rm navigator-admin-backend -- pytest -vvv tests --cov=app --cov-fail-under=80 --cov-report=term --cov-report=html
 
 run: 
 	docker compose -f docker-compose.yml up -d --remove-orphans
