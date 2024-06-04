@@ -68,6 +68,7 @@ jobs:
         with:
           name: code-coverage-report
           path: htmlcov
+          retention-days: 30
 
   build:
     if: |
