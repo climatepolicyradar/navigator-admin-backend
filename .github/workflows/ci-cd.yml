@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
-          path: htmlcov
+          path: ./htmlcov/index.html
           retention-days: 30
 
   build:
