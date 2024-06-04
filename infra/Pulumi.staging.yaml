@@ -14,7 +14,7 @@ config:
   admin_backend:rds_username:
     secure: AAABAA5ksIyhZpxyOnXXuix11W9tcT0m9hcqV5BG7JGzhuQrNNjoeB/uhejx+sY=
   admin_backend:secret_key:
-    secure: AAABAIizbJ4IiC3D0UvGRoNWJt1KNGj73YBBtGfUHHeX1WZIwg4WzrfORLcfl3gdCXe4VnCnvlQm0bn491ETzFnzOuQ=
+    secure: AAABAIiumDXgeRR7pyApTU5C/76vSoVHKa+cpadeoIjPAbTDSTZ3nEN93yMSUFOPhwEcmB3YSKberEHPX9uX6ua9hcQ=
   admin_backend:validation_account_id:
     secure: AAABABLsojJHl5ZBeqjrwE/yzA9SksStylWPGSNe9rdzwHBmt0x0WoYo0kM=
   admin_backend:vpc_private_subnet_1_id:
