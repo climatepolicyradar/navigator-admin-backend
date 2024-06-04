@@ -19,9 +19,8 @@ from db_client.models.document.physical_document import (
 from db_client.models.organisation import Organisation
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import AnyHttpUrl
-from sqlalchemy import Column, and_
+from sqlalchemy import Column, and_, desc
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
