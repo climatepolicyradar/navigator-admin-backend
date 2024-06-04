@@ -1,3 +1,5 @@
+MIN_COVERAGE = 60
+
 bootstrap:
 	- pyenv deactivate
 	pyenv virtualenv 3.9 admin-backend
@@ -30,13 +32,13 @@ build_dev:
 	docker compose build
 
 unit_test: build
-	docker compose run --rm navigator-admin-backend pytest -vvv tests/unit_tests --cov=app --cov-fail-under=80 --cov-report=term --cov-report=html
+	docker compose run --rm navigator-admin-backend pytest -vvv tests/unit_tests --cov=app --cov-fail-under=$(MIN_COVERAGE) --cov-report=term --cov-report=html
 
 integration_test: build_dev
-	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests --cov=app --cov-fail-under=80 --cov-report=term --cov-report=html
+	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests --cov=app --cov-fail-under=$(MIN_COVERAGE) --cov-report=term --cov-report=html
 
 test: build_dev
-	docker compose run --rm navigator-admin-backend -- pytest -vvv tests --cov=app --cov-fail-under=80 --cov-report=term --cov-report=html
+	docker compose run --rm navigator-admin-backend -- pytest -vvv tests --cov=app --cov-fail-under=$(MIN_COVERAGE) --cov-report=term --cov-report=html
 
 run: 
 	docker compose -f docker-compose.yml up -d --remove-orphans

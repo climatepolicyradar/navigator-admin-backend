@@ -60,11 +60,14 @@ jobs:
       - name: Build docker compose
         run: make build_dev
 
-      - name: Run Unit Tests
-        run: make unit_test
+      - name: Run Tests
+        run: make test
 
-      - name: Run Integration Tests
-        run: make integration_test
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: htmlcov
 
   build:
     if: |
