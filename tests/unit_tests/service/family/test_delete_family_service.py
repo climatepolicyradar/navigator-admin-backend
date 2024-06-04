@@ -7,7 +7,7 @@ Uses a family repo mock and ensures that the repo is called.
 import pytest
 
 import app.service.family as family_service
-from app.errors import ValidationError
+from app.errors import AuthorisationError, ValidationError
 
 USER_EMAIL = "cclw@cpr.org"
 ORG_ID = 1
@@ -63,7 +63,27 @@ def test_delete_raises_when_organisation_invalid(
         ok = family_service.delete("a.b.c.d", USER_EMAIL)
         assert not ok
 
-    expected_msg = "Invalid org name"
+    expected_msg = "The organisation name CCLW is invalid!"
+    assert e.value.message == expected_msg
+
+    assert family_repo_mock.get.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
+    assert family_repo_mock.delete.call_count == 0
+
+
+def test_delete_raises_when_family_organisation_mismatch_with_user_org(
+    family_repo_mock, organisation_repo_mock, app_user_repo_mock
+):
+    app_user_repo_mock.invalid_org = True
+    with pytest.raises(AuthorisationError) as e:
+        ok = family_service.delete("a.b.c.d", USER_EMAIL)
+        assert not ok
+
+    expected_msg = (
+        f"User '{USER_EMAIL}' is not authorised to make changes to family 'a.b.c.d'"
+    )
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 1
