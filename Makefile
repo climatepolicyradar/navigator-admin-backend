@@ -30,10 +30,10 @@ build_dev:
 	docker compose build
 
 unit_test: build
-	docker compose run --rm navigator-admin-backend pytest -vvv tests/unit_tests
+	docker compose run --rm navigator-admin-backend pytest -vvv tests/unit_tests --cov=app --cov-fail-under=80 --cov-report=term --cov-report=html
 
 integration_test: build_dev
-	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests
+	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests --cov=app --cov-fail-under=80 --cov-report=term --cov-report=html
 
 test: build_dev
 	docker compose run --rm navigator-admin-backend -- pytest -vvv tests --cov=app --cov-fail-under=80 --cov-report=term --cov-report=html
