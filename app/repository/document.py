@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import FamilyDocument
@@ -17,14 +18,13 @@ from db_client.models.document.physical_document import (
 )
 from db_client.models.organisation import Organisation
 from db_client.models.organisation.counters import CountedEntity
+from pydantic import AnyHttpUrl
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import func
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session, aliased
-from sqlalchemy.sql.functions import concat
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError, ValidationError
@@ -35,50 +35,30 @@ from app.repository.helpers import generate_import_id, generate_slug
 _LOGGER = logging.getLogger(__name__)
 
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
+ReadObj = Tuple[FamilyDocument, PhysicalDocument, Organisation, Language, Language]
 
 
 def _get_query(db: Session) -> Query:
+    # NOTE: SqlAlchemy will make a complete hash of the query generation
+    #       if columns are used in the query() call. Therefore, entire
+    #       objects are returned.
     lang_model = aliased(Language)
     lang_user = aliased(Language)
     pdl_model = aliased(PhysicalDocumentLanguage)
     pdl_user = aliased(PhysicalDocumentLanguage)
 
-    sq_slug = (
-        db.query(
-            func.string_agg(Slug.name, ",").label("name"),
-            Slug.family_document_import_id.label("doc_id"),
-        )
-        .group_by(Slug.family_document_import_id)
-        .subquery()
-    )
-
     return (
-        db.query(
-            FamilyDocument.import_id.label("import_id"),
-            FamilyDocument.family_import_id.label("family_import_id"),
-            FamilyDocument.variant_name.label("variant_name"),
-            FamilyDocument.document_status.label("status"),
-            FamilyDocument.document_role.label("role"),
-            FamilyDocument.document_type.label("type"),
-            FamilyDocument.created.label("created"),
-            FamilyDocument.last_modified.label("last_modified"),
-            concat(sq_slug.c.name).label("slug"),  # type: ignore
-            PhysicalDocument.id.label("physical_id"),
-            PhysicalDocument.title.label("title"),
-            PhysicalDocument.md5_sum.label("md5_sum"),
-            PhysicalDocument.cdn_object.label("cdn_object"),
-            PhysicalDocument.source_url.label("source_url"),
-            PhysicalDocument.content_type.label("content_type"),
-            lang_user.name.label("user_language_name"),
-            lang_model.name.label("calc_language_name"),
+        db.query(FamilyDocument, PhysicalDocument, Organisation, lang_user, lang_model)
+        .filter(FamilyDocument.family_import_id == Family.import_id)
+        .join(Family, FamilyDocument.family_import_id == Family.import_id)
+        .join(
+            PhysicalDocument,
+            FamilyDocument.physical_document_id == PhysicalDocument.id,
+            isouter=True,
         )
-        .select_from(FamilyDocument, PhysicalDocument)
-        .filter(FamilyDocument.physical_document_id == PhysicalDocument.id)
-        .join(Family, Family.import_id == FamilyDocument.family_import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
-        .join(Corpus, FamilyCorpus.corpus_import_id == FamilyCorpus.corpus_import_id)
-        .join(Organisation, Organisation.id == Corpus.organisation_id)
-        .join(sq_slug, sq_slug.c.doc_id == FamilyDocument.import_id, isouter=True)
+        .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Corpus.organisation_id == Organisation.id)
         .join(
             pdl_user,
             and_(
@@ -119,6 +99,53 @@ def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
     }
 
 
+def _document_tuple_from_create_dto(
+    db: Session, dto: DocumentCreateDTO
+) -> CreateObjects:
+    language = PhysicalDocumentLanguage(
+        language_id=db.query(Language.id)
+        .filter(Language.name == dto.user_language_name)
+        .scalar(),
+        document_id=None,
+        source=LanguageSource.USER,
+        visible=True,
+    )
+    fam_doc = FamilyDocument(**_dto_to_family_document_dict(dto))
+    phys_doc = PhysicalDocument(
+        id=None,
+        title=dto.title,
+        # TODO: More verification needed here: PDCT-865
+        source_url=str(dto.source_url) if dto.source_url is not None else None,
+    )
+    return language, fam_doc, phys_doc
+
+
+def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
+    fdoc, pdoc, org, lang_user, lang_model = doc_query_return
+
+    return DocumentReadDTO(
+        import_id=str(fdoc.import_id),
+        family_import_id=str(fdoc.family_import_id),
+        variant_name=str(fdoc.variant_name) if fdoc.variant_name is not None else None,
+        status=cast(DocumentStatus, fdoc.document_status),
+        role=str(fdoc.document_role) if fdoc.document_role is not None else None,
+        type=str(fdoc.document_type) if fdoc.document_type is not None else None,
+        created=cast(datetime, fdoc.created),
+        last_modified=cast(datetime, fdoc.last_modified),
+        slug=str(fdoc.slugs[-1].name if len(fdoc.slugs) > 0 else ""),
+        physical_id=cast(int, pdoc.id),
+        title=str(pdoc.title),
+        md5_sum=str(pdoc.md5_sum) if pdoc.md5_sum is not None else None,
+        cdn_object=str(pdoc.cdn_object) if pdoc.cdn_object is not None else None,
+        source_url=(
+            cast(AnyHttpUrl, pdoc.source_url) if pdoc.source_url is not None else None
+        ),
+        content_type=str(pdoc.content_type) if pdoc.content_type is not None else None,
+        user_language_name=str(lang_user.name) if lang_user is not None else None,
+        calc_language_name=str(lang_model.name) if lang_model is not None else None,
+    )
+
+
 def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjects:
     language = PhysicalDocumentLanguage(
         language_id=db.query(Language.id)
@@ -151,7 +178,7 @@ def all(db: Session) -> list[DocumentReadDTO]:
     if not result:
         return []
 
-    return [DocumentReadDTO(**dict(r)) for r in result]
+    return [_doc_to_dto(doc) for doc in result]
 
 
 def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
@@ -168,7 +195,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
         _LOGGER.error(e)
         return
 
-    return DocumentReadDTO(**dict(result))
+    return _doc_to_dto(result)
 
 
 def search(
@@ -203,7 +230,7 @@ def search(
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [DocumentReadDTO(**dict(r)) for r in result]
+    return [_doc_to_dto(doc) for doc in result]
 
 
 def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:

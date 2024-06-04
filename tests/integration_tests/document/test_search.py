@@ -27,12 +27,12 @@ def test_search_document_super(
 
 
 def test_search_document_non_super(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
     response = client.get(
         "/api/v1/documents/?q=title",
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -84,12 +84,12 @@ def test_search_document_when_db_error(
 
 
 def test_search_document_with_max_results(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
     response = client.get(
         "/api/v1/documents/?q=title&max_results=1",
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
