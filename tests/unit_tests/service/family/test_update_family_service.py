@@ -143,7 +143,7 @@ def test_update_raises_when_organisation_invalid(
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", USER_EMAIL, updated_family)
 
-    expected_msg = "Invalid org name"
+    expected_msg = "The organisation name CCLW is invalid!"
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 2
