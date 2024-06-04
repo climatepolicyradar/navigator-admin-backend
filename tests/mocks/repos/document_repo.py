@@ -24,6 +24,8 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_get_all(_, org_id: Optional[int]) -> list[DocumentReadDTO]:
         maybe_throw()
+        if document_repo.return_empty:
+            return []
         values = []
         for x in range(3):
             dto = create_document_read_dto(import_id=f"id{x}")

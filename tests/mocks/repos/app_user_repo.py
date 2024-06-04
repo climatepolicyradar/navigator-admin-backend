@@ -39,10 +39,10 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
         return 1
 
     def mock_is_active(_, email: str) -> bool:
-        return app_user_repo.user_active
+        return bool(app_user_repo.user_active is True)
 
     def mock_is_superuser(_, email: str) -> bool:
-        return app_user_repo.is_superuser
+        return bool(app_user_repo.is_superuser is True)
 
     monkeypatch.setattr(app_user_repo, "get_user_by_email", mock_get_user_by_email)
     mocker.spy(app_user_repo, "get_user_by_email")

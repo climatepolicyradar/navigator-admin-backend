@@ -39,9 +39,9 @@ def test_search_event_non_super(
     assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
-    assert len(ids_found) == 2
+    assert len(ids_found) == 1
 
-    expected_ids = set(["E.0.0.2", "E.0.0.3"])
+    expected_ids = set(["E.0.0.2"])
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
@@ -68,7 +68,7 @@ def test_search_event_when_nothing_found(
     )
 
 
-def test_search_document_when_db_error(
+def test_search_event_when_db_error(
     client: TestClient, data_db: Session, bad_event_repo, user_header_token
 ):
     setup_db(data_db)
@@ -82,7 +82,7 @@ def test_search_document_when_db_error(
     assert bad_event_repo.search.call_count == 1
 
 
-def test_search_document_with_max_results(
+def test_search_event_with_max_results(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
@@ -101,7 +101,7 @@ def test_search_document_with_max_results(
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
 
-def test_search_document_when_invalid_params(
+def test_search_event_when_invalid_params(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)

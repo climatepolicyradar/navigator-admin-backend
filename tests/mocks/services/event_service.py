@@ -20,7 +20,7 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         if event_service.throw_timeout_error:
             raise TimeoutError
 
-    def mock_get_all_events() -> list[EventReadDTO]:
+    def mock_get_all_events(user_email: str) -> list[EventReadDTO]:
         maybe_throw()
         return [create_event_read_dto("test")]
 

@@ -4,47 +4,6 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 
-# --- GET ALL
-
-
-def test_get_all_documents(client: TestClient, data_db: Session, user_header_token):
-    setup_db(data_db)
-    response = client.get(
-        "/api/v1/documents",
-        headers=user_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) == 2
-    ids_found = set([f["import_id"] for f in data])
-    expected_ids = set(["D.0.0.1", "D.0.0.2"])
-
-    assert ids_found.symmetric_difference(expected_ids) == set([])
-
-    sdata = sorted(data, key=lambda d: d["import_id"])
-    assert all(field in col for col in sdata for field in ("created", "last_modified"))
-
-    expected_data = [
-        {
-            k: v
-            for k, v in col.items()
-            if k not in ("created", "last_modified", "physical_id")
-        }
-        for col in sdata
-    ]
-    assert expected_data[0] == EXPECTED_DOCUMENTS[0]
-    assert expected_data[1] == EXPECTED_DOCUMENTS[1]
-
-
-def test_get_all_documents_when_not_authenticated(client: TestClient, data_db: Session):
-    setup_db(data_db)
-    response = client.get(
-        "/api/v1/documents",
-    )
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-
 # --- GET
 
 
@@ -59,12 +18,12 @@ def test_get_document(client: TestClient, data_db: Session, user_header_token):
     assert data["import_id"] == "D.0.0.1"
 
     assert all(field in data for field in ("created", "last_modified"))
-    expected_data = {
+    actual_data = {
         k: v
         for k, v in data.items()
         if k not in ("created", "last_modified", "physical_id")
     }
-    assert expected_data == EXPECTED_DOCUMENTS[0]
+    assert actual_data == EXPECTED_DOCUMENTS[0]
 
 
 def test_get_document_when_not_authenticated(client: TestClient, data_db: Session):

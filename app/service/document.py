@@ -44,14 +44,16 @@ def get(import_id: str) -> Optional[DocumentReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def all() -> list[DocumentReadDTO]:
+def all(user_email: str) -> list[DocumentReadDTO]:
     """
     Gets the entire list of documents from the repository.
 
+    :param str user_email: The email address of the current user.
     :return list[documentDTO]: The list of documents.
     """
     with db_session.get_db() as db:
-        return document_repo.all(db)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return document_repo.all(db, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

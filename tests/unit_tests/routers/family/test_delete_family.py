@@ -37,10 +37,19 @@ def test_delete_when_not_found(
     assert family_service_mock.delete.call_count == 1
 
 
-def test_delete_fails_when_org_mismatch(
+def test_delete_fails_when_invalid_org(
     client: TestClient, family_service_mock, user_header_token
 ):
     family_service_mock.throw_validation_error = True
     response = client.delete("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert family_service_mock.delete.call_count == 1
+
+
+def test_delete_fails_when_org_mismatch(
+    client: TestClient, family_service_mock, user_header_token
+):
+    family_service_mock.org_mismatch = True
+    response = client.delete("/api/v1/families/fam1", headers=user_header_token)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert family_service_mock.delete.call_count == 1

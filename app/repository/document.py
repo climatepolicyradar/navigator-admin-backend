@@ -21,6 +21,7 @@ from db_client.models.organisation.counters import CountedEntity
 from pydantic import AnyHttpUrl
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
+from sqlalchemy import desc
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
@@ -85,7 +86,6 @@ def _get_query(db: Session) -> Query:
             lang_model.id == pdl_model.language_id,
             isouter=True,
         )
-        .distinct(FamilyDocument.import_id)
     )
 
 
@@ -146,34 +146,19 @@ def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
     )
 
 
-def _document_tuple_from_dto(db: Session, dto: DocumentCreateDTO) -> CreateObjects:
-    language = PhysicalDocumentLanguage(
-        language_id=db.query(Language.id)
-        .filter(Language.name == dto.user_language_name)
-        .scalar(),
-        document_id=None,
-        source=LanguageSource.USER,
-        visible=True,
-    )
-    fam_doc = FamilyDocument(**_dto_to_family_document_dict(dto))
-    phys_doc = PhysicalDocument(
-        id=None,
-        title=dto.title,
-        # TODO: More verification needed here: PDCT-865
-        source_url=str(dto.source_url) if dto.source_url is not None else None,
-    )
-    return language, fam_doc, phys_doc
-
-
-def all(db: Session) -> list[DocumentReadDTO]:
+def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
     """
     Returns all the documents.
 
     :param db Session: the database connection
+    :param org_id int: the ID of the organisation the user belongs to
     :return Optional[DocumentResponse]: All of things
     """
-    # TODO: PDCT-672 .Add ordering e.g., order_by(desc(FamilyDocument.last_modified))
-    result = _get_query(db).all()
+    query = _get_query(db)
+    if org_id is not None:
+        query = query.filter(Organisation.id == org_id)
+
+    result = query.order_by(desc(FamilyDocument.last_modified)).all()
 
     if not result:
         return []
@@ -220,11 +205,14 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
-        # TODO: Fix order by on search PDCT-672
         query = _get_query(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
-        result = query.limit(query_params["max_results"]).all()
+        result = (
+            query.order_by(desc(FamilyDocument.last_modified))
+            .limit(query_params["max_results"])
+            .all()
+        )
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -399,7 +387,7 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
     :return str: The import id
     """
     try:
-        language, family_doc, phys_doc = _document_tuple_from_dto(db, document)
+        language, family_doc, phys_doc = _document_tuple_from_create_dto(db, document)
 
         db.add(phys_doc)
         db.flush()

@@ -17,7 +17,6 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from app.service import (
     app_user,
-    authorisation,
     category,
     collection,
     corpus,
@@ -54,6 +53,7 @@ def all(user_email: str) -> list[FamilyReadDTO]:
     """
     Gets the entire list of families from the repository.
 
+    :param str user_email: The email address of the current user.
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
@@ -239,7 +239,7 @@ def delete(
         return None
 
     # Validate family belongs to same org as current user.
-    authenticated = authorisation.is_user_authorised_to_make_changes(
+    authenticated = app_user.is_authorised_to_make_changes(
         db, user_email, family.organisation, "family", import_id
     )
     if authenticated:

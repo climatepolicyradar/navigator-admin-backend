@@ -67,6 +67,8 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
 
     def mock_delete_family(import_id: str, user_email: str) -> Optional[bool]:
         maybe_throw()
+        if family_service.org_mismatch:
+            raise AuthorisationError("Org mismatch")
         return not family_service.missing
 
     monkeypatch.setattr(family_service, "get", mock_get_family)

@@ -35,14 +35,16 @@ def get(import_id: str) -> Optional[EventReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def all() -> list[EventReadDTO]:
+def all(user_email: str) -> list[EventReadDTO]:
     """
     Gets the entire list of family events from the repository.
 
+    :param str user_email: The email address of the current user.
     :return list[EventReadDTO]: The list of family events.
     """
     with db_session.get_db() as db:
-        return event_repo.all(db)
+        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        return event_repo.all(db, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

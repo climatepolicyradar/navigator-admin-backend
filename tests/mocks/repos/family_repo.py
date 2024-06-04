@@ -20,6 +20,8 @@ def _maybe_timeout():
 
 def all(db: Session, org_id: Optional[int]):
     _maybe_throw()
+    if family_repo.return_empty:
+        return []
     return [create_family_read_dto("test", collections=["x.y.z.1", "x.y.z.2"])]
 
 
