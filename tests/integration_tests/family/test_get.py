@@ -2,6 +2,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from tests.helpers.utils import remove_trigger_cols_from_result
 from tests.integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 
 # --- GET
@@ -17,10 +18,7 @@ def test_get_family(client: TestClient, data_db: Session, user_header_token):
     data = response.json()
     assert data["import_id"] == "A.0.0.1"
 
-    assert all(field in data for field in ("created", "last_modified"))
-    actual_data = {
-        k: v for k, v in data.items() if k not in ("created", "last_modified")
-    }
+    actual_data = remove_trigger_cols_from_result(data)
     assert actual_data == EXPECTED_FAMILIES[0]
 
 

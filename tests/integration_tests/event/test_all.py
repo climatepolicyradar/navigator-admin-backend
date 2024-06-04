@@ -2,6 +2,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from tests.helpers.utils import remove_trigger_cols_from_result
 from tests.integration_tests.setup_db import EXPECTED_EVENTS, setup_db
 
 # --- GET ALL
@@ -24,18 +25,8 @@ def test_get_all_events_super(
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    assert all(
-        field in event for event in data for field in ("created", "last_modified")
-    )
-    data = sorted(data, key=lambda d: d["import_id"])
-    actual_data = [
-        {
-            k: v if not isinstance(v, list) else sorted(v)
-            for k, v in event.items()
-            if k not in ("created", "last_modified")
-        }
-        for event in data
-    ]
+    actual_data = remove_trigger_cols_from_result(data)
+    assert actual_data is not None
     assert actual_data[0] == EXPECTED_EVENTS[0]
     assert actual_data[1] == EXPECTED_EVENTS[1]
     assert actual_data[2] == EXPECTED_EVENTS[2]
@@ -56,18 +47,8 @@ def test_get_all_events_cclw(client: TestClient, data_db: Session, user_header_t
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    assert all(
-        field in event for event in data for field in ("created", "last_modified")
-    )
-    data = sorted(data, key=lambda d: d["import_id"])
-    actual_data = [
-        {
-            k: v if not isinstance(v, list) else sorted(v)
-            for k, v in event.items()
-            if k not in ("created", "last_modified")
-        }
-        for event in data
-    ]
+    actual_data = remove_trigger_cols_from_result(data)
+    assert actual_data is not None
     assert actual_data[0] == EXPECTED_EVENTS[0]
     assert actual_data[1] == EXPECTED_EVENTS[1]
 
@@ -89,18 +70,8 @@ def test_get_all_events_unfccc(
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    assert all(
-        field in event for event in data for field in ("created", "last_modified")
-    )
-    data = sorted(data, key=lambda d: d["import_id"])
-    actual_data = [
-        {
-            k: v if not isinstance(v, list) else sorted(v)
-            for k, v in event.items()
-            if k not in ("created", "last_modified")
-        }
-        for event in data
-    ]
+    actual_data = remove_trigger_cols_from_result(data)
+    assert actual_data is not None
     assert actual_data[0] == EXPECTED_EVENTS[2]
 
 
