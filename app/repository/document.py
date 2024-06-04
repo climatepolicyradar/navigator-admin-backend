@@ -21,6 +21,7 @@ from db_client.models.organisation.counters import CountedEntity
 from pydantic import AnyHttpUrl
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
+from sqlalchemy import desc
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
@@ -85,7 +86,6 @@ def _get_query(db: Session) -> Query:
             lang_model.id == pdl_model.language_id,
             isouter=True,
         )
-        .distinct(FamilyDocument.import_id)
     )
 
 
@@ -159,8 +159,7 @@ def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
         _LOGGER.error("FILTERING ON ORG ID %s", org_id)
         query = query.filter(Organisation.id == org_id)
 
-    # TODO: PDCT-672 .Add ordering e.g., order_by(desc(FamilyDocument.last_modified))
-    result = query.all()
+    result = query.order_by(desc(FamilyDocument.last_modified)).all()
 
     if not result:
         return []
@@ -207,11 +206,14 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
-        # TODO: Fix order by on search PDCT-672
         query = _get_query(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
-        result = query.limit(query_params["max_results"]).all()
+        result = (
+            query.order_by(desc(FamilyDocument.last_modified))
+            .limit(query_params["max_results"])
+            .all()
+        )
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
