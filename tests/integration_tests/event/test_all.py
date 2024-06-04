@@ -28,7 +28,7 @@ def test_get_all_events_super(
         field in event for event in data for field in ("created", "last_modified")
     )
     data = sorted(data, key=lambda d: d["import_id"])
-    expected_data = [
+    actual_data = [
         {
             k: v if not isinstance(v, list) else sorted(v)
             for k, v in event.items()
@@ -36,9 +36,9 @@ def test_get_all_events_super(
         }
         for event in data
     ]
-    assert expected_data[0] == EXPECTED_EVENTS[0]
-    assert expected_data[1] == EXPECTED_EVENTS[1]
-    assert expected_data[2] == EXPECTED_EVENTS[2]
+    assert actual_data[0] == EXPECTED_EVENTS[0]
+    assert actual_data[1] == EXPECTED_EVENTS[1]
+    assert actual_data[2] == EXPECTED_EVENTS[2]
 
 
 def test_get_all_events_cclw(client: TestClient, data_db: Session, user_header_token):
@@ -60,7 +60,7 @@ def test_get_all_events_cclw(client: TestClient, data_db: Session, user_header_t
         field in event for event in data for field in ("created", "last_modified")
     )
     data = sorted(data, key=lambda d: d["import_id"])
-    expected_data = [
+    actual_data = [
         {
             k: v if not isinstance(v, list) else sorted(v)
             for k, v in event.items()
@@ -68,8 +68,8 @@ def test_get_all_events_cclw(client: TestClient, data_db: Session, user_header_t
         }
         for event in data
     ]
-    assert expected_data[0] == EXPECTED_EVENTS[0]
-    assert expected_data[1] == EXPECTED_EVENTS[1]
+    assert actual_data[0] == EXPECTED_EVENTS[0]
+    assert actual_data[1] == EXPECTED_EVENTS[1]
 
 
 def test_get_all_events_unfccc(
@@ -93,7 +93,7 @@ def test_get_all_events_unfccc(
         field in event for event in data for field in ("created", "last_modified")
     )
     data = sorted(data, key=lambda d: d["import_id"])
-    expected_data = [
+    actual_data = [
         {
             k: v if not isinstance(v, list) else sorted(v)
             for k, v in event.items()
@@ -101,7 +101,7 @@ def test_get_all_events_unfccc(
         }
         for event in data
     ]
-    assert expected_data[0] == EXPECTED_EVENTS[2]
+    assert actual_data[0] == EXPECTED_EVENTS[2]
 
 
 def test_get_all_events_when_not_authenticated(client: TestClient, data_db: Session):

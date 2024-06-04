@@ -18,10 +18,10 @@ def test_get_event(client: TestClient, data_db: Session, user_header_token):
     assert data["import_id"] == "E.0.0.1"
 
     assert all(field in data for field in ("created", "last_modified"))
-    expected_data = {
+    actual_data = {
         k: v for k, v in data.items() if k not in ("created", "last_modified")
     }
-    assert expected_data == EXPECTED_EVENTS[0]
+    assert actual_data == EXPECTED_EVENTS[0]
 
 
 def test_get_event_when_not_authenticated(client: TestClient, data_db: Session):

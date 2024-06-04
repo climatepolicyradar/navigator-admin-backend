@@ -24,7 +24,7 @@ def test_get_all_collections_super(
 
     assert all(field in col for col in data for field in ("created", "last_modified"))
     data = sorted(data, key=lambda d: d["import_id"])
-    expected_data = [
+    actual_data = [
         {
             k: v if not isinstance(v, list) else sorted(v)
             for k, v in col.items()
@@ -32,10 +32,10 @@ def test_get_all_collections_super(
         }
         for col in data
     ]
-    assert expected_data[0] == EXPECTED_COLLECTIONS[0]
-    assert expected_data[1] == EXPECTED_COLLECTIONS[1]
-    assert expected_data[2] == EXPECTED_COLLECTIONS[2]
-    assert expected_data[3] == EXPECTED_COLLECTIONS[3]
+    assert actual_data[0] == EXPECTED_COLLECTIONS[0]
+    assert actual_data[1] == EXPECTED_COLLECTIONS[1]
+    assert actual_data[2] == EXPECTED_COLLECTIONS[2]
+    assert actual_data[3] == EXPECTED_COLLECTIONS[3]
 
 
 def test_get_all_collections_cclw(
@@ -58,7 +58,7 @@ def test_get_all_collections_cclw(
 
     assert all(field in col for col in data for field in ("created", "last_modified"))
     data = sorted(data, key=lambda d: d["import_id"])
-    expected_data = [
+    actual_data = [
         {
             k: v if not isinstance(v, list) else sorted(v)
             for k, v in col.items()
@@ -66,8 +66,8 @@ def test_get_all_collections_cclw(
         }
         for col in data
     ]
-    assert expected_data[0] == EXPECTED_COLLECTIONS[1]
-    assert expected_data[1] == EXPECTED_COLLECTIONS[2]
+    assert actual_data[0] == EXPECTED_COLLECTIONS[1]
+    assert actual_data[1] == EXPECTED_COLLECTIONS[2]
 
 
 def test_get_all_collections_unfccc(
@@ -90,7 +90,7 @@ def test_get_all_collections_unfccc(
 
     assert all(field in col for col in data for field in ("created", "last_modified"))
     data = sorted(data, key=lambda d: d["import_id"])
-    expected_data = [
+    actual_data = [
         {
             k: v if not isinstance(v, list) else sorted(v)
             for k, v in col.items()
@@ -98,7 +98,7 @@ def test_get_all_collections_unfccc(
         }
         for col in data
     ]
-    assert expected_data[0] == EXPECTED_COLLECTIONS[3]
+    assert actual_data[0] == EXPECTED_COLLECTIONS[3]
 
 
 def test_get_all_collections_other(
@@ -121,7 +121,7 @@ def test_get_all_collections_other(
 
     assert all(field in col for col in data for field in ("created", "last_modified"))
     data = sorted(data, key=lambda d: d["import_id"])
-    expected_data = [
+    actual_data = [
         {
             k: v if not isinstance(v, list) else sorted(v)
             for k, v in col.items()
@@ -129,7 +129,7 @@ def test_get_all_collections_other(
         }
         for col in data
     ]
-    assert expected_data[0] == EXPECTED_COLLECTIONS[0]
+    assert actual_data[0] == EXPECTED_COLLECTIONS[0]
 
 
 def test_get_all_collections_when_not_authenticated(
