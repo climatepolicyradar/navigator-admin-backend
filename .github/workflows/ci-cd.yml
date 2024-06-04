@@ -63,6 +63,9 @@ jobs:
       - name: Run Tests
         run: make test
 
+      - name: Debug
+        run: ls ./htmlcov
+
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:
