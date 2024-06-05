@@ -85,7 +85,7 @@ def test_create_when_no_org_associated_with_entity(
     assert document_repo_mock.create.call_count == 0
 
 
-def test_create_when_org_mismatch(
+def test_create_raises_when_org_mismatch(
     document_repo_mock, family_repo_mock, app_user_repo_mock
 ):
     new_document = create_document_create_dto()
@@ -102,3 +102,19 @@ def test_create_when_org_mismatch(
     assert app_user_repo_mock.get_org_id.call_count == 1
     assert app_user_repo_mock.is_superuser.call_count == 1
     assert document_repo_mock.create.call_count == 0
+
+
+def test_create_success_when_org_mismatch(
+    document_repo_mock, family_repo_mock, app_user_repo_mock
+):
+    new_document = create_document_create_dto()
+    app_user_repo_mock.superuser = True
+    app_user_repo_mock.invalid_org = True
+    document = doc_service.create(new_document, USER_EMAIL)
+    assert document is not None
+
+    assert family_repo_mock.get.call_count == 1
+    assert document_repo_mock.get_org_from_import_id.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert document_repo_mock.create.call_count == 1
