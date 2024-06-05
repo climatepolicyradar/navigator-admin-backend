@@ -37,7 +37,9 @@ def _get_doc_tuple(
     return fd, pd
 
 
-def test_update_document(client: TestClient, data_db: Session, user_header_token):
+def test_update_document_super(
+    client: TestClient, data_db: Session, superuser_header_token
+):
     setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="Translation",
@@ -50,7 +52,111 @@ def test_update_document(client: TestClient, data_db: Session, user_header_token
     response = client.put(
         "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(mode="json"),
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.2"
+    assert data["variant_name"] == "Translation"
+    assert data["role"] == "SUMMARY"
+    assert data["type"] == "Annex"
+    assert data["title"] == "Updated Title"
+    assert data["source_url"] == "http://update_source/"
+    assert data["slug"].startswith("updated-title")
+    assert data["user_language_name"] == "Ghotuo"
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
+    assert fd.import_id == "D.0.0.2"
+    assert fd.variant_name == "Translation"
+    assert fd.document_role == "SUMMARY"
+    assert fd.document_type == "Annex"
+    assert pd.title == "Updated Title"
+    assert pd.source_url == "http://update_source/"
+
+    # Check the user language in the db
+    lang = (
+        data_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one()
+    )
+    assert lang.language_id == 1
+
+    # Check slug is updated too
+    slugs = (
+        data_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
+    )
+    last_slug = slugs[-1].name
+    assert last_slug.startswith("updated-title")
+
+
+def test_update_document_cclw(client: TestClient, data_db: Session, user_header_token):
+    setup_db(data_db)
+    new_document = DocumentWriteDTO(
+        variant_name="Translation",
+        role="SUMMARY",
+        type="Annex",
+        title="Updated Title",
+        source_url=cast(AnyHttpUrl, "http://update_source"),
+        user_language_name="Ghotuo",
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.3",
+        json=new_document.model_dump(mode="json"),
         headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.3"
+    assert data["variant_name"] == "Translation"
+    assert data["role"] == "SUMMARY"
+    assert data["type"] == "Annex"
+    assert data["title"] == "Updated Title"
+    assert data["source_url"] == "http://update_source/"
+    assert data["slug"].startswith("updated-title")
+    assert data["user_language_name"] == "Ghotuo"
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.3")
+    assert fd.import_id == "D.0.0.3"
+    assert fd.variant_name == "Translation"
+    assert fd.document_role == "SUMMARY"
+    assert fd.document_type == "Annex"
+    assert pd.title == "Updated Title"
+    assert pd.source_url == "http://update_source/"
+
+    # Check the user language in the db
+    lang = (
+        data_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one()
+    )
+    assert lang.language_id == 1
+
+    # Check slug is updated too
+    slugs = (
+        data_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.3").all()
+    )
+    last_slug = slugs[-1].name
+    assert last_slug.startswith("updated-title")
+
+
+def test_update_document_unfccc(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    new_document = DocumentWriteDTO(
+        variant_name="Translation",
+        role="SUMMARY",
+        type="Annex",
+        title="Updated Title",
+        source_url=cast(AnyHttpUrl, "http://update_source"),
+        user_language_name="Ghotuo",
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.2",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -89,7 +195,7 @@ def test_update_document(client: TestClient, data_db: Session, user_header_token
 
 
 def test_update_document_no_source_url(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
 
@@ -106,7 +212,7 @@ def test_update_document_no_source_url(
     response = client.put(
         "/api/v1/documents/D.0.0.1",
         json=new_document.model_dump(mode="json"),
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -138,7 +244,7 @@ def test_update_document_no_source_url(
 
 
 def test_update_document_remove_variant(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
 
@@ -154,7 +260,7 @@ def test_update_document_remove_variant(
     response = client.put(
         "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(mode="json"),
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -185,7 +291,7 @@ def test_update_document_remove_variant(
 
 
 def test_update_document_remove_user_language(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
 
@@ -201,7 +307,7 @@ def test_update_document_remove_user_language(
     response = client.put(
         "/api/v1/documents/D.0.0.1",
         json=new_document.model_dump(mode="json"),
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -243,7 +349,7 @@ def test_update_document_when_not_authorised(client: TestClient, data_db: Sessio
 
 
 def test_update_document_idempotent(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
     doc = EXPECTED_DOCUMENTS[0]
@@ -259,7 +365,7 @@ def test_update_document_idempotent(
     response = client.put(
         f"/api/v1/documents/{doc['import_id']}",
         json=document,
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
 
@@ -271,7 +377,10 @@ def test_update_document_idempotent(
 
 
 def test_update_document_rollback(
-    client: TestClient, data_db: Session, rollback_document_repo, user_header_token
+    client: TestClient,
+    data_db: Session,
+    rollback_document_repo,
+    non_cclw_user_header_token,
 ):
     setup_db(data_db)
     new_document = create_document_write_dto(
@@ -280,7 +389,7 @@ def test_update_document_rollback(
     response = client.put(
         "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(mode="json"),
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
@@ -308,7 +417,7 @@ def test_update_document_when_not_found(
 
 
 def test_update_document_when_db_error(
-    client: TestClient, data_db: Session, bad_document_repo, user_header_token
+    client: TestClient, data_db: Session, bad_document_repo, non_cclw_user_header_token
 ):
     setup_db(data_db)
 
@@ -318,16 +427,15 @@ def test_update_document_when_db_error(
     response = client.put(
         "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(mode="json"),
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
-    assert bad_document_repo.update.call_count == 1
 
 
 def test_update_document_blank_variant(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
     new_document = DocumentWriteDTO(
@@ -341,7 +449,7 @@ def test_update_document_blank_variant(
     response = client.put(
         "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(mode="json"),
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
@@ -349,7 +457,7 @@ def test_update_document_blank_variant(
 
 
 def test_update_document_idempotent_user_language(
-    client: TestClient, data_db: Session, user_header_token
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
     new_document = DocumentWriteDTO(
@@ -363,7 +471,7 @@ def test_update_document_idempotent_user_language(
     response = client.put(
         "/api/v1/documents/D.0.0.2",
         json=new_document.model_dump(mode="json"),
-        headers=user_header_token,
+        headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -392,3 +500,24 @@ def test_update_document_idempotent_user_language(
     )
     assert lang is None
     assert data["user_language_name"] is None
+
+
+def test_update_document_when_org_mismatch(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+
+    new_document = create_document_write_dto(
+        title="Updated Title",
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.2",
+        json=new_document.model_dump(mode="json"),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert (
+        data["detail"]
+        == "User 'cclw@cpr.org' is not authorised to perform operation on 'D.0.0.2'"
+    )
