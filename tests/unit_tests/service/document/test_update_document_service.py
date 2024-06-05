@@ -1,7 +1,7 @@
 import pytest
 
 import app.service.document as doc_service
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from tests.helpers.document import create_document_write_dto
 
 USER_EMAIL = "test@cpr.org"
@@ -81,5 +81,55 @@ def test_update_raises_when_invalid_variant(document_repo_mock, app_user_repo_mo
     assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert app_user_repo_mock.get_org_id.call_count == 0
     assert app_user_repo_mock.is_superuser.call_count == 0
+    assert document_repo_mock.update.call_count == 0
+    assert document_repo_mock.get.call_count == 0
+
+
+def test_create_when_no_org_associated_with_entity(
+    document_repo_mock, app_user_repo_mock
+):
+    document = doc_service.get("a.b.c.d")
+    assert document is not None
+    document_repo_mock.get.call_count = 0
+    assert document_repo_mock.get.call_count == 0
+
+    updated_doc = create_document_write_dto()
+
+    document_repo_mock.no_org = True
+    with pytest.raises(ValidationError) as e:
+        ok = doc_service.update(document.import_id, updated_doc, USER_EMAIL)
+        assert not ok
+
+    expected_msg = "No organisation associated with import id a.b.c.d"
+    assert e.value.message == expected_msg
+
+    assert document_repo_mock.get_org_from_import_id.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
+    assert document_repo_mock.update.call_count == 0
+    assert document_repo_mock.get.call_count == 0
+
+
+def test_create_when_org_mismatch(document_repo_mock, app_user_repo_mock):
+    document = doc_service.get("a.b.c.d")
+    assert document is not None
+    document_repo_mock.get.call_count = 0
+    assert document_repo_mock.get.call_count == 0
+
+    updated_doc = create_document_write_dto()
+
+    document_repo_mock.alternative_org = True
+    with pytest.raises(AuthorisationError) as e:
+        ok = doc_service.update(document.import_id, updated_doc, USER_EMAIL)
+        assert not ok
+
+    expected_msg = (
+        "User 'test@cpr.org' is not authorised to perform operation on 'a.b.c.d'"
+    )
+    assert e.value.message == expected_msg
+
+    assert document_repo_mock.get_org_from_import_id.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 0
