@@ -10,9 +10,9 @@ def test_delete(document_repo_mock, app_user_repo_mock):
     ok = doc_service.delete("a.b.c.d", USER_EMAIL)
     assert ok
     assert document_repo_mock.get.call_count == 1
+    assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
     assert app_user_repo_mock.is_superuser.call_count == 1
-    assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert document_repo_mock.delete.call_count == 1
 
 
@@ -23,9 +23,9 @@ def test_delete_raises_when_invalid_id(document_repo_mock, app_user_repo_mock):
     expected_msg = f"The import id {import_id} is invalid!"
     assert e.value.message == expected_msg
     assert document_repo_mock.get.call_count == 0
+    assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert app_user_repo_mock.get_org_id.call_count == 0
     assert app_user_repo_mock.is_superuser.call_count == 0
-    assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert document_repo_mock.delete.call_count == 0
 
 
@@ -39,9 +39,9 @@ def test_delete_when_missing(document_repo_mock, app_user_repo_mock):
     assert e.value.message == expected_msg
 
     assert document_repo_mock.get.call_count == 1
+    assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert app_user_repo_mock.get_org_id.call_count == 0
     assert app_user_repo_mock.is_superuser.call_count == 0
-    assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert document_repo_mock.delete.call_count == 0
 
 
@@ -59,9 +59,9 @@ def test_delete_when_no_org_associated_with_entity(
     assert e.value.message == expected_msg
 
     assert document_repo_mock.get.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert app_user_repo_mock.is_superuser.call_count == 1
     assert document_repo_mock.get_org_from_import_id.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
     assert document_repo_mock.delete.call_count == 0
 
 
@@ -71,11 +71,13 @@ def test_delete_when_org_mismatch(document_repo_mock, app_user_repo_mock):
         ok = doc_service.delete("a.b.c.d", USER_EMAIL)
         assert not ok
 
-    expected_msg = "User 'test@cpr.org' is not authorised to delete document 'a.b.c.d'"
+    expected_msg = (
+        "User 'test@cpr.org' is not authorised to perform operation on 'a.b.c.d'"
+    )
     assert e.value.message == expected_msg
 
     assert document_repo_mock.get.call_count == 1
+    assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
     assert app_user_repo_mock.is_superuser.call_count == 1
-    assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert document_repo_mock.delete.call_count == 0

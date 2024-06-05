@@ -239,8 +239,9 @@ def delete(
         return None
 
     # Validate family belongs to same org as current user.
+    entity_org_id = organisation.get_id_from_name(db, family.organisation)
     authenticated = app_user.is_authorised_to_make_changes(
-        db, user_email, family.organisation, "family", import_id
+        db, user_email, entity_org_id, import_id
     )
     if authenticated:
         return family_repo.delete(db, import_id)

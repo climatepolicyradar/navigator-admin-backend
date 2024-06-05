@@ -10,7 +10,7 @@ import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
-from app.errors import AuthorisationError, RepositoryError, ValidationError
+from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.service import app_user, id
 
@@ -166,18 +166,11 @@ def delete(
     if doc is None:
         raise ValidationError(f"Could not find document {import_id}")
 
-    user_org_id = app_user.restrict_entities_to_user_org(db, user_email)
-    if user_org_id is None:
-        return True
-
-    entity_org_id = get_org_from_id(db, import_id)
-    if entity_org_id != user_org_id:
-        msg = f"User '{user_email}' is not authorised to delete document '{import_id}'"
-        raise AuthorisationError(msg)
-
     if context is not None:
         context.error = f"Could not delete document {import_id}"
 
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.is_authorised_to_make_changes(db, user_email, entity_org_id, import_id)
     return document_repo.delete(db, import_id)
 
 
