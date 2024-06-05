@@ -79,7 +79,7 @@ def test_update_raises_when_invalid_variant(document_repo_mock, app_user_repo_mo
     assert document_repo_mock.get.call_count == 1
 
 
-def test_create_when_no_org_associated_with_entity(
+def test_update_when_no_org_associated_with_entity(
     document_repo_mock, app_user_repo_mock
 ):
     document = doc_service.get("a.b.c.d")
@@ -104,7 +104,7 @@ def test_create_when_no_org_associated_with_entity(
     assert document_repo_mock.get.call_count == 1
 
 
-def test_create_when_org_mismatch(document_repo_mock, app_user_repo_mock):
+def test_update_raises_when_org_mismatch(document_repo_mock, app_user_repo_mock):
     document = doc_service.get("a.b.c.d")
     assert document is not None
     document_repo_mock.get.call_count = 0
@@ -127,3 +127,25 @@ def test_create_when_org_mismatch(document_repo_mock, app_user_repo_mock):
     assert app_user_repo_mock.is_superuser.call_count == 1
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 1
+
+
+def test_update_success_when_org_mismatch_superuser(
+    document_repo_mock, app_user_repo_mock
+):
+    document = doc_service.get("a.b.c.d")
+    assert document is not None
+    document_repo_mock.get.call_count = 0
+    assert document_repo_mock.get.call_count == 0
+
+    updated_doc = create_document_write_dto()
+
+    app_user_repo_mock.invalid_org = True
+    app_user_repo_mock.superuser = True
+    result = doc_service.update(document.import_id, updated_doc, USER_EMAIL)
+    assert result is not None
+
+    assert document_repo_mock.get_org_from_import_id.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert document_repo_mock.update.call_count == 1
+    assert document_repo_mock.get.call_count == 2

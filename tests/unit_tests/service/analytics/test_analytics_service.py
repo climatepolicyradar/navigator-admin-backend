@@ -41,7 +41,7 @@ def test_summary_superuser(
     app_user_repo_mock,
 ):
     collection_repo_mock.is_superuser = True
-    document_repo_mock.is_superuser = True
+    document_repo_mock.superuser = True
     family_repo_mock.is_superuser = True
     event_repo_mock.is_superuser = True
 
