@@ -118,17 +118,22 @@ async def search_document(request: Request) -> list[DocumentReadDTO]:
     response_model=DocumentReadDTO,
 )
 async def update_document(
-    import_id: str, new_document: DocumentWriteDTO
+    request: Request, import_id: str, new_document: DocumentWriteDTO
 ) -> DocumentReadDTO:
     """
     Updates a specific document given the import id.
 
+    :param Request request: Request object.
     :param str import_id: Specified import_id.
     :raises HTTPException: If the document is not found a 404 is returned.
     :return DocumentDTO: returns a DocumentDTO of the document updated.
     """
     try:
-        document = document_service.update(import_id, new_document)
+        document = document_service.update(
+            import_id, new_document, request.state.user.email
+        )
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

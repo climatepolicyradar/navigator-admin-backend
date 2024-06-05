@@ -112,6 +112,10 @@ def update(
     if context is not None:
         context.error = f"Error when updating document {import_id}"
 
+    doc = get(import_id)
+    if doc is None:
+        return None
+
     if document.variant_name == "":
         raise ValidationError("Variant name is empty")
 
