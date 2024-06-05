@@ -7,13 +7,10 @@ Uses a family repo mock and ensures that the repo is called.
 import pytest
 
 import app.service.family as family_service
-from app.errors import AuthorisationError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from tests.helpers.family import create_family_create_dto
 
 USER_EMAIL = "test@cpr.org"
-
-
-# --- CREATE
 
 
 def test_create(
@@ -28,13 +25,14 @@ def test_create(
     family = family_service.create(new_family, USER_EMAIL)
     assert family is not None
 
-    assert family_repo_mock.create.call_count == 1
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert family_repo_mock.create.call_count == 1
 
 
 def test_create_repo_fails(
@@ -46,19 +44,22 @@ def test_create_repo_fails(
     corpus_repo_mock,
 ):
     new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
-    family_repo_mock.return_empty = True
-    family = family_service.create(new_family, USER_EMAIL)
+    family_repo_mock.throw_repository_error = True
 
-    # TODO: Should this be a RepositoryError
-    assert family == ""
+    with pytest.raises(RepositoryError) as e:
+        family_service.create(new_family, USER_EMAIL)
 
-    assert family_repo_mock.create.call_count == 1
+    expected_msg = "bad family repo"
+    assert e.value.message == expected_msg
+
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert family_repo_mock.create.call_count == 1
 
 
 def test_create_raises_when_category_invalid(
@@ -77,12 +78,13 @@ def test_create_raises_when_category_invalid(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert family_repo_mock.create.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 0
-    assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert corpus_repo_mock.validate.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
+    assert metadata_repo_mock.get_schema_for_org.call_count == 0
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
+    assert family_repo_mock.create.call_count == 0
 
 
 def test_create_raises_when_metadata_invalid(
@@ -101,12 +103,13 @@ def test_create_raises_when_metadata_invalid(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert family_repo_mock.create.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
+    assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
-    assert corpus_repo_mock.validate.call_count == 0
-    assert corpus_repo_mock.get_corpus_org_id.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
+    assert family_repo_mock.create.call_count == 0
 
 
 def test_create_raises_when_collection_org_different_to_usr_org(
@@ -126,12 +129,13 @@ def test_create_raises_when_collection_org_different_to_usr_org(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert family_repo_mock.create.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
+    assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
-    assert corpus_repo_mock.validate.call_count == 0
-    assert corpus_repo_mock.get_corpus_org_id.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
+    assert family_repo_mock.create.call_count == 0
 
 
 def test_create_raises_when_corpus_missing(
@@ -150,12 +154,39 @@ def test_create_raises_when_corpus_missing(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert family_repo_mock.create.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
-    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
+    assert metadata_repo_mock.get_schema_for_org.call_count == 0
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
+    assert family_repo_mock.create.call_count == 0
+
+
+def test_create_when_no_org_associated_with_entity(
+    family_repo_mock,
+    geography_repo_mock,
+    app_user_repo_mock,
+    metadata_repo_mock,
+    collection_repo_mock,
+    corpus_repo_mock,
+):
+    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    corpus_repo_mock.error = True
+    with pytest.raises(ValidationError) as e:
+        family_service.create(new_family, USER_EMAIL)
+
+    expected_msg = "No organisation associated with corpus CCLW.corpus.i00000001.n0000"
+    assert e.value.message == expected_msg
+
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
+    assert corpus_repo_mock.get_corpus_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 0
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 0
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
+    assert family_repo_mock.create.call_count == 0
 
 
 def test_create_raises_when_corpus_org_different_to_usr_org(
@@ -167,17 +198,42 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
     corpus_repo_mock,
 ):
     new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
-    corpus_repo_mock.error = True
+    app_user_repo_mock.invalid_org = True
     with pytest.raises(AuthorisationError) as e:
         family_service.create(new_family, USER_EMAIL)
-    expected_msg = "Organisation mismatch between selected corpus and the current user"
+    expected_msg = "User 'test@cpr.org' is not authorised to perform operation on 'CCLW.corpus.i00000001.n0000'"
 
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert family_repo_mock.create.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
-    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert family_repo_mock.create.call_count == 0
+
+
+def test_create_success_when_corpus_org_different_to_usr_org_super(
+    family_repo_mock,
+    geography_repo_mock,
+    app_user_repo_mock,
+    metadata_repo_mock,
+    collection_repo_mock,
+    corpus_repo_mock,
+):
+    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    app_user_repo_mock.invalid_org = True
+    app_user_repo_mock.superuser = True
+    family = family_service.create(new_family, USER_EMAIL)
+    assert family is not None
+
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
+    assert corpus_repo_mock.get_corpus_org_id.call_count == 1
+    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 2
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert family_repo_mock.create.call_count == 1

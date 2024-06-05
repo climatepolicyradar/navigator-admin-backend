@@ -15,6 +15,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     family_service.throw_repository_error = False
     family_service.throw_validation_error = False
     family_service.throw_timeout_error = False
+    family_service.superuser = False
 
     def maybe_throw():
         if family_service.throw_repository_error:
@@ -59,7 +60,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_create_family(data: FamilyCreateDTO, user_email: str) -> str:
         if not family_service.valid:
             raise ValidationError("Invalid data")
-        if family_service.org_mismatch:
+        if family_service.org_mismatch and not family_service.superuser:
             raise AuthorisationError("Org mismatch")
         if family_service.missing:
             raise RepositoryError("bad-db")

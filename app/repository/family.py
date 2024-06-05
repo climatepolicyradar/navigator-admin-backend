@@ -336,7 +336,7 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     :param FamilyDTO family: the values for the new family
     :param int geo_id: a validated geography id
     :param int org_id: a validated organisation id
-    :return bool: True if new Family was created otherwise False.
+    :return str: The ID of the created family.
     """
     try:
         import_id = cast(Column, generate_import_id(db, CountedEntity.Family, org_id))
@@ -358,9 +358,9 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
         )
 
         db.flush()
-    except:
+    except Exception as e:
         _LOGGER.exception("Error trying to create Family")
-        raise
+        raise RepositoryError(e)
 
     # Add a slug
     db.add(
