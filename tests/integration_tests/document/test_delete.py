@@ -19,6 +19,7 @@ def test_delete_document_super(
     assert data_db.query(FamilyDocument).count() == 3
     assert (
         data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "D.0.0.2")
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 1
@@ -33,6 +34,7 @@ def test_delete_document_cclw(client: TestClient, data_db: Session, user_header_
     assert data_db.query(FamilyDocument).count() == 3
     assert (
         data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "D.0.0.3")
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 1
@@ -51,6 +53,7 @@ def test_delete_document_unfccc(
     assert data_db.query(FamilyDocument).count() == 3
     assert (
         data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "D.0.0.2")
         .filter(FamilyDocument.document_status == DocumentStatus.DELETED)
         .count()
         == 1
