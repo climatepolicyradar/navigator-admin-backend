@@ -22,9 +22,7 @@ _LOGGER = logging.getLogger(__name__)
     "/documents/{import_id}",
     response_model=DocumentReadDTO,
 )
-async def get_document(
-    import_id: str,
-) -> DocumentReadDTO:
+async def get_document(import_id: str) -> DocumentReadDTO:
     """
     Returns a specific document given the import id.
 
@@ -58,6 +56,7 @@ async def get_all_documents(request: Request) -> list[DocumentReadDTO]:
     """
     Returns all documents
 
+    :param Request request: Request object.
     :return DocumentDTO: returns a DocumentDTO of the document found.
     """
     try:
@@ -119,8 +118,7 @@ async def search_document(request: Request) -> list[DocumentReadDTO]:
     response_model=DocumentReadDTO,
 )
 async def update_document(
-    import_id: str,
-    new_document: DocumentWriteDTO,
+    import_id: str, new_document: DocumentWriteDTO
 ) -> DocumentReadDTO:
     """
     Updates a specific document given the import id.
@@ -145,10 +143,12 @@ async def update_document(
     return document
 
 
-@r.post("/documents", response_model=str, status_code=status.HTTP_201_CREATED)
-async def create_document(
-    new_document: DocumentCreateDTO,
-) -> str:
+@r.post(
+    "/documents",
+    response_model=str,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_document(new_document: DocumentCreateDTO) -> str:
     """
     Creates a specific document given the values in DocumentCreateDTO.
 
@@ -190,17 +190,16 @@ async def create_document(
 @r.delete(
     "/documents/{import_id}",
 )
-async def delete_document(
-    import_id: str,
-) -> None:
+async def delete_document(request: Request, import_id: str) -> None:
     """
     Deletes a specific document given the import id.
 
+    :param Request request: Request object.
     :param str import_id: Specified import_id.
     :raises HTTPException: If the document is not found a 404 is returned.
     """
     try:
-        document_deleted = document_service.delete(import_id)
+        document_deleted = document_service.delete(import_id, request.state.user.email)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

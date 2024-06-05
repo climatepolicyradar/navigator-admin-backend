@@ -59,7 +59,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
             raise ValidationError(f"Could not find family for {data.family_import_id}")
         return "new.doc.id.0"
 
-    def mock_delete_document(_) -> bool:
+    def mock_delete_document(_, user_email: str) -> bool:
         maybe_throw()
         return not document_service.missing
 

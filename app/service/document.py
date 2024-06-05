@@ -10,7 +10,7 @@ import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.service import app_user, id
 
@@ -148,16 +148,43 @@ def create(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(
+    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
+) -> bool:
     """
     Deletes the document specified by the import_id.
 
     :param str import_id: The import_id of the document to delete.
+    :param str user_email: The email address of the current user.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
+
+    doc = get(import_id)
+    if doc is None:
+        raise ValidationError(f"Could not find document {import_id}")
+
+    user_org_id = app_user.restrict_entities_to_user_org(db, user_email)
+    if user_org_id is None:
+        return True
+
+    entity_org_id = get_org_from_id(db, import_id)
+    if entity_org_id != user_org_id:
+        msg = f"User '{user_email}' is not authorised to delete document '{import_id}'"
+        raise AuthorisationError(msg)
+
     if context is not None:
         context.error = f"Could not delete document {import_id}"
+
     return document_repo.delete(db, import_id)
+
+
+def get_org_from_id(db: Session, import_id: str) -> int:
+    org = document_repo.get_org_from_import_id(db, import_id)
+    if org is None:
+        msg = f"The document import id {import_id} does not have an associated organisation"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+    return org

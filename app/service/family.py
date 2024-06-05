@@ -130,7 +130,7 @@ def update(
 
     # Validate family belongs to same org as current user.
     user_org_id = app_user.get_organisation(db, user_email)
-    org_id = organisation.get_id(db, family.organisation)
+    org_id = organisation.get_id_from_name(db, family.organisation)
     if org_id != user_org_id:
         msg = "Current user does not belong to the organisation that owns family "
         msg += import_id

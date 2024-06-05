@@ -42,7 +42,7 @@ def is_authorised_to_make_changes(
     if user_org_id is None:
         return True
 
-    entity_org_id = organisation.get_id(db, org_name)
+    entity_org_id = organisation.get_id_from_name(db, org_name)
     if entity_org_id != user_org_id:
         msg = f"User '{user_email}' is not authorised to make changes to {entity} '{import_id}'"
         raise AuthorisationError(msg)
