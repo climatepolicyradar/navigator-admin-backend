@@ -139,9 +139,9 @@ def test_delete_family_when_org_mismatch(
     response = client.delete(
         "/api/v1/families/A.0.0.1", headers=non_cclw_user_header_token
     )
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
         data["detail"]
-        == "User 'unfccc@cpr.org' is not authorised to make changes to family 'A.0.0.1'"
+        == "User 'unfccc@cpr.org' is not authorised to perform operation on 'A.0.0.1'"
     )

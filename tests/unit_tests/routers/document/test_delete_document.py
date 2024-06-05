@@ -15,7 +15,7 @@ def test_delete_when_not_found(
     response = client.delete("/api/v1/documents/doc1", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Document not deleted: doc1"
+    assert data["detail"] == "Document doc1 does not exist"
     assert document_service_mock.delete.call_count == 1
 
 

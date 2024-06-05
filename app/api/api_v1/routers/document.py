@@ -212,5 +212,5 @@ async def delete_document(request: Request, import_id: str) -> None:
     if not document_deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document not deleted: {import_id}",
+            detail=f"Document {import_id} does not exist",
         )

@@ -29,14 +29,10 @@ def test_delete_raises_when_invalid_id(document_repo_mock, app_user_repo_mock):
     assert document_repo_mock.delete.call_count == 0
 
 
-def test_delete_when_missing(document_repo_mock, app_user_repo_mock):
+def test_delete_returns_none_when_missing(document_repo_mock, app_user_repo_mock):
     document_repo_mock.return_empty = True
-    with pytest.raises(ValidationError) as e:
-        ok = doc_service.delete("a.b.c.d", USER_EMAIL)
-        assert not ok
-
-    expected_msg = "Could not find document a.b.c.d"
-    assert e.value.message == expected_msg
+    response = doc_service.delete("a.b.c.d", USER_EMAIL)
+    assert response is None
 
     assert document_repo_mock.get.call_count == 1
     assert document_repo_mock.get_org_from_import_id.call_count == 0

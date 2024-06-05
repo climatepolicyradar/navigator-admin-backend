@@ -150,7 +150,7 @@ def create(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(
     import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
-) -> bool:
+) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
 
@@ -158,13 +158,13 @@ def delete(
     :param str user_email: The email address of the current user.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
-    :return bool: True if deleted else False.
+    :return bool: True if deleted None if not.
     """
     id.validate(import_id)
 
     doc = get(import_id)
     if doc is None:
-        raise ValidationError(f"Could not find document {import_id}")
+        return None
 
     if context is not None:
         context.error = f"Could not delete document {import_id}"
