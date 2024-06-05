@@ -93,13 +93,17 @@ def validate_import_id(import_id: str) -> None:
 def update(
     import_id: str,
     document: DocumentWriteDTO,
+    user_email: str,
     context=None,
     db: Session = db_session.get_db(),
 ) -> Optional[DocumentReadDTO]:
     """
     Updates a single document with the values passed.
 
+    :param str import_id: The import ID of the document to update.
     :param documentDTO document: The DTO with all the values to change (or keep).
+    :param str user_email: The email address of the current user.
+    :raises AuthorisationError: raised if user has incorrect permissions.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[documentDTO]: The updated document or None if not updated.
@@ -110,6 +114,9 @@ def update(
 
     if document.variant_name == "":
         raise ValidationError("Variant name is empty")
+
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.is_authorised_to_make_changes(db, user_email, entity_org_id, import_id)
 
     document_repo.update(db, import_id, document)
     db.commit()
@@ -125,12 +132,13 @@ def create(
     db: Session = db_session.get_db(),
 ) -> str:
     """
-        Creates a new document with the values passed.
+    Creates a new document with the values passed.
 
-        :param documentDTO document: The values for the new document.
-        :raises RepositoryError: raised on a database error
-        :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[documentDTO]: The new created document or
+    :param documentDTO document: The values for the new document.
+    :param str user_email: The email address of the current user.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return Optional[documentDTO]: The new created document or
     None if unsuccessful.
     """
     id.validate(document.family_import_id)

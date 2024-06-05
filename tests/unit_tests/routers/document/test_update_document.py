@@ -39,5 +39,5 @@ def test_update_when_validation_error(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "Variant name is empty"
+    assert data["detail"] == "Validation error"
     assert document_service_mock.update.call_count == 1
