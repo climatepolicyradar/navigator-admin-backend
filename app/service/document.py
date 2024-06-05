@@ -179,5 +179,5 @@ def get_org_from_id(db: Session, import_id: str) -> int:
     if org is None:
         msg = f"The document import id {import_id} does not have an associated organisation"
         _LOGGER.error(msg)
-        raise RepositoryError(msg)
+        raise ValidationError(msg)
     return org

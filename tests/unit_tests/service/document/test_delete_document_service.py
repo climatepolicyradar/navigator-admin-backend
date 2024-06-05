@@ -1,7 +1,7 @@
 import pytest
 
 import app.service.document as doc_service
-from app.errors import AuthorisationError, RepositoryError, ValidationError
+from app.errors import AuthorisationError, ValidationError
 
 USER_EMAIL = "test@cpr.org"
 
@@ -49,7 +49,7 @@ def test_delete_when_no_org_associated_with_entity(
     document_repo_mock, app_user_repo_mock
 ):
     document_repo_mock.no_org = True
-    with pytest.raises(RepositoryError) as e:
+    with pytest.raises(ValidationError) as e:
         ok = doc_service.delete("a.b.c.d", USER_EMAIL)
         assert not ok
 

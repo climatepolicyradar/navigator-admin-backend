@@ -9,10 +9,8 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 
-def test_delete_when_ok(
-    client: TestClient, family_service_mock, admin_user_header_token
-):
-    response = client.delete("/api/v1/families/fam1", headers=admin_user_header_token)
+def test_delete_when_ok(client: TestClient, family_service_mock, user_header_token):
+    response = client.delete("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     assert family_service_mock.delete.call_count == 1
 
@@ -27,10 +25,10 @@ def test_delete_fails_when_not_admin(
 
 
 def test_delete_when_not_found(
-    client: TestClient, family_service_mock, admin_user_header_token
+    client: TestClient, family_service_mock, user_header_token
 ):
     family_service_mock.missing = True
-    response = client.delete("/api/v1/families/fam1", headers=admin_user_header_token)
+    response = client.delete("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == "Family not deleted: fam1"
@@ -51,5 +49,5 @@ def test_delete_fails_when_org_mismatch(
 ):
     family_service_mock.org_mismatch = True
     response = client.delete("/api/v1/families/fam1", headers=user_header_token)
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert family_service_mock.delete.call_count == 1

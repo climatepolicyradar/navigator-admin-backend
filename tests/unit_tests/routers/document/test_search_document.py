@@ -56,7 +56,8 @@ def test_search_when_not_found(
     with caplog.at_level(logging.INFO):
         response = client.get("/api/v1/documents/?q=stuff", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
-    response.json()
+    result = response.json()
+    assert result == []
     assert document_service_mock.search.call_count == 1
     assert (
         "Documents not found for terms: {'q': 'stuff', 'max_results': 500}"
