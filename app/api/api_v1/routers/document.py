@@ -148,15 +148,20 @@ async def update_document(
     response_model=str,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_document(new_document: DocumentCreateDTO) -> str:
+async def create_document(request: Request, new_document: DocumentCreateDTO) -> str:
     """
     Creates a specific document given the values in DocumentCreateDTO.
 
+    :param Request request: Request object.
+    :param DocumentCreateDTO new_document: The new document data.
     :raises HTTPException: If the document is not found a 404 is returned.
     :return str: returns a the import_id of the document created.
     """
     try:
-        return document_service.create(new_document)
+        return document_service.create(new_document, request.state.user.email)
+    except AuthorisationError as e:
+        _LOGGER.error(e.message)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
         _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)

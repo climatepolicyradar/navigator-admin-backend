@@ -49,9 +49,7 @@ def test_delete_when_no_org_associated_with_entity(
         ok = doc_service.delete("a.b.c.d", USER_EMAIL)
         assert not ok
 
-    expected_msg = (
-        "The document import id a.b.c.d does not have an associated organisation"
-    )
+    expected_msg = "No organisation associated with import id a.b.c.d"
     assert e.value.message == expected_msg
 
     assert document_repo_mock.get.call_count == 1

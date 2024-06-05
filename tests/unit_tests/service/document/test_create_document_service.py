@@ -75,7 +75,7 @@ def test_create_when_no_org_associated_with_entity(
         ok = doc_service.create(new_document, USER_EMAIL)
         assert not ok
 
-    expected_msg = "The document import id test.family.1.0 does not have an associated organisation"
+    expected_msg = "No organisation associated with import id test.family.1.0"
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 1

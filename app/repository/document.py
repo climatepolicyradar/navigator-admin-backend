@@ -482,9 +482,17 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     return n_documents
 
 
-def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
-    result = _get_query(db).filter(FamilyDocument.import_id == import_id).one_or_none()
-    _LOGGER.error(result)
+def get_org_from_import_id(
+    db: Session, import_id: str, is_create: bool = False
+) -> Optional[int]:
+    query = _get_query(db)
+    if is_create:
+        query = query.filter(FamilyDocument.family_import_id == import_id).distinct(
+            FamilyDocument.family_import_id
+        )
+    else:
+        query = query.filter(FamilyDocument.import_id == import_id)
+    result = query.one_or_none()
     if result is None:
         return None
     _, _, org, _, _ = result
