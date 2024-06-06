@@ -53,3 +53,13 @@ def test_delete_fails_when_org_mismatch(
     response = client.delete("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert family_service_mock.delete.call_count == 1
+
+
+def test_delete_success_when_org_mismatch_super(
+    client: TestClient, family_service_mock, user_header_token
+):
+    family_service_mock.org_mismatch = True
+    family_service_mock.superuser = True
+    response = client.delete("/api/v1/families/fam1", headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
+    assert family_service_mock.delete.call_count == 1
