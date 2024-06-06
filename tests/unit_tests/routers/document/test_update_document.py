@@ -39,5 +39,34 @@ def test_update_when_validation_error(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "Variant name is empty"
+    assert data["detail"] == "Validation error"
+    assert document_service_mock.update.call_count == 1
+
+
+def test_update_raises_when_corpus_org_different_to_usr_org(
+    client: TestClient, document_service_mock, user_header_token
+):
+    document_service_mock.org_mismatch = True
+    new_data = create_document_write_dto("doc1").model_dump(mode="json")
+    response = client.put(
+        "/api/v1/documents/a.b.c.d", json=new_data, headers=user_header_token
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert data["detail"] == "Org mismatch"
+    assert document_service_mock.update.call_count == 1
+
+
+def test_update_success_when_corpus_org_different_to_usr_org_super(
+    client: TestClient, document_service_mock, user_header_token
+):
+    document_service_mock.org_mismatch = True
+    document_service_mock.superuser = True
+    new_data = create_document_write_dto("doc1").model_dump(mode="json")
+    response = client.put(
+        "/api/v1/documents/D.0.0.1", json=new_data, headers=user_header_token
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.1"
     assert document_service_mock.update.call_count == 1
