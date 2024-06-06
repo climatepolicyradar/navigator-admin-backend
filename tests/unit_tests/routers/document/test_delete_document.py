@@ -39,3 +39,13 @@ def test_delete_fails_when_org_mismatch(
     data = response.json()
     assert data["detail"] == "Org mismatch"
     assert document_service_mock.delete.call_count == 1
+
+
+def test_delete_success_when_org_mismatch_super(
+    client: TestClient, document_service_mock, user_header_token
+):
+    document_service_mock.org_mismatch = True
+    document_service_mock.superuser = True
+    response = client.delete("/api/v1/documents/doc1", headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
+    assert document_service_mock.delete.call_count == 1

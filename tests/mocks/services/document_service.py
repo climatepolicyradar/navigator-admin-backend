@@ -13,6 +13,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
     document_service.throw_validation_error = False
     document_service.throw_timeout_error = False
     document_service.org_mismatch = False
+    document_service.superuser = False
 
     def maybe_throw():
         if document_service.throw_repository_error:
@@ -43,7 +44,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
         import_id: str, data: DocumentWriteDTO, user_email: str
     ) -> Optional[DocumentReadDTO]:
         maybe_throw()
-        if document_service.org_mismatch:
+        if document_service.org_mismatch and not document_service.superuser:
             raise AuthorisationError("Org mismatch")
 
         if document_service.missing:
@@ -56,7 +57,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
 
     def mock_create_document(data: DocumentCreateDTO, user_email: str) -> str:
         maybe_throw()
-        if document_service.org_mismatch:
+        if document_service.org_mismatch and not document_service.superuser:
             raise AuthorisationError("Org mismatch")
 
         if document_service.throw_validation_error:
@@ -68,7 +69,7 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
 
     def mock_delete_document(_, user_email: str) -> bool:
         maybe_throw()
-        if document_service.org_mismatch:
+        if document_service.org_mismatch and not document_service.superuser:
             raise AuthorisationError("Org mismatch")
         if document_service.throw_validation_error:
             raise ValidationError("No org")

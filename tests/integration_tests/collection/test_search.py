@@ -115,7 +115,6 @@ def test_search_collections_with_max_results_super(
     assert isinstance(data, list)
 
     ids_found = set([f["import_id"] for f in data])
-    print(ids_found)
     assert len(ids_found) == 1
 
     expected_ids = set(["C.0.0.1"])
