@@ -209,7 +209,7 @@ def create(
 
     # Validate that the corpus we want to add the new family to exists and is from the
     # same organisation as the user.
-    app_user.is_authorised_to_make_changes(
+    app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, family.corpus_import_id
     )
     return family_repo.create(db, family, geo_id, entity_org_id)
@@ -240,8 +240,7 @@ def delete(
 
     # Validate family belongs to same org as current user.
     entity_org_id = organisation.get_id_from_name(db, family.organisation)
-    authenticated = app_user.is_authorised_to_make_changes(
+    app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, import_id
     )
-    if authenticated:
-        return family_repo.delete(db, import_id)
+    return family_repo.delete(db, import_id)

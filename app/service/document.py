@@ -120,7 +120,9 @@ def update(
         raise ValidationError("Variant name is empty")
 
     entity_org_id = get_org_from_id(db, import_id)
-    app_user.is_authorised_to_make_changes(db, user_email, entity_org_id, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(
+        db, user_email, entity_org_id, import_id
+    )
 
     document_repo.update(db, import_id, document)
     db.commit()
@@ -159,7 +161,7 @@ def create(
         raise ValidationError(f"Could not find family for {document.family_import_id}")
 
     entity_org_id = get_org_from_id(db, family.import_id, is_create=True)
-    app_user.is_authorised_to_make_changes(
+    app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, family.import_id
     )
     return document_repo.create(db, document)
@@ -189,7 +191,9 @@ def delete(
         return None
 
     entity_org_id = get_org_from_id(db, import_id)
-    app_user.is_authorised_to_make_changes(db, user_email, entity_org_id, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(
+        db, user_email, entity_org_id, import_id
+    )
     return document_repo.delete(db, import_id)
 
 
