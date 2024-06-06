@@ -93,7 +93,6 @@ def all(db: Session, org_id: Optional[int]) -> list[EventReadDTO]:
     """
     query = _get_query(db)
     if org_id is not None:
-        _LOGGER.error("FILTERING ON ORG ID %s", org_id)
         query = query.filter(Organisation.id == org_id)
     family_event_metas = query.all()
 

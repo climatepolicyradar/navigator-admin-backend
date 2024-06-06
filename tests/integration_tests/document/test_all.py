@@ -27,7 +27,7 @@ def test_get_all_documents_super(
     sdata = sorted(data, key=lambda d: d["import_id"])
     assert all(field in col for col in sdata for field in ("created", "last_modified"))
 
-    expected_data = [
+    actual_data = [
         {
             k: v
             for k, v in col.items()
@@ -35,9 +35,9 @@ def test_get_all_documents_super(
         }
         for col in sdata
     ]
-    assert expected_data[0] == EXPECTED_DOCUMENTS[0]
-    assert expected_data[1] == EXPECTED_DOCUMENTS[1]
-    assert expected_data[2] == EXPECTED_DOCUMENTS[2]
+    assert actual_data[0] == EXPECTED_DOCUMENTS[0]
+    assert actual_data[1] == EXPECTED_DOCUMENTS[1]
+    assert actual_data[2] == EXPECTED_DOCUMENTS[2]
 
 
 def test_get_all_documents_cclw(
@@ -60,7 +60,7 @@ def test_get_all_documents_cclw(
     sdata = sorted(data, key=lambda d: d["import_id"])
     assert all(field in col for col in sdata for field in ("created", "last_modified"))
 
-    expected_data = [
+    actual_data = [
         {
             k: v
             for k, v in col.items()
@@ -68,7 +68,7 @@ def test_get_all_documents_cclw(
         }
         for col in sdata
     ]
-    assert expected_data[0] == EXPECTED_DOCUMENTS[2]
+    assert actual_data[0] == EXPECTED_DOCUMENTS[2]
 
 
 def test_get_all_documents_unfccc(
@@ -91,7 +91,7 @@ def test_get_all_documents_unfccc(
     sdata = sorted(data, key=lambda d: d["import_id"])
     assert all(field in col for col in sdata for field in ("created", "last_modified"))
 
-    expected_data = [
+    actual_data = [
         {
             k: v
             for k, v in col.items()
@@ -99,8 +99,8 @@ def test_get_all_documents_unfccc(
         }
         for col in sdata
     ]
-    assert expected_data[0] == EXPECTED_DOCUMENTS[0]
-    assert expected_data[1] == EXPECTED_DOCUMENTS[1]
+    assert actual_data[0] == EXPECTED_DOCUMENTS[0]
+    assert actual_data[1] == EXPECTED_DOCUMENTS[1]
 
 
 def test_get_all_documents_when_not_authenticated(client: TestClient, data_db: Session):

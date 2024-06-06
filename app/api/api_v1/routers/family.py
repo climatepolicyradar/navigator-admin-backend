@@ -60,6 +60,7 @@ async def get_all_families(request: Request) -> list[FamilyReadDTO]:
     """
     Returns all families
 
+    :param Request request: Request object.
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
     try:
@@ -68,6 +69,8 @@ async def get_all_families(request: Request) -> list[FamilyReadDTO]:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
 
 
 @r.get("/families/", response_model=list[FamilyReadDTO])
@@ -100,6 +103,8 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except TimeoutError:
         msg = "Request timed out fetching matching families. Try adjusting your query."
         _LOGGER.error(msg)
@@ -116,9 +121,7 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
 
 @r.put("/families/{import_id}", response_model=FamilyReadDTO)
 async def update_family(
-    request: Request,
-    import_id: str,
-    new_family: FamilyWriteDTO,
+    request: Request, import_id: str, new_family: FamilyWriteDTO
 ) -> FamilyReadDTO:
     """
     Updates a specific family given the import id.
@@ -144,13 +147,12 @@ async def update_family(
 
 
 @r.post("/families", response_model=str, status_code=status.HTTP_201_CREATED)
-async def create_family(
-    request: Request,
-    new_family: FamilyCreateDTO,
-) -> str:
+async def create_family(request: Request, new_family: FamilyCreateDTO) -> str:
     """
     Creates a specific family given the import id.
 
+    :param Request request: Request object.
+    :param FamilyCreateDTO new_family: New family data object.
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the new family.
     """
@@ -175,6 +177,7 @@ async def delete_family(request: Request, import_id: str) -> None:
     """
     Deletes a specific family given the import id.
 
+    :param Request request: Request object.
     :param str import_id: Specified import_id.
     :raises HTTPException: If the family is not found a 404 is returned.
     """
@@ -187,7 +190,7 @@ async def delete_family(request: Request, import_id: str) -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
     except AuthorisationError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
 
     if not family_deleted:
         raise HTTPException(

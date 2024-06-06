@@ -18,12 +18,12 @@ def test_get_document(client: TestClient, data_db: Session, user_header_token):
     assert data["import_id"] == "D.0.0.1"
 
     assert all(field in data for field in ("created", "last_modified"))
-    expected_data = {
+    actual_data = {
         k: v
         for k, v in data.items()
         if k not in ("created", "last_modified", "physical_id")
     }
-    assert expected_data == EXPECTED_DOCUMENTS[0]
+    assert actual_data == EXPECTED_DOCUMENTS[0]
 
 
 def test_get_document_when_not_authenticated(client: TestClient, data_db: Session):

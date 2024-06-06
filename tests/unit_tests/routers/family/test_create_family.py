@@ -45,3 +45,18 @@ def test_create_when_invalid_data(
     expected_msg = "Invalid data"
     assert expected_msg == data["detail"]
     assert family_service_mock.create.call_count == 1
+
+
+def test_create_success_when_org_mismatch_super(
+    client: TestClient, family_service_mock, superuser_header_token
+):
+    family_service_mock.org_mismatch = True
+    family_service_mock.superuser = True
+    new_data = create_family_create_dto("fam1").model_dump()
+    response = client.post(
+        "/api/v1/families", json=new_data, headers=superuser_header_token
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data == "new-import-id"
+    assert family_service_mock.create.call_count == 1

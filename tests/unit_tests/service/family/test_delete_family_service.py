@@ -9,20 +9,16 @@ import pytest
 import app.service.family as family_service
 from app.errors import AuthorisationError, ValidationError
 
-USER_EMAIL = "cclw@cpr.org"
-ORG_ID = 1
-
-
-# --- DELETE
+USER_EMAIL = "test@cpr.org"
 
 
 def test_delete(family_repo_mock, app_user_repo_mock, organisation_repo_mock):
     ok = family_service.delete("a.b.c.d", USER_EMAIL)
     assert ok
     assert family_repo_mock.get.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
     assert app_user_repo_mock.is_superuser.call_count == 1
-    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert family_repo_mock.delete.call_count == 1
 
 
@@ -33,9 +29,9 @@ def test_delete_when_fam_missing(
     ok = family_service.delete("a.b.c.d", USER_EMAIL)
     assert not ok
     assert family_repo_mock.get.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert app_user_repo_mock.get_org_id.call_count == 0
     assert app_user_repo_mock.is_superuser.call_count == 0
-    assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert family_repo_mock.delete.call_count == 0
 
 
@@ -48,9 +44,9 @@ def test_delete_raises_when_invalid_id(
     expected_msg = f"The import id {import_id} is invalid!"
     assert e.value.message == expected_msg
     assert family_repo_mock.get.call_count == 0
+    assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert app_user_repo_mock.get_org_id.call_count == 0
     assert app_user_repo_mock.is_superuser.call_count == 0
-    assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert family_repo_mock.delete.call_count == 0
 
 
@@ -67,9 +63,9 @@ def test_delete_raises_when_organisation_invalid(
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert app_user_repo_mock.is_superuser.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 0
+    assert app_user_repo_mock.is_superuser.call_count == 0
     assert family_repo_mock.delete.call_count == 0
 
 
@@ -82,14 +78,14 @@ def test_delete_raises_when_family_organisation_mismatch_with_user_org(
         assert not ok
 
     expected_msg = (
-        f"User '{USER_EMAIL}' is not authorised to make changes to family 'a.b.c.d'"
+        f"User '{USER_EMAIL}' is not authorised to perform operation on 'a.b.c.d'"
     )
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 1
+    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert app_user_repo_mock.get_org_id.call_count == 1
     assert app_user_repo_mock.is_superuser.call_count == 1
-    assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert family_repo_mock.delete.call_count == 0
 
 

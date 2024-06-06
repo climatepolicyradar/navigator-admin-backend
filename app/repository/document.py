@@ -156,7 +156,6 @@ def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
     """
     query = _get_query(db)
     if org_id is not None:
-        _LOGGER.error("FILTERING ON ORG ID %s", org_id)
         query = query.filter(Organisation.id == org_id)
 
     result = query.order_by(desc(FamilyDocument.last_modified)).all()
@@ -483,3 +482,20 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         return
 
     return n_documents
+
+
+def get_org_from_import_id(
+    db: Session, import_id: str, is_create: bool = False
+) -> Optional[int]:
+    query = _get_query(db)
+    if is_create:
+        query = query.filter(FamilyDocument.family_import_id == import_id).distinct(
+            FamilyDocument.family_import_id
+        )
+    else:
+        query = query.filter(FamilyDocument.import_id == import_id)
+    result = query.one_or_none()
+    if result is None:
+        return None
+    _, _, org, _, _ = result
+    return org.id

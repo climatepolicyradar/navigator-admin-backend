@@ -196,8 +196,8 @@ def test_create_family_when_invalid_collection_org(
     )
 
 
-def test_create_family_when_invalid_corpus_org(
-    client: TestClient, data_db: Session, user_header_token
+def test_create_family_when_invalid_metadata(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
     new_family = create_family_create_dto(
@@ -207,11 +207,34 @@ def test_create_family_when_invalid_corpus_org(
         corpus_import_id="UNFCCC.corpus.i00000001.n0000",
     )
     response = client.post(
+        "/api/v1/families",
+        json=new_family.model_dump(),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert (
+        data["detail"]
+        == "Values for the following are missing: {'author_type', 'author'}"
+    )
+
+
+def test_create_family_when_invalid_corpus_org(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_family = create_family_create_dto(
+        title="Title",
+        summary="test test test",
+        metadata={"author_type": "", "author": ""},
+        corpus_import_id="UNFCCC.corpus.i00000001.n0000",
+    )
+    response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
         data["detail"]
-        == "Organisation mismatch between selected corpus and the current user"
+        == "User 'cclw@cpr.org' is not authorised to perform operation on 'UNFCCC.corpus.i00000001.n0000'"
     )

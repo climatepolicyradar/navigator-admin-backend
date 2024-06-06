@@ -138,7 +138,7 @@ def update(
     """
 
     # TODO: implement changing of a collection's organisation
-    # org_id = organisation.get_id(db, collection.organisation)
+    # org_id = organisation.get_id_from_name(db, collection.organisation)
 
     validate_import_id(import_id)
     if context is not None:

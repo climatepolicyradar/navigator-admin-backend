@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from app.errors import AuthorisationError, ValidationError
 from app.repository import app_user_repo
-from app.service import organisation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,14 +26,12 @@ def restrict_entities_to_user_org(db: Session, user_email: str) -> Optional[int]
     org_id = get_organisation(db, user_email)
     superuser: bool = is_superuser(db, user_email)
     if superuser:
-        _LOGGER.error("IS SUPERUSER")
         return None
-    _LOGGER.error("ORG ID: %s", org_id)
     return org_id
 
 
-def is_authorised_to_make_changes(
-    db, user_email: str, org_name: str, entity: str, import_id: str
+def raise_if_unauthorised_to_make_changes(
+    db, user_email: str, entity_org_id: int, import_id: str
 ) -> bool:
     """Validate entity belongs to same org as current user."""
 
@@ -42,9 +39,8 @@ def is_authorised_to_make_changes(
     if user_org_id is None:
         return True
 
-    entity_org_id = organisation.get_id(db, org_name)
     if entity_org_id != user_org_id:
-        msg = f"User '{user_email}' is not authorised to make changes to {entity} '{import_id}'"
+        msg = f"User '{user_email}' is not authorised to perform operation on '{import_id}'"
         raise AuthorisationError(msg)
 
     return bool(entity_org_id == user_org_id)

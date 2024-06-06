@@ -93,13 +93,17 @@ def validate_import_id(import_id: str) -> None:
 def update(
     import_id: str,
     document: DocumentWriteDTO,
+    user_email: str,
     context=None,
     db: Session = db_session.get_db(),
 ) -> Optional[DocumentReadDTO]:
     """
     Updates a single document with the values passed.
 
+    :param str import_id: The import ID of the document to update.
     :param documentDTO document: The DTO with all the values to change (or keep).
+    :param str user_email: The email address of the current user.
+    :raises AuthorisationError: raised if user has incorrect permissions.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[documentDTO]: The updated document or None if not updated.
@@ -108,8 +112,17 @@ def update(
     if context is not None:
         context.error = f"Error when updating document {import_id}"
 
+    doc = get(import_id)
+    if doc is None:
+        return None
+
     if document.variant_name == "":
         raise ValidationError("Variant name is empty")
+
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(
+        db, user_email, entity_org_id, import_id
+    )
 
     document_repo.update(db, import_id, document)
     db.commit()
@@ -119,15 +132,19 @@ def update(
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    document: DocumentCreateDTO, context=None, db: Session = db_session.get_db()
+    document: DocumentCreateDTO,
+    user_email: str,
+    context=None,
+    db: Session = db_session.get_db(),
 ) -> str:
     """
-        Creates a new document with the values passed.
+    Creates a new document with the values passed.
 
-        :param documentDTO document: The values for the new document.
-        :raises RepositoryError: raised on a database error
-        :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[documentDTO]: The new created document or
+    :param documentDTO document: The values for the new document.
+    :param str user_email: The email address of the current user.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return Optional[documentDTO]: The new created document or
     None if unsuccessful.
     """
     id.validate(document.family_import_id)
@@ -143,21 +160,47 @@ def create(
     if family is None:
         raise ValidationError(f"Could not find family for {document.family_import_id}")
 
+    entity_org_id = get_org_from_id(db, family.import_id, is_create=True)
+    app_user.raise_if_unauthorised_to_make_changes(
+        db, user_email, entity_org_id, family.import_id
+    )
     return document_repo.create(db, document)
 
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(
+    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
+) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
 
     :param str import_id: The import_id of the document to delete.
+    :param str user_email: The email address of the current user.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
-    :return bool: True if deleted else False.
+    :return bool: True if deleted None if not.
     """
     id.validate(import_id)
+
     if context is not None:
         context.error = f"Could not delete document {import_id}"
+
+    doc = get(import_id)
+    if doc is None:
+        return None
+
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(
+        db, user_email, entity_org_id, import_id
+    )
     return document_repo.delete(db, import_id)
+
+
+def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int:
+    org = document_repo.get_org_from_import_id(db, import_id, is_create)
+    if org is None:
+        msg = f"No organisation associated with import id {import_id}"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
+    return org

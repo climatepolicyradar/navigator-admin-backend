@@ -12,7 +12,9 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
     document_repo.return_empty = False
     document_repo.throw_repository_error = False
     document_repo.throw_timeout_error = False
-    document_repo.is_superuser = False
+    document_repo.superuser = False
+    document_repo.alternative_org = False
+    document_repo.no_org = False
 
     def maybe_throw():
         if document_repo.throw_repository_error:
@@ -33,8 +35,9 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
         return values
 
     def mock_get(_, import_id: str) -> Optional[DocumentReadDTO]:
-        dto = create_document_read_dto(import_id)
-        return dto
+        if not document_repo.return_empty:
+            dto = create_document_read_dto(import_id)
+            return dto
 
     def mock_search(_, q: str, org_id: Optional[int]) -> list[DocumentReadDTO]:
         maybe_throw()
@@ -62,10 +65,21 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         maybe_throw()
         if not document_repo.return_empty:
-            if document_repo.is_superuser:
+            if document_repo.superuser:
                 return 33
             return 11
         return
+
+    def mock_get_org_from_import_id(
+        _, import_id: str, is_create: bool
+    ) -> Optional[int]:
+        maybe_throw()
+        if document_repo.no_org is True:
+            return None
+
+        if document_repo.alternative_org is True:
+            return 999
+        return 1
 
     monkeypatch.setattr(document_repo, "get", mock_get)
     mocker.spy(document_repo, "get")
@@ -87,3 +101,8 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(document_repo, "count", mock_get_count)
     mocker.spy(document_repo, "count")
+
+    monkeypatch.setattr(
+        document_repo, "get_org_from_import_id", mock_get_org_from_import_id
+    )
+    mocker.spy(document_repo, "get_org_from_import_id")

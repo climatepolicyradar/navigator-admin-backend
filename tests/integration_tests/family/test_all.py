@@ -2,6 +2,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from tests.helpers.utils import remove_trigger_cols_from_result
 from tests.integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 
 # --- GET ALL
@@ -24,19 +25,11 @@ def test_get_all_families_super(
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    assert all(field in fam for fam in data for field in ("created", "last_modified"))
-    sorted_data = sorted(data, key=lambda d: d["import_id"])
-    response_data = [
-        {
-            k: v if not isinstance(v, list) else sorted(v)
-            for k, v in fam.items()
-            if k not in ("created", "last_modified")
-        }
-        for fam in sorted_data
-    ]
-    assert response_data[0] == EXPECTED_FAMILIES[0]
-    assert response_data[1] == EXPECTED_FAMILIES[1]
-    assert response_data[2] == EXPECTED_FAMILIES[2]
+    actual_data = remove_trigger_cols_from_result(data)
+    assert actual_data is not None
+    assert actual_data[0] == EXPECTED_FAMILIES[0]
+    assert actual_data[1] == EXPECTED_FAMILIES[1]
+    assert actual_data[2] == EXPECTED_FAMILIES[2]
 
 
 def test_get_all_families_cclw(client: TestClient, data_db: Session, user_header_token):
@@ -54,18 +47,10 @@ def test_get_all_families_cclw(client: TestClient, data_db: Session, user_header
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    assert all(field in fam for fam in data for field in ("created", "last_modified"))
-    sorted_data = sorted(data, key=lambda d: d["import_id"])
-    response_data = [
-        {
-            k: v if not isinstance(v, list) else sorted(v)
-            for k, v in fam.items()
-            if k not in ("created", "last_modified")
-        }
-        for fam in sorted_data
-    ]
-    assert response_data[0] == EXPECTED_FAMILIES[0]
-    assert response_data[1] == EXPECTED_FAMILIES[1]
+    actual_data = remove_trigger_cols_from_result(data)
+    assert actual_data is not None
+    assert actual_data[0] == EXPECTED_FAMILIES[0]
+    assert actual_data[1] == EXPECTED_FAMILIES[1]
 
 
 def test_get_all_families_unfccc(
@@ -85,17 +70,9 @@ def test_get_all_families_unfccc(
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
-    assert all(field in fam for fam in data for field in ("created", "last_modified"))
-    sorted_data = sorted(data, key=lambda d: d["import_id"])
-    response_data = [
-        {
-            k: v if not isinstance(v, list) else sorted(v)
-            for k, v in fam.items()
-            if k not in ("created", "last_modified")
-        }
-        for fam in sorted_data
-    ]
-    assert response_data[0] == EXPECTED_FAMILIES[2]
+    actual_data = remove_trigger_cols_from_result(data)
+    assert actual_data is not None
+    assert actual_data[0] == EXPECTED_FAMILIES[2]
 
 
 def test_get_all_families_when_not_authenticated(client: TestClient, data_db: Session):
