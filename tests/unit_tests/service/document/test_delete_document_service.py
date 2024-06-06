@@ -59,7 +59,7 @@ def test_delete_when_no_org_associated_with_entity(
     assert document_repo_mock.delete.call_count == 0
 
 
-def test_delete_when_org_mismatch(document_repo_mock, app_user_repo_mock):
+def test_delete_raises_when_org_mismatch(document_repo_mock, app_user_repo_mock):
     document_repo_mock.alternative_org = True
     with pytest.raises(AuthorisationError) as e:
         ok = doc_service.delete("a.b.c.d", USER_EMAIL)
@@ -75,3 +75,16 @@ def test_delete_when_org_mismatch(document_repo_mock, app_user_repo_mock):
     assert app_user_repo_mock.get_org_id.call_count == 1
     assert app_user_repo_mock.is_superuser.call_count == 1
     assert document_repo_mock.delete.call_count == 0
+
+
+def test_delete_success_when_org_mismatch_super(document_repo_mock, app_user_repo_mock):
+    app_user_repo_mock.invalid_org = True
+    app_user_repo_mock.superuser = True
+
+    ok = doc_service.delete("a.b.c.d", USER_EMAIL)
+    assert ok
+    assert document_repo_mock.get.call_count == 1
+    assert document_repo_mock.get_org_from_import_id.call_count == 1
+    assert app_user_repo_mock.get_org_id.call_count == 1
+    assert app_user_repo_mock.is_superuser.call_count == 1
+    assert document_repo_mock.delete.call_count == 1

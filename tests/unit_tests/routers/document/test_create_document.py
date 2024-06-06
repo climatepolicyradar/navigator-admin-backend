@@ -57,3 +57,18 @@ def test_create_fails_when_org_mismatch(
     data = response.json()
     assert data["detail"] == "Org mismatch"
     assert document_service_mock.delete.call_count == 0
+
+
+def test_create_success_when_org_mismatch_super(
+    client: TestClient, document_service_mock, superuser_header_token
+):
+    document_service_mock.org_mismatch = True
+    document_service_mock.superuser = True
+    new_data = create_document_create_dto("doc1").model_dump(mode="json")
+    response = client.post(
+        "/api/v1/documents", json=new_data, headers=superuser_header_token
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data == "new.doc.id.0"
+    assert document_service_mock.create.call_count == 1
