@@ -128,4 +128,4 @@ def _validate_schema(schema):
         # if len(missing_values) > 0:
         #     raise ValueError(f"Missing values in schema: {missing_values}")
 
-    return valid_data_keys
+    return sorted(valid_data_keys)
