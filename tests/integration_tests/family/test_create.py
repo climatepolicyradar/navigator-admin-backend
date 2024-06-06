@@ -215,7 +215,7 @@ def test_create_family_when_invalid_metadata(
     data = response.json()
     assert (
         data["detail"]
-        == "Values for the following are missing: {'author_type', 'author'}"
+        == "Values for the following are missing: {'author', 'author_type'}"
     )
 
 
