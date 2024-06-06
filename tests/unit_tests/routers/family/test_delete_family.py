@@ -4,7 +4,6 @@ Tests the routes for family management.
 This uses a service mock and ensures each endpoint calls into the service.
 """
 
-import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
@@ -13,15 +12,6 @@ def test_delete_when_ok(client: TestClient, family_service_mock, user_header_tok
     response = client.delete("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     assert family_service_mock.delete.call_count == 1
-
-
-@pytest.mark.skip(reason="No admin user for MVP")
-def test_delete_fails_when_not_admin(
-    client: TestClient, family_service_mock, user_header_token
-):
-    response = client.delete("/api/v1/families/fam1", headers=user_header_token)
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert family_service_mock.delete.call_count == 0
 
 
 def test_delete_when_not_found(
@@ -50,4 +40,14 @@ def test_delete_fails_when_org_mismatch(
     family_service_mock.org_mismatch = True
     response = client.delete("/api/v1/families/fam1", headers=user_header_token)
     assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert family_service_mock.delete.call_count == 1
+
+
+def test_delete_success_when_org_mismatch(
+    client: TestClient, family_service_mock, superuser_header_token
+):
+    family_service_mock.org_mismatch = True
+    family_service_mock.superuser = True
+    response = client.delete("/api/v1/families/fam1", headers=superuser_header_token)
+    assert response.status_code == status.HTTP_200_OK
     assert family_service_mock.delete.call_count == 1
