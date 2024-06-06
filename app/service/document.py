@@ -119,7 +119,10 @@ def update(
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    document: DocumentCreateDTO, context=None, db: Session = db_session.get_db()
+    document: DocumentCreateDTO,
+    user_email: str,
+    context=None,
+    db: Session = db_session.get_db(),
 ) -> str:
     """
         Creates a new document with the values passed.
@@ -143,6 +146,10 @@ def create(
     if family is None:
         raise ValidationError(f"Could not find family for {document.family_import_id}")
 
+    entity_org_id = get_org_from_id(db, family.import_id, is_create=True)
+    app_user.is_authorised_to_make_changes(
+        db, user_email, entity_org_id, family.import_id
+    )
     return document_repo.create(db, document)
 
 
@@ -162,22 +169,22 @@ def delete(
     """
     id.validate(import_id)
 
+    if context is not None:
+        context.error = f"Could not delete document {import_id}"
+
     doc = get(import_id)
     if doc is None:
         return None
-
-    if context is not None:
-        context.error = f"Could not delete document {import_id}"
 
     entity_org_id = get_org_from_id(db, import_id)
     app_user.is_authorised_to_make_changes(db, user_email, entity_org_id, import_id)
     return document_repo.delete(db, import_id)
 
 
-def get_org_from_id(db: Session, import_id: str) -> int:
-    org = document_repo.get_org_from_import_id(db, import_id)
+def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int:
+    org = document_repo.get_org_from_import_id(db, import_id, is_create)
     if org is None:
-        msg = f"The document import id {import_id} does not have an associated organisation"
+        msg = f"No organisation associated with import id {import_id}"
         _LOGGER.error(msg)
         raise ValidationError(msg)
     return org

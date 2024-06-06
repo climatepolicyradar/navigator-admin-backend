@@ -52,10 +52,13 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
 
         return create_document_read_dto(import_id, "family_import_id", data.title)
 
-    def mock_create_document(data: DocumentCreateDTO) -> str:
+    def mock_create_document(data: DocumentCreateDTO, user_email: str) -> str:
         maybe_throw()
+        if document_service.org_mismatch and not document_service.superuser:
+            raise AuthorisationError("Org mismatch")
+
         if document_service.throw_validation_error:
-            raise ValidationError("Variant name is empty")
+            raise ValidationError("Validation error")
 
         if document_service.missing:
             raise ValidationError(f"Could not find family for {data.family_import_id}")
