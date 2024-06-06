@@ -30,7 +30,7 @@ def restrict_entities_to_user_org(db: Session, user_email: str) -> Optional[int]
     return org_id
 
 
-def is_authorised_to_make_changes(
+def raise_if_unauthorised_to_make_changes(
     db, user_email: str, entity_org_id: int, import_id: str
 ) -> bool:
     """Validate entity belongs to same org as current user."""

@@ -9,11 +9,7 @@ import pytest
 import app.service.family as family_service
 from app.errors import AuthorisationError, ValidationError
 
-USER_EMAIL = "cclw@cpr.org"
-ORG_ID = 1
-
-
-# --- DELETE
+USER_EMAIL = "test@cpr.org"
 
 
 def test_delete(family_repo_mock, app_user_repo_mock, organisation_repo_mock):

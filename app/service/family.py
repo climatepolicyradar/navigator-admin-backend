@@ -170,6 +170,7 @@ def create(
     Creates a new Family with the values passed.
 
     :param FamilyDTO family: The values for the new Family.
+    :param str user_email: The email address of the current user.
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
@@ -178,17 +179,18 @@ def create(
     if context is not None:
         context.error = f"Could not create a family for {family.title}"
 
-    # Get the organisation from the user's email
-    org_id = app_user.get_organisation(db, user_email)
-
     # Validate geography
     geo_id = geography.get_id(db, family.geography)
 
     # Validate category
     category.validate(family.category)
 
+    # Get the organisation from the user's email
+    corpus.validate(db, family.corpus_import_id)
+    entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
+
     # Validate metadata.
-    metadata.validate(db, org_id, family.metadata)
+    metadata.validate(db, entity_org_id, family.metadata)
 
     # Validate collection ids.
     collections = set(family.collections)
@@ -198,7 +200,7 @@ def create(
     # Validate that the collections we want to update are from the same organisation as
     # the current user.
     collections_not_in_user_org = [
-        collection.get_org_from_id(db, c) != org_id for c in collections
+        collection.get_org_from_id(db, c) != entity_org_id for c in collections
     ]
     if len(collections_not_in_user_org) > 0 and any(collections_not_in_user_org):
         msg = "Organisation mismatch between some collections and the current user"
@@ -207,13 +209,10 @@ def create(
 
     # Validate that the corpus we want to add the new family to exists and is from the
     # same organisation as the user.
-    corpus.validate(db, family.corpus_import_id)
-    if corpus.get_corpus_org_id(db, family.corpus_import_id) != org_id:
-        msg = "Organisation mismatch between selected corpus and the current user"
-        _LOGGER.error(msg)
-        raise AuthorisationError(msg)
-
-    return family_repo.create(db, family, geo_id, org_id)
+    app_user.raise_if_unauthorised_to_make_changes(
+        db, user_email, entity_org_id, family.corpus_import_id
+    )
+    return family_repo.create(db, family, geo_id, entity_org_id)
 
 
 @db_session.with_transaction(__name__)
@@ -225,6 +224,7 @@ def delete(
     Deletes the Family specified by the import_id.
 
     :param str import_id: The import_id of the Family to delete.
+    :param str user_email: The email address of the current user.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
@@ -240,8 +240,7 @@ def delete(
 
     # Validate family belongs to same org as current user.
     entity_org_id = organisation.get_id_from_name(db, family.organisation)
-    authenticated = app_user.is_authorised_to_make_changes(
+    app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, import_id
     )
-    if authenticated:
-        return family_repo.delete(db, import_id)
+    return family_repo.delete(db, import_id)
