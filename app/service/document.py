@@ -148,16 +148,36 @@ def create(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(
+    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
+) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
 
     :param str import_id: The import_id of the document to delete.
+    :param str user_email: The email address of the current user.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
-    :return bool: True if deleted else False.
+    :return bool: True if deleted None if not.
     """
     id.validate(import_id)
+
+    doc = get(import_id)
+    if doc is None:
+        return None
+
     if context is not None:
         context.error = f"Could not delete document {import_id}"
+
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.is_authorised_to_make_changes(db, user_email, entity_org_id, import_id)
     return document_repo.delete(db, import_id)
+
+
+def get_org_from_id(db: Session, import_id: str) -> int:
+    org = document_repo.get_org_from_import_id(db, import_id)
+    if org is None:
+        msg = f"The document import id {import_id} does not have an associated organisation"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
+    return org

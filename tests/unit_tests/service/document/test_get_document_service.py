@@ -16,7 +16,7 @@ def test_get(document_repo_mock):
 def test_get_returns_none(document_repo_mock):
     document_repo_mock.return_empty = True
     result = doc_service.get("id.1.2.3")
-    assert result is not None
+    assert result is None
     assert document_repo_mock.get.call_count == 1
 
 

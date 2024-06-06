@@ -2,7 +2,7 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from tests.helpers.document import create_document_read_dto
 
@@ -12,6 +12,8 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
     document_service.throw_repository_error = False
     document_service.throw_validation_error = False
     document_service.throw_timeout_error = False
+    document_service.org_mismatch = False
+    document_service.superuser = False
 
     def maybe_throw():
         if document_service.throw_repository_error:
@@ -59,8 +61,12 @@ def mock_document_service(document_service, monkeypatch: MonkeyPatch, mocker):
             raise ValidationError(f"Could not find family for {data.family_import_id}")
         return "new.doc.id.0"
 
-    def mock_delete_document(_) -> bool:
+    def mock_delete_document(_, user_email: str) -> bool:
         maybe_throw()
+        if document_service.org_mismatch and not document_service.superuser:
+            raise AuthorisationError("Org mismatch")
+        if document_service.throw_validation_error:
+            raise ValidationError("No org")
         return not document_service.missing
 
     monkeypatch.setattr(document_service, "get", mock_get_document)

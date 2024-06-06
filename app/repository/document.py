@@ -480,3 +480,12 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         return
 
     return n_documents
+
+
+def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
+    result = _get_query(db).filter(FamilyDocument.import_id == import_id).one_or_none()
+    _LOGGER.error(result)
+    if result is None:
+        return None
+    _, _, org, _, _ = result
+    return org.id

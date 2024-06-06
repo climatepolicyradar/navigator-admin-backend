@@ -187,7 +187,7 @@ async def delete_family(request: Request, import_id: str) -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
     except AuthorisationError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
 
     if not family_deleted:
         raise HTTPException(
