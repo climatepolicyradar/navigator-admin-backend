@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from tests.helpers.document import create_document_create_dto
 from tests.integration_tests.setup_db import setup_db
 
+SLUG_SUFFIX_LENGTH = 4
+
 
 def test_create_document_cclw(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
@@ -42,7 +44,7 @@ def test_create_document_cclw(client: TestClient, data_db: Session, user_header_
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
-    assert len(slug.name) == len("title") + 1 + 4
+    assert len(slug.name) == len("title") + 1 + SLUG_SUFFIX_LENGTH
     assert slug.name.startswith("title")
 
 
@@ -80,7 +82,7 @@ def test_create_document_super(
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
-    assert len(slug.name) == len("title") + 1 + 4
+    assert len(slug.name) == len("title") + 1 + SLUG_SUFFIX_LENGTH
     assert slug.name.startswith("title")
 
 
@@ -118,7 +120,7 @@ def test_create_document_unfccc(
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
-    assert len(slug.name) == len("title") + 1 + 4
+    assert len(slug.name) == len("title") + 1 + SLUG_SUFFIX_LENGTH
     assert slug.name.startswith("title")
 
 
@@ -158,7 +160,7 @@ def test_create_document_null_variant(
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
-    assert len(slug.name) == len("title") + 1 + 4
+    assert len(slug.name) == len("title") + 1 + SLUG_SUFFIX_LENGTH
     assert slug.name.startswith("title")
 
 
@@ -204,7 +206,7 @@ def test_create_document_null_user_language_name(
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
-    assert len(slug.name) == len("title") + 1 + 4
+    assert len(slug.name) == len("title") + 1 + SLUG_SUFFIX_LENGTH
     assert slug.name.startswith("title")
 
 
@@ -243,7 +245,7 @@ def test_create_document_null_source_url(
         .filter(Slug.family_document_import_id == actual_fd.import_id)
         .one()
     )
-    assert len(slug.name) == len("title") + 1 + 4
+    assert len(slug.name) == len("title") + 1 + SLUG_SUFFIX_LENGTH
     assert slug.name.startswith("title")
 
 
