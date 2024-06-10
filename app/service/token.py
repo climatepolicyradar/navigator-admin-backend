@@ -6,7 +6,7 @@ from typing import Any, Optional
 import jwt
 
 from app.errors import TokenError
-from app.model.jwt_user import JWTUser
+from app.model.jwt_user import UserContext
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
@@ -60,7 +60,7 @@ def encode(
     return encoded_jwt
 
 
-def decode(token: str) -> JWTUser:
+def decode(token: str) -> UserContext:
     """
     Decodes the JWT token into a JWTUser.
 
@@ -86,7 +86,7 @@ def decode(token: str) -> JWTUser:
     if org_id is None or not isinstance(org_id, int):
         raise TokenError("Token did not contain an organisation_id")
 
-    jwt_user = JWTUser(
+    jwt_user = UserContext(
         email=email,
         org_id=org_id,
         is_superuser=payload.get("is_superuser", False),
