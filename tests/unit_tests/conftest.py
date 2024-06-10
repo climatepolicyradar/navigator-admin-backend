@@ -21,6 +21,7 @@ import app.service.family as family_service
 import app.service.token as token_service
 from app.clients.aws.client import get_s3_client
 from app.main import app
+from app.model.jwt_user import UserContext
 from app.repository import (
     app_user_repo,
     collection_repo,
@@ -259,3 +260,25 @@ def test_s3_client(s3_document_bucket_names):
         )
 
         yield s3_client
+
+
+# -- now UserContexts
+@pytest.fixture
+def super_user_context():
+    return UserContext(
+        email="super@here.com", org_id=1, is_superuser=True, authorisation={}
+    )
+
+
+@pytest.fixture
+def admin_user_context():
+    return UserContext(
+        email="admin@here.com", org_id=1, is_superuser=False, authorisation={}
+    )
+
+
+@pytest.fixture
+def bad_user_context():
+    return UserContext(
+        email="not-an-email", org_id=0, is_superuser=False, authorisation={}
+    )

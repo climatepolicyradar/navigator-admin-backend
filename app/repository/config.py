@@ -23,7 +23,6 @@ from app.model.config import (
     TaxonomyData,
 )
 from app.model.jwt_user import UserContext
-from app.repository import app_user
 
 _LOGGER = logging.getLogger(__name__)
 

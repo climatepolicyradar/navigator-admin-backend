@@ -13,8 +13,6 @@ from tests.helpers.analytics import (
     create_summary_dto,
 )
 
-USER_EMAIL = "test@cpr.org"
-
 
 def expected_analytics_summary(
     expected_docs: Optional[int] = EXPECTED_NUM_DOCUMENTS,
@@ -39,13 +37,14 @@ def test_summary_superuser(
     family_repo_mock,
     event_repo_mock,
     app_user_repo_mock,
+    super_user_context,
 ):
     collection_repo_mock.is_superuser = True
     document_repo_mock.superuser = True
     family_repo_mock.is_superuser = True
     event_repo_mock.is_superuser = True
 
-    result = analytics_service.summary("superuser@cpr.org")
+    result = analytics_service.summary(super_user_context)
     assert result == expected_analytics_summary()
 
     assert result is not None
@@ -65,8 +64,9 @@ def test_summary_non_superuser(
     family_repo_mock,
     event_repo_mock,
     app_user_repo_mock,
+    admin_user_context,
 ):
-    result = analytics_service.summary("non-superuser@cpr.org")
+    result = analytics_service.summary(admin_user_context)
     assert result == expected_analytics_summary(
         expected_docs=11,
         expected_families=22,
@@ -91,9 +91,10 @@ def test_summary_returns_none(
     family_repo_mock,
     event_repo_mock,
     app_user_repo_mock,
+    admin_user_context,
 ):
     collection_repo_mock.return_empty = True
-    result = analytics_service.summary(USER_EMAIL)
+    result = analytics_service.summary(admin_user_context)
     assert result == expected_analytics_summary(
         expected_docs=11,
         expected_families=22,
@@ -116,10 +117,11 @@ def test_summary_raises_if_db_error(
     family_repo_mock,
     event_repo_mock,
     app_user_repo_mock,
+    admin_user_context,
 ):
     collection_repo_mock.throw_repository_error = True
     with pytest.raises(RepositoryError):
-        analytics_service.summary(USER_EMAIL)
+        analytics_service.summary(admin_user_context)
 
     # Ensure the analytics service uses the other services to validate.
     assert app_user_repo_mock.get_org_id.call_count == 1
