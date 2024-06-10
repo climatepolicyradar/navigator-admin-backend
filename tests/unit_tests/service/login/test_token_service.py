@@ -6,6 +6,8 @@ import pytest
 import app.service.token as token_service
 from app.errors import TokenError
 
+ORG_ID = 999
+
 
 @pytest.mark.parametrize(
     "email",
@@ -30,6 +32,7 @@ def test_ok_when_encoded_and_decoded(
     assert token is not None
     assert len(token) > 200
     user = token_service.decode(token)
+    print(user)
     assert user.email == email
     assert user.is_superuser == is_superuser
     assert user.authorisation == authorisation
@@ -38,7 +41,9 @@ def test_ok_when_encoded_and_decoded(
 
 def test_encode_checks_authorisation():
     with pytest.raises(TokenError) as e:
-        token_service.encode("email@here.com", False, cast(dict, "random stuff"))
+        token_service.encode(
+            "email@here.com", ORG_ID, False, cast(dict, "random stuff")
+        )
 
     assert (
         e.value.message == "Parameter authorisation should be a dict, not random stuff"
@@ -47,14 +52,14 @@ def test_encode_checks_authorisation():
 
 def test_encode_checks_email():
     with pytest.raises(TokenError) as e:
-        token_service.encode("email.here.com", False, {})
+        token_service.encode("email.here.com", ORG_ID, False, {})
 
     assert e.value.message == "Parameter email should be an email, not email.here.com"
 
 
 def test_encode_checks_is_superuser():
     with pytest.raises(TokenError) as e:
-        token_service.encode("email@here.com", cast(bool, "False"), {})
+        token_service.encode("email@here.com", ORG_ID, cast(bool, "False"), {})
 
     assert e.value.message == "Parameter is_superuser should be a bool, not False"
 

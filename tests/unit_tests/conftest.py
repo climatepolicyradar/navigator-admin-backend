@@ -205,7 +205,7 @@ def corpus_service_mock(monkeypatch, mocker):
 
 @pytest.fixture
 def superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("super@cpr.org", True, {})
+    a_token = token_service.encode("super@cpr.org", ORG_ID, True, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 

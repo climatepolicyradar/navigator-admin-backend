@@ -48,7 +48,7 @@ def encode(
         "email": email,
         "is_superuser": is_superuser,
         "authorisation": authorisation,
-        "organisation_id": org_id,
+        "org_id": org_id,
     }
     expiry_minutes = minutes or ACCESS_TOKEN_EXPIRE_MINUTES
     expire = datetime.utcnow() + timedelta(minutes=expiry_minutes)
@@ -79,8 +79,9 @@ def decode(token: str) -> JWTUser:
 
     authorisation: Optional[dict[str, Any]] = payload.get("authorisation", {})
 
-    if org_id := payload.get("organisation_id"):
-        raise TokenError("Token did not contain an organisation_id")
+    org_id = payload.get("org_id")
+    if org_id is None:
+        raise TokenError("Token did not contain an org_id")
 
     jwt_user = JWTUser(
         email=email,
