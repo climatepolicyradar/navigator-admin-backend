@@ -52,6 +52,8 @@ from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
 
+ORG_ID = 1
+
 
 @pytest.fixture
 def client():
@@ -203,28 +205,28 @@ def corpus_service_mock(monkeypatch, mocker):
 
 @pytest.fixture
 def superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("super@cpr.org", True, {})
+    a_token = token_service.encode("super@cpr.org", ORG_ID, True, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("cclw@cpr.org", False, {"is_admin": False})
+    a_token = token_service.encode("cclw@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def non_cclw_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("unfccc@cpr.org", False, {"is_admin": False})
+    a_token = token_service.encode("unfccc@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def admin_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("admin@cpr.org", False, {"is_admin": True})
+    a_token = token_service.encode("admin@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 

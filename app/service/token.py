@@ -16,7 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def encode(
-    email: str, is_superuser: bool, authorisation: dict, minutes: Optional[int] = None
+    email: str,
+    org_id: int,
+    is_superuser: bool,
+    authorisation: dict,
+    minutes: Optional[int] = None,
 ) -> str:
     """
     Encodes the user's data into a JWT token.
@@ -39,11 +43,15 @@ def encode(
     if not isinstance(is_superuser, bool):
         raise TokenError(f"Parameter is_superuser should be a bool, not {is_superuser}")
 
+    if not isinstance(org_id, int):
+        raise TokenError(f"Parameter org_id should be an int, not {org_id}")
+
     to_encode = {
         "sub": email,
         "email": email,
         "is_superuser": is_superuser,
         "authorisation": authorisation,
+        "org_id": org_id,
     }
     expiry_minutes = minutes or ACCESS_TOKEN_EXPIRE_MINUTES
     expire = datetime.utcnow() + timedelta(minutes=expiry_minutes)
@@ -74,9 +82,15 @@ def decode(token: str) -> JWTUser:
 
     authorisation: Optional[dict[str, Any]] = payload.get("authorisation", {})
 
+    org_id = payload.get("org_id")
+    if org_id is None or not isinstance(org_id, int):
+        raise TokenError("Token did not contain an organisation_id")
+
     jwt_user = JWTUser(
         email=email,
+        org_id=org_id,
         is_superuser=payload.get("is_superuser", False),
         authorisation=authorisation,
     )
+
     return jwt_user
