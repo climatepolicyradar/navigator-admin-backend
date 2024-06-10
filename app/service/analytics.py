@@ -15,6 +15,7 @@ import app.repository.collection as collection_repo
 import app.repository.document as document_repo
 import app.repository.event as event_repo
 import app.repository.family as family_repo
+import app.service.app_user as app_user_service
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
 from app.model.jwt_user import UserContext
@@ -32,7 +33,7 @@ def summary(user: UserContext) -> SummaryDTO:
     """
     try:
         with db_session.get_db() as db:
-            org_id = user.org_id
+            org_id = app_user_service.restrict_entities_to_user_org(db, user)
             n_collections = collection_repo.count(db, org_id)
             n_families = family_repo.count(db, org_id)
             n_documents = document_repo.count(db, org_id)
