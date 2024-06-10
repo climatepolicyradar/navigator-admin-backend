@@ -16,7 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def encode(
-    email: str, is_superuser: bool, authorisation: dict, minutes: Optional[int] = None
+    email: str,
+    org_id: int,
+    is_superuser: bool,
+    authorisation: dict,
+    minutes: Optional[int] = None,
 ) -> str:
     """
     Encodes the user's data into a JWT token.
@@ -44,6 +48,7 @@ def encode(
         "email": email,
         "is_superuser": is_superuser,
         "authorisation": authorisation,
+        "organisation_id": org_id,
     }
     expiry_minutes = minutes or ACCESS_TOKEN_EXPIRE_MINUTES
     expire = datetime.utcnow() + timedelta(minutes=expiry_minutes)

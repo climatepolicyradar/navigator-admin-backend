@@ -12,6 +12,10 @@ from app.errors import TokenError
     ["e1@here.com", "e2@there.com", "e3@nowhere.com"],
 )
 @pytest.mark.parametrize(
+    "org_id",
+    [1, 2, 3],
+)
+@pytest.mark.parametrize(
     "is_superuser",
     [False, True, False],
 )
@@ -20,15 +24,16 @@ from app.errors import TokenError
     [{}, {"e2": False}, {"e3": {"a": 1}}],
 )
 def test_ok_when_encoded_and_decoded(
-    email: str, is_superuser: bool, authorisation: dict
+    email: str, org_id: int, is_superuser: bool, authorisation: dict
 ):
-    token = token_service.encode(email, is_superuser, authorisation)
+    token = token_service.encode(email, org_id, is_superuser, authorisation)
     assert token is not None
     assert len(token) > 200
     user = token_service.decode(token)
     assert user.email == email
     assert user.is_superuser == is_superuser
     assert user.authorisation == authorisation
+    assert user.org_id == org_id
 
 
 def test_encode_checks_authorisation():
