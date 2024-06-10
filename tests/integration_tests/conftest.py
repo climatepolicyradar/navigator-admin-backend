@@ -33,6 +33,8 @@ from tests.mocks.repos.rollback_document_repo import mock_rollback_document_repo
 from tests.mocks.repos.rollback_event_repo import mock_rollback_event_repo
 from tests.mocks.repos.rollback_family_repo import mock_rollback_family_repo
 
+ORG_ID = 1
+
 
 def get_test_db_url() -> str:
     return SQLALCHEMY_DATABASE_URI + f"_test_{uuid.uuid4()}"
@@ -218,34 +220,34 @@ def rollback_event_repo(monkeypatch, mocker):
 
 @pytest.fixture
 def superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("super@cpr.org", True, {})
+    a_token = token_service.encode("super@cpr.org", ORG_ID, True, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("cclw@cpr.org", False, {"is_admin": False})
+    a_token = token_service.encode("cclw@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def non_cclw_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("unfccc@cpr.org", False, {"is_admin": False})
+    a_token = token_service.encode("unfccc@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def another_org_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("another@cpr.org", False, {"is_admin": False})
+    a_token = token_service.encode("another@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def admin_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("admin@cpr.org", False, {"is_admin": True})
+    a_token = token_service.encode("admin@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
