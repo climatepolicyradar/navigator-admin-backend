@@ -43,6 +43,9 @@ def encode(
     if not isinstance(is_superuser, bool):
         raise TokenError(f"Parameter is_superuser should be a bool, not {is_superuser}")
 
+    if not isinstance(org_id, int):
+        raise TokenError(f"Parameter org_id should be an int, not {org_id}")
+
     to_encode = {
         "sub": email,
         "email": email,
@@ -80,8 +83,8 @@ def decode(token: str) -> JWTUser:
     authorisation: Optional[dict[str, Any]] = payload.get("authorisation", {})
 
     org_id = payload.get("org_id")
-    if org_id is None:
-        raise TokenError("Token did not contain an org_id")
+    if org_id is None or not isinstance(org_id, int):
+        raise TokenError("Token did not contain an organisation_id")
 
     jwt_user = JWTUser(
         email=email,
