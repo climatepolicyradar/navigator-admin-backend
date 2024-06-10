@@ -75,6 +75,7 @@ def authenticate_user(email: str, password: str) -> str:
     authorisation = {
         cast(str, org.name): {"is_admin": cast(bool, org_user.is_admin)}
         for org_user, org in app_user_links
+        if org.id == org_id
     }
 
     return token_service.encode(
