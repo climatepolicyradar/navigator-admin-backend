@@ -213,10 +213,8 @@ def test_create_family_when_invalid_metadata(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert (
-        data["detail"]
-        == "Values for the following are missing: {'author_type', 'author'}"
-    )
+    expected_set = set({"author", "author_type"})
+    assert data["detail"] == f"Values for the following are missing: {expected_set}"
 
 
 def test_create_family_when_invalid_corpus_org(
