@@ -79,9 +79,14 @@ def decode(token: str) -> JWTUser:
 
     authorisation: Optional[dict[str, Any]] = payload.get("authorisation", {})
 
+    if org_id := payload.get("organisation_id"):
+        raise TokenError("Token did not contain an organisation_id")
+
     jwt_user = JWTUser(
         email=email,
+        org_id=org_id,
         is_superuser=payload.get("is_superuser", False),
         authorisation=authorisation,
     )
+
     return jwt_user
