@@ -43,7 +43,8 @@ def with_transaction(module_name, context=session_context):
             try:
                 db.begin_nested()
                 result = func(*args, **kwargs, context=context, db=db)
-                db.commit()
+                if db.transaction.is_active:
+                    db.transaction.commit()
                 return result
             except exc.SQLAlchemyError as e:
                 msg = f"Error {str(e)} in {module_name}.{func.__name__}()"
