@@ -70,9 +70,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
             return 11
         return
 
-    def mock_get_org_from_import_id(
-        _, import_id: str, is_create: bool
-    ) -> Optional[int]:
+    def mock_get_org_from_import_id(_, import_id: str) -> Optional[int]:
         maybe_throw()
         if document_repo.no_org is True:
             return None
