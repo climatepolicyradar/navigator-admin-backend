@@ -72,6 +72,6 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
 
 def get_organisation(db: Session, family_import_id: str) -> Optional[int]:
     _maybe_throw()
-    if family_repo.return_empty:
+    if family_repo.no_org:
         return None
     return 987 if family_repo.invalid_org else 1

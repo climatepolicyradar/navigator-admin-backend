@@ -74,7 +74,7 @@ def test_create_when_no_org_associated_with_entity(
     document_repo_mock, family_repo_mock, app_user_repo_mock
 ):
     new_document = create_document_create_dto()
-    family_repo_mock.return_empty = True
+    family_repo_mock.no_org = True
     with pytest.raises(ValidationError) as e:
         ok = doc_service.create(new_document, USER_EMAIL)
         assert not ok

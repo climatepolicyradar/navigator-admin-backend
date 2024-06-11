@@ -14,6 +14,7 @@ class FamilyRepo(Protocol):
     throw_timeout_error: bool = False
     is_superuser: bool = False
     invalid_org: bool = False
+    no_org: bool = False
 
     @staticmethod
     def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
