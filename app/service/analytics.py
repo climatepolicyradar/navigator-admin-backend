@@ -33,7 +33,7 @@ def summary(user: UserContext) -> SummaryDTO:
     """
     try:
         with db_session.get_db() as db:
-            org_id = app_user_service.restrict_entities_to_user_org(db, user)
+            org_id = app_user_service.restrict_entities_to_user_org(user)
             n_collections = collection_repo.count(db, org_id)
             n_families = family_repo.count(db, org_id)
             n_documents = document_repo.count(db, org_id)

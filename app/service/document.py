@@ -53,7 +53,7 @@ def all(user: UserContext) -> list[DocumentReadDTO]:
     :return list[documentDTO]: The list of documents.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return document_repo.all(db, org_id)
 
 
@@ -74,7 +74,7 @@ def search(
         given search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return document_repo.search(db, query_params, org_id)
 
 
@@ -121,7 +121,7 @@ def update(
         raise ValidationError("Variant name is empty")
 
     entity_org_id = get_org_from_id(db, import_id)
-    app_user.raise_if_unauthorised_to_make_changes(db, user, entity_org_id, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
     document_repo.update(db, import_id, document)
     db.commit()
@@ -161,7 +161,7 @@ def create(
 
     entity_org_id = get_org_from_id(db, family.import_id, is_create=True)
     app_user.raise_if_unauthorised_to_make_changes(
-        db, user, entity_org_id, family.import_id
+        user, entity_org_id, family.import_id
     )
     return document_repo.create(db, document)
 
@@ -190,7 +190,7 @@ def delete(
         return None
 
     entity_org_id = get_org_from_id(db, import_id)
-    app_user.raise_if_unauthorised_to_make_changes(db, user, entity_org_id, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
     return document_repo.delete(db, import_id)
 
 

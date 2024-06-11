@@ -55,7 +55,7 @@ def all(user: UserContext) -> list[CollectionReadDTO]:
     """
     try:
         with db_session.get_db() as db:
-            org_id = app_user.restrict_entities_to_user_org(db, user)
+            org_id = app_user.restrict_entities_to_user_org(user)
             return collection_repo.all(db, org_id)
     except exc.SQLAlchemyError:
         _LOGGER.exception("When getting all collections")
@@ -80,7 +80,7 @@ def search(
         the given search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return collection_repo.search(db, query_params, org_id)
 
 
@@ -166,6 +166,9 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_id for the collection.
     """
+    if context is not None:
+        context.error = "Error when creating collection"
+
     return collection_repo.create(db, collection, user.org_id)
 
 

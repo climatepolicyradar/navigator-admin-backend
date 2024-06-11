@@ -58,7 +58,7 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.all(db, org_id)
 
 
@@ -80,7 +80,7 @@ def search(
         search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.search(db, query_params, org_id)
 
 
@@ -210,7 +210,7 @@ def create(
     # Validate that the corpus we want to add the new family to exists and is from the
     # same organisation as the user.
     app_user.raise_if_unauthorised_to_make_changes(
-        db, user, entity_org_id, family.corpus_import_id
+        user, entity_org_id, family.corpus_import_id
     )
     return family_repo.create(db, family, geo_id, entity_org_id)
 
@@ -240,5 +240,5 @@ def delete(
 
     # Validate family belongs to same org as current user.
     entity_org_id = organisation.get_id_from_name(db, family.organisation)
-    app_user.raise_if_unauthorised_to_make_changes(db, user, entity_org_id, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
     return family_repo.delete(db, import_id)
