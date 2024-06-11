@@ -266,7 +266,7 @@ def test_s3_client(s3_document_bucket_names):
 @pytest.fixture
 def super_user_context():
     return UserContext(
-        email="super@here.com", org_id=1, is_superuser=True, authorisation={}
+        email="super@here.com", org_id=50, is_superuser=True, authorisation={}
     )
 
 
@@ -274,6 +274,13 @@ def super_user_context():
 def admin_user_context():
     return UserContext(
         email="admin@here.com", org_id=1, is_superuser=False, authorisation={}
+    )
+
+
+@pytest.fixture
+def another_admin_user_context():
+    return UserContext(
+        email="another-admin@here.com", org_id=3, is_superuser=False, authorisation={}
     )
 
 

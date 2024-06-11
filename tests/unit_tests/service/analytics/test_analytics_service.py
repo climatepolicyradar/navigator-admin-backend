@@ -36,7 +36,6 @@ def test_summary_superuser(
     document_repo_mock,
     family_repo_mock,
     event_repo_mock,
-    app_user_repo_mock,
     super_user_context,
 ):
     collection_repo_mock.is_superuser = True
@@ -50,8 +49,6 @@ def test_summary_superuser(
     assert result is not None
 
     # Ensure the analytics service uses the other services to validate.
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert app_user_repo_mock.is_superuser.call_count == 1
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -63,7 +60,6 @@ def test_summary_non_superuser(
     document_repo_mock,
     family_repo_mock,
     event_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     result = analytics_service.summary(admin_user_context)
@@ -77,8 +73,6 @@ def test_summary_non_superuser(
     assert result is not None
 
     # Ensure the analytics service uses the other services to validate.
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert app_user_repo_mock.is_superuser.call_count == 1
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -90,7 +84,6 @@ def test_summary_returns_none(
     document_repo_mock,
     family_repo_mock,
     event_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     collection_repo_mock.return_empty = True
@@ -103,8 +96,6 @@ def test_summary_returns_none(
     )
 
     # Ensure the analytics service uses the other services to validate.
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert app_user_repo_mock.is_superuser.call_count == 1
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 1
     assert family_repo_mock.count.call_count == 1
@@ -116,7 +107,6 @@ def test_summary_raises_if_db_error(
     document_repo_mock,
     family_repo_mock,
     event_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     collection_repo_mock.throw_repository_error = True
@@ -124,8 +114,6 @@ def test_summary_raises_if_db_error(
         analytics_service.summary(admin_user_context)
 
     # Ensure the analytics service uses the other services to validate.
-    assert app_user_repo_mock.get_org_id.call_count == 1
-    assert app_user_repo_mock.is_superuser.call_count == 1
     assert collection_repo_mock.count.call_count == 1
     assert document_repo_mock.count.call_count == 0
     assert family_repo_mock.count.call_count == 0

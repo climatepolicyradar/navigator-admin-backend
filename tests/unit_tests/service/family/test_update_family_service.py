@@ -19,7 +19,6 @@ def test_update(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -37,7 +36,6 @@ def test_update(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert family_repo_mock.get.call_count == 2
 
@@ -48,7 +46,6 @@ def test_update_when_family_missing(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -64,7 +61,6 @@ def test_update_when_family_missing(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.get.call_count == 2
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 0
     assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert metadata_repo_mock.get_schema_for_org.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
@@ -76,7 +72,6 @@ def test_update_raises_when_family_id_invalid(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -92,7 +87,6 @@ def test_update_raises_when_family_id_invalid(
     assert family_repo_mock.get.call_count == 1
     assert geography_repo_mock.get_id_from_value.call_count == 0
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 0
     assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert metadata_repo_mock.get_schema_for_org.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
@@ -104,7 +98,6 @@ def test_update_raises_when_category_invalid(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -119,7 +112,6 @@ def test_update_raises_when_category_invalid(
 
     assert geography_repo_mock.get_id_from_value.call_count == 0
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 0
     assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert metadata_repo_mock.get_schema_for_org.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
@@ -131,7 +123,6 @@ def test_update_raises_when_organisation_invalid(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -140,7 +131,6 @@ def test_update_raises_when_organisation_invalid(
     updated_family = create_family_write_dto()
 
     organisation_repo_mock.error = True
-    app_user_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
 
@@ -150,7 +140,6 @@ def test_update_raises_when_organisation_invalid(
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
@@ -162,7 +151,6 @@ def test_update_family_raises_when_geography_invalid(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -179,7 +167,6 @@ def test_update_family_raises_when_geography_invalid(
     assert family_repo_mock.get.call_count == 1
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 0
     assert organisation_repo_mock.get_id_from_name.call_count == 0
     assert metadata_repo_mock.get_schema_for_org.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
@@ -191,7 +178,6 @@ def test_update_family_raises_when_metadata_invalid(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -208,7 +194,6 @@ def test_update_family_raises_when_metadata_invalid(
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
@@ -220,7 +205,6 @@ def test_update_family_raises_when_collection_id_invalid(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -236,7 +220,6 @@ def test_update_family_raises_when_collection_id_invalid(
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert collection_repo_mock.validate.call_count == 0
@@ -249,7 +232,6 @@ def test_update_family_raises_when_collection_missing(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -266,7 +248,6 @@ def test_update_family_raises_when_collection_missing(
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert collection_repo_mock.validate.call_count == 1
@@ -279,7 +260,6 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
     geography_repo_mock,
     organisation_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     admin_user_context,
 ):
     family = family_service.get("a.b.c.d")
@@ -296,7 +276,6 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert app_user_repo_mock.get_org_id.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
     assert metadata_repo_mock.get_schema_for_org.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
