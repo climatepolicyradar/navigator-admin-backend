@@ -493,7 +493,7 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
         .join(FamilyCorpus, FamilyCorpus.corpus_import_id == Corpus.import_id)
         .filter(FamilyCorpus.family_import_id == family_import_id)
         .group_by(Organisation.id)
-        .one()
+        .one_or_none()
     )
 
 

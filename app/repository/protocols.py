@@ -13,6 +13,7 @@ class FamilyRepo(Protocol):
     throw_repository_error: bool = False
     throw_timeout_error: bool = False
     is_superuser: bool = False
+    invalid_org: bool = False
 
     @staticmethod
     def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
@@ -51,4 +52,9 @@ class FamilyRepo(Protocol):
     @staticmethod
     def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         """Counts all the families"""
+        ...
+
+    @staticmethod
+    def get_organisation(db: Session, family_import_id: str) -> Optional[int]:
+        """Get the organisation a family belongs to"""
         ...

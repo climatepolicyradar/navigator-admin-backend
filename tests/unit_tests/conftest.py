@@ -101,6 +101,7 @@ def family_repo_mock(monkeypatch, mocker):
     family_repo.return_empty = False
     family_repo.throw_repository_error = False
     family_repo.throw_timeout_error = False
+    family_repo.invalid_org = False
 
     create_mock_family_repo(family_repo, monkeypatch, mocker)
     yield family_repo
