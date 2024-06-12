@@ -89,13 +89,13 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     document: DocumentWriteDTO,
     user_email: str,
-    db: Session = db_session.get_db(),
+    db: Optional[Session],
 ) -> Optional[DocumentReadDTO]:
     """
     Updates a single document with the values passed.
@@ -110,6 +110,9 @@ def update(
     """
     validate_import_id(import_id)
 
+    if db is None:
+        db = db_session.get_db()
+
     doc = get(import_id)
     if doc is None:
         return None
@@ -122,17 +125,24 @@ def update(
         db, user_email, entity_org_id, import_id
     )
 
-    document_repo.update(db, import_id, document)
-    db.commit()
+    transaction = db.begin_nested()
+    try:
+        if document_repo.update(db, import_id, document):
+            transaction.commit()
+        else:
+            transaction.rollback()
+    except Exception as e:
+        transaction.rollback()
+        raise e
     return get(import_id)
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     document: DocumentCreateDTO,
     user_email: str,
-    db: Session = db_session.get_db(),
+    db: Optional[Session],
 ) -> str:
     """
     Creates a new document with the values passed.
@@ -146,6 +156,9 @@ def create(
     """
     id.validate(document.family_import_id)
 
+    if db is None:
+        db = db_session.get_db()
+
     if document.variant_name == "":
         raise ValidationError("Variant name is empty")
 
@@ -157,14 +170,17 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, family.import_id
     )
-    return document_repo.create(db, document)
+    import_id = document_repo.create(db, document)
+    if len(import_id) > 0:
+        db.commit()
+    else:
+        db.rollback()
+    return import_id
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(
-    import_id: str, user_email: str, db: Session = db_session.get_db()
-) -> Optional[bool]:
+def delete(import_id: str, user_email: str, db: Optional[Session]) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
 
@@ -176,6 +192,9 @@ def delete(
     """
     id.validate(import_id)
 
+    if db is None:
+        db = db_session.get_db()
+
     doc = get(import_id)
     if doc is None:
         return None
@@ -184,7 +203,18 @@ def delete(
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, import_id
     )
-    return document_repo.delete(db, import_id)
+
+    transaction = db.begin_nested()
+    try:
+        if result := document_repo.delete(db, import_id):
+            transaction.commit()
+        else:
+            transaction.rollback()
+    except Exception as e:
+        transaction.rollback()
+        raise e
+
+    return result
 
 
 def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int:
