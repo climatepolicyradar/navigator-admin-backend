@@ -7,7 +7,7 @@ import app.clients.db.session as db_session
 import app.repository.config as config_repo
 from app.errors import RepositoryError
 from app.model.config import ConfigReadDTO
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -10,7 +10,7 @@ import app.repository.event as event_repo
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 from app.service import app_user, id
 
 _LOGGER = logging.getLogger(__name__)

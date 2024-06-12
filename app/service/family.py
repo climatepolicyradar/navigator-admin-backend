@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 from app.repository import family_repo
 from app.service import (
     app_user,

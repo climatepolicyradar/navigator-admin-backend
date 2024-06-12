@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.errors import AuthorisationError
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 from app.repository import app_user_repo
 
 _LOGGER = logging.getLogger(__name__)

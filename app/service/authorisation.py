@@ -7,7 +7,7 @@ from db_client.models.organisation.authorisation import (
 )
 
 from app.errors import AuthorisationError
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 
 
 def http_method_to_operation(method: str) -> AuthOperation:

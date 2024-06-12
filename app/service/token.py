@@ -6,7 +6,7 @@ from typing import Any, Optional
 import jwt
 
 from app.errors import TokenError
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"

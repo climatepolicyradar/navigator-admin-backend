@@ -22,7 +22,7 @@ from app.model.config import (
     EventConfig,
     TaxonomyData,
 )
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)
 

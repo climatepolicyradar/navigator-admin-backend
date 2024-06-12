@@ -13,7 +13,7 @@ import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 from app.service import app_user, id
 
 _LOGGER = logging.getLogger(__name__)

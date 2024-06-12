@@ -19,7 +19,7 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 from app.repository import collection_repo
 from app.service import app_user, id
 

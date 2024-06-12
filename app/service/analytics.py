@@ -18,7 +18,7 @@ import app.repository.family as family_repo
 import app.service.app_user as app_user_service
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)
 

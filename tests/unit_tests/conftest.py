@@ -21,7 +21,7 @@ import app.service.family as family_service
 import app.service.token as token_service
 from app.clients.aws.client import get_s3_client
 from app.main import app
-from app.model.jwt_user import UserContext
+from app.model.user import UserContext
 from app.repository import (
     app_user_repo,
     collection_repo,
