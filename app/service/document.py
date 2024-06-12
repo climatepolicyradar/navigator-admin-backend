@@ -49,7 +49,7 @@ def all(user: UserContext) -> list[DocumentReadDTO]:
     """
     Gets the entire list of documents from the repository.
 
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[documentDTO]: The list of documents.
     """
     with db_session.get_db() as db:
@@ -69,7 +69,7 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[DocumentReadDTO]: The list of documents matching the
         given search terms.
     """
@@ -103,7 +103,7 @@ def update(
 
     :param str import_id: The import ID of the document to update.
     :param documentDTO document: The DTO with all the values to change (or keep).
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :raises AuthorisationError: raised if user has incorrect permissions.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
@@ -140,7 +140,7 @@ def create(
     Creates a new document with the values passed.
 
     :param documentDTO document: The values for the new document.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[documentDTO]: The new created document or
@@ -175,7 +175,7 @@ def delete(
     Deletes the document specified by the import_id.
 
     :param str import_id: The import_id of the document to delete.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted None if not.

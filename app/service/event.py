@@ -40,7 +40,7 @@ def all(user: UserContext) -> list[EventReadDTO]:
     """
     Gets the entire list of family events from the repository.
 
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[EventReadDTO]: The list of family events.
     """
     with db_session.get_db() as db:
@@ -61,7 +61,7 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[EventReadDTO]: The list of events matching the given
         search terms.
     """

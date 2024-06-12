@@ -50,7 +50,7 @@ def all(user: UserContext) -> list[CollectionReadDTO]:
     """
     Gets the entire list of collections from the repository.
 
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[CollectionDTO]: The list of collections.
     """
     try:
@@ -75,7 +75,7 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[CollectionReadDTO]: The list of collections matching
         the given search terms.
     """

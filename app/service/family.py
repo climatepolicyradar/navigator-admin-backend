@@ -54,7 +54,7 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
     """
     Gets the entire list of families from the repository.
 
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
@@ -75,7 +75,7 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
@@ -170,7 +170,7 @@ def create(
     Creates a new Family with the values passed.
 
     :param FamilyDTO family: The values for the new Family.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
@@ -224,7 +224,7 @@ def delete(
     Deletes the Family specified by the import_id.
 
     :param str import_id: The import_id of the Family to delete.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
