@@ -13,7 +13,7 @@ class FamilyRepo(Protocol):
     throw_repository_error: bool = False
     throw_timeout_error: bool = False
     is_superuser: bool = False
-    invalid_org: bool = False
+    alternative_org: bool = False
     no_org: bool = False
 
     @staticmethod

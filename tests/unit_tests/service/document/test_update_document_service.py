@@ -70,7 +70,7 @@ def test_update_raises_when_invalid_variant(document_repo_mock, admin_user_conte
 
 
 def test_update_when_no_org_associated_with_entity(
-    document_repo_mock, app_user_repo_mock, admin_user_context
+    document_repo_mock, admin_user_context
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
@@ -88,8 +88,6 @@ def test_update_when_no_org_associated_with_entity(
     assert e.value.message == expected_msg
 
     assert document_repo_mock.get_org_from_import_id.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 0
-    assert app_user_repo_mock.is_superuser.call_count == 0
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 1
 

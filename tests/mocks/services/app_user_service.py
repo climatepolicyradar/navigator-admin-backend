@@ -2,22 +2,25 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-ORG_ID = 1234
+ALTERNATIVE_ORG_ID = 999
+STANDARD_ORG_ID = 1
 
 
 def mock_app_user_service(app_user_service, monkeypatch: MonkeyPatch, mocker):
-    app_user_service.invalid_org = False
+    app_user_service.alternative_org = False
     app_user_service.superuser = False
 
     def mock_get_organisation(_, user_email: str) -> int:
-        if app_user_service.invalid_org is True:
-            return ORG_ID
-        return 1
+        if app_user_service.alternative_org:
+            return ALTERNATIVE_ORG_ID
+        return STANDARD_ORG_ID
 
     def mock_restrict_entities_to_user_org(user_email: str) -> Optional[int]:
         if app_user_service.superuser is True:
             return None
-        return 1
+        if app_user_service.alternative_org:
+            return ALTERNATIVE_ORG_ID
+        return STANDARD_ORG_ID
 
     monkeypatch.setattr(
         app_user_service,

@@ -135,16 +135,39 @@ def update(
 
 @db_session.with_transaction(__name__)
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(
+    import_id: str, user: UserContext, context=None, db: Session = db_session.get_db()
+) -> bool:
     """
     Deletes the event specified by the import_id.
 
     :param str import_id: The import_id of the event to delete.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
+
     if context is not None:
         context.error = f"Could not delete event {import_id}"
+
+    event = get(import_id)
+    if event is None:
+        return False
+
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
+
     return event_repo.delete(db, import_id)
+
+
+def get_org_from_id(db: Session, import_id: str) -> int:
+    org = event_repo.get_org_from_import_id(db, import_id)
+
+    if org is None:
+        msg = f"No organisation associated with import id {import_id}"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
+
+    return org

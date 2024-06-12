@@ -6,13 +6,41 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
-def test_delete_event(client: TestClient, data_db: Session, user_header_token):
+def test_delete_event_super(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    response = client.delete("/api/v1/events/E.0.0.2", headers=superuser_header_token)
+    assert response.status_code == status.HTTP_200_OK
+    assert data_db.query(FamilyEvent).count() == 2
+    assert (
+        data_db.query(FamilyEvent).filter(FamilyEvent.import_id == "E.0.0.2").count()
+        == 0
+    )
+
+
+def test_delete_event_cclw(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
     response = client.delete("/api/v1/events/E.0.0.2", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     assert data_db.query(FamilyEvent).count() == 2
     assert (
         data_db.query(FamilyEvent).filter(FamilyEvent.import_id == "E.0.0.2").count()
+        == 0
+    )
+
+
+def test_delete_event_unfccc(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    response = client.delete(
+        "/api/v1/events/E.0.0.3", headers=non_cclw_user_header_token
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert data_db.query(FamilyEvent).count() == 2
+    assert (
+        data_db.query(FamilyEvent).filter(FamilyEvent.import_id == "E.0.0.3").count()
         == 0
     )
 
@@ -66,4 +94,19 @@ def test_delete_event_when_db_error(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
-    assert bad_event_repo.delete.call_count == 1
+
+
+def test_delete_event_when_org_mismatch(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    assert data_db.query(FamilyEvent).count() == 3
+    response = client.delete(
+        "/api/v1/events/E.0.0.1", headers=non_cclw_user_header_token
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert data_db.query(FamilyEvent).count() == 3
+    assert (
+        data_db.query(FamilyEvent).filter(FamilyEvent.import_id == "E.0.0.1").count()
+        == 1
+    )

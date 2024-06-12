@@ -10,7 +10,7 @@ from app.api.api_v1.query_params import (
     set_default_query_params,
     validate_query_params,
 )
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 
 event_router = r = APIRouter()
@@ -177,17 +177,18 @@ async def update_event(
 @r.delete(
     "/events/{import_id}",
 )
-async def delete_event(
-    import_id: str,
-) -> None:
+async def delete_event(request: Request, import_id: str) -> None:
     """
     Deletes a specific event given the import id.
 
+    :param Request request: Request object.
     :param str import_id: Specified import_id.
     :raises HTTPException: If the event is not found a 404 is returned.
     """
     try:
-        event_deleted = event_service.delete(import_id)
+        event_deleted = event_service.delete(import_id, request.state.user)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

@@ -275,3 +275,11 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         return
 
     return n_events
+
+
+def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
+    result = _get_query(db).filter(FamilyEvent.import_id == import_id).one_or_none()
+    if result is None:
+        return None
+    _, _, _, org = result
+    return org.id

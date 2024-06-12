@@ -129,7 +129,6 @@ def test_update_raises_when_organisation_invalid(
     collection_repo_mock,
     geography_repo_mock,
     metadata_repo_mock,
-    app_user_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -141,7 +140,6 @@ def test_update_raises_when_organisation_invalid(
     updated_family = create_family_write_dto()
 
     corpus_repo_mock.error = True
-    # organisation_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
 
@@ -280,7 +278,7 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
 
     updated_family = create_family_write_dto(collections=["x.y.z.2", "x.y.z.3"])
 
-    collection_repo_mock.invalid_org = True
+    collection_repo_mock.alternative_org = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
     expected_msg = "Organisation mismatch between some collections and the current user"
