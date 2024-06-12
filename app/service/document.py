@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, cast
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 import app.repository.document as document_repo
 import app.repository.document_file as file_repo
+import app.repository.family as family_repo
 import app.service.family as family_service
 from app.clients.aws.client import get_s3_client
 from app.errors import RepositoryError, ValidationError
@@ -195,9 +196,14 @@ def delete(
 
 
 def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int:
-    org = document_repo.get_org_from_import_id(db, import_id, is_create)
+    if not is_create:
+        org = document_repo.get_org_from_import_id(db, import_id)
+    else:
+        org = family_repo.get_organisation(db, import_id)
+
     if org is None:
         msg = f"No organisation associated with import id {import_id}"
         _LOGGER.error(msg)
         raise ValidationError(msg)
-    return org
+
+    return org if isinstance(org, int) else cast(int, org.id)

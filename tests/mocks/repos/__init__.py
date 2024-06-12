@@ -27,3 +27,6 @@ def create_mock_family_repo(family_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(family_repo, "count", mock_repo.count)
     mocker.spy(family_repo, "count")
+
+    monkeypatch.setattr(family_repo, "get_organisation", mock_repo.get_organisation)
+    mocker.spy(family_repo, "get_organisation")
