@@ -179,12 +179,10 @@ def create(db: Session, event: EventCreateDTO) -> str:
             )
 
         org_name = cast(str, org.name)
-        new_family_event.import_id = cast(
-            Column, generate_import_id(db, CountedEntity.Event, org_name)
-        )
+        new_id = generate_import_id(db, CountedEntity.Event, org_name)
+        new_family_event.import_id = cast( Column, new_id)
 
         db.add(new_family_event)
-        db.flush()
     except Exception:
         _LOGGER.exception("Error trying to create Event")
         raise

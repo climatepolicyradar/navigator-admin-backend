@@ -154,7 +154,6 @@ def update(
         raise ValidationError(msg)
 
     family_repo.update(db, import_id, family_dto, geo_id)
-    db.commit()
     return get(import_id)
 
 

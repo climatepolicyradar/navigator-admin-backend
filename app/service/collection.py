@@ -145,7 +145,6 @@ def update(
         context.error = f"Error when updating collection '{import_id}'"
 
     collection_repo.update(db, import_id, collection)
-    db.commit()
     return get(import_id)
 
 

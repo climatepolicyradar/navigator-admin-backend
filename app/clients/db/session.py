@@ -40,11 +40,23 @@ def with_transaction(module_name, context=session_context):
         def wrapper(*args, **kwargs):
             context.error = None
             db = get_db()
+            func_context = f"{func.__module__}::{func.__name__}"
             try:
-                db.begin_nested()
+                tr = db.begin_nested()
+                _LOGGER.debug(f"Starting transaction for {func_context}")
                 result = func(*args, **kwargs, context=context, db=db)
+
+                if not tr.is_active:
+                    _LOGGER.error(f"Transaction not started for {func_context}")
+                else:    
+                    _LOGGER.debug(f"Committing transaction for {func_context}")
+                    tr.commit()
+
                 if db.transaction.is_active:
-                    db.transaction.commit()
+                    _LOGGER.error(f"Current transaction not closed for {func_context}")
+                    db.transaction.commit() 
+                    # raise RuntimeError("Transaction not closed")
+
                 return result
             except exc.SQLAlchemyError as e:
                 msg = f"Error {str(e)} in {module_name}.{func.__name__}()"

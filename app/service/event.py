@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.event as event_repo
-import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.service import app_user, id
+from app.repository import family as family_repo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ def create(
     if context is not None:
         context.error = f"Could not create event for family {event.family_import_id}"
 
-    family = family_service.get(event.family_import_id)
+    family = family_repo.get(db, event.family_import_id)
     if family is None:
         raise ValidationError(
             f"Could not find family when creating event for {event.family_import_id}"
@@ -128,7 +128,6 @@ def update(
         context.error = f"Error when updating event {import_id}"
 
     event_repo.update(db, import_id, event)
-    db.commit()
     return get(import_id)
 
 

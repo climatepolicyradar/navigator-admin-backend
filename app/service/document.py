@@ -113,7 +113,7 @@ def update(
     if context is not None:
         context.error = f"Error when updating document {import_id}"
 
-    doc = get(import_id)
+    doc = document_repo.get(db, import_id)
     if doc is None:
         return None
 
@@ -126,8 +126,7 @@ def update(
     )
 
     document_repo.update(db, import_id, document)
-    db.commit()
-    return get(import_id)
+    return document_repo.get(db, import_id)
 
 
 @db_session.with_transaction(__name__)
@@ -187,7 +186,7 @@ def delete(
     if context is not None:
         context.error = f"Could not delete document {import_id}"
 
-    doc = get(import_id)
+    doc = document_repo.get(db, import_id)
     if doc is None:
         return None
 
