@@ -65,7 +65,7 @@ async def get_all_collections(request: Request) -> list[CollectionReadDTO]:
     :return CollectionDTO: returns a CollectionDTO of the collection found.
     """
     try:
-        return collection_service.all(request.state.user.email)
+        return collection_service.all(request.state.user)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
@@ -99,7 +99,7 @@ async def search_collection(request: Request) -> list[CollectionReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        collections = collection_service.search(query_params, request.state.user.email)
+        collections = collection_service.search(query_params, request.state.user)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -169,7 +169,7 @@ async def create_collection(
     :return str: returns the import_id of the new collection.
     """
     try:
-        return collection_service.create(new_collection, request.state.user.email)
+        return collection_service.create(new_collection, request.state.user)
     except ValidationError as e:
         _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)

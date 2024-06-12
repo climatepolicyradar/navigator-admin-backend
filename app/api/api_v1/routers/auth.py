@@ -33,6 +33,7 @@ async def check_user_auth(
     :raises HTTPException: Raised if the user is not authorised
     """
     try:
+        # NOTE: there may come a time when the decoding needs to be transformed into the UserContext object
         user = token_service.decode(token)
         entity = auth_service.path_to_endpoint(request.scope["path"])
         operation = auth_service.http_method_to_operation(request.scope["method"])

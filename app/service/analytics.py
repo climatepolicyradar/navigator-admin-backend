@@ -18,12 +18,13 @@ import app.repository.family as family_repo
 import app.service.app_user as app_user_service
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
+from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def summary(user_email: str) -> SummaryDTO:
+def summary(user: UserContext) -> SummaryDTO:
     """
     Gets an analytics summary from the repository.
 
@@ -32,7 +33,7 @@ def summary(user_email: str) -> SummaryDTO:
     """
     try:
         with db_session.get_db() as db:
-            org_id = app_user_service.restrict_entities_to_user_org(db, user_email)
+            org_id = app_user_service.restrict_entities_to_user_org(user)
             n_collections = collection_repo.count(db, org_id)
             n_families = family_repo.count(db, org_id)
             n_documents = document_repo.count(db, org_id)

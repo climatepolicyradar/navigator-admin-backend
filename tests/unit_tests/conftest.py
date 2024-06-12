@@ -21,6 +21,7 @@ import app.service.family as family_service
 import app.service.token as token_service
 from app.clients.aws.client import get_s3_client
 from app.main import app
+from app.model.user import UserContext
 from app.repository import (
     app_user_repo,
     collection_repo,
@@ -207,7 +208,14 @@ def corpus_service_mock(monkeypatch, mocker):
 
 @pytest.fixture
 def superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("super@cpr.org", ORG_ID, True, {})
+    a_token = token_service.encode("super@cpr.org", ORG_ID, True, {"is_admin": True})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def non_admin_superuser_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("non-admin-super@cpr.org", ORG_ID, True, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
@@ -227,8 +235,8 @@ def non_cclw_user_header_token() -> Dict[str, str]:
 
 
 @pytest.fixture
-def admin_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("admin@cpr.org", ORG_ID, False, {"is_admin": True})
+def non_admin_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("non-admin@cpr.org", ORG_ID, False, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
@@ -261,3 +269,32 @@ def test_s3_client(s3_document_bucket_names):
         )
 
         yield s3_client
+
+
+# -- now UserContexts
+@pytest.fixture
+def super_user_context():
+    return UserContext(
+        email="super@here.com", org_id=50, is_superuser=True, authorisation={}
+    )
+
+
+@pytest.fixture
+def admin_user_context():
+    return UserContext(
+        email="admin@here.com", org_id=1, is_superuser=False, authorisation={}
+    )
+
+
+@pytest.fixture
+def another_admin_user_context():
+    return UserContext(
+        email="another-admin@here.com", org_id=3, is_superuser=False, authorisation={}
+    )
+
+
+@pytest.fixture
+def bad_user_context():
+    return UserContext(
+        email="not-an-email", org_id=0, is_superuser=False, authorisation={}
+    )

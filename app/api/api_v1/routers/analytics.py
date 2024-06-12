@@ -22,7 +22,7 @@ async def get_analytics_summary(request: Request) -> SummaryDTO:
     data in key (str): value (int) form.
     """
     try:
-        summary_dto = analytics_service.summary(request.state.user.email)
+        summary_dto = analytics_service.summary(request.state.user)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message

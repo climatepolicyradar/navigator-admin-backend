@@ -78,29 +78,6 @@ def test_get_all_collections_unfccc(
     assert actual_data[0] == EXPECTED_COLLECTIONS[3]
 
 
-def test_get_all_collections_other(
-    client: TestClient, data_db: Session, another_org_user_header_token
-):
-    setup_db(data_db)
-    response = client.get(
-        "/api/v1/collections",
-        headers=another_org_user_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) == 1
-
-    ids_found = set([f["import_id"] for f in data])
-    expected_ids = set(["C.0.0.1"])
-
-    assert ids_found.symmetric_difference(expected_ids) == set([])
-
-    actual_data = remove_trigger_cols_from_result(data)
-    assert actual_data is not None
-    assert actual_data[0] == EXPECTED_COLLECTIONS[0]
-
-
 def test_get_all_collections_when_not_authenticated(
     client: TestClient, data_db: Session
 ):

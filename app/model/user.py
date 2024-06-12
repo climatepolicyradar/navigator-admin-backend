@@ -3,7 +3,7 @@ from typing import Any, Mapping, Optional
 from pydantic import BaseModel
 
 
-class JWTUser(BaseModel):
+class UserContext(BaseModel):
     """An object representing what is in the token."""
 
     email: str
