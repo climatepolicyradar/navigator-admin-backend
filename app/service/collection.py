@@ -119,12 +119,11 @@ def validate(import_ids: set[str], db: Session = db_session.get_db()) -> None:
         raise ValidationError("One or more of the collections to update does not exist")
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     collection: CollectionWriteDTO,
-    context=None,
     db: Session = db_session.get_db(),
 ) -> Optional[CollectionReadDTO]:
     """
@@ -141,20 +140,17 @@ def update(
     # org_id = organisation.get_id_from_name(db, collection.organisation)
 
     validate_import_id(import_id)
-    if context is not None:
-        context.error = f"Error when updating collection '{import_id}'"
 
     collection_repo.update(db, import_id, collection)
     db.commit()
     return get(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     collection: CollectionCreateDTO,
     user_email: str,
-    context=None,
     db: Session = db_session.get_db(),
 ) -> str:
     """
@@ -167,15 +163,13 @@ def create(
     """
     # Get the organisation from the user's email
     org_id = app_user.get_organisation(db, user_email)
-    if context is not None:
-        context.error = f"Error when creating collection '{collection.description}'"
 
     return collection_repo.create(db, collection, org_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     """
     Deletes the collection specified by the import_id.
 
@@ -185,8 +179,6 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
-    if context is not None:
-        context.error = f"Could not delete collection {import_id}"
     return collection_repo.delete(db, import_id)
 
 

@@ -94,13 +94,12 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     user_email: str,
     family_dto: FamilyWriteDTO,
-    context=None,
     db: Session = db_session.get_db(),
 ) -> Optional[FamilyReadDTO]:
     """
@@ -114,8 +113,6 @@ def update(
 
     # Validate import_id
     validate_import_id(import_id)
-    if context is not None:
-        context.error = f"Could not update family {import_id}"
 
     # Validate category
     category.validate(family_dto.category)
@@ -158,12 +155,11 @@ def update(
     return get(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     family: FamilyCreateDTO,
     user_email: str,
-    context=None,
     db: Session = db_session.get_db(),
 ) -> str:
     """
@@ -175,9 +171,6 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
-
-    if context is not None:
-        context.error = f"Could not create a family for {family.title}"
 
     # Validate geography
     geo_id = geography.get_id(db, family.geography)
@@ -215,10 +208,10 @@ def create(
     return family_repo.create(db, family, geo_id, entity_org_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(
-    import_id: str, user_email: str, context=None, db: Session = db_session.get_db()
+    import_id: str, user_email: str, db: Session = db_session.get_db()
 ) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
@@ -230,8 +223,6 @@ def delete(
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
-    if context is not None:
-        context.error = f"Unable to delete family {import_id}"
 
     # Get family we're going to delete.
     family = get(import_id)

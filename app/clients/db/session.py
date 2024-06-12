@@ -1,5 +1,4 @@
 import logging
-import threading
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import Session, sessionmaker
@@ -7,7 +6,6 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
 from app.errors import RepositoryError
 
-session_context = threading.local()
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,
@@ -26,34 +24,29 @@ def get_db() -> Session:
     return SessionLocal()
 
 
-def with_transaction(module_name, context=session_context):
-    """Wraps a function with this standard transaction handler.
+def with_database():
+    """Wraps a function and supplies the db session to it.
 
-    Note: You still need to call commit() in the `func` if you require
-    any changes to persist.
-
-    :param _type_ module_name: The name of the module, used for logging context.
-    :param _type_ context: any context object to propagate to `func`, defaults to session_context
+    This decorator is used to wrap functions that require a database session.
     """
 
     def inner(func):
         def wrapper(*args, **kwargs):
-            context.error = None
+            context = f"{func.__module__}::{func.__name__}"
             db = get_db()
             try:
                 db.begin_nested()
-                result = func(*args, **kwargs, context=context, db=db)
+                result = func(*args, **kwargs, db=db)
                 db.commit()
                 return result
             except exc.SQLAlchemyError as e:
-                msg = f"Error {str(e)} in {module_name}.{func.__name__}()"
+                msg = f"Error {str(e)} in {context}"
                 _LOGGER.error(
-                    msg, extra={"failing_module": module_name, "func": func.__name__}
+                    msg,
+                    extra={"failing_module": func.__module__, "func": func.__name__},
                 )
                 db.rollback()
-                if context.error is not None:
-                    raise RepositoryError(context.error) from e
-                raise RepositoryError(str(e)) from e
+                raise RepositoryError(context) from e
             finally:
                 db.close()
 
