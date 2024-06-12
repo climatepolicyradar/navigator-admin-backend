@@ -118,11 +118,14 @@ async def get_event(import_id: str) -> EventReadDTO:
 
 @r.post("/events", response_model=str, status_code=status.HTTP_201_CREATED)
 async def create_event(
+    request: Request,
     new_event: EventCreateDTO,
 ) -> str:
     """
     Creates a specific event given the values in EventCreateDTO.
 
+    :param Request request: Request object.
+    :param EventCreateDTO new_event: The new event data.
     :raises HTTPException: If a validation error occurs, a 400 is
         returned.
     :raises HTTPException: If an SQL alchemy database error occurs, a
@@ -130,7 +133,11 @@ async def create_event(
     :return str: returns a the import_id of the event created.
     """
     try:
-        return event_service.create(new_event)
+        return event_service.create(new_event, request.state.user)
+
+    except AuthorisationError as e:
+        _LOGGER.error(e.message)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
 
     except ValidationError as e:
         _LOGGER.error(e.message)
