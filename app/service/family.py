@@ -5,7 +5,7 @@ This file hands off to the family repo, adding the dependency of the db (future)
 """
 
 import logging
-from typing import Optional, Union, final
+from typing import Optional, Union
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
@@ -266,4 +266,3 @@ def delete(import_id: str, user_email: str, db: Optional[Session]) -> Optional[b
     except Exception as e:
         db.rollback()
         raise e
-

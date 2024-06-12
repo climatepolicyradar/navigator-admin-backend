@@ -114,6 +114,7 @@ def create(event: EventCreateDTO, db: Optional[Session]) -> str:
     finally:
         db.commit()
 
+
 @db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(

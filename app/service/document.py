@@ -170,7 +170,7 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, family.import_id
     )
-    
+
     try:
         import_id = document_repo.create(db, document)
         if len(import_id) == 0:
