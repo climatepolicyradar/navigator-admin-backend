@@ -232,7 +232,6 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
 
         collection_organisation.collection_import_id = new_collection.import_id
         db.add(collection_organisation)
-        db.flush()
     except Exception as e:
         _LOGGER.error(e)
         raise RepositoryError(

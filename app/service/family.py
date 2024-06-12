@@ -5,7 +5,7 @@ This file hands off to the family repo, adding the dependency of the db (future)
 """
 
 import logging
-from typing import Optional, Union
+from typing import Optional, Union, final
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
@@ -218,12 +218,16 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, family.corpus_import_id
     )
-    import_id = family_repo.create(db, family, geo_id, entity_org_id)
-    if len(import_id) > 0:
-        db.commit()
-    else:
+    try:
+        import_id = family_repo.create(db, family, geo_id, entity_org_id)
+        if len(import_id) == 0:
+            db.rollback()
+        return import_id
+    except Exception as e:
         db.rollback()
-    return import_id
+        raise e
+    finally:
+        db.commit()
 
 
 @db_session.with_database_new()
@@ -253,14 +257,13 @@ def delete(import_id: str, user_email: str, db: Optional[Session]) -> Optional[b
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, import_id
     )
-    transaction = db.begin_nested()
     try:
         if result := family_repo.delete(db, import_id):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
+            db.rollback()
+        return result
     except Exception as e:
-        transaction.rollback()
+        db.rollback()
         raise e
 
-    return result

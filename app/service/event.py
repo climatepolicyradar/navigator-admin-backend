@@ -103,8 +103,16 @@ def create(event: EventCreateDTO, db: Optional[Session]) -> str:
             f"Could not find family when creating event for {event.family_import_id}"
         )
 
-    return event_repo.create(db, event)
-
+    try:
+        import_id = event_repo.create(db, event)
+        if len(import_id) == 0:
+            db.rollback()
+        return import_id
+    except Exception as e:
+        # db.rollback()
+        raise e
+    finally:
+        db.commit()
 
 @db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -154,14 +162,15 @@ def delete(import_id: str, db: Optional[Session]) -> bool:
     if db is None:
         db = db_session.get_db()
 
-    transaction = db.begin_nested()
     try:
+        db.begin_nested()
         if result := event_repo.delete(db, import_id):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
+            db.rollback()
+        return result
     except Exception as e:
-        transaction.rollback()
+        db.rollback()
         raise e
-
-    return result
+    finally:
+        db.commit()

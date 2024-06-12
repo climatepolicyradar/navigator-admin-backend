@@ -170,12 +170,17 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, family.import_id
     )
-    import_id = document_repo.create(db, document)
-    if len(import_id) > 0:
+    
+    try:
+        import_id = document_repo.create(db, document)
+        if len(import_id) == 0:
+            db.rollback()
+        return import_id
+    except Exception as e:
+        # db.rollback()
+        raise e
+    finally:
         db.commit()
-    else:
-        db.rollback()
-    return import_id
 
 
 @db_session.with_database_new()
@@ -204,17 +209,16 @@ def delete(import_id: str, user_email: str, db: Optional[Session]) -> Optional[b
         db, user_email, entity_org_id, import_id
     )
 
-    transaction = db.begin_nested()
     try:
         if result := document_repo.delete(db, import_id):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
-    except Exception as e:
-        transaction.rollback()
-        raise e
+            db.rollback()
 
-    return result
+        return result
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
 def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int:

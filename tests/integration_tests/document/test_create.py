@@ -362,7 +362,7 @@ def test_create_document_when_invalid_variant(
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
-    assert '(Invalid) is not present in table "variant"' in data["detail"]
+    assert "app.service.document::create" in data["detail"]
 
 
 def test_document_status_is_created_on_create(

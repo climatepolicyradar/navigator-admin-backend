@@ -107,6 +107,7 @@ def data_db_connection() -> Generator[Connection, None, None]:
 @pytest.fixture(scope="function")
 def data_db(data_db_connection, monkeypatch):
 
+    outer = data_db_connection.begin_nested()
     SessionLocal = sessionmaker(
         autocommit=False, autoflush=False, bind=data_db_connection
     )
@@ -117,19 +118,13 @@ def data_db(data_db_connection, monkeypatch):
 
     monkeypatch.setattr(db_session, "get_db", get_test_db)
 
-    transaction = session.begin()
-    print(f"This test is being performed with transaction {transaction}")
     yield session
-
-    if session.is_active:
-        session.close()
-    else:
-        raise RuntimeError(
-            "Session is not active - test environment is in an invalid state."
-        )
-
-    print(f"This test is finished and being rolled back with transaction {transaction}")
-    transaction.rollback()
+    if not outer.is_active:
+        raise RuntimeError("Outer transaction already completed.")
+    outer.rollback()
+    n_cols = data_db_connection.execute("select count(*) from collection")
+    if n_cols.scalar() != 0:
+        raise RuntimeError("Database not cleaned up properly")
 
 
 @pytest.fixture

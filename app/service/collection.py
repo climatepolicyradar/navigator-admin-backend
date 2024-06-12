@@ -185,7 +185,7 @@ def create(
             db.rollback()
         return import_id
     except Exception as e:
-        db.rollback()
+        # db.rollback()
         raise e
     finally:
         db.commit()
@@ -217,6 +217,8 @@ def delete(import_id: str, db: Optional[Session]) -> bool:
     except Exception as e:
         db.rollback()
         raise e
+    finally:
+        db.commit()
 
 
 def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
