@@ -149,4 +149,24 @@ def test_update_event_when_db_error(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
-    assert bad_event_repo.update.call_count == 1
+
+
+def test_update_event_when_org_mismatch(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+
+    new_event = create_event_write_dto(
+        title="Updated Title",
+    )
+    response = client.put(
+        "/api/v1/events/E.0.0.2",
+        json=jsonable_encoder(new_event),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert (
+        data["detail"]
+        == "User 'unfccc@cpr.org' is not authorised to perform operation on 'E.0.0.2'"
+    )

@@ -16,7 +16,7 @@ def test_get(event_repo_mock):
 def test_get_returns_none(event_repo_mock):
     event_repo_mock.return_empty = True
     result = event_service.get("id.1.2.3")
-    assert result is not None
+    assert result is None
     assert event_repo_mock.get.call_count == 1
 
 
