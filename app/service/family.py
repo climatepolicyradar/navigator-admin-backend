@@ -219,7 +219,10 @@ def create(
         db, user_email, entity_org_id, family.corpus_import_id
     )
     import_id = family_repo.create(db, family, geo_id, entity_org_id)
-    db.commit()
+    if len(import_id) > 0:
+        db.commit()
+    else:
+        db.rollback()
     return import_id
 
 
