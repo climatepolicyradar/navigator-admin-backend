@@ -74,7 +74,6 @@ def with_database_new():
                     msg,
                     extra={"failing_module": func.__module__, "func": func.__name__},
                 )
-                db.rollback()
                 raise RepositoryError(context) from e
             finally:
                 db.close()
