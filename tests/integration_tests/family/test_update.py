@@ -249,7 +249,7 @@ def test_update_family_collections_to_one_that_does_not_exist(
     assert db_collections[0].collection_import_id == "C.0.0.2"
 
 
-def test_update_family_when_user_org_different_to_family_org(
+def test_update_fails_family_when_user_org_different_to_family_org(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
@@ -266,11 +266,11 @@ def test_update_family_when_user_org_different_to_family_org(
         json=new_family.model_dump(),
         headers=non_cclw_user_header_token,
     )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
         data["detail"]
-        == "Current user does not belong to the organisation that owns family A.0.0.2"
+        == "User 'unfccc@cpr.org' is not authorised to perform operation on 'CCLW.corpus.i00000001.n0000'"
     )
 
     db_family: Family = (
@@ -280,6 +280,51 @@ def test_update_family_when_user_org_different_to_family_org(
     assert db_family.description == "apple"
     assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == "UNFCCC"
+
+
+def test_update_family_succeeds_when_user_org_different_to_family_org_super(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    new_family = create_family_write_dto(
+        title="apple",
+        summary="just a test",
+        geography="USA",
+        category=FamilyCategory.UNFCCC,
+        metadata={"color": ["pink"], "size": [0]},
+        collections=["C.0.0.3"],
+    )
+    response = client.put(
+        "/api/v1/families/A.0.0.1",
+        json=new_family.model_dump(),
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["title"] == "apple"
+    assert data["summary"] == "just a test"
+    assert data["geography"] == "USA"
+    assert data["category"] == "UNFCCC"
+    assert data["collections"] == ["C.0.0.3"]
+
+    db_family: Family = (
+        data_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
+    )
+    assert db_family.title == "apple"
+    assert db_family.description == "just a test"
+    assert db_family.geography_id == USA_GEO_ID
+    assert db_family.family_category == "UNFCCC"
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
+    assert len(db_slug) == 1
+    assert str(db_slug[-1].name) == data["slug"]
+
+    db_collection: Optional[list[CollectionFamily]] = (
+        data_db.query(CollectionFamily)
+        .filter(CollectionFamily.collection_import_id == "C.0.0.3")
+        .all()
+    )
+    assert len(db_collection) == 1
+    assert db_collection[0].family_import_id == "A.0.0.1"
 
 
 def test_update_family_when_collection_org_different_to_family_org(
@@ -404,9 +449,9 @@ def test_update_family_when_not_found(
         json=new_family.model_dump(),
         headers=user_header_token,
     )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Could not find family A.0.0.22"
+    assert data["detail"] == "Family not updated: A.0.0.22"
 
 
 def test_update_family_when_db_error(
@@ -429,7 +474,7 @@ def test_update_family_when_db_error(
 
 
 def test_update_family__invalid_geo(
-    client: TestClient, data_db: Session, bad_family_repo, user_header_token
+    client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
     new_family = create_family_write_dto(
@@ -439,11 +484,11 @@ def test_update_family__invalid_geo(
     )
     new_family.geography = "UK"
     response = client.put(
-        "/api/v1/families/A.0.0.22",
+        "/api/v1/families/A.0.0.3",
         json=new_family.model_dump(),
         headers=user_header_token,
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["detail"] == "The geography value UK is invalid!"
 

@@ -132,6 +132,8 @@ async def update_family(
     """
     try:
         family = family_service.update(import_id, request.state.user, new_family)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -140,8 +142,10 @@ async def update_family(
         )
 
     if family is None:
-        detail = f"Family not updated: {import_id}"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Family not updated: {import_id}",
+        )
 
     return family
 

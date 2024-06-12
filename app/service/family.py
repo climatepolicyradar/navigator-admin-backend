@@ -118,26 +118,25 @@ def update(
     if context is not None:
         context.error = f"Could not update family {import_id}"
 
+    # Get family we're going to update
+    family = get(import_id)
+    if family is None:
+        return None
+
     # Validate category
     category.validate(family_dto.category)
 
     # Validate geography
     geo_id = geography.get_id(db, family_dto.geography)
 
-    # Get family we're going to update
-    family = get(import_id)
-    if family is None:
-        raise ValidationError(f"Could not find family {import_id}")
-
     # Validate family belongs to same org as current user.
-    family_org_id = organisation.get_id_from_name(db, family.organisation)
-    if family_org_id != user.org_id:
-        msg = "Current user does not belong to the organisation that owns family "
-        msg += import_id
-        raise ValidationError(msg)
+    entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
+    app_user.raise_if_unauthorised_to_make_changes(
+        user, entity_org_id, family.corpus_import_id
+    )
 
     # Validate metadata.
-    metadata.validate(db, family_org_id, family_dto.metadata)
+    metadata.validate(db, entity_org_id, family_dto.metadata)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
@@ -146,7 +145,7 @@ def update(
     collection.validate(all_cols_to_modify, db)
 
     collections_not_in_user_org = [
-        collection.get_org_from_id(db, c) != family_org_id for c in all_cols_to_modify
+        collection.get_org_from_id(db, c) != entity_org_id for c in all_cols_to_modify
     ]
     if len(collections_not_in_user_org) > 0 and any(collections_not_in_user_org):
         msg = "Organisation mismatch between some collections and the current user"
