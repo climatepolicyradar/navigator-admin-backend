@@ -179,7 +179,16 @@ def create(
     # Get the organisation from the user's email
     org_id = app_user.get_organisation(db, user_email)
 
-    return collection_repo.create(db, collection, org_id)
+    try:
+        import_id = collection_repo.create(db, collection, org_id)
+        if len(import_id) == 0:
+            db.rollback()
+        return import_id
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.commit()
 
 
 @db_session.with_database_new()
@@ -198,17 +207,16 @@ def delete(import_id: str, db: Optional[Session]) -> bool:
     if db is None:
         db = db_session.get_db()
 
-    transaction = db.begin_nested()
     try:
+        db.begin_nested()
         if result := collection_repo.delete(db, import_id):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
+            db.rollback()
+        return result
     except Exception as e:
-        transaction.rollback()
+        db.rollback()
         raise e
-
-    return result
 
 
 def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
