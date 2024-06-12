@@ -293,6 +293,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         "CCLWTestUser",
         cclw.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+        is_admin=True,
     )
     _add_app_user(
         test_db,
@@ -300,6 +301,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         "UNFCCCTestUser",
         unfccc.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+        is_admin=True,
     )
     _add_app_user(
         test_db,
@@ -328,11 +330,10 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     )
     _add_app_user(
         test_db,
-        "admin@cpr.org",
+        "non-admin@cpr.org",
         "Admin",
         cclw.id,
         hashed_pass="$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
-        is_admin=True,
     )
     _add_app_user(
         test_db,
