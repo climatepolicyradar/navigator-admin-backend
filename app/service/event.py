@@ -80,9 +80,9 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
+def create(event: EventCreateDTO, db: Optional[Session]) -> str:
     """
         Creates a new event with the values passed.
 
@@ -94,6 +94,9 @@ def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
     """
     id.validate(event.family_import_id)
 
+    if db is None:
+        db = db_session.get_db()
+
     family = family_service.get(event.family_import_id)
     if family is None:
         raise ValidationError(
@@ -103,12 +106,12 @@ def create(event: EventCreateDTO, db: Session = db_session.get_db()) -> str:
     return event_repo.create(db, event)
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     event: EventWriteDTO,
-    db: Session = db_session.get_db(),
+    db: Optional[Session],
 ) -> Optional[EventReadDTO]:
     """
     Updates a single event with the values passed.
@@ -120,14 +123,24 @@ def update(
     """
     validate_import_id(import_id)
 
-    event_repo.update(db, import_id, event)
-    db.commit()
+    if db is None:
+        db = db_session.get_db()
+
+    transaction = db.begin_nested()
+    try:
+        if event_repo.update(db, import_id, event):
+            transaction.commit()
+        else:
+            transaction.rollback()
+    except Exception as e:
+        transaction.rollback()
+        raise e
     return get(import_id)
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
+def delete(import_id: str, db: Optional[Session]) -> bool:
     """
     Deletes the event specified by the import_id.
 
@@ -137,4 +150,18 @@ def delete(import_id: str, db: Session = db_session.get_db()) -> bool:
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
-    return event_repo.delete(db, import_id)
+
+    if db is None:
+        db = db_session.get_db()
+
+    transaction = db.begin_nested()
+    try:
+        if result := event_repo.delete(db, import_id):
+            transaction.commit()
+        else:
+            transaction.rollback()
+    except Exception as e:
+        transaction.rollback()
+        raise e
+
+    return result
