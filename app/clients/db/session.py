@@ -53,3 +53,32 @@ def with_database():
         return wrapper
 
     return inner
+
+
+def with_database_new():
+    """Wraps a function and supplies the db session to it.
+
+    This decorator is used to wrap functions that require a database session.
+    """
+
+    def inner(func):
+        def wrapper(*args, **kwargs):
+            context = f"{func.__module__}::{func.__name__}"
+            db = get_db()
+            try:
+                result = func(*args, **kwargs, db=db)
+                return result
+            except exc.SQLAlchemyError as e:
+                msg = f"Error {str(e)} in {context}"
+                _LOGGER.error(
+                    msg,
+                    extra={"failing_module": func.__module__, "func": func.__name__},
+                )
+                db.rollback()
+                raise RepositoryError(context) from e
+            finally:
+                db.close()
+
+        return wrapper
+
+    return inner
