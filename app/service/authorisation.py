@@ -7,7 +7,7 @@ from db_client.models.organisation.authorisation import (
 )
 
 from app.errors import AuthorisationError
-from app.model.jwt_user import JWTUser
+from app.model.user import UserContext
 
 
 def http_method_to_operation(method: str) -> AuthOperation:
@@ -46,7 +46,7 @@ def _has_access(required_access: AuthAccess, user_access: AuthAccess) -> bool:
     return False
 
 
-def _get_user_access(user: JWTUser) -> AuthAccess:
+def _get_user_access(user: UserContext) -> AuthAccess:
     if user.is_superuser:
         return AuthAccess.SUPER
 
@@ -61,7 +61,7 @@ def _get_user_access(user: JWTUser) -> AuthAccess:
     return AuthAccess.USER
 
 
-def is_authorised(user: JWTUser, entity: AuthEndpoint, op: AuthOperation) -> None:
+def is_authorised(user: UserContext, entity: AuthEndpoint, op: AuthOperation) -> None:
     required_access = AUTH_TABLE[entity][op]
 
     if _has_access(required_access, _get_user_access(user)):

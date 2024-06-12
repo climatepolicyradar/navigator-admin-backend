@@ -16,7 +16,7 @@ async def get_config(request: Request) -> ConfigReadDTO:
     user = request.state.user
     _LOGGER.info(f"User {user.email} is getting config")
     try:
-        config = config_service.get(user.email)
+        config = config_service.get(user)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message

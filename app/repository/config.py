@@ -22,7 +22,7 @@ from app.model.config import (
     EventConfig,
     TaxonomyData,
 )
-from app.repository import app_user
+from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,9 +90,7 @@ def _to_corpus_data(row, event_types) -> CorpusData:
     )
 
 
-def get_corpora(
-    db: Session, user_email: str, is_superuser: bool
-) -> Sequence[CorpusData]:
+def get_corpora(db: Session, user: UserContext) -> Sequence[CorpusData]:
     corpora = (
         db.query(
             Corpus.import_id.label("corpus_import_id"),
@@ -108,11 +106,10 @@ def get_corpora(
         )
         .join(Organisation, Organisation.id == Corpus.organisation_id)
     )
-    if is_superuser:
+    if user.is_superuser:
         corpora = corpora.all()
     else:
-        org_id = app_user.get_org_id(db, user_email)
-        corpora = corpora.filter(Organisation.id == org_id).all()
+        corpora = corpora.filter(Organisation.id == user.org_id).all()
 
     event_types = db.query(FamilyEventType).all()
     entry = TaxonomyEntry(
@@ -123,7 +120,7 @@ def get_corpora(
     return [_to_corpus_data(row, entry) for row in corpora]
 
 
-def get(db: Session, user_email: str) -> ConfigReadDTO:
+def get(db: Session, user: UserContext) -> ConfigReadDTO:
     """
     Returns the configuration for the admin service.
 
@@ -140,8 +137,7 @@ def get(db: Session, user_email: str) -> ConfigReadDTO:
         if tax is not None:
             taxonomies[org.name] = tax
 
-    is_superuser = app_user.is_superuser(db, user_email)
-    corpora = get_corpora(db, user_email, is_superuser)
+    corpora = get_corpora(db, user)
 
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 

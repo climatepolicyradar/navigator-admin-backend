@@ -19,6 +19,7 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
+from app.model.user import UserContext
 from app.repository import collection_repo
 from app.service import app_user, id
 
@@ -45,16 +46,16 @@ def get(import_id: str) -> Optional[CollectionReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def all(user_email: str) -> list[CollectionReadDTO]:
+def all(user: UserContext) -> list[CollectionReadDTO]:
     """
     Gets the entire list of collections from the repository.
 
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[CollectionDTO]: The list of collections.
     """
     try:
         with db_session.get_db() as db:
-            org_id = app_user.restrict_entities_to_user_org(db, user_email)
+            org_id = app_user.restrict_entities_to_user_org(user)
             return collection_repo.all(db, org_id)
     except exc.SQLAlchemyError:
         _LOGGER.exception("When getting all collections")
@@ -63,7 +64,7 @@ def all(user_email: str) -> list[CollectionReadDTO]:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
-    query_params: dict[str, Union[str, int]], user_email: str
+    query_params: dict[str, Union[str, int]], user: UserContext
 ) -> list[CollectionReadDTO]:
     """
     Searches for the search term against collections on specified fields.
@@ -74,12 +75,12 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[CollectionReadDTO]: The list of collections matching
         the given search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return collection_repo.search(db, query_params, org_id)
 
 
@@ -153,7 +154,7 @@ def update(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     collection: CollectionCreateDTO,
-    user_email: str,
+    user: UserContext,
     context=None,
     db: Session = db_session.get_db(),
 ) -> str:
@@ -165,12 +166,10 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_id for the collection.
     """
-    # Get the organisation from the user's email
-    org_id = app_user.get_organisation(db, user_email)
     if context is not None:
-        context.error = f"Error when creating collection '{collection.description}'"
+        context.error = "Error when creating collection"
 
-    return collection_repo.create(db, collection, org_id)
+    return collection_repo.create(db, collection, user.org_id)
 
 
 @db_session.with_transaction(__name__)

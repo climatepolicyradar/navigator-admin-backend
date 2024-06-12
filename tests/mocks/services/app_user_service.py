@@ -14,7 +14,7 @@ def mock_app_user_service(app_user_service, monkeypatch: MonkeyPatch, mocker):
             return ORG_ID
         return 1
 
-    def mock_restrict_entities_to_user_org(_, user_email: str) -> Optional[int]:
+    def mock_restrict_entities_to_user_org(user_email: str) -> Optional[int]:
         if app_user_service.superuser is True:
             return None
         return 1

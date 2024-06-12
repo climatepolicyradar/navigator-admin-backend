@@ -93,12 +93,10 @@ def test_delete_family_when_not_authenticated(client: TestClient, data_db: Sessi
     + "call returns the db to an empty state."
 )
 def test_delete_family_rollback(
-    client: TestClient, data_db: Session, rollback_family_repo, admin_user_header_token
+    client: TestClient, data_db: Session, rollback_family_repo, user_header_token
 ):
     setup_db(data_db)
-    response = client.delete(
-        "/api/v1/families/A.0.0.1", headers=admin_user_header_token
-    )
+    response = client.delete("/api/v1/families/A.0.0.1", headers=user_header_token)
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     assert (
         data_db.query(FamilyDocument)

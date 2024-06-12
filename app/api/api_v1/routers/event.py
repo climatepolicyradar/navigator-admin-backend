@@ -28,7 +28,7 @@ async def get_all_events(request: Request) -> list[EventReadDTO]:
 
     :return EventDTO: returns a EventDTO if the event is found.
     """
-    found_events = event_service.all(request.state.user.email)
+    found_events = event_service.all(request.state.user)
 
     if not found_events:
         raise HTTPException(
@@ -65,7 +65,7 @@ async def search_event(request: Request) -> list[EventReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        events_found = event_service.search(query_params, request.state.user.email)
+        events_found = event_service.search(query_params, request.state.user)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

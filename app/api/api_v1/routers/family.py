@@ -64,7 +64,7 @@ async def get_all_families(request: Request) -> list[FamilyReadDTO]:
     :return FamilyDTO: returns a FamilyDTO of the family found.
     """
     try:
-        return family_service.all(request.state.user.email)
+        return family_service.all(request.state.user)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
@@ -96,7 +96,7 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        families = family_service.search(query_params, request.state.user.email)
+        families = family_service.search(query_params, request.state.user)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -131,7 +131,7 @@ async def update_family(
     :return FamilyDTO: returns a FamilyDTO of the family updated.
     """
     try:
-        family = family_service.update(import_id, request.state.user.email, new_family)
+        family = family_service.update(import_id, request.state.user, new_family)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -157,7 +157,7 @@ async def create_family(request: Request, new_family: FamilyCreateDTO) -> str:
     :return FamilyDTO: returns a FamilyDTO of the new family.
     """
     try:
-        family = family_service.create(new_family, request.state.user.email)
+        family = family_service.create(new_family, request.state.user)
     except AuthorisationError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
@@ -182,7 +182,7 @@ async def delete_family(request: Request, import_id: str) -> None:
     :raises HTTPException: If the family is not found a 404 is returned.
     """
     try:
-        family_deleted = family_service.delete(import_id, request.state.user.email)
+        family_deleted = family_service.delete(import_id, request.state.user)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
