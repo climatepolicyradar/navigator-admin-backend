@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
 import app.clients.db.session as db_session
+from app.repository.app_user import is_active
 import app.service.token as token_service
 from app.config import SQLALCHEMY_DATABASE_URI
 from app.main import app
@@ -107,8 +108,7 @@ def data_db_connection() -> Generator[Connection, None, None]:
 @pytest.fixture(scope="function")
 def data_db(data_db_connection, monkeypatch):
 
-    transaction = data_db_connection.begin()
-    print(f"This test is being performed with transaction {transaction}")
+    
 
     SessionLocal = sessionmaker(
         autocommit=False, autoflush=False, bind=data_db_connection
@@ -120,10 +120,16 @@ def data_db(data_db_connection, monkeypatch):
 
     monkeypatch.setattr(db_session, "get_db", get_test_db)
 
+    transaction = session.begin()
+    print(f"This test is being performed with transaction {transaction}")
     yield session
 
-    session.close()
-    print(f"This test is finished and being rolledback with transaction {transaction}")
+    if session.is_active:
+        session.close()
+    else:
+        raise RuntimeError("Session is not active - test environment is in an invalid state.")
+        
+    print(f"This test is finished and being rolled back with transaction {transaction}")
     transaction.rollback()
 
 
