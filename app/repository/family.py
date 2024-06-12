@@ -415,7 +415,6 @@ def hard_delete(db: Session, import_id: str):
         result = db.execute(c)
         # Keep this for debug.
         _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
-    db.commit()
 
     fam_deleted = db.query(Family).filter(Family.import_id == import_id).one_or_none()
     if fam_deleted is not None:
@@ -451,22 +450,6 @@ def delete(db: Session, import_id: str) -> bool:
     for doc in family_docs:
         doc.document_status = DocumentStatus.DELETED
         db.add(doc)
-
-    db.commit()  # TODO: Fix PDCT-1115
-
-    # The below code is preserved in this comment while we decide
-    # what is wrong.
-    # TODO: remove
-    # result = db.execute(
-    #     db_update(FamilyDocument)
-    #     .filter(FamilyDocument.family_import_id == import_id)
-    #     .values(document_status=DocumentStatus.DELETED)
-    # )
-
-    # if result.rowcount == 0:  # type: ignore
-    #     msg = f"Could not soft delete documents in family : {import_id}"
-    #     _LOGGER.error(msg)
-    #     raise RepositoryError(msg)
 
     # Check family has been soft deleted if all documents have also been soft deleted.
     fam_deleted = db.query(Family).filter(Family.import_id == import_id).one()

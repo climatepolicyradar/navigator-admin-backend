@@ -94,13 +94,13 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     user_email: str,
     family_dto: FamilyWriteDTO,
-    db: Session = db_session.get_db(),
+    db: Optional[Session],
 ) -> Optional[FamilyReadDTO]:
     """
     Updates a single Family with the values passed.
@@ -116,6 +116,9 @@ def update(
 
     # Validate category
     category.validate(family_dto.category)
+
+    if db is None:
+        db = db_session.get_db()
 
     # Validate geography
     geo_id = geography.get_id(db, family_dto.geography)
@@ -150,17 +153,24 @@ def update(
         _LOGGER.error(msg)
         raise ValidationError(msg)
 
-    family_repo.update(db, import_id, family_dto, geo_id)
-    db.commit()
+    transaction = db.begin_nested()
+    try:
+        if family_repo.update(db, import_id, family_dto, geo_id):
+            transaction.commit()
+        else:
+            transaction.rollback()
+    except Exception as e:
+        transaction.rollback()
+        raise e
     return get(import_id)
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     family: FamilyCreateDTO,
     user_email: str,
-    db: Session = db_session.get_db(),
+    db: Optional[Session],
 ) -> str:
     """
     Creates a new Family with the values passed.
@@ -171,6 +181,9 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
     """
+
+    if db is None:
+        db = db_session.get_db()
 
     # Validate geography
     geo_id = geography.get_id(db, family.geography)
@@ -205,14 +218,14 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, family.corpus_import_id
     )
-    return family_repo.create(db, family, geo_id, entity_org_id)
+    import_id = family_repo.create(db, family, geo_id, entity_org_id)
+    db.commit()
+    return import_id
 
 
-@db_session.with_database()
+@db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(
-    import_id: str, user_email: str, db: Session = db_session.get_db()
-) -> Optional[bool]:
+def delete(import_id: str, user_email: str, db: Optional[Session]) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
 
@@ -229,9 +242,22 @@ def delete(
     if family is None:
         return None
 
+    if db is None:
+        db = db_session.get_db()
+
     # Validate family belongs to same org as current user.
     entity_org_id = organisation.get_id_from_name(db, family.organisation)
     app_user.raise_if_unauthorised_to_make_changes(
         db, user_email, entity_org_id, import_id
     )
-    return family_repo.delete(db, import_id)
+    transaction = db.begin_nested()
+    try:
+        if result := family_repo.delete(db, import_id):
+            transaction.commit()
+        else:
+            transaction.rollback()
+    except Exception as e:
+        transaction.rollback()
+        raise e
+
+    return result
