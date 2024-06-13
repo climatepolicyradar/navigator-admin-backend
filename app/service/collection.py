@@ -182,7 +182,7 @@ def create(
             db.rollback()
         return import_id
     except Exception as e:
-        # db.rollback()
+        db.rollback()
         raise e
     finally:
         db.commit()
