@@ -28,11 +28,14 @@ def with_database_new():
     """Wraps a function and supplies the db session to it.
 
     This decorator is used to wrap functions that require a database session.
+
+    NOTE: Transaction management is handled by the service functions.
+    Don't be tempted to put them in here as they are unique to each service.
     """
 
     def inner(func):
         def wrapper(*args, **kwargs):
-            context = f"{func.__module__}::{func.__name__}"
+            context = f"{func.__module__}::{func.__name__}{args}"
             db = get_db()
             try:
                 result = func(*args, **kwargs, db=db)
