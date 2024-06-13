@@ -231,9 +231,7 @@ def create(
 
 @db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(
-    import_id: str, user: UserContext, db: Session = db: Optional[Session]
-) -> Optional[bool]:
+def delete(import_id: str, user: UserContext, db: Optional[Session]) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
 
@@ -255,9 +253,7 @@ def delete(
 
     # Validate family belongs to same org as current user.
     entity_org_id = organisation.get_id_from_name(db, family.organisation)
-    app_user.raise_if_unauthorised_to_make_changes(
-        db, user_email, entity_org_id, import_id
-    )
+    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
     try:
         if result := family_repo.delete(db, import_id):
             db.commit()

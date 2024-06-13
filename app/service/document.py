@@ -184,9 +184,7 @@ def create(
 
 @db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(
-    import_id: str, user: UserContext, db: Optional[Session]
-) -> Optional[bool]:
+def delete(import_id: str, user: UserContext, db: Optional[Session]) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
 
