@@ -23,7 +23,7 @@ def test_update_when_missing(event_repo_mock):
 
     with pytest.raises(RepositoryError) as e:
         event_service.update(event.import_id, create_event_write_dto())
-    assert e.value.message == "Error when updating event a.b.c.d"
+    assert e.value.message == "app.service.event::update"
     assert event_repo_mock.update.call_count == 1
 
 
