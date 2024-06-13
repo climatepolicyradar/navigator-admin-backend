@@ -110,7 +110,7 @@ def create(event: EventCreateDTO, db: Optional[Session]) -> str:
             db.rollback()
         return import_id
     except Exception as e:
-        # db.rollback()
+        db.rollback()
         raise e
     finally:
         db.commit()
