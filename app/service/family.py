@@ -95,7 +95,7 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
@@ -163,7 +163,7 @@ def update(
     return get(import_id)
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     family: FamilyCreateDTO,
@@ -228,7 +228,7 @@ def create(
         db.commit()
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(import_id: str, user: UserContext, db: Optional[Session]) -> Optional[bool]:
     """

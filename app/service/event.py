@@ -81,7 +81,7 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(event: EventCreateDTO, db: Optional[Session]) -> str:
     """
@@ -116,7 +116,7 @@ def create(event: EventCreateDTO, db: Optional[Session]) -> str:
         db.commit()
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
@@ -147,7 +147,7 @@ def update(
     return get(import_id)
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(import_id: str, db: Optional[Session]) -> bool:
     """

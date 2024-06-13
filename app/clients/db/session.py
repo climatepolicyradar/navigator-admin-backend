@@ -24,7 +24,7 @@ def get_db() -> Session:
     return SessionLocal()
 
 
-def with_database_new():
+def with_database():
     """Wraps a function and supplies the db session to it.
 
     This decorator is used to wrap functions that require a database session.

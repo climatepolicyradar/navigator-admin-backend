@@ -121,7 +121,7 @@ def validate(import_ids: set[str], db: Optional[Session]) -> None:
         raise ValidationError("One or more of the collections to update does not exist")
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
@@ -157,7 +157,7 @@ def update(
     return get(import_id)
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     collection: CollectionCreateDTO,
@@ -188,7 +188,7 @@ def create(
         db.commit()
 
 
-@db_session.with_database_new()
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(import_id: str, db: Optional[Session]) -> bool:
     """
