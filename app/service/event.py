@@ -136,14 +136,13 @@ def update(
     if db is None:
         db = db_session.get_db()
 
-    transaction = db.begin_nested()
     try:
         if event_repo.update(db, import_id, event):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
+            db.rollback()
     except Exception as e:
-        transaction.rollback()
+        db.rollback()
         raise e
     return get(import_id)
 

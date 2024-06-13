@@ -404,6 +404,7 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
 
         org_name = cast(str, org.name)
 
+        # TODO: Fix this call - the transaction is changed here
         family_doc.import_id = cast(
             Column, generate_import_id(db, CountedEntity.Document, org_name)
         )

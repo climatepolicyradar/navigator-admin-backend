@@ -66,7 +66,7 @@ def _family_to_dto(
         category=str(fam.family_category),
         status=str(fam.family_status),
         metadata=metadata,
-        slug=str(fam.slugs[-1].name if len(fam.slugs) > 0 else ""),
+        slug=str(fam.slugs[0].name if len(fam.slugs) > 0 else ""),
         events=[str(e.import_id) for e in fam.events],
         published_date=fam.published_date,
         last_updated_date=fam.last_updated_date,

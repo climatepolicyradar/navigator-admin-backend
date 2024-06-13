@@ -124,14 +124,13 @@ def update(
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
-    transaction = db.begin_nested()
     try:
         if document_repo.update(db, import_id, document):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
+            db.rollback()
     except Exception as e:
-        transaction.rollback()
+        db.rollback()
         raise e
     return get(import_id)
 
@@ -174,12 +173,12 @@ def create(
         import_id = document_repo.create(db, document)
         if len(import_id) == 0:
             db.rollback()
+        else:
+            db.commit()
         return import_id
     except Exception as e:
-        # db.rollback()
+        db.rollback()
         raise e
-    finally:
-        db.commit()
 
 
 @db_session.with_database_new()

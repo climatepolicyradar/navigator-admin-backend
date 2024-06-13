@@ -152,14 +152,13 @@ def update(
         _LOGGER.error(msg)
         raise ValidationError(msg)
 
-    transaction = db.begin_nested()
     try:
         if family_repo.update(db, import_id, family_dto, geo_id):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
+            db.rollback()
     except Exception as e:
-        transaction.rollback()
+        db.rollback()
         raise e
     return get(import_id)
 

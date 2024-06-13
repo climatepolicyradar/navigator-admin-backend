@@ -146,14 +146,13 @@ def update(
 
     validate_import_id(import_id)
 
-    transaction = db.begin_nested()
     try:
         if collection_repo.update(db, import_id, collection):
-            transaction.commit()
+            db.commit()
         else:
-            transaction.rollback()
+            db.rollback()
     except Exception as e:
-        transaction.rollback()
+        db.rollback()
         raise e
     return get(import_id)
 
