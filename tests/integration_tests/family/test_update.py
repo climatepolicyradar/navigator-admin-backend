@@ -45,7 +45,7 @@ def test_update_family(client: TestClient, data_db: Session, user_header_token):
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
-    assert str(db_slug[-1].name) == data["slug"]
+    assert str(db_slug[0].name) == data["slug"]
 
     db_collection: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)
@@ -92,9 +92,14 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
 
     assert db_family.geography_id == expected_geo.id
     assert db_family.family_category == "UNFCCC"
-    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
+    db_slug = (
+        data_db.query(Slug)
+        .filter(Slug.family_import_id == "A.0.0.1")
+        .order_by(Slug.created.desc())
+        .all()
+    )
     assert len(db_slug) == 2
-    assert str(db_slug[-1].name).startswith("updated-title")
+    assert str(db_slug[0].name).startswith("updated-title")
 
     db_collection: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)
@@ -143,7 +148,7 @@ def test_update_family_remove_collections(
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
-    assert str(db_slug[-1].name) == "Slug1"
+    assert str(db_slug[0].name) == "Slug1"
 
     db_collection: CollectionFamily = (
         data_db.query(CollectionFamily)
@@ -192,7 +197,7 @@ def test_update_family_append_collections(
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
-    assert str(db_slug[-1].name) == "Slug1"
+    assert str(db_slug[0].name) == "Slug1"
 
     db_collections: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)
@@ -238,7 +243,7 @@ def test_update_family_collections_to_one_that_does_not_exist(
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
-    assert str(db_slug[-1].name) == "Slug1"
+    assert str(db_slug[0].name) == "Slug1"
 
     db_collections: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)
@@ -316,7 +321,7 @@ def test_update_family_succeeds_when_user_org_different_to_family_org_super(
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
-    assert str(db_slug[-1].name) == data["slug"]
+    assert str(db_slug[0].name) == data["slug"]
 
     db_collection: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)

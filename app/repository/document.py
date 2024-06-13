@@ -132,7 +132,7 @@ def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
         type=str(fdoc.document_type) if fdoc.document_type is not None else None,
         created=cast(datetime, fdoc.created),
         last_modified=cast(datetime, fdoc.last_modified),
-        slug=str(fdoc.slugs[-1].name if len(fdoc.slugs) > 0 else ""),
+        slug=str(fdoc.slugs[0].name if len(fdoc.slugs) > 0 else ""),
         physical_id=cast(int, pdoc.id),
         title=str(pdoc.title),
         md5_sum=str(pdoc.md5_sum) if pdoc.md5_sum is not None else None,
