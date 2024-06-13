@@ -166,23 +166,27 @@ def create(db: Session, event: EventCreateDTO) -> str:
     :return str: The import id of the newly created family event.
     """
 
-    new_family_event = _event_from_dto(event)
+    try:
+        new_family_event = _event_from_dto(event)
 
-    family_import_id = new_family_event.family_import_id
+        family_import_id = new_family_event.family_import_id
 
-    # Generate the import_id for the new event
-    org = family_repo.get_organisation(db, cast(str, family_import_id))
-    if org is None:
-        raise ValidationError(
-            f"Cannot find counter to generate id for {family_import_id}"
+        # Generate the import_id for the new event
+        org = family_repo.get_organisation(db, cast(str, family_import_id))
+        if org is None:
+            raise ValidationError(
+                f"Cannot find counter to generate id for {family_import_id}"
+            )
+
+        org_name = cast(str, org.name)
+        new_family_event.import_id = cast(
+            Column, generate_import_id(db, CountedEntity.Event, org_name)
         )
 
-    org_name = cast(str, org.name)
-    new_family_event.import_id = cast(
-        Column, generate_import_id(db, CountedEntity.Event, org_name)
-    )
-
-    db.add(new_family_event)
+        db.add(new_family_event)
+    except Exception:
+        _LOGGER.exception("Error trying to create Event")
+        raise
 
     return cast(str, new_family_event.import_id)
 
