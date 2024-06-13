@@ -45,6 +45,12 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
     def mock_update_family(
         import_id: str, user_email: str, data: FamilyWriteDTO
     ) -> Optional[FamilyReadDTO]:
+        if not family_service.valid:
+            raise ValidationError("Invalid data")
+
+        if family_service.org_mismatch and not family_service.superuser:
+            raise AuthorisationError("Org mismatch")
+
         if not family_service.missing:
             return create_family_read_dto(
                 import_id,

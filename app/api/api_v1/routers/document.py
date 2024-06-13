@@ -60,7 +60,7 @@ async def get_all_documents(request: Request) -> list[DocumentReadDTO]:
     :return DocumentDTO: returns a DocumentDTO of the document found.
     """
     try:
-        return document_service.all(request.state.user.email)
+        return document_service.all(request.state.user)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
@@ -92,7 +92,7 @@ async def search_document(request: Request) -> list[DocumentReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        documents = document_service.search(query_params, request.state.user.email)
+        documents = document_service.search(query_params, request.state.user)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -129,9 +129,7 @@ async def update_document(
     :return DocumentDTO: returns a DocumentDTO of the document updated.
     """
     try:
-        document = document_service.update(
-            import_id, new_document, request.state.user.email
-        )
+        document = document_service.update(import_id, new_document, request.state.user)
     except AuthorisationError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
@@ -163,7 +161,7 @@ async def create_document(request: Request, new_document: DocumentCreateDTO) -> 
     :return str: returns a the import_id of the document created.
     """
     try:
-        return document_service.create(new_document, request.state.user.email)
+        return document_service.create(new_document, request.state.user)
     except AuthorisationError as e:
         _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
@@ -209,7 +207,7 @@ async def delete_document(request: Request, import_id: str) -> None:
     :raises HTTPException: If the document is not found a 404 is returned.
     """
     try:
-        document_deleted = document_service.delete(import_id, request.state.user.email)
+        document_deleted = document_service.delete(import_id, request.state.user)
     except AuthorisationError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:

@@ -33,7 +33,9 @@ from tests.mocks.repos.rollback_document_repo import mock_rollback_document_repo
 from tests.mocks.repos.rollback_event_repo import mock_rollback_event_repo
 from tests.mocks.repos.rollback_family_repo import mock_rollback_family_repo
 
-ORG_ID = 1
+CCLW_ORG_ID = 1
+UNFCCC_ORG_ID = 2
+SUPER_ORG_ID = 50
 
 
 def get_test_db_url() -> str:
@@ -220,34 +222,40 @@ def rollback_event_repo(monkeypatch, mocker):
 
 @pytest.fixture
 def superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("super@cpr.org", ORG_ID, True, {})
+    a_token = token_service.encode(
+        "super@cpr.org", SUPER_ORG_ID, True, {"is_admin": True}
+    )
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def non_admin_superuser_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("non-admin-super@cpr.org", SUPER_ORG_ID, True, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("cclw@cpr.org", ORG_ID, False, {"is_admin": True})
+    a_token = token_service.encode(
+        "cclw@cpr.org", CCLW_ORG_ID, False, {"is_admin": True}
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def non_cclw_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("unfccc@cpr.org", ORG_ID, False, {"is_admin": True})
+    a_token = token_service.encode(
+        "unfccc@cpr.org", UNFCCC_ORG_ID, False, {"is_admin": True}
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
-def another_org_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("another@cpr.org", ORG_ID, False, {"is_admin": True})
-    headers = {"Authorization": f"Bearer {a_token}"}
-    return headers
-
-
-@pytest.fixture
-def admin_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("admin@cpr.org", ORG_ID, False, {"is_admin": True})
+def non_admin_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("non-admin@cpr.org", CCLW_ORG_ID, False, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers

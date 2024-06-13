@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from app.model.user import UserContext
 from app.repository import family_repo
 from app.service import (
     app_user,
@@ -49,21 +50,21 @@ def get(import_id: str) -> Optional[FamilyReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def all(user_email: str) -> list[FamilyReadDTO]:
+def all(user: UserContext) -> list[FamilyReadDTO]:
     """
     Gets the entire list of families from the repository.
 
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.all(db, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
-    query_params: dict[str, Union[str, int]], user_email: str
+    query_params: dict[str, Union[str, int]], user: UserContext
 ) -> list[FamilyReadDTO]:
     """
     Searches for the search term against families on specified fields.
@@ -74,12 +75,12 @@ def search(
 
     :param dict query_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(db, user_email)
+        org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.search(db, query_params, org_id)
 
 
@@ -98,7 +99,7 @@ def validate_import_id(import_id: str) -> None:
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
-    user_email: str,
+    user: UserContext,
     family_dto: FamilyWriteDTO,
     db: Optional[Session],
 ) -> Optional[FamilyReadDTO]:
@@ -114,6 +115,11 @@ def update(
     # Validate import_id
     validate_import_id(import_id)
 
+    # Get family we're going to update
+    family = get(import_id)
+    if family is None:
+        return None
+
     # Validate category
     category.validate(family_dto.category)
 
@@ -123,21 +129,14 @@ def update(
     # Validate geography
     geo_id = geography.get_id(db, family_dto.geography)
 
-    # Get family we're going to update
-    family = get(import_id)
-    if family is None:
-        raise ValidationError(f"Could not find family {import_id}")
-
     # Validate family belongs to same org as current user.
-    user_org_id = app_user.get_organisation(db, user_email)
-    org_id = organisation.get_id_from_name(db, family.organisation)
-    if org_id != user_org_id:
-        msg = "Current user does not belong to the organisation that owns family "
-        msg += import_id
-        raise ValidationError(msg)
+    entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
+    app_user.raise_if_unauthorised_to_make_changes(
+        user, entity_org_id, family.corpus_import_id
+    )
 
     # Validate metadata.
-    metadata.validate(db, org_id, family_dto.metadata)
+    metadata.validate(db, entity_org_id, family_dto.metadata)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
@@ -146,7 +145,7 @@ def update(
     collection.validate(all_cols_to_modify, db)
 
     collections_not_in_user_org = [
-        collection.get_org_from_id(db, c) != org_id for c in all_cols_to_modify
+        collection.get_org_from_id(db, c) != entity_org_id for c in all_cols_to_modify
     ]
     if len(collections_not_in_user_org) > 0 and any(collections_not_in_user_org):
         msg = "Organisation mismatch between some collections and the current user"
@@ -169,14 +168,14 @@ def update(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     family: FamilyCreateDTO,
-    user_email: str,
+    user: UserContext,
     db: Optional[Session],
 ) -> str:
     """
     Creates a new Family with the values passed.
 
     :param FamilyDTO family: The values for the new Family.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
@@ -216,7 +215,7 @@ def create(
     # Validate that the corpus we want to add the new family to exists and is from the
     # same organisation as the user.
     app_user.raise_if_unauthorised_to_make_changes(
-        db, user_email, entity_org_id, family.corpus_import_id
+        user, entity_org_id, family.corpus_import_id
     )
     try:
         import_id = family_repo.create(db, family, geo_id, entity_org_id)
@@ -232,12 +231,14 @@ def create(
 
 @db_session.with_database_new()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, user_email: str, db: Optional[Session]) -> Optional[bool]:
+def delete(
+    import_id: str, user: UserContext, db: Session = db: Optional[Session]
+) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
 
     :param str import_id: The import_id of the Family to delete.
-    :param str user_email: The email address of the current user.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
