@@ -177,11 +177,8 @@ def create(
     if db is None:
         db = db_session.get_db()
 
-    # Get the organisation from the user's email
-    org_id = app_user.get_organisation(db, user_email)
-
     try:
-        import_id = collection_repo.create(db, collection, org_id)
+        import_id = collection_repo.create(db, collection, user.org_id)
         if len(import_id) == 0:
             db.rollback()
         return import_id
