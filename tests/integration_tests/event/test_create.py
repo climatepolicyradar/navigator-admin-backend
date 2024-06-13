@@ -58,21 +58,22 @@ def test_create_event_rollback(
     non_cclw_user_header_token,
 ):
     setup_db(data_db)
-    new_event = create_event_create_dto(
-        title="some event title", family_import_id="A.0.0.3"
-    )
+    new_event = create_event_create_dto(title="rollback", family_import_id="A.0.0.3")
     response = client.post(
         "/api/v1/events",
         json=jsonable_encoder(new_event),
         headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-    actual_fd = (
+    fe_count = data_db.query(FamilyEvent).count()
+    assert fe_count == 3
+    actual_fe = (
         data_db.query(FamilyEvent)
-        .filter(FamilyEvent.import_id == "A.0.0.9")
+        .filter(FamilyEvent.title == "rollback")
+        .filter(FamilyEvent.family_import_id == "A.0.0.3")
         .one_or_none()
     )
-    assert actual_fd is None
+    assert actual_fe is None
     assert rollback_event_repo.create.call_count == 1
 
 
