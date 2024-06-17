@@ -184,7 +184,6 @@ def create(db: Session, event: EventCreateDTO) -> str:
         )
 
         db.add(new_family_event)
-        db.flush()
     except Exception:
         _LOGGER.exception("Error trying to create Event")
         raise

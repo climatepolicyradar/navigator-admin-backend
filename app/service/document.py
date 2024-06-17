@@ -90,14 +90,13 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     document: DocumentWriteDTO,
     user: UserContext,
-    context=None,
-    db: Session = db_session.get_db(),
+    db: Optional[Session] = None,
 ) -> Optional[DocumentReadDTO]:
     """
     Updates a single document with the values passed.
@@ -111,8 +110,9 @@ def update(
     :return Optional[documentDTO]: The updated document or None if not updated.
     """
     validate_import_id(import_id)
-    if context is not None:
-        context.error = f"Error when updating document {import_id}"
+
+    if db is None:
+        db = db_session.get_db()
 
     doc = get(import_id)
     if doc is None:
@@ -124,18 +124,23 @@ def update(
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
-    document_repo.update(db, import_id, document)
-    db.commit()
+    try:
+        if document_repo.update(db, import_id, document):
+            db.commit()
+        else:
+            db.rollback()
+    except Exception as e:
+        db.rollback()
+        raise e
     return get(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     document: DocumentCreateDTO,
     user: UserContext,
-    context=None,
-    db: Session = db_session.get_db(),
+    db: Optional[Session] = None,
 ) -> str:
     """
     Creates a new document with the values passed.
@@ -148,10 +153,9 @@ def create(
     None if unsuccessful.
     """
     id.validate(document.family_import_id)
-    if context is not None:
-        context.error = (
-            f"Could not create document for family {document.family_import_id}"
-        )
+
+    if db is None:
+        db = db_session.get_db()
 
     if document.variant_name == "":
         raise ValidationError("Variant name is empty")
@@ -164,13 +168,23 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.import_id
     )
-    return document_repo.create(db, document)
+
+    try:
+        import_id = document_repo.create(db, document)
+        if len(import_id) == 0:
+            db.rollback()
+        else:
+            db.commit()
+        return import_id
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(
-    import_id: str, user: UserContext, context=None, db: Session = db_session.get_db()
+    import_id: str, user: UserContext, db: Optional[Session] = None
 ) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
@@ -183,8 +197,8 @@ def delete(
     """
     id.validate(import_id)
 
-    if context is not None:
-        context.error = f"Could not delete document {import_id}"
+    if db is None:
+        db = db_session.get_db()
 
     doc = get(import_id)
     if doc is None:
@@ -192,7 +206,17 @@ def delete(
 
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
-    return document_repo.delete(db, import_id)
+
+    try:
+        if result := document_repo.delete(db, import_id):
+            db.commit()
+        else:
+            db.rollback()
+
+        return result
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
 def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int:

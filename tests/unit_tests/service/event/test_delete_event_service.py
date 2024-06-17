@@ -8,6 +8,7 @@ def test_delete(event_repo_mock, admin_user_context):
     ok = event_service.delete("a.b.c.d", admin_user_context)
     assert ok
     assert event_repo_mock.get.call_count == 1
+    assert event_repo_mock.get_org_from_import_id.call_count == 1
     assert event_repo_mock.delete.call_count == 1
 
 
@@ -16,6 +17,7 @@ def test_delete_returns_false_when_missing(event_repo_mock, admin_user_context):
     ok = event_service.delete("a.b.c.d", admin_user_context)
     assert not ok
     assert event_repo_mock.get.call_count == 1
+    assert event_repo_mock.get_org_from_import_id.call_count == 0
     assert event_repo_mock.delete.call_count == 0
 
 
@@ -26,6 +28,7 @@ def test_delete_raises_when_invalid_id(event_repo_mock, admin_user_context):
     expected_msg = f"The import id {import_id} is invalid!"
     assert e.value.message == expected_msg
     assert event_repo_mock.get.call_count == 0
+    assert event_repo_mock.get_org_from_import_id.call_count == 0
     assert event_repo_mock.delete.call_count == 0
 
 

@@ -81,23 +81,22 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(
-    event: EventCreateDTO, context=None, db: Session = db_session.get_db()
-) -> str:
+def create(event: EventCreateDTO, db: Optional[Session] = None) -> str:
     """
-        Creates a new event with the values passed.
+    Creates a new event with the values passed.
 
-        :param eventDTO event: The values for the new event.
-        :raises RepositoryError: raised on a database error
-        :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[eventDTO]: The new created event or
+    :param eventDTO event: The values for the new event.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return Optional[eventDTO]: The new created event or
     None if unsuccessful.
     """
     id.validate(event.family_import_id)
-    if context is not None:
-        context.error = f"Could not create event for family {event.family_import_id}"
+
+    if db is None:
+        db = db_session.get_db()
 
     family = family_service.get(event.family_import_id)
     if family is None:
@@ -105,17 +104,25 @@ def create(
             f"Could not find family when creating event for {event.family_import_id}"
         )
 
-    return event_repo.create(db, event)
+    try:
+        import_id = event_repo.create(db, event)
+        if len(import_id) == 0:
+            db.rollback()
+        return import_id
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.commit()
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     event: EventWriteDTO,
     user: UserContext,
-    context=None,
-    db: Session = db_session.get_db(),
+    db: Optional[Session] = None,
 ) -> Optional[EventReadDTO]:
     """
     Updates a single event with the values passed.
@@ -128,26 +135,34 @@ def update(
     :return Optional[EventReadDTO]: The updated event or None if not updated.
     """
     validate_import_id(import_id)
-    if context is not None:
-        context.error = f"Error when updating event {import_id}"
 
     existing_event = get(import_id)
     if existing_event is None:
         return None
 
+    if db is None:
+        db = db_session.get_db()
+
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
-    event_repo.update(db, import_id, event)
-    db.commit()
+    if db is None:
+        db = db_session.get_db()
+
+    try:
+        if event_repo.update(db, import_id, event):
+            db.commit()
+        else:
+            db.rollback()
+    except Exception as e:
+        db.rollback()
+        raise e
     return get(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(
-    import_id: str, user: UserContext, context=None, db: Session = db_session.get_db()
-) -> bool:
+def delete(import_id: str, user: UserContext, db: Optional[Session] = None) -> bool:
     """
     Deletes the event specified by the import_id.
 
@@ -159,8 +174,8 @@ def delete(
     """
     id.validate(import_id)
 
-    if context is not None:
-        context.error = f"Could not delete event {import_id}"
+    if db is None:
+        db = db_session.get_db()
 
     event = get(import_id)
     if event is None:
@@ -169,7 +184,18 @@ def delete(
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
-    return event_repo.delete(db, import_id)
+    try:
+        db.begin_nested()
+        if result := event_repo.delete(db, import_id):
+            db.commit()
+        else:
+            db.rollback()
+        return result
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.commit()
 
 
 def get_org_from_id(db: Session, import_id: str) -> int:

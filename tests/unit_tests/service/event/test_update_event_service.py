@@ -23,7 +23,7 @@ def test_update_when_db_error(event_repo_mock, admin_user_context):
     assert e.value.message == "bad event repo"
     assert event_repo_mock.get.call_count == 1
     assert event_repo_mock.get_org_from_import_id.call_count == 1
-    assert event_repo_mock.update.call_count == 0
+    assert event_repo_mock.update.call_count == 1
 
 
 def test_update_when_event_missing(event_repo_mock, admin_user_context):
