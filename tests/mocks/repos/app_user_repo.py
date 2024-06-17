@@ -10,13 +10,14 @@ PLAIN_PASSWORD = "test-password"
 HASH_PASSWORD = auth_service.get_password_hash(PLAIN_PASSWORD)
 VALID_USERNAME = "bob@here.com"
 
-INVALID_ORG_ID = 1234
+ALTERNATIVE_ORG_ID = 999
+STANDARD_ORG_ID = 1
 
 
 def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
     app_user_repo.user_active = True
     app_user_repo.error = False
-    app_user_repo.invalid_org = False
+    app_user_repo.alternative_org = False
     app_user_repo.superuser = False
 
     def mock_get_app_user_authorisation(
@@ -34,9 +35,9 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
             )
 
     def mock_get_org_id(_, user_email: str) -> int:
-        if app_user_repo.invalid_org is True:
-            return INVALID_ORG_ID
-        return 1
+        if app_user_repo.alternative_org is True:
+            return ALTERNATIVE_ORG_ID
+        return STANDARD_ORG_ID
 
     def mock_is_active(_, email: str) -> bool:
         return bool(app_user_repo.user_active is True)

@@ -83,14 +83,14 @@ def validate_import_id(import_id: str) -> None:
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(event: EventCreateDTO, db: Optional[Session]) -> str:
+def create(event: EventCreateDTO, db: Optional[Session] = None) -> str:
     """
-        Creates a new event with the values passed.
+    Creates a new event with the values passed.
 
-        :param eventDTO event: The values for the new event.
-        :raises RepositoryError: raised on a database error
-        :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[eventDTO]: The new created event or
+    :param eventDTO event: The values for the new event.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return Optional[eventDTO]: The new created event or
     None if unsuccessful.
     """
     id.validate(event.family_import_id)
@@ -121,7 +121,7 @@ def create(event: EventCreateDTO, db: Optional[Session]) -> str:
 def update(
     import_id: str,
     event: EventWriteDTO,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> Optional[EventReadDTO]:
     """
     Updates a single event with the values passed.
@@ -149,11 +149,12 @@ def update(
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, db: Optional[Session]) -> bool:
+def delete(import_id: str, user: UserContext, db: Optional[Session] = None) -> bool:
     """
     Deletes the event specified by the import_id.
 
     :param str import_id: The import_id of the event to delete.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
@@ -162,6 +163,13 @@ def delete(import_id: str, db: Optional[Session]) -> bool:
 
     if db is None:
         db = db_session.get_db()
+
+    event = get(import_id)
+    if event is None:
+        return False
+
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
     try:
         db.begin_nested()
@@ -175,3 +183,14 @@ def delete(import_id: str, db: Optional[Session]) -> bool:
         raise e
     finally:
         db.commit()
+
+
+def get_org_from_id(db: Session, import_id: str) -> int:
+    org = event_repo.get_org_from_import_id(db, import_id)
+
+    if org is None:
+        msg = f"No organisation associated with import id {import_id}"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
+
+    return org

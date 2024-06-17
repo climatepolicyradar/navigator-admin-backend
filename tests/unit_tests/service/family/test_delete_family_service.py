@@ -43,10 +43,9 @@ def test_delete_raises_when_invalid_id(
 
 
 def test_delete_raises_when_organisation_invalid(
-    family_repo_mock, organisation_repo_mock, app_user_repo_mock, admin_user_context
+    family_repo_mock, organisation_repo_mock, admin_user_context
 ):
     organisation_repo_mock.error = True
-    app_user_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         ok = family_service.delete("a.b.c.d", admin_user_context)
         assert not ok
@@ -56,8 +55,6 @@ def test_delete_raises_when_organisation_invalid(
 
     assert family_repo_mock.get.call_count == 1
     assert organisation_repo_mock.get_id_from_name.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 0
-    assert app_user_repo_mock.is_superuser.call_count == 0
     assert family_repo_mock.delete.call_count == 0
 
 

@@ -101,7 +101,7 @@ def update(
     import_id: str,
     user: UserContext,
     family_dto: FamilyWriteDTO,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> Optional[FamilyReadDTO]:
     """
     Updates a single Family with the values passed.
@@ -168,7 +168,7 @@ def update(
 def create(
     family: FamilyCreateDTO,
     user: UserContext,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> str:
     """
     Creates a new Family with the values passed.
@@ -230,7 +230,9 @@ def create(
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, user: UserContext, db: Optional[Session]) -> Optional[bool]:
+def delete(
+    import_id: str, user: UserContext, db: Optional[Session] = None
+) -> Optional[bool]:
     """
     Deletes the Family specified by the import_id.
 

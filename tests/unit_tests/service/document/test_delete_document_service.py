@@ -34,7 +34,7 @@ def test_delete_returns_none_when_missing(document_repo_mock, admin_user_context
 
 
 def test_delete_when_no_org_associated_with_entity(
-    document_repo_mock, app_user_repo_mock, admin_user_context
+    document_repo_mock, admin_user_context
 ):
     document_repo_mock.no_org = True
     with pytest.raises(ValidationError) as e:
@@ -46,8 +46,6 @@ def test_delete_when_no_org_associated_with_entity(
 
     assert document_repo_mock.get.call_count == 1
     assert document_repo_mock.get_org_from_import_id.call_count == 1
-    assert app_user_repo_mock.get_org_id.call_count == 0
-    assert app_user_repo_mock.is_superuser.call_count == 0
     assert document_repo_mock.delete.call_count == 0
 
 

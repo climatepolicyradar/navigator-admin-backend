@@ -7,6 +7,9 @@ from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository import family_repo
 from tests.helpers.family import create_family_read_dto
 
+ALTERNATIVE_ORG_ID = 999
+STANDARD_ORG_ID = 1
+
 
 def _maybe_throw():
     if family_repo.throw_repository_error is True:
@@ -74,4 +77,4 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[int]:
     _maybe_throw()
     if family_repo.no_org:
         return None
-    return 987 if family_repo.invalid_org else 1
+    return ALTERNATIVE_ORG_ID if family_repo.alternative_org else STANDARD_ORG_ID

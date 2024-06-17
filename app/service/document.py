@@ -96,7 +96,7 @@ def update(
     import_id: str,
     document: DocumentWriteDTO,
     user: UserContext,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> Optional[DocumentReadDTO]:
     """
     Updates a single document with the values passed.
@@ -140,7 +140,7 @@ def update(
 def create(
     document: DocumentCreateDTO,
     user: UserContext,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> str:
     """
     Creates a new document with the values passed.
@@ -183,7 +183,9 @@ def create(
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, user: UserContext, db: Optional[Session]) -> Optional[bool]:
+def delete(
+    import_id: str, user: UserContext, db: Optional[Session] = None
+) -> Optional[bool]:
     """
     Deletes the document specified by the import_id.
 

@@ -7,12 +7,17 @@ from app.errors import RepositoryError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from tests.helpers.event import create_event_read_dto
 
+ALTERNATIVE_ORG_ID = 999
+STANDARD_ORG_ID = 1
+
 
 def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     event_repo.return_empty = False
     event_repo.throw_repository_error = False
     event_repo.throw_timeout_error = False
     event_repo.is_superuser = False
+    event_repo.no_org = False
+    event_repo.alternative_org = False
 
     def maybe_throw():
         if event_repo.throw_repository_error:
@@ -67,6 +72,15 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
             return 2
         return
 
+    def mock_get_org_from_import_id(_, import_id: str) -> Optional[int]:
+        maybe_throw()
+        if event_repo.no_org is True:
+            return None
+
+        if event_repo.alternative_org is True:
+            return ALTERNATIVE_ORG_ID
+        return STANDARD_ORG_ID
+
     monkeypatch.setattr(event_repo, "get", mock_get)
     mocker.spy(event_repo, "get")
 
@@ -87,3 +101,8 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(event_repo, "count", mock_get_count)
     mocker.spy(event_repo, "count")
+
+    monkeypatch.setattr(
+        event_repo, "get_org_from_import_id", mock_get_org_from_import_id
+    )
+    mocker.spy(event_repo, "get_org_from_import_id")

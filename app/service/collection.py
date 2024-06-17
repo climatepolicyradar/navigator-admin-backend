@@ -126,7 +126,7 @@ def validate(import_ids: set[str], db: Optional[Session]) -> None:
 def update(
     import_id: str,
     collection: CollectionWriteDTO,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> Optional[CollectionReadDTO]:
     """
     Updates a single collection with the values passed.
@@ -162,7 +162,7 @@ def update(
 def create(
     collection: CollectionCreateDTO,
     user: UserContext,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> str:
     """
     Creates a new collection with the values passed.
@@ -190,7 +190,7 @@ def create(
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, db: Optional[Session]) -> bool:
+def delete(import_id: str, db: Optional[Session] = None) -> bool:
     """
     Deletes the collection specified by the import_id.
 

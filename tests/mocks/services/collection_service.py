@@ -6,15 +6,15 @@ from app.errors import RepositoryError
 from app.model.collection import CollectionReadDTO, CollectionWriteDTO
 from tests.helpers.collection import create_collection_read_dto
 
-ORG_ID = 1
-INCORRECT_ORG_ID = 1234
+STANDARD_ORG_ID = 1
+ALTERNATIVE_ORG_ID = 999
 
 
 def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker):
     collection_service.missing = False
     collection_service.throw_repository_error = False
     collection_service.throw_timeout_error = False
-    collection_service.invalid_org = False
+    collection_service.alternative_org = False
     collection_service.valid = True
 
     def maybe_throw():
@@ -72,9 +72,9 @@ def mock_collection_service(collection_service, monkeypatch: MonkeyPatch, mocker
         maybe_throw()
         if collection_service.missing:
             return None
-        if collection_service.invalid_org:
-            return INCORRECT_ORG_ID
-        return ORG_ID
+        if collection_service.alternative_org:
+            return ALTERNATIVE_ORG_ID
+        return STANDARD_ORG_ID
 
     monkeypatch.setattr(collection_service, "get", mock_get_collection)
     mocker.spy(collection_service, "get")

@@ -77,7 +77,7 @@ def test_create_raises_when_org_mismatch(
     document_repo_mock, family_repo_mock, another_admin_user_context
 ):
     new_document = create_document_create_dto()
-    family_repo_mock.invalid_org = True
+    family_repo_mock.alternative_org = True
     with pytest.raises(AuthorisationError) as e:
         ok = doc_service.create(new_document, another_admin_user_context)
         assert not ok

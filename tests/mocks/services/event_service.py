@@ -2,8 +2,9 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
+from app.model.user import UserContext
 from tests.helpers.event import create_event_read_dto
 
 
@@ -11,6 +12,9 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
     event_service.missing = False
     event_service.throw_repository_error = False
     event_service.throw_timeout_error = False
+    event_service.throw_validation_error = False
+    event_service.org_mismatch = False
+    event_service.superuser = False
 
     def maybe_throw():
         if event_service.throw_repository_error:
@@ -53,8 +57,12 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
                 import_id, "family_import_id", data.event_title
             )
 
-    def mock_delete_event(_) -> bool:
+    def mock_delete_event(_, user: UserContext) -> bool:
         maybe_throw()
+        if event_service.org_mismatch and not event_service.superuser:
+            raise AuthorisationError("Org mismatch")
+        if event_service.throw_validation_error:
+            raise ValidationError("No org")
         return not event_service.missing
 
     monkeypatch.setattr(event_service, "get", mock_get_event)

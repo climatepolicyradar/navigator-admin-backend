@@ -7,6 +7,9 @@ from app.errors import RepositoryError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO
 from tests.helpers.document import create_document_read_dto
 
+ALTERNATIVE_ORG_ID = 999
+STANDARD_ORG_ID = 1
+
 
 def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
     document_repo.return_empty = False
@@ -76,8 +79,8 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
             return None
 
         if document_repo.alternative_org is True:
-            return 999
-        return 1
+            return ALTERNATIVE_ORG_ID
+        return STANDARD_ORG_ID
 
     monkeypatch.setattr(document_repo, "get", mock_get)
     mocker.spy(document_repo, "get")
