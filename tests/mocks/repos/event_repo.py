@@ -76,7 +76,6 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         return
 
     def mock_get_org_from_import_id(_, import_id: str) -> Optional[int]:
-        maybe_throw()
         if event_repo.no_org is True:
             return None
 
