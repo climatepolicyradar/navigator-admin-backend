@@ -49,9 +49,15 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         raise ValidationError(f"Could not find family for {data.family_import_id}")
 
     def mock_update_event(
-        import_id: str, data: EventWriteDTO
+        import_id: str, data: EventWriteDTO, user: UserContext
     ) -> Optional[EventReadDTO]:
         maybe_throw()
+        if event_service.throw_validation_error:
+            raise ValidationError("Validation error")
+
+        if event_service.org_mismatch and not event_service.superuser:
+            raise AuthorisationError("Org mismatch")
+
         if not event_service.missing:
             return create_event_read_dto(
                 import_id, "family_import_id", data.event_title

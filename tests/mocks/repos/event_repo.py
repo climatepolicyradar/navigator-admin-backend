@@ -38,8 +38,9 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
         return values
 
     def mock_get(_, import_id: str) -> Optional[EventReadDTO]:
-        dto = create_event_read_dto(import_id)
-        return dto
+        if event_repo.return_empty:
+            return None
+        return create_event_read_dto(import_id)
 
     def mock_search(_, q: dict, org_id: Optional[int]) -> list[EventReadDTO]:
         maybe_throw()
@@ -67,9 +68,11 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         maybe_throw()
         if not event_repo.return_empty:
+            SUPERUSER_COUNT = 5
+            NON_SUPERUSER_COUNT = 2
             if event_repo.is_superuser:
-                return 5
-            return 2
+                return SUPERUSER_COUNT
+            return NON_SUPERUSER_COUNT
         return
 
     def mock_get_org_from_import_id(_, import_id: str) -> Optional[int]:

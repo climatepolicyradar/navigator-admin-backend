@@ -148,18 +148,20 @@ async def create_event(
     response_model=EventReadDTO,
 )
 async def update_event(
-    import_id: str,
-    new_event: EventWriteDTO,
+    request: Request, import_id: str, new_event: EventWriteDTO
 ) -> EventReadDTO:
     """
     Updates a specific event given the import id.
 
+    :param Request request: Request object.
     :param str import_id: Specified import_id.
     :raises HTTPException: If the event is not found a 404 is returned.
     :return EventDTO: returns a EventDTO of the event updated.
     """
     try:
-        event = event_service.update(import_id, new_event)
+        event = event_service.update(import_id, new_event, request.state.user)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

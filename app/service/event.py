@@ -121,17 +121,30 @@ def create(event: EventCreateDTO, db: Optional[Session] = None) -> str:
 def update(
     import_id: str,
     event: EventWriteDTO,
+    user: UserContext,
     db: Optional[Session] = None,
 ) -> Optional[EventReadDTO]:
     """
     Updates a single event with the values passed.
 
+    :param str import_id: The import ID of the event to update.
     :param EventWriteDTO event: The DTO with all the values to change (or keep).
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[EventReadDTO]: The updated event or None if not updated.
     """
     validate_import_id(import_id)
+
+    existing_event = get(import_id)
+    if existing_event is None:
+        return None
+
+    if db is None:
+        db = db_session.get_db()
+
+    entity_org_id = get_org_from_id(db, import_id)
+    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
     if db is None:
         db = db_session.get_db()
