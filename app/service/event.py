@@ -83,14 +83,14 @@ def validate_import_id(import_id: str) -> None:
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(event: EventCreateDTO, db: Optional[Session]) -> str:
+def create(event: EventCreateDTO, db: Optional[Session] = None) -> str:
     """
-        Creates a new event with the values passed.
+    Creates a new event with the values passed.
 
-        :param eventDTO event: The values for the new event.
-        :raises RepositoryError: raised on a database error
-        :raises ValidationError: raised should the import_id be invalid.
-        :return Optional[eventDTO]: The new created event or
+    :param eventDTO event: The values for the new event.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return Optional[eventDTO]: The new created event or
     None if unsuccessful.
     """
     id.validate(event.family_import_id)
@@ -121,7 +121,7 @@ def create(event: EventCreateDTO, db: Optional[Session]) -> str:
 def update(
     import_id: str,
     event: EventWriteDTO,
-    db: Optional[Session],
+    db: Optional[Session] = None,
 ) -> Optional[EventReadDTO]:
     """
     Updates a single event with the values passed.
@@ -149,7 +149,7 @@ def update(
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, user: UserContext, db: Optional[Session]) -> bool:
+def delete(import_id: str, user: UserContext, db: Optional[Session] = None) -> bool:
     """
     Deletes the event specified by the import_id.
 
