@@ -17,6 +17,7 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     event_repo.throw_timeout_error = False
     event_repo.is_superuser = False
     event_repo.no_org = False
+    event_repo.org_error = False
     event_repo.alternative_org = False
 
     def maybe_throw():
@@ -78,6 +79,9 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_org_from_import_id(_, import_id: str) -> Optional[int]:
         if event_repo.no_org is True:
             return None
+
+        if event_repo.org_error is True:
+            raise RepositoryError("bad event repo")
 
         if event_repo.alternative_org is True:
             return ALTERNATIVE_ORG_ID

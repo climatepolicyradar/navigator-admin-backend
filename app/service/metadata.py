@@ -1,3 +1,17 @@
+"""Service layer module for metadata.
+
+Behaviour:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+| allow_any | allow_blanks  | Behaviour
+---------------------------------------...
+| True      | True          | allowed_values is ignored and anything goes
+| True      | False         | allowed_values is ignored but you need a non-blank value
+| False     | True          | allowed_values is used to validate, blank is also valid
+| False     | False         | allowed_values is used to validate, blank is invalid
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+"""
+
 import logging
 
 from sqlalchemy.orm import Session
@@ -12,18 +26,6 @@ KEY_ALLOW_ANY = "allow_any"
 KEY_ALLOW_BLANKS = "allow_blanks"
 KEY_ALLOWED_VALUES = "allowed_values"
 
-"""
-Behaviour:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
-| allow_any | allow_blanks  | Behaviour
----------------------------------------...
-| True      | True          | allowed_values is ignored and anything goes
-| True      | False         | allowed_values is ignored but you need a non-blank value
-| False     | True          | allowed_values is used to validate, blank is also valid
-| False     | False         | allowed_values is used to validate, blank is invalid
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
-"""
 VALID_SCHEMA_KEYS = [KEY_ALLOW_ANY, KEY_ALLOW_BLANKS, KEY_ALLOWED_VALUES]
 
 

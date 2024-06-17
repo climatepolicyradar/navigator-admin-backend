@@ -26,7 +26,7 @@ def test_update_when_missing(collection_repo_mock):
         collection_service.update("a.b.c.d", collection)
 
     assert collection_repo_mock.update.call_count == 1
-    expected_msg = "Error when updating collection 'a.b.c.d'"
+    expected_msg = "app.service.collection::update('a.b.c.d', CollectionWriteDTO(title='title', description='description', organisation='CCLW'))"
     assert e.value.message == expected_msg
 
 

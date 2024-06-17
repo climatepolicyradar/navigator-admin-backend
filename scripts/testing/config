@@ -16,4 +16,3 @@ get_token() {
         ${TEST_URL}/api/tokens | \
         jq ".access_token" | tr -d '"'
 }
-

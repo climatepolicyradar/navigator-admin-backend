@@ -84,9 +84,12 @@ def test_update_document_super(
 
     # Check slug is updated too
     slugs = (
-        data_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
+        data_db.query(Slug)
+        .filter(Slug.family_document_import_id == "D.0.0.2")
+        .order_by(Slug.created.desc())
+        .all()
     )
-    last_slug = slugs[-1].name
+    last_slug = slugs[0].name
     assert last_slug.startswith("updated-title")
 
 
@@ -135,9 +138,12 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
 
     # Check slug is updated too
     slugs = (
-        data_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.3").all()
+        data_db.query(Slug)
+        .filter(Slug.family_document_import_id == "D.0.0.3")
+        .order_by(Slug.created.desc())
+        .all()
     )
-    last_slug = slugs[-1].name
+    last_slug = slugs[0].name
     assert last_slug.startswith("updated-title")
 
 
@@ -188,9 +194,12 @@ def test_update_document_unfccc(
 
     # Check slug is updated too
     slugs = (
-        data_db.query(Slug).filter(Slug.family_document_import_id == "D.0.0.2").all()
+        data_db.query(Slug)
+        .filter(Slug.family_document_import_id == "D.0.0.2")
+        .order_by(Slug.created.desc())
+        .all()
     )
-    last_slug = slugs[-1].name
+    last_slug = slugs[0].name
     assert last_slug.startswith("updated-title")
 
 
