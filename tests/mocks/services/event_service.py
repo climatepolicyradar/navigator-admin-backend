@@ -19,6 +19,8 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
     def maybe_throw():
         if event_service.throw_repository_error:
             raise RepositoryError("bad repo")
+        if event_service.throw_validation_error:
+            raise ValidationError("Validation error")
 
     def maybe_timeout():
         if event_service.throw_timeout_error:
@@ -41,12 +43,15 @@ def mock_event_service(event_service, monkeypatch: MonkeyPatch, mocker):
         else:
             return [create_event_read_dto("search1")]
 
-    def mock_create_event(data: EventCreateDTO) -> str:
+    def mock_create_event(data: EventCreateDTO, user: UserContext) -> str:
         maybe_throw()
-        if not event_service.missing:
-            return "new.event.id.0"
+        if event_service.org_mismatch and not event_service.superuser:
+            raise AuthorisationError("Org mismatch")
 
-        raise ValidationError(f"Could not find family for {data.family_import_id}")
+        if event_service.missing:
+            raise ValidationError(f"Could not find family for {data.family_import_id}")
+
+        return "new.event.id.0"
 
     def mock_update_event(
         import_id: str, data: EventWriteDTO, user: UserContext

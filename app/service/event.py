@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.event as event_repo
+import app.repository.family as family_repo
 import app.service.family as family_service
 from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
@@ -83,11 +84,15 @@ def validate_import_id(import_id: str) -> None:
 
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(event: EventCreateDTO, db: Optional[Session] = None) -> str:
+def create(
+    event: EventCreateDTO,
+    user: UserContext,
+    db: Optional[Session] = None) -> str:
     """
     Creates a new event with the values passed.
 
     :param eventDTO event: The values for the new event.
+    :param UserContext user: The current user context.
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[eventDTO]: The new created event or
@@ -104,6 +109,10 @@ def create(event: EventCreateDTO, db: Optional[Session] = None) -> str:
             f"Could not find family when creating event for {event.family_import_id}"
         )
 
+    entity_org_id = get_org_from_id(db, family.import_id, is_create=True)
+    app_user.raise_if_unauthorised_to_make_changes(
+        user, entity_org_id, family.import_id
+    )
     try:
         import_id = event_repo.create(db, event)
         if len(import_id) == 0:
@@ -198,12 +207,15 @@ def delete(import_id: str, user: UserContext, db: Optional[Session] = None) -> b
         db.commit()
 
 
-def get_org_from_id(db: Session, import_id: str) -> int:
-    org = event_repo.get_org_from_import_id(db, import_id)
+def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int:
+    if not is_create:
+        org = event_repo.get_org_from_import_id(db, import_id)
+    else:
+        org = family_repo.get_organisation(db, import_id)
 
     if org is None:
         msg = f"No organisation associated with import id {import_id}"
         _LOGGER.error(msg)
         raise ValidationError(msg)
 
-    return org
+    return org if isinstance(org, int) else cast(int, org.id)

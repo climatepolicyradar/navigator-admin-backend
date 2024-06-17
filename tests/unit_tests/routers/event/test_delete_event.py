@@ -26,7 +26,7 @@ def test_delete_fails_when_invalid_org(
     response = client.delete("/api/v1/events/event1", headers=user_header_token)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "No org"
+    assert data["detail"] == "Validation error"
 
 
 def test_delete_fails_when_org_mismatch(
