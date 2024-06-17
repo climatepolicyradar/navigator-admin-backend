@@ -85,9 +85,8 @@ def validate_import_id(import_id: str) -> None:
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
-    event: EventCreateDTO,
-    user: UserContext,
-    db: Optional[Session] = None) -> str:
+    event: EventCreateDTO, user: UserContext, db: Optional[Session] = None
+) -> str:
     """
     Creates a new event with the values passed.
 
