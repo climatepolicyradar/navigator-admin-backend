@@ -107,26 +107,32 @@ def data_db_connection() -> Generator[Connection, None, None]:
 
 
 @pytest.fixture(scope="function")
-def data_db(data_db_connection, monkeypatch):
+def data_db(slow_db):
+    yield slow_db
 
-    transaction = data_db_connection.begin()
-    print(f"This test is being performed with transaction {transaction}")
 
-    SessionLocal = sessionmaker(
-        autocommit=False, autoflush=False, bind=data_db_connection
-    )
-    session = SessionLocal()
+# @pytest.fixture(scope="function")
+# def data_db(data_db_connection, monkeypatch):
 
-    def get_test_db():
-        return session
+#     outer = data_db_connection.begin_nested()
+#     SessionLocal = sessionmaker(
+#         autocommit=False, autoflush=False, bind=data_db_connection
+#     )
+#     session = SessionLocal()
 
-    monkeypatch.setattr(db_session, "get_db", get_test_db)
+#     def get_test_db():
+#         return session
 
-    yield session
-
-    session.close()
-    print(f"This test is finished and being rolledback with transaction {transaction}")
-    transaction.rollback()
+#     monkeypatch.setattr(db_session, "get_db", get_test_db)
+#     yield session
+#     if not outer.is_active:
+#         print("Outer transaction already completed.")
+#         #raise RuntimeError("Outer transaction already completed.")
+#     else:
+#         outer.rollback()
+#     n_cols = data_db_connection.execute("select count(*) from collection")
+#     if n_cols.scalar() != 0:
+#         raise RuntimeError("Database not cleaned up properly")
 
 
 @pytest.fixture

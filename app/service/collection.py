@@ -96,9 +96,7 @@ def validate_import_id(import_id: str) -> None:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def validate_multiple_ids(
-    import_ids: set[str], db: Session = db_session.get_db()
-) -> None:
+def validate_multiple_ids(import_ids: set[str]) -> None:
     """
     Validates a set of collection import ids.
 
@@ -109,24 +107,26 @@ def validate_multiple_ids(
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def validate(import_ids: set[str], db: Session = db_session.get_db()) -> None:
+def validate(import_ids: set[str], db: Optional[Session]) -> None:
     """
     Verifies that a set of collection import ids exist in the database.
 
     :param set[str] import_ids: A set of import ids to check.
     :raises ValidationError: raised if any of the import_ids don't exist.
     """
+    if db is None:
+        db = db_session.get_db()
+
     if collection_repo.validate(db, import_ids) is False:
         raise ValidationError("One or more of the collections to update does not exist")
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
     import_id: str,
     collection: CollectionWriteDTO,
-    context=None,
-    db: Session = db_session.get_db(),
+    db: Optional[Session],
 ) -> Optional[CollectionReadDTO]:
     """
     Updates a single collection with the values passed.
@@ -138,25 +138,31 @@ def update(
     :return Optional[CollectionDTO]: The updated collection or None if not updated.
     """
 
+    if db is None:
+        db = db_session.get_db()
+
     # TODO: implement changing of a collection's organisation
     # org_id = organisation.get_id_from_name(db, collection.organisation)
 
     validate_import_id(import_id)
-    if context is not None:
-        context.error = f"Error when updating collection '{import_id}'"
 
-    collection_repo.update(db, import_id, collection)
-    db.commit()
+    try:
+        if collection_repo.update(db, import_id, collection):
+            db.commit()
+        else:
+            db.rollback()
+    except Exception as e:
+        db.rollback()
+        raise e
     return get(import_id)
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     collection: CollectionCreateDTO,
     user: UserContext,
-    context=None,
-    db: Session = db_session.get_db(),
+    db: Optional[Session],
 ) -> str:
     """
     Creates a new collection with the values passed.
@@ -166,15 +172,25 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_id for the collection.
     """
-    if context is not None:
-        context.error = "Error when creating collection"
 
-    return collection_repo.create(db, collection, user.org_id)
+    if db is None:
+        db = db_session.get_db()
+
+    try:
+        import_id = collection_repo.create(db, collection, user.org_id)
+        if len(import_id) == 0:
+            db.rollback()
+        return import_id
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.commit()
 
 
-@db_session.with_transaction(__name__)
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> bool:
+def delete(import_id: str, db: Optional[Session]) -> bool:
     """
     Deletes the collection specified by the import_id.
 
@@ -184,9 +200,22 @@ def delete(import_id: str, context=None, db: Session = db_session.get_db()) -> b
     :return bool: True if deleted else False.
     """
     id.validate(import_id)
-    if context is not None:
-        context.error = f"Could not delete collection {import_id}"
-    return collection_repo.delete(db, import_id)
+
+    if db is None:
+        db = db_session.get_db()
+
+    try:
+        db.begin_nested()
+        if result := collection_repo.delete(db, import_id):
+            db.commit()
+        else:
+            db.rollback()
+        return result
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.commit()
 
 
 def get_org_from_id(db: Session, collection_import_id: str) -> Optional[int]:
