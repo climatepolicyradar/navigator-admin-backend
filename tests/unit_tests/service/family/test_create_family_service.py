@@ -91,7 +91,7 @@ def test_create_raises_when_metadata_invalid(
     metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
-    expected_msg = "Organisation 1 has no Taxonomy defined!"
+    expected_msg = "Corpus CCLW.corpus.i00000001.n0000 has no Taxonomy defined!"
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1

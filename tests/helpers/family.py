@@ -55,7 +55,14 @@ def create_family_create_dto(
     corpus_import_id: str = "CCLW.corpus.i00000001.n0000",
 ) -> FamilyCreateDTO:
     if metadata is None:
-        metadata = {}
+        metadata = {
+            "topic": [],
+            "hazard": [],
+            "sector": [],
+            "keyword": [],
+            "framework": [],
+            "instrument": [],
+        }
     if collections is None:
         collections = []
     return FamilyCreateDTO(
@@ -78,7 +85,14 @@ def create_family_write_dto(
     collections: Optional[list[str]] = None,
 ) -> FamilyWriteDTO:
     if metadata is None:
-        metadata = {}
+        metadata = {
+            "topic": [],
+            "hazard": [],
+            "sector": [],
+            "keyword": [],
+            "framework": [],
+            "instrument": [],
+        }
     if collections is None:
         collections = []
     return FamilyWriteDTO(

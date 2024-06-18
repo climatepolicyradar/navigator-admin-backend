@@ -14,11 +14,9 @@ from tests.integration_tests.setup_db import setup_db
 
 def test_create_family(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
-    test_meta = {"color": ["blue"], "size": [888]}
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata=test_meta,
         collections=["C.0.0.3"],
     )
     response = client.post(
@@ -40,7 +38,14 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
         .one()
     )
     assert metadata.value is not None
-    assert metadata.value == test_meta
+    assert metadata.value == {
+        "topic": [],
+        "hazard": [],
+        "sector": [],
+        "keyword": [],
+        "framework": [],
+        "instrument": [],
+    }
 
     db_collection: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)
@@ -69,11 +74,9 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
 
 def test_create_family_when_not_authorised(client: TestClient, data_db: Session):
     setup_db(data_db)
-    test_meta = {"color": "blue", "size": 888}
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata=test_meta,
     )
     response = client.post(
         "/api/v1/families",
@@ -89,7 +92,6 @@ def test_create_family_rollback(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -112,7 +114,6 @@ def test_create_family_when_db_error(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -164,7 +165,6 @@ def test_create_family_when_invalid_collection_id(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"color": ["pink"], "size": [0]},
         collections=["col1"],
     )
     response = client.post(
@@ -182,7 +182,6 @@ def test_create_family_when_invalid_collection_org(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"color": ["pink"], "size": [0]},
         collections=["C.0.0.1"],
     )
     response = client.post(
@@ -196,7 +195,31 @@ def test_create_family_when_invalid_collection_org(
     )
 
 
-def test_create_family_when_invalid_metadata(
+def test_create_family_when_invalid_metadata_cclw(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_family = create_family_create_dto(
+        title="Title",
+        summary="test test test",
+        metadata={"color": ["pink"], "size": [0]},
+    )
+    response = client.post(
+        "/api/v1/families",
+        json=new_family.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "{'topic', 'hazard', 'sector', 'keyword', 'framework', 'instrument'}"
+    assert data["detail"].startswith("Values for the following are missing: ")
+    assert len(data["detail"]) == len("Values for the following are missing: ") + len(
+        key_text
+    )
+
+
+def test_create_family_when_invalid_metadata_unfccc(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
@@ -221,14 +244,14 @@ def test_create_family_when_invalid_metadata(
     )
 
 
-def test_create_family_when_invalid_corpus_org(
+def test_create_family_when_org_mismatch(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"author_type": "", "author": ""},
+        metadata={"author": "CPR", "author_type": "Party"},
         corpus_import_id="UNFCCC.corpus.i00000001.n0000",
     )
     response = client.post(

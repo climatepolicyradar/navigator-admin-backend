@@ -29,10 +29,10 @@ KEY_ALLOWED_VALUES = "allowed_values"
 VALID_SCHEMA_KEYS = [KEY_ALLOW_ANY, KEY_ALLOW_BLANKS, KEY_ALLOWED_VALUES]
 
 
-def validate(db: Session, org_id: int, data: Json) -> bool:
-    schema = metadata_repo.get_schema_for_org(db, org_id)
+def validate(db: Session, corpus_id: str, data: Json) -> bool:
+    schema = metadata_repo.get_schema_for_org(db, corpus_id)
     if schema is None:
-        msg = f"Organisation {org_id} has no Taxonomy defined!"
+        msg = f"Corpus {corpus_id} has no Taxonomy defined!"
         _LOGGER.error(msg)
         raise ValidationError(msg)
     return _validate(schema, data)

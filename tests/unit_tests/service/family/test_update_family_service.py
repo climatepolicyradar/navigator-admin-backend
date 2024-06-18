@@ -55,9 +55,6 @@ def test_update_when_family_missing(
     family_repo_mock.return_empty = True
     result = family_service.update("a.b.c.d", admin_user_context, updated_family)
     assert result is None
-    # with pytest.raises(ValidationError) as e:
-    #     family_service.update("a.b.c.d", admin_user_context, updated_family)
-    # assert e.value.message == "Could not find family a.b.c.d"
 
     assert family_repo_mock.update.call_count == 0
     assert geography_repo_mock.get_id_from_value.call_count == 0
@@ -199,7 +196,7 @@ def test_update_family_raises_when_metadata_invalid(
     metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
-    expected_msg = "Organisation 1 has no Taxonomy defined!"
+    expected_msg = "Corpus CCLW.corpus.i00000001.n0000 has no Taxonomy defined!"
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 2
