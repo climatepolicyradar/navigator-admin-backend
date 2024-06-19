@@ -55,6 +55,7 @@ def test_get_config_has_expected_shape(
 
     assert isinstance(data["corpora"], list)
     assert set(data["corpora"][0].keys()) ^ EXPECTED_CORPORA_CONFIG_KEYS == set()
+    assert list(data["corpora"][0]["organisation"]) == ["id", "name"]
 
     assert isinstance(data["languages"], dict)
     assert len(data["languages"]) == EXPECTED_LANGUAGES
