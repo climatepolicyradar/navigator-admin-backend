@@ -404,29 +404,6 @@ def _setup_family_data(
 ) -> None:
     if configure_empty is True:
         return None
-    # Now a CorpusType
-    # valid_metadata = {
-    #     "color": {
-    #         "allow_any": False,
-    #         "allowed_values": ["green", "red", "pink", "blue"],
-    #     },
-    #     "size": {
-    #         "allow_any": True,
-    #         "allowed_values": [],
-    #     },
-    # }
-
-    # New Schema modification
-    # CorpusType
-    # cclw_ct = (
-    #     test_db.query(CorpusType)
-    #     .join(Corpus, Corpus.corpus_type_name == CorpusType.name)
-    #     .filter(Corpus.organisation_id == default_org_id)
-    #     .one()
-    # )
-    # cclw_ct.valid_metadata = valid_metadata
-    # test_db.add(cclw_ct)
-    # test_db.flush()
 
     for index in range(EXPECTED_NUM_FAMILIES):
         data = EXPECTED_FAMILIES[index]

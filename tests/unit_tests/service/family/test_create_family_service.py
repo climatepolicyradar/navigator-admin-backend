@@ -19,7 +19,9 @@ def test_create(
     corpus_repo_mock,
     admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     family = family_service.create(new_family, admin_user_context)
     assert family is not None
 
@@ -39,7 +41,9 @@ def test_create_repo_fails(
     corpus_repo_mock,
     admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     family_repo_mock.throw_repository_error = True
 
     with pytest.raises(RepositoryError) as e:
@@ -64,7 +68,9 @@ def test_create_raises_when_category_invalid(
     corpus_repo_mock,
     admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     new_family.category = "invalid"
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
@@ -87,7 +93,9 @@ def test_create_raises_when_metadata_invalid(
     corpus_repo_mock,
     admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
@@ -110,7 +118,9 @@ def test_create_raises_when_collection_org_different_to_usr_org(
     corpus_repo_mock,
     admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     collection_repo_mock.alternative_org = True
     with pytest.raises(AuthorisationError) as e:
         family_service.create(new_family, admin_user_context)
@@ -134,7 +144,9 @@ def test_create_raises_when_corpus_missing(
     corpus_repo_mock,
     admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     corpus_repo_mock.valid = False
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
@@ -157,7 +169,9 @@ def test_create_when_no_org_associated_with_entity(
     corpus_repo_mock,
     admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     corpus_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
@@ -181,7 +195,9 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
     corpus_repo_mock,
     another_admin_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     with pytest.raises(AuthorisationError) as e:
         family_service.create(new_family, another_admin_user_context)
     expected_msg = "User 'another-admin@here.com' is not authorised to perform operation on 'CCLW.corpus.i00000001.n0000'"
@@ -204,7 +220,9 @@ def test_create_success_when_corpus_org_different_to_usr_org_super(
     corpus_repo_mock,
     super_user_context,
 ):
-    new_family = create_family_create_dto(collections=["x.y.z.1", "x.y.z.2"])
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"], metadata={"size": [100], "color": ["blue"]}
+    )
     family = family_service.create(new_family, super_user_context)
     assert family is not None
 

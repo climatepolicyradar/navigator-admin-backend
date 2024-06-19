@@ -251,7 +251,7 @@ def test_create_family_when_org_mismatch(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"author": "CPR", "author_type": "Party"},
+        metadata={"author": "CPR", "author_type": ["Party"]},
         corpus_import_id="UNFCCC.corpus.i00000001.n0000",
     )
     response = client.post(
