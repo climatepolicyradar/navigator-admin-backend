@@ -28,7 +28,7 @@ def test_create(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 1
 
@@ -55,7 +55,7 @@ def test_create_repo_fails(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 1
 
@@ -80,7 +80,7 @@ def test_create_raises_when_category_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_schema_for_org.call_count == 0
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert family_repo_mock.create.call_count == 0
 
@@ -105,7 +105,7 @@ def test_create_raises_when_metadata_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert family_repo_mock.create.call_count == 0
 
@@ -131,7 +131,7 @@ def test_create_raises_when_collection_org_different_to_usr_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 0
 
@@ -156,7 +156,7 @@ def test_create_raises_when_corpus_missing(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_schema_for_org.call_count == 0
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert family_repo_mock.create.call_count == 0
 
@@ -182,7 +182,7 @@ def test_create_when_no_org_associated_with_entity(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 0
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert family_repo_mock.create.call_count == 0
 
@@ -207,7 +207,7 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 0
 
@@ -229,6 +229,6 @@ def test_create_success_when_corpus_org_different_to_usr_org_super(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_org.call_count == 1
+    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 1

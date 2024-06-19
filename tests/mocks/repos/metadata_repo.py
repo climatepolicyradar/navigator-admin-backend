@@ -20,5 +20,5 @@ def mock_metadata_repo(metadata_repo, monkeypatch: MonkeyPatch, mocker):
             }
 
     metadata_repo.error = False
-    monkeypatch.setattr(metadata_repo, "get_schema_for_org", mock_get_schema_for_org)
-    mocker.spy(metadata_repo, "get_schema_for_org")
+    monkeypatch.setattr(metadata_repo, "get_schema_for_corpus", mock_get_schema_for_org)
+    mocker.spy(metadata_repo, "get_schema_for_corpus")

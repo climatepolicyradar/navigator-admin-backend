@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.model.general import Json
 
 
-def get_schema_for_org(db: Session, corpus_import_id: str) -> Optional[Json]:
+def get_schema_for_corpus(db: Session, corpus_import_id: str) -> Optional[Json]:
     """Gets the schema for an organisation.
 
     :param Session db: The DB session to query.

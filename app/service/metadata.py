@@ -30,7 +30,7 @@ VALID_SCHEMA_KEYS = [KEY_ALLOW_ANY, KEY_ALLOW_BLANKS, KEY_ALLOWED_VALUES]
 
 
 def validate(db: Session, corpus_id: str, data: Json) -> bool:
-    schema = metadata_repo.get_schema_for_org(db, corpus_id)
+    schema = metadata_repo.get_schema_for_corpus(db, corpus_id)
     if schema is None:
         msg = f"Corpus {corpus_id} has no Taxonomy defined!"
         _LOGGER.error(msg)
