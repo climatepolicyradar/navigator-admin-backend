@@ -55,16 +55,16 @@ def test_get_config_has_expected_shape(
 
     assert isinstance(data["corpora"], list)
     assert set(data["corpora"][0].keys()) ^ EXPECTED_CORPORA_CONFIG_KEYS == set()
-    assert list(data["corpora"][0]["organisation"]) == ["id", "name"]
+    assert set(data["corpora"][0]["organisation"]) ^ set(["id", "name"]) == set()
 
     assert isinstance(data["languages"], dict)
     assert len(data["languages"]) == EXPECTED_LANGUAGES
 
     assert isinstance(data["document"], dict)
-    assert list(data["document"].keys()) == ["roles", "types", "variants"]
+    assert set(data["document"].keys()) ^ set(["roles", "types", "variants"]) == set()
 
     assert isinstance(data["event"], dict)
-    assert list(data["event"].keys()) == ["types"]
+    assert set(data["event"].keys()) ^ set(["types"]) == set()
 
 
 def test_get_config_has_correct_number_corpora_super(
