@@ -395,9 +395,9 @@ def test_update_family_idempotent_when_ok(
 
 
 def test_update_family_rollback(
-    client: TestClient, test_db: Session, rollback_family_repo, user_header_token
+    client: TestClient, data_db: Session, rollback_family_repo, user_header_token
 ):
-    setup_db(test_db)
+    setup_db(data_db)
     new_family = EXPECTED_FAMILIES[1]
     response = client.put(
         "/api/v1/families/A.0.0.2",
@@ -407,17 +407,17 @@ def test_update_family_rollback(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
     db_family: Family = (
-        test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
+        data_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
     )
     assert db_family.title != "Updated Title"
     assert db_family.description != "just a test"
 
-    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
     # Ensure no extra slug was created
     assert len(db_slug) == 1
 
     db_meta = (
-        test_db.query(FamilyMetadata)
+        data_db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == "A.0.0.2")
         .all()
     )
