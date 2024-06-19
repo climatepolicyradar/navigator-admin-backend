@@ -83,6 +83,7 @@ def _to_corpus_data(row, event_types) -> CorpusData:
         description=row.description,
         corpus_type=row.corpus_type,
         corpus_type_description=row.corpus_type_description,
+        organisation={"name": row.org_name, "id": row.org_id},
         taxonomy={
             **row.taxonomy,
             "event_types": asdict(event_types),
@@ -98,6 +99,8 @@ def get_corpora(db: Session, user: UserContext) -> Sequence[CorpusData]:
             Corpus.description.label("description"),
             Corpus.corpus_type_name.label("corpus_type"),
             CorpusType.description.label("corpus_type_description"),
+            Organisation.name.label("org_name"),
+            Organisation.id.label("org_id"),
             CorpusType.valid_metadata.label("taxonomy"),
         )
         .join(
@@ -129,16 +132,7 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
     """
 
     geographies = _tree_table_to_json(table=Geography, db=db)
-    taxonomies = {}
-
-    # Be resilient to an organisation not having a taxonomy
-    for org in db.query(Organisation).all():
-        tax = _get_organisation_taxonomy_by_name(db=db, org_name=org.name)
-        if tax is not None:
-            taxonomies[org.name] = tax
-
     corpora = get_corpora(db, user)
-
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 
     # Now Document config
