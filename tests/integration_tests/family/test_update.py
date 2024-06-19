@@ -394,41 +394,44 @@ def test_update_family_idempotent_when_ok(
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
 
 
-# TODO: Fix with PDCT-1115
-# def test_update_family_rollback(
-#     client: TestClient, test_db: Session, rollback_family_repo, user_header_token
-# ):
-#     setup_db(test_db)
-#     new_family = create_family_write_dto(
-#         title="Updated Title",
-#         summary="just a test",
-#         metadata={"color": ["pink"], "size": [0]},
-#     )
-#     response = client.put(
-#         "/api/v1/families/A.0.0.2",
-#         json=new_family.model_dump(),
-#         headers=user_header_token,
-#     )
-#     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+def test_update_family_rollback(
+    client: TestClient, test_db: Session, rollback_family_repo, user_header_token
+):
+    setup_db(test_db)
+    new_family = EXPECTED_FAMILIES[1]
+    response = client.put(
+        "/api/v1/families/A.0.0.2",
+        json=new_family,
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
-#     db_family: Family = (
-#         test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
-#     )
-#     assert db_family.title != "Updated Title"
-#     assert db_family.description != "just a test"
+    db_family: Family = (
+        test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
+    )
+    assert db_family.title != "Updated Title"
+    assert db_family.description != "just a test"
 
-#     db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
-#     # Ensure no extra slug was created
-#     assert len(db_slug) == 1
+    db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
+    # Ensure no extra slug was created
+    assert len(db_slug) == 1
 
-#     db_meta = (
-#         test_db.query(FamilyMetadata)
-#         .filter(FamilyMetadata.family_import_id == "A.0.0.2")
-#         .all()
-#     )
-#     # Ensure no metadata was updated
-#     assert len(db_meta) == 1
-#     assert db_meta[0].value == {"size": [4], "color": ["green"]}
+    db_meta = (
+        test_db.query(FamilyMetadata)
+        .filter(FamilyMetadata.family_import_id == "A.0.0.2")
+        .all()
+    )
+    # Ensure no metadata was updated
+    assert len(db_meta) == 1
+    assert db_meta[0].value == {
+        "topic": ["Mitigation"],
+        "hazard": [],
+        "sector": [],
+        "keyword": [],
+        "framework": [],
+        "instrument": [],
+    }
+    assert rollback_family_repo.update.call_count == 1
 
 
 def test_update_family_when_not_found(
