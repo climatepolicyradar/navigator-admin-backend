@@ -372,8 +372,6 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     )
     db.flush()
 
-    # TODO Validate that the metadata being added conforms to corpus type. PDCT-945
-
     # Add the metadata
     db.add(
         FamilyMetadata(

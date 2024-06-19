@@ -19,7 +19,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.organisation import Corpus, CorpusType
+from db_client.models.organisation import Corpus
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
 
@@ -33,7 +33,14 @@ EXPECTED_FAMILIES = [
         "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
-        "metadata": {"size": [3], "color": ["red"]},
+        "metadata": {
+            "topic": [],
+            "hazard": [],
+            "sector": [],
+            "keyword": [],
+            "framework": [],
+            "instrument": [],
+        },
         "organisation": "CCLW",
         "corpus_import_id": "CCLW.corpus.i00000001.n0000",
         "corpus_title": "CCLW national policies",
@@ -52,7 +59,14 @@ EXPECTED_FAMILIES = [
         "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
-        "metadata": {"size": [4], "color": ["green"]},
+        "metadata": {
+            "topic": ["Mitigation"],
+            "hazard": [],
+            "sector": [],
+            "keyword": [],
+            "framework": [],
+            "instrument": [],
+        },
         "organisation": "CCLW",
         "corpus_import_id": "CCLW.corpus.i00000001.n0000",
         "corpus_title": "CCLW national policies",
@@ -71,7 +85,7 @@ EXPECTED_FAMILIES = [
         "geography": "Other",
         "category": "UNFCCC",
         "status": "Created",
-        "metadata": {"size": [100], "color": ["blue"]},
+        "metadata": {"author": "CPR", "author_type": "Party"},
         "organisation": "UNFCCC",
         "corpus_import_id": "UNFCCC.corpus.i00000001.n0000",
         "corpus_title": "UNFCCC Submissions",
@@ -390,29 +404,6 @@ def _setup_family_data(
 ) -> None:
     if configure_empty is True:
         return None
-    # Now a CorpusType
-    valid_metadata = {
-        "color": {
-            "allow_any": False,
-            "allowed_values": ["green", "red", "pink", "blue"],
-        },
-        "size": {
-            "allow_any": True,
-            "allowed_values": [],
-        },
-    }
-
-    # New Schema modification
-    # CorpusType
-    cclw_ct = (
-        test_db.query(CorpusType)
-        .join(Corpus, Corpus.corpus_type_name == CorpusType.name)
-        .filter(Corpus.organisation_id == default_org_id)
-        .one()
-    )
-    cclw_ct.valid_metadata = valid_metadata
-    test_db.add(cclw_ct)
-    test_db.flush()
 
     for index in range(EXPECTED_NUM_FAMILIES):
         data = EXPECTED_FAMILIES[index]

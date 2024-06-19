@@ -9,9 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_corpus_org_id(db: Session, corpus_import_id: str) -> int:
-    """Get the organisation ID(s) a corpus belongs to.
-
-    TODO: Will need to review as part of PDCT-1011.
+    """Get the organisation ID a corpus belongs to.
 
     :param Session db: The DB session to connect to.
     :param str corpus_id: The corpus import ID we want to get the org

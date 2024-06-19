@@ -136,7 +136,7 @@ def update(
     )
 
     # Validate metadata.
-    metadata.validate(db, entity_org_id, family_dto.metadata)
+    metadata.validate(db, family.corpus_import_id, family_dto.metadata)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
@@ -194,7 +194,7 @@ def create(
     entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
 
     # Validate metadata.
-    metadata.validate(db, entity_org_id, family.metadata)
+    metadata.validate(db, family.corpus_import_id, family.metadata)
 
     # Validate collection ids.
     collections = set(family.collections)

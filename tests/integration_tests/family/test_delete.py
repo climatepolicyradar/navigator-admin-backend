@@ -1,4 +1,3 @@
-import pytest
 from db_client.models.dfce import (
     CollectionFamily,
     DocumentStatus,
@@ -88,10 +87,6 @@ def test_delete_family_when_not_authenticated(client: TestClient, data_db: Sessi
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-@pytest.mark.skip(
-    "Fix PDCT-1115 - This test no longer works in the test environment, the rollback "
-    + "call returns the db to an empty state."
-)
 def test_delete_family_rollback(
     client: TestClient, data_db: Session, rollback_family_repo, user_header_token
 ):
@@ -106,6 +101,7 @@ def test_delete_family_rollback(
     )
     test_family = data_db.query(Family).filter(Family.import_id == "A.0.0.1").one()
     assert test_family.family_status != FamilyStatus.DELETED
+    assert rollback_family_repo.delete.call_count == 1
 
 
 def test_delete_family_when_not_found(

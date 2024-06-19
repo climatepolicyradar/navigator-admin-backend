@@ -91,6 +91,7 @@ def test_get_config_cclw_corpora_correct(
 
     # Now sanity check the new corpora data
     cclw_corporas = data["corpora"]
+    assert len(data["corpora"]) == 1
 
     assert cclw_corporas[0]["corpus_import_id"] == "CCLW.corpus.i00000001.n0000"
     assert cclw_corporas[0]["corpus_type"] == "Laws and Policies"
@@ -99,13 +100,16 @@ def test_get_config_cclw_corpora_correct(
     assert cclw_corporas[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = cclw_corporas[0]["taxonomy"]
-    expected_cclw_taxonomy = {"color", "size"}
+    expected_cclw_taxonomy = {
+        "topic",
+        "keyword",
+        "hazard",
+        "framework",
+        "sector",
+        "instrument",
+    }
     expected_cclw_taxonomy.add("event_types")
     assert set(cclw_taxonomy) ^ expected_cclw_taxonomy == set()
-
-    expected_cclw_colours = ["green", "red", "pink", "blue"]
-    cclw_taxonomy_colours = cclw_taxonomy["color"]["allowed_values"]
-    assert set(cclw_taxonomy_colours) ^ set(expected_cclw_colours) == set()
 
 
 def test_get_config_unfccc_corpora_correct(
@@ -122,6 +126,7 @@ def test_get_config_unfccc_corpora_correct(
 
     # Now sanity check the new corpora data
     unfccc_corporas = data["corpora"]
+    assert len(data["corpora"]) == 1
 
     assert unfccc_corporas[0]["corpus_import_id"] == "UNFCCC.corpus.i00000001.n0000"
     assert unfccc_corporas[0]["corpus_type"] == "Intl. agreements"
@@ -156,13 +161,16 @@ def test_get_config_corpora_correct(
     assert corpora[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = corpora[0]["taxonomy"]
-    expected_cclw_taxonomy = {"color", "size"}
+    expected_cclw_taxonomy = {
+        "topic",
+        "keyword",
+        "hazard",
+        "framework",
+        "sector",
+        "instrument",
+    }
     expected_cclw_taxonomy.add("event_types")
     assert set(cclw_taxonomy) ^ expected_cclw_taxonomy == set()
-
-    expected_cclw_colours = ["green", "red", "pink", "blue"]
-    cclw_taxonomy_colours = cclw_taxonomy["color"]["allowed_values"]
-    assert set(cclw_taxonomy_colours) ^ set(expected_cclw_colours) == set()
 
     assert corpora[1]["corpus_import_id"] == "UNFCCC.corpus.i00000001.n0000"
     assert corpora[1]["corpus_type"] == "Intl. agreements"

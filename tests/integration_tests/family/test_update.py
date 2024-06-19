@@ -20,7 +20,6 @@ def test_update_family(client: TestClient, data_db: Session, user_header_token):
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["pink"], "size": [0]},
         collections=["C.0.0.3"],
     )
     response = client.put(
@@ -63,7 +62,6 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
         summary="",
         geography="South Asia",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["red"], "size": [3]},
         collections=["C.0.0.2"],
     )
 
@@ -119,7 +117,6 @@ def test_update_family_remove_collections(
         summary="",
         geography="Other",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["red"], "size": [3]},
         collections=[],
     )
     response = client.put(
@@ -167,7 +164,6 @@ def test_update_family_append_collections(
         summary="",
         geography="Other",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["red"], "size": [3]},
         collections=["C.0.0.2", "C.0.0.3"],
     )
     response = client.put(
@@ -218,7 +214,6 @@ def test_update_family_collections_to_one_that_does_not_exist(
         summary="",
         geography="Other",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["red"], "size": [3]},
         collections=["C.0.0.2", "X.Y.Z.3"],
     )
     response = client.put(
@@ -263,7 +258,6 @@ def test_update_fails_family_when_user_org_different_to_family_org(
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["pink"], "size": [0]},
         collections=[],
     )
     response = client.put(
@@ -296,7 +290,6 @@ def test_update_family_succeeds_when_user_org_different_to_family_org_super(
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["pink"], "size": [0]},
         collections=["C.0.0.3"],
     )
     response = client.put(
@@ -337,7 +330,6 @@ def test_update_family_when_collection_org_different_to_family_org(
 ):
     setup_db(data_db)
     new_family = create_family_write_dto(
-        metadata={"color": ["pink"], "size": [0]},
         collections=["C.0.0.1", "C.0.0.2", "C.0.0.3"],
     )
     response = client.put(
@@ -370,7 +362,6 @@ def test_update_family_when_not_authenticated(client: TestClient, data_db: Sessi
         summary="just a test",
         geography="USA",
         category=FamilyCategory.UNFCCC,
-        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put("/api/v1/families/A.0.0.2", json=new_family.model_dump())
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -403,41 +394,44 @@ def test_update_family_idempotent_when_ok(
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
 
 
-# TODO: Fix with PDCT-1115
-# def test_update_family_rollback(
-#     client: TestClient, test_db: Session, rollback_family_repo, user_header_token
-# ):
-#     setup_db(test_db)
-#     new_family = create_family_write_dto(
-#         title="Updated Title",
-#         summary="just a test",
-#         metadata={"color": ["pink"], "size": [0]},
-#     )
-#     response = client.put(
-#         "/api/v1/families/A.0.0.2",
-#         json=new_family.model_dump(),
-#         headers=user_header_token,
-#     )
-#     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+def test_update_family_rollback(
+    client: TestClient, data_db: Session, rollback_family_repo, user_header_token
+):
+    setup_db(data_db)
+    new_family = EXPECTED_FAMILIES[1]
+    response = client.put(
+        "/api/v1/families/A.0.0.2",
+        json=new_family,
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
-#     db_family: Family = (
-#         test_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
-#     )
-#     assert db_family.title != "Updated Title"
-#     assert db_family.description != "just a test"
+    db_family: Family = (
+        data_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
+    )
+    assert db_family.title != "Updated Title"
+    assert db_family.description != "just a test"
 
-#     db_slug = test_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
-#     # Ensure no extra slug was created
-#     assert len(db_slug) == 1
+    db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.2").all()
+    # Ensure no extra slug was created
+    assert len(db_slug) == 1
 
-#     db_meta = (
-#         test_db.query(FamilyMetadata)
-#         .filter(FamilyMetadata.family_import_id == "A.0.0.2")
-#         .all()
-#     )
-#     # Ensure no metadata was updated
-#     assert len(db_meta) == 1
-#     assert db_meta[0].value == {"size": [4], "color": ["green"]}
+    db_meta = (
+        data_db.query(FamilyMetadata)
+        .filter(FamilyMetadata.family_import_id == "A.0.0.2")
+        .all()
+    )
+    # Ensure no metadata was updated
+    assert len(db_meta) == 1
+    assert db_meta[0].value == {
+        "topic": ["Mitigation"],
+        "hazard": [],
+        "sector": [],
+        "keyword": [],
+        "framework": [],
+        "instrument": [],
+    }
+    assert rollback_family_repo.update.call_count == 1
 
 
 def test_update_family_when_not_found(
@@ -447,7 +441,6 @@ def test_update_family_when_not_found(
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
-        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
         "/api/v1/families/A.0.0.22",
@@ -466,7 +459,6 @@ def test_update_family_when_db_error(
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
-        metadata={"color": ["pink"], "size": [0]},
     )
     response = client.put(
         "/api/v1/families/A.0.0.22",
@@ -485,7 +477,6 @@ def test_update_family__invalid_geo(
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
-        metadata={"color": ["pink"], "size": [0]},
     )
     new_family.geography = "UK"
     response = client.put(
@@ -502,14 +493,29 @@ def test_update_family_metadata_if_changed(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
-    expected_meta = {"color": ["pink"], "size": [23]}
     response = client.get(
         "/api/v1/families/A.0.0.2",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     family_data = response.json()
-    assert {"color": ["green"], "size": [4]} == family_data["metadata"]
+    assert family_data["metadata"] == {
+        "topic": ["Mitigation"],
+        "hazard": [],
+        "sector": [],
+        "keyword": [],
+        "framework": [],
+        "instrument": [],
+    }
+
+    expected_meta = {
+        "topic": ["Adaptation"],
+        "hazard": ["Flood"],
+        "sector": [],
+        "keyword": [],
+        "framework": [],
+        "instrument": [],
+    }
     family_data["metadata"] = expected_meta
     response = client.put(
         "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
@@ -517,7 +523,7 @@ def test_update_family_metadata_if_changed(
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert expected_meta == data["metadata"]
+    assert data["metadata"] == expected_meta
 
     metadata: FamilyMetadata = (
         data_db.query(FamilyMetadata)
