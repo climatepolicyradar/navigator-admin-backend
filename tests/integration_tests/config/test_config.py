@@ -4,6 +4,28 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
 
+EXPECTED_CONFIG_KEYS = {"geographies", "corpora", "languages", "document", "event"}
+EXPECTED_CORPORA_CONFIG_KEYS = {
+    "corpus_import_id",
+    "title",
+    "description",
+    "corpus_type",
+    "corpus_type_description",
+    "organisation",
+    "taxonomy",
+}
+EXPECTED_GEOGRAPHY_REGIONS = 8
+EXPECTED_LANGUAGES = 7893
+
+EXPECTED_CCLW_TAXONOMY = {
+    "topic",
+    "keyword",
+    "hazard",
+    "framework",
+    "sector",
+    "instrument",
+    "event_types",
+}
 EXPECTED_CCLW_TOPICS = 4
 EXPECTED_CCLW_HAZARDS = 81
 EXPECTED_CCLW_SECTORS = 23
@@ -11,8 +33,10 @@ EXPECTED_CCLW_KEYWORDS = 219
 EXPECTED_CCLW_FRAMEWORKS = 3
 EXPECTED_CCLW_INSTRUMENTS = 25
 
+EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type", "event_types"}
 
-def test_get_config_has_expected_keys(
+
+def test_get_config_has_expected_shape(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
@@ -23,13 +47,23 @@ def test_get_config_has_expected_keys(
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    keys = data.keys()
 
-    assert "geographies" in keys
-    assert "corpora" in keys
-    assert "languages" in keys
-    assert "document" in keys
-    assert "event" in keys
+    assert set(data.keys()) ^ EXPECTED_CONFIG_KEYS == set()
+
+    assert isinstance(data["geographies"], list)
+    assert len(data["geographies"]) == EXPECTED_GEOGRAPHY_REGIONS
+
+    assert isinstance(data["corpora"], list)
+    assert set(data["corpora"][0].keys()) ^ EXPECTED_CORPORA_CONFIG_KEYS == set()
+
+    assert isinstance(data["languages"], dict)
+    assert len(data["languages"]) == EXPECTED_LANGUAGES
+
+    assert isinstance(data["document"], dict)
+    assert list(data["document"].keys()) == ["roles", "types", "variants"]
+
+    assert isinstance(data["event"], dict)
+    assert list(data["event"].keys()) == ["types"]
 
 
 def test_get_config_has_correct_number_corpora_super(
@@ -103,16 +137,7 @@ def test_get_config_cclw_corpora_correct(
     assert cclw_corporas[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = cclw_corporas[0]["taxonomy"]
-    expected_cclw_taxonomy = {
-        "topic",
-        "keyword",
-        "hazard",
-        "framework",
-        "sector",
-        "instrument",
-    }
-    expected_cclw_taxonomy.add("event_types")
-    assert set(cclw_taxonomy) ^ expected_cclw_taxonomy == set()
+    assert set(cclw_taxonomy) ^ EXPECTED_CCLW_TAXONOMY == set()
 
     assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
     assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
@@ -146,9 +171,8 @@ def test_get_config_unfccc_corpora_correct(
     assert unfccc_corporas[0]["description"] == "UNFCCC Submissions"
     assert unfccc_corporas[0]["title"] == "UNFCCC Submissions"
 
-    expected_unfccc_taxonomy = {"author", "author_type"}
-    expected_unfccc_taxonomy.add("event_types")
-    assert set(unfccc_corporas[0]["taxonomy"]) ^ expected_unfccc_taxonomy == set()
+    unfccc_taxonomy = unfccc_corporas[0]["taxonomy"]
+    assert set(unfccc_taxonomy) ^ EXPECTED_UNFCCC_TAXONOMY == set()
 
 
 def test_get_config_corpora_correct(
@@ -173,16 +197,7 @@ def test_get_config_corpora_correct(
     assert corpora[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = corpora[0]["taxonomy"]
-    expected_cclw_taxonomy = {
-        "topic",
-        "keyword",
-        "hazard",
-        "framework",
-        "sector",
-        "instrument",
-    }
-    expected_cclw_taxonomy.add("event_types")
-    assert set(cclw_taxonomy) ^ expected_cclw_taxonomy == set()
+    assert set(cclw_taxonomy) ^ EXPECTED_CCLW_TAXONOMY == set()
 
     assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
     assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
@@ -199,9 +214,8 @@ def test_get_config_corpora_correct(
     assert corpora[1]["description"] == "UNFCCC Submissions"
     assert corpora[1]["title"] == "UNFCCC Submissions"
 
-    expected_unfccc_taxonomy = {"author", "author_type"}
-    expected_unfccc_taxonomy.add("event_types")
-    assert set(corpora[1]["taxonomy"]) ^ expected_unfccc_taxonomy == set()
+    unfccc_taxonomy = corpora[1]["taxonomy"]
+    assert set(unfccc_taxonomy) ^ EXPECTED_UNFCCC_TAXONOMY == set()
 
 
 def test_config_languages(client: TestClient, data_db: Session, user_header_token):
