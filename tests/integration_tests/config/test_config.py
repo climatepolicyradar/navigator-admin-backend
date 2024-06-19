@@ -4,9 +4,12 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
 
-EXPECTED_CCLW_TAXONOMY = {"color", "size"}
-EXPECTED_CCLW_COLOURS = ["green", "red", "pink", "blue"]
-EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type"}
+EXPECTED_CCLW_TOPICS = 4
+EXPECTED_CCLW_HAZARDS = 81
+EXPECTED_CCLW_SECTORS = 23
+EXPECTED_CCLW_KEYWORDS = 219
+EXPECTED_CCLW_FRAMEWORKS = 3
+EXPECTED_CCLW_INSTRUMENTS = 25
 
 
 def test_get_config_has_expected_keys(
@@ -111,6 +114,15 @@ def test_get_config_cclw_corpora_correct(
     expected_cclw_taxonomy.add("event_types")
     assert set(cclw_taxonomy) ^ expected_cclw_taxonomy == set()
 
+    assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
+    assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
+    assert len(cclw_taxonomy["sector"]["allowed_values"]) == EXPECTED_CCLW_SECTORS
+    assert len(cclw_taxonomy["framework"]["allowed_values"]) == EXPECTED_CCLW_FRAMEWORKS
+    assert len(cclw_taxonomy["keyword"]["allowed_values"]) == EXPECTED_CCLW_KEYWORDS
+    assert (
+        len(cclw_taxonomy["instrument"]["allowed_values"]) == EXPECTED_CCLW_INSTRUMENTS
+    )
+
 
 def test_get_config_unfccc_corpora_correct(
     client: TestClient, data_db: Session, non_cclw_user_header_token
@@ -171,6 +183,15 @@ def test_get_config_corpora_correct(
     }
     expected_cclw_taxonomy.add("event_types")
     assert set(cclw_taxonomy) ^ expected_cclw_taxonomy == set()
+
+    assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
+    assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
+    assert len(cclw_taxonomy["sector"]["allowed_values"]) == EXPECTED_CCLW_SECTORS
+    assert len(cclw_taxonomy["framework"]["allowed_values"]) == EXPECTED_CCLW_FRAMEWORKS
+    assert len(cclw_taxonomy["keyword"]["allowed_values"]) == EXPECTED_CCLW_KEYWORDS
+    assert (
+        len(cclw_taxonomy["instrument"]["allowed_values"]) == EXPECTED_CCLW_INSTRUMENTS
+    )
 
     assert corpora[1]["corpus_import_id"] == "UNFCCC.corpus.i00000001.n0000"
     assert corpora[1]["corpus_type"] == "Intl. agreements"
