@@ -27,6 +27,7 @@ class CorpusData(BaseModel):
     description: str
     corpus_type: str
     corpus_type_description: str
+    organisation: Mapping[str, Union[int, str]]
     taxonomy: TaxonomyData
 
 
