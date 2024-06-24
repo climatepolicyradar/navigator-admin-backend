@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
 
-EXPECTED_CONFIG_KEYS = {"geographies", "corpora", "languages", "document", "event"}
+EXPECTED_CONFIG_KEYS = {"geographies", "corpora", "languages", "document"}
 EXPECTED_CORPORA_CONFIG_KEYS = {
     "corpus_import_id",
     "title",
@@ -24,7 +24,7 @@ EXPECTED_CCLW_TAXONOMY = {
     "framework",
     "sector",
     "instrument",
-    "event_types",
+    "event_type",
 }
 EXPECTED_CCLW_TOPICS = 4
 EXPECTED_CCLW_HAZARDS = 81
@@ -33,7 +33,7 @@ EXPECTED_CCLW_KEYWORDS = 219
 EXPECTED_CCLW_FRAMEWORKS = 3
 EXPECTED_CCLW_INSTRUMENTS = 25
 
-EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type", "event_types"}
+EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type", "event_type"}
 
 
 def test_get_config_has_expected_shape(
@@ -62,9 +62,6 @@ def test_get_config_has_expected_shape(
 
     assert isinstance(data["document"], dict)
     assert set(data["document"].keys()) == set(["roles", "types", "variants"])
-
-    assert isinstance(data["event"], dict)
-    assert set(data["event"].keys()) == set(["types"])
 
 
 def test_get_config_has_correct_number_corpora_super(
@@ -138,7 +135,7 @@ def test_get_config_cclw_corpora_correct(
     assert cclw_corporas[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = cclw_corporas[0]["taxonomy"]
-    assert set(cclw_taxonomy) ^ EXPECTED_CCLW_TAXONOMY == set()
+    assert set(cclw_taxonomy.keys()) ^ EXPECTED_CCLW_TAXONOMY == set()
 
     assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
     assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
@@ -198,7 +195,7 @@ def test_get_config_corpora_correct(
     assert corpora[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = corpora[0]["taxonomy"]
-    assert set(cclw_taxonomy) ^ EXPECTED_CCLW_TAXONOMY == set()
+    assert set(cclw_taxonomy.keys()) ^ EXPECTED_CCLW_TAXONOMY == set()
 
     assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
     assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
@@ -251,22 +248,6 @@ def test_config_documents(client: TestClient, data_db: Session, user_header_toke
     assert "AMENDMENT" in data["document"]["roles"]
     assert "Action Plan" in data["document"]["types"]
     assert "Translation" in data["document"]["variants"]
-
-
-def test_config_events(client: TestClient, data_db: Session, user_header_token):
-    setup_db(data_db)
-
-    response = client.get(
-        "/api/v1/config",
-        headers=user_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-
-    # Now sanity check the data
-    #
-    # Events.
-    assert "Appealed" in data["event"]["types"]
 
 
 def test_config_geographies(client: TestClient, data_db: Session, user_header_token):

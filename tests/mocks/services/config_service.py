@@ -1,7 +1,7 @@
 from pytest import MonkeyPatch
 
 from app.errors import RepositoryError
-from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig
+from app.model.config import ConfigReadDTO, DocumentConfig
 
 
 def mock_config_service(config_service, monkeypatch: MonkeyPatch, mocker):
@@ -18,7 +18,6 @@ def mock_config_service(config_service, monkeypatch: MonkeyPatch, mocker):
             corpora=[],
             languages={},
             document=DocumentConfig(roles=[], types=[], variants=[]),
-            event=EventConfig(types=[]),
         )
 
     monkeypatch.setattr(config_service, "get", mock_get_config)

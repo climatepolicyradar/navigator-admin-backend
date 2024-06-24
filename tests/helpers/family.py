@@ -62,6 +62,7 @@ def create_family_create_dto(
             "keyword": [],
             "framework": [],
             "instrument": [],
+            "event_type": [],
         }
     if collections is None:
         collections = []
@@ -92,6 +93,7 @@ def create_family_write_dto(
             "keyword": [],
             "framework": [],
             "instrument": [],
+            "event_type": [],
         }
     if collections is None:
         collections = []

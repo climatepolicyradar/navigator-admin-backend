@@ -5,12 +5,6 @@ from pydantic import BaseModel
 TaxonomyData = Mapping[str, Mapping[str, Union[bool, str, Sequence[str]]]]
 
 
-class EventConfig(BaseModel):
-    """Everything you need to know about events."""
-
-    types: Sequence[str]
-
-
 class DocumentConfig(BaseModel):
     """Everything you need to know about documents."""
 
@@ -38,4 +32,3 @@ class ConfigReadDTO(BaseModel):
     corpora: Sequence[CorpusData]
     languages: Mapping[str, str]
     document: DocumentConfig
-    event: EventConfig
