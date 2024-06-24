@@ -45,6 +45,7 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
         "keyword": [],
         "framework": [],
         "instrument": [],
+        "event_type": [],
     }
 
     db_collection: Optional[list[CollectionFamily]] = (
@@ -212,7 +213,7 @@ def test_create_family_when_invalid_metadata_cclw(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
-    key_text = "{'topic', 'hazard', 'sector', 'keyword', 'framework', 'instrument'}"
+    key_text = "{'topic', 'hazard', 'sector', 'keyword', 'framework', 'instrument', 'event_type'}"
     assert data["detail"].startswith("Values for the following are missing: ")
     assert len(data["detail"]) == len("Values for the following are missing: ") + len(
         key_text
@@ -237,7 +238,7 @@ def test_create_family_when_invalid_metadata_unfccc(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
-    key_text = "{'author_type', 'author'}"
+    key_text = "{'author_type', 'author', 'event_type'}"
     assert data["detail"].startswith("Values for the following are missing: ")
     assert len(data["detail"]) == len("Values for the following are missing: ") + len(
         key_text
@@ -251,7 +252,11 @@ def test_create_family_when_org_mismatch(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"author": "CPR", "author_type": ["Party"]},
+        metadata={
+            "author": "CPR",
+            "author_type": ["Party"],
+            "event_type": [],
+        },
         corpus_import_id="UNFCCC.corpus.i00000001.n0000",
     )
     response = client.post(
