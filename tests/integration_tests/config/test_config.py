@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
 
-EXPECTED_CONFIG_KEYS = {"geographies", "corpora", "languages", "document", "event"}
+EXPECTED_CONFIG_KEYS = {"geographies", "corpora", "languages", "document"}
 EXPECTED_CORPORA_CONFIG_KEYS = {
     "corpus_import_id",
     "title",
@@ -48,13 +48,13 @@ def test_get_config_has_expected_shape(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
 
-    assert set(data.keys()) ^ EXPECTED_CONFIG_KEYS == set()
+    assert set(data.keys()) == EXPECTED_CONFIG_KEYS
 
     assert isinstance(data["geographies"], list)
     assert len(data["geographies"]) == EXPECTED_GEOGRAPHY_REGIONS
 
     assert isinstance(data["corpora"], list)
-    assert set(data["corpora"][0].keys()) ^ EXPECTED_CORPORA_CONFIG_KEYS == set()
+    assert set(data["corpora"][0].keys()) == EXPECTED_CORPORA_CONFIG_KEYS
     assert set(data["corpora"][0]["organisation"]) == set(["id", "name"])
 
     assert isinstance(data["languages"], dict)
@@ -138,7 +138,7 @@ def test_get_config_cclw_corpora_correct(
     assert cclw_corporas[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = cclw_corporas[0]["taxonomy"]
-    assert set(cclw_taxonomy) ^ EXPECTED_CCLW_TAXONOMY == set()
+    assert set(cclw_taxonomy) == EXPECTED_CCLW_TAXONOMY
 
     assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
     assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
@@ -173,7 +173,7 @@ def test_get_config_unfccc_corpora_correct(
     assert unfccc_corporas[0]["title"] == "UNFCCC Submissions"
 
     unfccc_taxonomy = unfccc_corporas[0]["taxonomy"]
-    assert set(unfccc_taxonomy) ^ EXPECTED_UNFCCC_TAXONOMY == set()
+    assert set(unfccc_taxonomy) == EXPECTED_UNFCCC_TAXONOMY
 
 
 def test_get_config_corpora_correct(
@@ -198,7 +198,7 @@ def test_get_config_corpora_correct(
     assert corpora[0]["title"] == "CCLW national policies"
 
     cclw_taxonomy = corpora[0]["taxonomy"]
-    assert set(cclw_taxonomy) ^ EXPECTED_CCLW_TAXONOMY == set()
+    assert set(cclw_taxonomy) == EXPECTED_CCLW_TAXONOMY
 
     assert len(cclw_taxonomy["topic"]["allowed_values"]) == EXPECTED_CCLW_TOPICS
     assert len(cclw_taxonomy["hazard"]["allowed_values"]) == EXPECTED_CCLW_HAZARDS
@@ -216,7 +216,7 @@ def test_get_config_corpora_correct(
     assert corpora[1]["title"] == "UNFCCC Submissions"
 
     unfccc_taxonomy = corpora[1]["taxonomy"]
-    assert set(unfccc_taxonomy) ^ EXPECTED_UNFCCC_TAXONOMY == set()
+    assert set(unfccc_taxonomy) == EXPECTED_UNFCCC_TAXONOMY
 
 
 def test_config_languages(client: TestClient, data_db: Session, user_header_token):
@@ -251,22 +251,6 @@ def test_config_documents(client: TestClient, data_db: Session, user_header_toke
     assert "AMENDMENT" in data["document"]["roles"]
     assert "Action Plan" in data["document"]["types"]
     assert "Translation" in data["document"]["variants"]
-
-
-def test_config_events(client: TestClient, data_db: Session, user_header_token):
-    setup_db(data_db)
-
-    response = client.get(
-        "/api/v1/config",
-        headers=user_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-
-    # Now sanity check the data
-    #
-    # Events.
-    assert "Appealed" in data["event"]["types"]
 
 
 def test_config_geographies(client: TestClient, data_db: Session, user_header_token):

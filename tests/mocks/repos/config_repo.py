@@ -3,7 +3,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 from sqlalchemy import exc
 
-from app.model.config import ConfigReadDTO, DocumentConfig, EventConfig
+from app.model.config import ConfigReadDTO, DocumentConfig
 
 
 def mock_config_repo(config_repo, monkeypatch: MonkeyPatch, mocker):
@@ -21,7 +21,6 @@ def mock_config_repo(config_repo, monkeypatch: MonkeyPatch, mocker):
             corpora=[],
             languages={},
             document=DocumentConfig(roles=[], types=[], variants=[]),
-            event=EventConfig(types=[]),
         )
 
     monkeypatch.setattr(config_repo, "get", mock_get)

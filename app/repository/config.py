@@ -1,27 +1,14 @@
 import logging
-from dataclasses import asdict
 from typing import Any, Optional, Sequence
 
 from db_client.models.base import AnyModel
-from db_client.models.dfce.family import (
-    FamilyDocumentRole,
-    FamilyDocumentType,
-    FamilyEventType,
-    Variant,
-)
+from db_client.models.dfce.family import FamilyDocumentRole, FamilyDocumentType, Variant
 from db_client.models.dfce.geography import Geography
-from db_client.models.dfce.taxonomy_entry import TaxonomyEntry
 from db_client.models.document.physical_document import Language
 from db_client.models.organisation import Corpus, CorpusType, Organisation
 from sqlalchemy.orm import Session
 
-from app.model.config import (
-    ConfigReadDTO,
-    CorpusData,
-    DocumentConfig,
-    EventConfig,
-    TaxonomyData,
-)
+from app.model.config import ConfigReadDTO, CorpusData, DocumentConfig, TaxonomyData
 from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +63,7 @@ def _get_organisation_taxonomy_by_name(
         return metadata[0]
 
 
-def _to_corpus_data(row, event_types) -> CorpusData:
+def _to_corpus_data(row) -> CorpusData:
     return CorpusData(
         corpus_import_id=row.corpus_import_id,
         title=row.title,
@@ -84,10 +71,7 @@ def _to_corpus_data(row, event_types) -> CorpusData:
         corpus_type=row.corpus_type,
         corpus_type_description=row.corpus_type_description,
         organisation={"name": row.org_name, "id": row.org_id},
-        taxonomy={
-            **row.taxonomy,
-            "event_types": asdict(event_types),
-        },
+        taxonomy={**row.taxonomy},
     )
 
 
@@ -114,13 +98,7 @@ def get_corpora(db: Session, user: UserContext) -> Sequence[CorpusData]:
     else:
         corpora = corpora.filter(Organisation.id == user.org_id).all()
 
-    event_types = db.query(FamilyEventType).all()
-    entry = TaxonomyEntry(
-        allow_blanks=False,
-        allowed_values=[r.name for r in event_types],
-        allow_any=False,
-    )
-    return [_to_corpus_data(row, entry) for row in corpora]
+    return [_to_corpus_data(row) for row in corpora]
 
 
 def get(db: Session, user: UserContext) -> ConfigReadDTO:
@@ -155,19 +133,9 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
         ],
     )
 
-    # Now Event config
-    event_config = EventConfig(
-        types=[
-            event_type.name
-            for event_type in db.query(FamilyEventType)
-            .order_by(FamilyEventType.name)
-            .all()
-        ]
-    )
     return ConfigReadDTO(
         geographies=geographies,
         corpora=corpora,
         languages=languages,
         document=doc_config,
-        event=event_config,
     )
