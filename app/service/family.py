@@ -207,23 +207,6 @@ def create(
     corpus.validate(db, family.corpus_import_id)
     entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
 
-    # Get the taxonomy from the family's corpus.
-    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
-    if taxonomy is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
-    # Validate metadata.
-    results = metadata.validate_metadata(
-        metadata.build_valid_taxonomy(taxonomy), family.metadata
-    )
-
-    if len(results) > 0:
-        msg = f"Metadata validation failed: {results}"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
     # Validate collection ids.
     collections = set(family.collections)
     collection.validate_multiple_ids(collections)
@@ -244,6 +227,24 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.corpus_import_id
     )
+
+    # Get the taxonomy from the family's corpus.
+    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
+    if taxonomy is None:
+        msg = "Could not get taxonomy from corpus"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
+
+    # Validate metadata.
+    results = metadata.validate_metadata(
+        metadata.build_valid_taxonomy(taxonomy), family.metadata
+    )
+
+    if len(results) > 0:
+        msg = f"Metadata validation failed: {','.join(results)}"
+        _LOGGER.error(msg)
+        raise ValidationError(msg)
+
     try:
         import_id = family_repo.create(db, family, geo_id, entity_org_id)
         if len(import_id) == 0:
