@@ -35,7 +35,7 @@ def test_update(
     assert family_repo_mock.update.call_count == 1
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert family_repo_mock.get.call_count == 2
 
@@ -65,7 +65,7 @@ def test_update_when_family_missing(
     assert family_repo_mock.get.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -95,7 +95,7 @@ def test_update_raises_when_family_id_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 0
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -125,7 +125,7 @@ def test_update_raises_when_category_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 0
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -157,7 +157,7 @@ def test_update_raises_when_organisation_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -188,7 +188,7 @@ def test_update_family_raises_when_geography_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -208,14 +208,25 @@ def test_update_family_raises_when_metadata_invalid(
     metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
-    expected_msg = "Corpus CCLW.corpus.i00000001.n0000 has no Taxonomy defined!"
-    assert e.value.message == expected_msg
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = "[\"Missing metadata keys: {'size', 'color'}\""
+    expected_extra_message = "\"Extra metadata keys: {'invalid'}\"]"
+
+    assert e.value.message.startswith(expected_message)
+    assert len(e.value.message) == len(
+        expected_message + expected_missing_message + ", " + expected_extra_message
+    )
+    assert (
+        e.value.message
+        == expected_message + expected_missing_message + ", " + expected_extra_message
+    )
 
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -244,7 +255,7 @@ def test_update_family_raises_when_collection_id_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
     assert collection_repo_mock.validate.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
@@ -274,7 +285,7 @@ def test_update_family_raises_when_collection_missing(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
     assert collection_repo_mock.validate.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
@@ -303,7 +314,7 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert collection_repo_mock.validate.call_count == 1
@@ -337,7 +348,7 @@ def test_update_raises_when_family_organisation_mismatch_with_user_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 0
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert collection_repo_mock.validate.call_count == 0
 
@@ -366,7 +377,7 @@ def test_update_success_when_family_organisation_mismatch_with_user_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.get.call_count == 2
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_schema_for_corpus.call_count == 1
+    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert collection_repo_mock.validate.call_count == 1
     assert family_repo_mock.update.call_count == 1
