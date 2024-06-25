@@ -217,10 +217,6 @@ def test_update_family_raises_when_metadata_invalid(
     assert len(e.value.message) == len(
         expected_message + expected_missing_message + ", " + expected_extra_message
     )
-    assert (
-        e.value.message
-        == expected_message + expected_missing_message + ", " + expected_extra_message
-    )
 
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
