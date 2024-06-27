@@ -214,10 +214,15 @@ def test_create_family_when_invalid_metadata_cclw(
     data = response.json()
 
     key_text = "{'topic', 'hazard', 'sector', 'keyword', 'framework', 'instrument', 'event_type'}"
-    assert data["detail"].startswith("Values for the following are missing: ")
-    assert len(data["detail"]) == len("Values for the following are missing: ") + len(
-        key_text
-    )
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = f"Missing metadata keys: {key_text}"
+    expected_extra_message = f"Extra metadata keys: {list(new_family.metadata.keys())}"
+
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message) + len(
+        expected_missing_message
+    ) + len(expected_extra_message) + len(",")
 
 
 def test_create_family_when_invalid_metadata_unfccc(
@@ -239,10 +244,14 @@ def test_create_family_when_invalid_metadata_unfccc(
     data = response.json()
 
     key_text = "{'author_type', 'author', 'event_type'}"
-    assert data["detail"].startswith("Values for the following are missing: ")
-    assert len(data["detail"]) == len("Values for the following are missing: ") + len(
-        key_text
-    )
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = f"Missing metadata keys: {key_text}"
+    expected_extra_message = f"Extra metadata keys: {list(new_family.metadata.keys())}"
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message) + len(
+        expected_missing_message
+    ) + len(expected_extra_message) + len(",")
 
 
 def test_create_family_when_org_mismatch(

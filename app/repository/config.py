@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional, Sequence
+from typing import Any, Sequence
 
 from db_client.models.base import AnyModel
 from db_client.models.dfce.family import FamilyDocumentRole, FamilyDocumentType, Variant
@@ -8,7 +8,7 @@ from db_client.models.document.physical_document import Language
 from db_client.models.organisation import Corpus, CorpusType, Organisation
 from sqlalchemy.orm import Session
 
-from app.model.config import ConfigReadDTO, CorpusData, DocumentConfig, TaxonomyData
+from app.model.config import ConfigReadDTO, CorpusData, DocumentConfig
 from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,29 +38,6 @@ def _tree_table_to_json(
             append_list.append(node_row_object)
 
     return json_out
-
-
-def _get_organisation_taxonomy_by_name(
-    db: Session, org_name: str
-) -> Optional[TaxonomyData]:
-    """
-    Returns the TaxonomyConfig for the named organisation
-
-    :param Session db: connection to the database
-    :return TaxonomyConfig: the TaxonomyConfig from the db
-    """
-    metadata = (
-        db.query(CorpusType.valid_metadata)
-        .join(
-            Corpus,
-            Corpus.corpus_type_name == CorpusType.name,
-        )
-        .join(Organisation, Organisation.id == Corpus.organisation_id)
-        .filter_by(name=org_name)
-        .one_or_none()
-    )
-    if metadata is not None:
-        return metadata[0]
 
 
 def _to_corpus_data(row) -> CorpusData:
