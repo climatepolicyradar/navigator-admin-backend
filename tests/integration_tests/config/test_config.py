@@ -263,4 +263,4 @@ def test_config_geographies(client: TestClient, data_db: Session, user_header_to
     # Now sanity check the data
     #
     # Geographies.
-    assert data["geographies"][1]["node"]["slug"] == "south-asia"
+    assert data["geographies"][0]["node"]["slug"] == "south-asia"

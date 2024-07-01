@@ -8,9 +8,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from tests.helpers.family import create_family_write_dto
-from tests.integration_tests.setup_db import DEFAULT_GEO_ID, EXPECTED_FAMILIES, setup_db
+from tests.integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 
-USA_GEO_ID = 212
+USA_GEO_ID = 209
 
 
 def test_update_family(client: TestClient, data_db: Session, user_header_token):
@@ -277,8 +277,10 @@ def test_update_fails_family_when_user_org_different_to_family_org(
     )
     assert db_family.title == "apple orange banana"
     assert db_family.description == "apple"
-    assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == "UNFCCC"
+
+    geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
+    assert db_family.geography_id == geo_id
 
 
 def test_update_family_succeeds_when_user_org_different_to_family_org_super(
@@ -351,8 +353,10 @@ def test_update_family_when_collection_org_different_to_family_org(
     db_family = db_families[0]
     assert db_family.title == "apple"
     assert db_family.description == ""
-    assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == "UNFCCC"
+
+    geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
+    assert db_family.geography_id == geo_id
 
 
 def test_update_family_when_not_authenticated(client: TestClient, data_db: Session):
@@ -390,8 +394,10 @@ def test_update_family_idempotent_when_ok(
     )
     assert db_family.title == EXPECTED_FAMILIES[1]["title"]
     assert db_family.description == EXPECTED_FAMILIES[1]["summary"]
-    assert db_family.geography_id == DEFAULT_GEO_ID
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
+
+    geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
+    assert db_family.geography_id == geo_id
 
 
 def test_update_family_rollback(
