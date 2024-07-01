@@ -38,6 +38,9 @@ integration_test: build_dev
 test: build_dev
 	docker compose run --rm navigator-admin-backend pytest -vvv tests
 
+test_local:
+	poetry run pytest  -vvv tests/integration_tests
+
 run: 
 	docker compose -f docker-compose.yml up -d --remove-orphans
 

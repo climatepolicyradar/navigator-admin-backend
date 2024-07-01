@@ -11,6 +11,7 @@ from db_client.models.dfce.family import (
     FamilyCorpus,
     FamilyDocument,
     FamilyEvent,
+    Geography,
     Slug,
 )
 from db_client.models.dfce.metadata import FamilyMetadata
@@ -22,8 +23,6 @@ from db_client.models.document.physical_document import (
 from db_client.models.organisation import Corpus
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
-
-DEFAULT_GEO_ID = 1
 
 EXPECTED_FAMILIES = [
     {
@@ -409,12 +408,19 @@ def _setup_family_data(
 
     for index in range(EXPECTED_NUM_FAMILIES):
         data = EXPECTED_FAMILIES[index]
+
+        geo_id = (
+            test_db.query(Geography.id)
+            .filter(Geography.value == data["geography"])
+            .scalar()
+        )
+
         test_db.add(
             Family(
                 import_id=data["import_id"],
                 title=data["title"],
                 description=data["summary"],
-                geography_id=DEFAULT_GEO_ID,
+                geography_id=geo_id,
                 family_category=data["category"],
             )
         )
