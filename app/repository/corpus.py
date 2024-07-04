@@ -148,7 +148,13 @@ def search(
     search = []
     if "q" in query_params.keys():
         term = f"%{escape_like(query_params['q'])}%"
-        search.append(or_(Corpus.title.ilike(term), Corpus.description.ilike(term)))
+        search.append(
+            or_(
+                Corpus.title.ilike(term),
+                Corpus.description.ilike(term),
+                Corpus.corpus_text.ilike(term),
+            )
+        )
     else:
         if "title" in query_params.keys():
             term = f"%{escape_like(query_params['title'])}%"
@@ -157,6 +163,10 @@ def search(
         if "description" in query_params.keys():
             term = f"%{escape_like(query_params['description'])}%"
             search.append(Corpus.description.ilike(term))
+
+        if "corpus_text" in query_params.keys():
+            term = f"%{escape_like(query_params['corpus_text'])}%"
+            search.append(Corpus.corpus_text.ilike(term))
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
