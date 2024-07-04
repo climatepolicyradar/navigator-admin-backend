@@ -365,6 +365,67 @@ def test_create_document_when_invalid_variant(
     assert '(Invalid) is not present in table "variant"' in data["detail"]
 
 
+def test_create_document_when_invalid_metadata_cclw(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_document = create_document_create_dto(
+        title="Title",
+        family_import_id="A.0.0.2",
+        metadata={"color": ["pink"], "size": [0]},
+    )
+    response = client.post(
+        "/api/v1/documents",
+        json=new_document.model_dump(mode="json"),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "{'role'}"
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = f"Missing metadata keys: {key_text}"
+    expected_extra_message = (
+        f"Extra metadata keys: {list(new_document.metadata.keys())}"
+    )
+
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message) + len(
+        expected_missing_message
+    ) + len(expected_extra_message) + len(",")
+
+
+def test_create_document_when_invalid_metadata_unfccc(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    new_document = create_document_create_dto(
+        title="Title",
+        family_import_id="A.0.0.3",
+        metadata={"color": ["pink"], "size": [0]},
+    )
+    response = client.post(
+        "/api/v1/documents",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "{'role'}"
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = f"Missing metadata keys: {key_text}"
+    expected_extra_message = (
+        f"Extra metadata keys: {list(new_document.metadata.keys())}"
+    )
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message) + len(
+        expected_missing_message
+    ) + len(expected_extra_message) + len(",")
+
+
 def test_document_status_is_created_on_create(
     client: TestClient, data_db: Session, user_header_token
 ):

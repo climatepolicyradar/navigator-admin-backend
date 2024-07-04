@@ -9,7 +9,9 @@ import app.clients.db.session as db_session
 import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.repository.family as family_repo
+import app.service.corpus as corpus_service
 import app.service.family as family_service
+import app.service.metadata as metadata_service
 from app.clients.aws.client import get_s3_client
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
@@ -124,6 +126,18 @@ def update(
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
+    family = family_service.get(doc.family_import_id)
+    if family is None:
+        raise ValidationError(f"Could not find family for {doc.family_import_id}")
+
+    # Get the taxonomy from the family's corpus.
+    taxonomy = corpus_service.get_taxonomy_from_corpus(
+        db, family.corpus_import_id, "_document"
+    )
+
+    # Validate metadata.
+    metadata_service.validate_metadata(taxonomy, document.metadata)
+
     try:
         if document_repo.update(db, import_id, document):
             db.commit()
@@ -168,6 +182,14 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.import_id
     )
+
+    # Get the taxonomy from the family's corpus.
+    taxonomy = corpus_service.get_taxonomy_from_corpus(
+        db, family.corpus_import_id, "_document"
+    )
+
+    # Validate metadata.
+    metadata_service.validate_metadata(taxonomy, document.metadata)
 
     try:
         import_id = document_repo.create(db, document)
