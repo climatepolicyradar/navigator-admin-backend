@@ -19,6 +19,7 @@ from app.api.api_v1.routers import (
     auth_router,
     collections_router,
     config_router,
+    corpora_router,
     document_router,
     event_router,
     families_router,
@@ -96,6 +97,12 @@ app.include_router(
 
 app.include_router(auth_router, prefix="/api", tags=["Authentication"])
 
+app.include_router(
+    corpora_router,
+    prefix="/api/v1",
+    tags=["corpora"],
+    dependencies=[Depends(check_user_auth)],
+)
 # Add CORS middleware to allow cross origin requests from any port
 app.add_middleware(
     CORSMiddleware,

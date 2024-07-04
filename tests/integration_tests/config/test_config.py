@@ -25,6 +25,7 @@ EXPECTED_CCLW_TAXONOMY = {
     "sector",
     "instrument",
     "event_type",
+    "_document",
 }
 EXPECTED_CCLW_TOPICS = 4
 EXPECTED_CCLW_HAZARDS = 81
@@ -33,7 +34,7 @@ EXPECTED_CCLW_KEYWORDS = 219
 EXPECTED_CCLW_FRAMEWORKS = 3
 EXPECTED_CCLW_INSTRUMENTS = 25
 
-EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type", "event_type"}
+EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type", "event_type", "_document"}
 
 
 def test_get_config_has_expected_shape(

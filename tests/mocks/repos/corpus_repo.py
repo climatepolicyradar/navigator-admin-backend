@@ -27,8 +27,8 @@ def mock_corpus_repo(corpus_repo, monkeypatch: MonkeyPatch, mocker):
     monkeypatch.setattr(corpus_repo, "get_corpus_org_id", mock_get_corpus_org_id)
     mocker.spy(corpus_repo, "get_corpus_org_id")
 
-    monkeypatch.setattr(corpus_repo, "validate", mock_validate)
-    mocker.spy(corpus_repo, "validate")
+    monkeypatch.setattr(corpus_repo, "verify_corpus_exists", mock_validate)
+    mocker.spy(corpus_repo, "verify_corpus_exists")
 
     monkeypatch.setattr(
         corpus_repo, "get_taxonomy_from_corpus", mock_get_taxonomy_from_corpus

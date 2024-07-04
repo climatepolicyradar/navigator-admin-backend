@@ -538,8 +538,8 @@ SQLAlchemy-Utils = "^0.38.2"
 [package.source]
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
-reference = "v3.7.2"
-resolved_reference = "1decd35791785b5ce12cce2dadec548150184cb4"
+reference = "755b2169f10c7be88ceb4cd8e368d332fa44df83"
+resolved_reference = "755b2169f10c7be88ceb4cd8e368d332fa44df83"
 
 [[package]]
 name = "dill"
@@ -3026,4 +3026,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "7abe9a62c289e6f003624e574d56c522858c3d2352b208284d8021d8f9f0c643"
+content-hash = "a6e495e7117686c12aae867f23686f4c6ebd2f73090d5a2875a879cddb93ece5"

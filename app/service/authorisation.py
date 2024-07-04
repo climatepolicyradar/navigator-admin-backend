@@ -1,3 +1,5 @@
+import logging
+
 from db_client.models.organisation.authorisation import (
     AUTH_TABLE,
     HTTP_MAP_TO_OPERATION,
@@ -8,6 +10,8 @@ from db_client.models.organisation.authorisation import (
 
 from app.errors import AuthorisationError
 from app.model.user import UserContext
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def http_method_to_operation(method: str) -> AuthOperation:
