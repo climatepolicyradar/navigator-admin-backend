@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, cast
 
 from pytest import MonkeyPatch
 
@@ -17,12 +17,17 @@ def mock_corpus_repo(corpus_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_validate(_, __) -> bool:
         return corpus_repo.valid
 
-    def mock_get_taxonomy_from_corpus(_, __) -> Optional[TaxonomyData]:
+    def mock_get_taxonomy_from_corpus(_, __, ___=None) -> Optional[TaxonomyData]:
         if corpus_repo.bad_taxonomy:
             return None
-        color = {"allow_blanks": True, "allow_any": True, "allowed_values": []}
+
+        color = {
+            "allow_blanks": False,
+            "allow_any": False,
+            "allowed_values": ["pink", "blue"],
+        }
         size = {"allow_blanks": True, "allow_any": True, "allowed_values": []}
-        return {"color": color, "size": size}
+        return cast(TaxonomyData, {"color": color, "size": size})
 
     monkeypatch.setattr(corpus_repo, "get_corpus_org_id", mock_get_corpus_org_id)
     mocker.spy(corpus_repo, "get_corpus_org_id")
