@@ -31,7 +31,6 @@ from app.repository import (
     event_repo,
     family_repo,
     geography_repo,
-    metadata_repo,
     organisation_repo,
 )
 from tests.mocks.repos import create_mock_family_repo
@@ -42,7 +41,6 @@ from tests.mocks.repos.corpus_repo import mock_corpus_repo
 from tests.mocks.repos.document_repo import mock_document_repo
 from tests.mocks.repos.event_repo import mock_event_repo
 from tests.mocks.repos.geography_repo import mock_geography_repo
-from tests.mocks.repos.metadata_repo import mock_metadata_repo
 from tests.mocks.repos.organisation_repo import mock_organisation_repo
 from tests.mocks.services.analytics_service import mock_analytics_service
 from tests.mocks.services.app_user_service import mock_app_user_service
@@ -64,13 +62,6 @@ def client():
 
 
 # ----- Mock repos
-
-
-@pytest.fixture
-def metadata_repo_mock(monkeypatch, mocker):
-    """Mocks the service for a single test."""
-    mock_metadata_repo(metadata_repo, monkeypatch, mocker)
-    yield metadata_repo
 
 
 @pytest.fixture

@@ -15,7 +15,6 @@ def test_update(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -44,7 +43,6 @@ def test_update_when_family_missing(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -73,7 +71,6 @@ def test_update_raises_when_family_id_invalid(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -103,7 +100,6 @@ def test_update_raises_when_category_invalid(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -133,7 +129,6 @@ def test_update_raises_when_organisation_invalid(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -165,7 +160,6 @@ def test_update_family_raises_when_geography_invalid(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -196,7 +190,6 @@ def test_update_family_raises_when_metadata_invalid(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -205,7 +198,6 @@ def test_update_family_raises_when_metadata_invalid(
 
     updated_family = create_family_write_dto(metadata={"invalid": True})
 
-    metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
 
@@ -230,7 +222,6 @@ def test_update_family_raises_when_collection_id_invalid(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -260,7 +251,6 @@ def test_update_family_raises_when_collection_missing(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -290,7 +280,6 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     admin_user_context,
 ):
@@ -320,7 +309,6 @@ def test_update_raises_when_family_organisation_mismatch_with_user_org(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     another_admin_user_context,
 ):
@@ -353,7 +341,6 @@ def test_update_success_when_family_organisation_mismatch_with_user_org(
     family_repo_mock,
     collection_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     corpus_repo_mock,
     super_user_context,
 ):

@@ -14,7 +14,6 @@ from tests.helpers.family import create_family_create_dto
 def test_create(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -36,7 +35,6 @@ def test_create(
 def test_create_repo_fails(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -63,7 +61,6 @@ def test_create_repo_fails(
 def test_create_raises_when_category_invalid(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -88,7 +85,6 @@ def test_create_raises_when_category_invalid(
 def test_create_raises_when_missing_metadata(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -97,7 +93,6 @@ def test_create_raises_when_missing_metadata(
     new_family = create_family_create_dto(
         collections=collections, metadata={"color": ["blue"]}
     )
-    metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
     expected_msg = "Metadata validation failed: Missing metadata keys: {'size'}"
@@ -116,7 +111,6 @@ def test_create_raises_when_missing_metadata(
 def test_create_raises_when_missing_taxonomy(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -126,7 +120,6 @@ def test_create_raises_when_missing_taxonomy(
     new_family = create_family_create_dto(
         collections=collections, metadata={"size": [100], "color": ["blue"]}
     )
-    metadata_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
     expected_msg = "Could not get taxonomy from corpus"
@@ -145,7 +138,6 @@ def test_create_raises_when_missing_taxonomy(
 def test_create_raises_when_collection_org_different_to_usr_org(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -170,7 +162,6 @@ def test_create_raises_when_collection_org_different_to_usr_org(
 def test_create_raises_when_corpus_missing(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -195,7 +186,6 @@ def test_create_raises_when_corpus_missing(
 def test_create_when_no_org_associated_with_entity(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     admin_user_context,
@@ -221,7 +211,6 @@ def test_create_when_no_org_associated_with_entity(
 def test_create_raises_when_corpus_org_different_to_usr_org(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     another_admin_user_context,
@@ -245,7 +234,6 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
 def test_create_success_when_corpus_org_different_to_usr_org_super(
     family_repo_mock,
     geography_repo_mock,
-    metadata_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
     super_user_context,

@@ -7,7 +7,6 @@ import app.repository.document as document_repo
 import app.repository.event as event_repo
 import app.repository.family as family_repo  # type: ignore
 import app.repository.geography as geography_repo
-import app.repository.metadata as metadata_repo
 import app.repository.organisation as organisation_repo
 from app.repository.protocols import FamilyRepo
 
@@ -23,6 +22,5 @@ __all__ = (
     "event_repo",
     "family_repo",
     "geography_repo",
-    "metadata_repo",
     "organisation_repo",
 )
