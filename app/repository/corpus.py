@@ -217,14 +217,18 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
     image_url_has_changed = original_corpus.corpus_image_url != cast(
         str, new_values["corpus_image_url"]
     )
-    if not (
-        ct_name_has_changed
-        and ct_description_has_changed
-        and title_has_changed
-        and description_has_changed
-        and corpus_text_has_changed
-        and image_url_has_changed
+
+    if not any(
+        [
+            ct_name_has_changed,
+            ct_description_has_changed,
+            title_has_changed,
+            description_has_changed,
+            corpus_text_has_changed,
+            image_url_has_changed,
+        ]
     ):
+        _LOGGER.error("idempotent")
         return True
 
     commands = []
@@ -240,11 +244,13 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
             )
         )
 
-    if (
-        corpus_text_has_changed
-        or title_has_changed
-        or description_has_changed
-        or image_url_has_changed
+    if any(
+        [
+            corpus_text_has_changed,
+            title_has_changed,
+            description_has_changed,
+            image_url_has_changed,
+        ]
     ):
         commands.append(
             db_update(Corpus)
@@ -253,11 +259,11 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
                 title=new_values["title"],
                 description=new_values["description"],
                 corpus_image_url=(
-                    str(new_values["source_url"])
-                    if new_values["source_url"] is not None
+                    str(new_values["corpus_image_url"])
+                    if new_values["corpus_image_url"] is not None
                     else None
                 ),
-                corpus_text=new_values["variant_name"],
+                corpus_text=new_values["corpus_text"],
             ),
         )
 
