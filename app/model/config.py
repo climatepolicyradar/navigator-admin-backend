@@ -2,7 +2,7 @@ from typing import Mapping, Sequence, Union
 
 from pydantic import BaseModel
 
-TaxonomyData = Mapping[str, Mapping[str, Union[bool, str, Sequence[str]]]]
+TaxonomyData = Mapping[str, Mapping[str, Union[dict, bool, str, Sequence[str]]]]
 
 
 class DocumentConfig(BaseModel):
