@@ -277,7 +277,6 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
         n_collections = query.count()
-        _LOGGER.error(n_collections)
     except Exception as e:
         _LOGGER.error(e)
         return
