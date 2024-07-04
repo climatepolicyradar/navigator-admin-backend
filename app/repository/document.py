@@ -96,6 +96,7 @@ def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
         "variant_name": dto.variant_name,
         "document_type": dto.type,
         "document_role": dto.role,
+        "metadata": dto.metadata,
     }
 
 
@@ -133,6 +134,11 @@ def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
         created=cast(datetime, fdoc.created),
         last_modified=cast(datetime, fdoc.last_modified),
         slug=str(fdoc.slugs[0].name if len(fdoc.slugs) > 0 else ""),
+        metadata=(
+            cast(dict, fdoc.valid_metadata)
+            if fdoc.valid_metadata is not None
+            else {"role": []}
+        ),
         physical_id=cast(int, pdoc.id),
         title=str(pdoc.title),
         md5_sum=str(pdoc.md5_sum) if pdoc.md5_sum is not None else None,
