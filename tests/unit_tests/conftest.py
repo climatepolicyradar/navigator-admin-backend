@@ -6,6 +6,7 @@ Service mocks should only be used for router tests.
 
 from typing import Dict
 
+import db_client.functions.metadata as metadata_repo
 import pytest
 from fastapi.testclient import TestClient
 from moto import mock_s3
@@ -41,6 +42,7 @@ from tests.mocks.repos.corpus_repo import mock_corpus_repo
 from tests.mocks.repos.document_repo import mock_document_repo
 from tests.mocks.repos.event_repo import mock_event_repo
 from tests.mocks.repos.geography_repo import mock_geography_repo
+from tests.mocks.repos.metadata_repo import mock_metadata_db_client
 from tests.mocks.repos.organisation_repo import mock_organisation_repo
 from tests.mocks.services.analytics_service import mock_analytics_service
 from tests.mocks.services.app_user_service import mock_app_user_service
@@ -133,6 +135,13 @@ def corpus_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_corpus_repo(corpus_repo, monkeypatch, mocker)
     yield corpus_repo
+
+
+@pytest.fixture
+def metadata_repo_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_metadata_db_client(metadata_repo, monkeypatch, mocker)
+    yield metadata_repo
 
 
 # ----- Mock services
