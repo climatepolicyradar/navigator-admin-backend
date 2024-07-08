@@ -17,7 +17,14 @@ def create_family_read_dto(
     collections: Optional[list[str]] = None,
 ) -> FamilyReadDTO:
     if metadata is None:
-        metadata = {}
+        metadata = {
+            "topic": [],
+            "hazard": [],
+            "sector": [],
+            "keyword": [],
+            "framework": [],
+            "instrument": [],
+        }
 
     if collections is None:
         collections = []
@@ -62,7 +69,6 @@ def create_family_create_dto(
             "keyword": [],
             "framework": [],
             "instrument": [],
-            "event_type": [],
         }
     if collections is None:
         collections = []
@@ -93,7 +99,6 @@ def create_family_write_dto(
             "keyword": [],
             "framework": [],
             "instrument": [],
-            "event_type": [],
         }
     if collections is None:
         collections = []
