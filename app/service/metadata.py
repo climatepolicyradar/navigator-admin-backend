@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, Sequence, cast
 
-from db_client.functions import metadata as metadata_repo
+from db_client.functions import metadata as db_client_metadata
 from db_client.functions.corpus_helpers import TaxonomyDataEntry
 from sqlalchemy.orm import Session
 
@@ -28,7 +28,9 @@ def validate_metadata(
     :return None
     """
     try:
-        results = metadata_repo.validate_metadata(db, corpus_id, metadata, entity_key)
+        results = db_client_metadata.validate_metadata(
+            db, corpus_id, metadata, entity_key
+        )
     except TypeError as e:
         raise ValidationError(e.args[0] if len(e.args) > 0 else e.args) from e
 

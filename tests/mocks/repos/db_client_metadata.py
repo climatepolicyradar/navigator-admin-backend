@@ -5,26 +5,26 @@ from pytest import MonkeyPatch
 from sqlalchemy import exc
 
 
-def mock_metadata_db_client(metadata_repo, monkeypatch: MonkeyPatch, mocker):
-    metadata_repo.return_empty = False
-    metadata_repo.throw_repository_error = False
-    metadata_repo.error = False
-    metadata_repo.valid = True
-    metadata_repo.bad_taxonomy = False
+def mock_metadata_db_client(db_client_metadata, monkeypatch: MonkeyPatch, mocker):
+    db_client_metadata.return_empty = False
+    db_client_metadata.throw_repository_error = False
+    db_client_metadata.error = False
+    db_client_metadata.valid = True
+    db_client_metadata.bad_taxonomy = False
 
     def maybe_throw():
-        if metadata_repo.throw_repository_error:
+        if db_client_metadata.throw_repository_error:
             raise exc.SQLAlchemyError("")
 
     def mock_validate_metadata(_) -> Optional[Sequence[str]]:
         maybe_throw()
-        if metadata_repo.return_empty:
+        if db_client_metadata.return_empty:
             raise TypeError
 
         return []
 
     def mock_get_taxonomy_from_corpus(_, __) -> Optional[TaxonomyData]:
-        if metadata_repo.bad_taxonomy:
+        if db_client_metadata.bad_taxonomy:
             return None
 
         color = {
@@ -48,14 +48,13 @@ def mock_metadata_db_client(metadata_repo, monkeypatch: MonkeyPatch, mocker):
         return cast(TaxonomyData, {"color": color, "size": size})
 
     monkeypatch.setattr(
-        metadata_repo, "get_taxonomy_from_corpus", mock_get_taxonomy_from_corpus
+        db_client_metadata, "get_taxonomy_from_corpus", mock_get_taxonomy_from_corpus
     )
-    mocker.spy(metadata_repo, "get_taxonomy_from_corpus")
+    mocker.spy(db_client_metadata, "get_taxonomy_from_corpus")
 
     monkeypatch.setattr(
-        metadata_repo, "get_entity_specific_taxonomy", mock_get_entity_specific_taxonomy
+        db_client_metadata,
+        "get_entity_specific_taxonomy",
+        mock_get_entity_specific_taxonomy,
     )
-    mocker.spy(metadata_repo, "get_entity_specific_taxonomy")
-
-    # monkeypatch.setattr(metadata_repo, "validate_metadata", mock_validate_metadata)
-    # mocker.spy(metadata_repo, "validate_metadata")
+    mocker.spy(db_client_metadata, "get_entity_specific_taxonomy")
