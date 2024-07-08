@@ -27,7 +27,10 @@ def validate_metadata(
     :raises ValidationError: if the metadata is invalid.
     :return None
     """
-    results = metadata_repo.validate_metadata(db, corpus_id, metadata, entity_key)
+    try:
+        results = metadata_repo.validate_metadata(db, corpus_id, metadata, entity_key)
+    except TypeError as e:
+        raise ValidationError(e.args[0] if len(e.args) > 0 else e.args) from e
 
     if results is not None and len(results) > 0:  # type: ignore
         msg = f"Metadata validation failed: {','.join(cast(list, results))}"
