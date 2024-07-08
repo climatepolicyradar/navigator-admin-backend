@@ -16,7 +16,7 @@ def test_create(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     new_family = create_family_create_dto(
@@ -28,7 +28,7 @@ def test_create(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 1
 
@@ -38,7 +38,7 @@ def test_create_repo_fails(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     new_family = create_family_create_dto(
@@ -55,8 +55,8 @@ def test_create_repo_fails(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 1
 
@@ -66,7 +66,7 @@ def test_create_raises_when_category_invalid(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     new_family = create_family_create_dto(
@@ -81,8 +81,8 @@ def test_create_raises_when_category_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert family_repo_mock.create.call_count == 0
 
@@ -92,7 +92,7 @@ def test_create_raises_when_missing_metadata(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     collections = ["x.y.z.1", "x.y.z.2"]
@@ -107,8 +107,8 @@ def test_create_raises_when_missing_metadata(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == len(
         collections
     )
@@ -120,11 +120,11 @@ def test_create_raises_when_missing_taxonomy(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     collections = ["x.y.z.1", "x.y.z.2"]
-    metadata_repo_mock.bad_taxonomy = True
+    db_client_metadata_mock.bad_taxonomy = True
     new_family = create_family_create_dto(
         collections=collections, metadata={"size": [100], "color": ["blue"]}
     )
@@ -136,8 +136,8 @@ def test_create_raises_when_missing_taxonomy(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == len(
         collections
     )
@@ -149,7 +149,7 @@ def test_create_raises_when_collection_org_different_to_usr_org(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     new_family = create_family_create_dto(
@@ -165,8 +165,8 @@ def test_create_raises_when_collection_org_different_to_usr_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 0
 
@@ -176,7 +176,7 @@ def test_create_raises_when_corpus_missing(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     new_family = create_family_create_dto(
@@ -191,8 +191,8 @@ def test_create_raises_when_corpus_missing(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert family_repo_mock.create.call_count == 0
 
@@ -202,7 +202,7 @@ def test_create_when_no_org_associated_with_entity(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     admin_user_context,
 ):
     new_family = create_family_create_dto(
@@ -218,8 +218,8 @@ def test_create_when_no_org_associated_with_entity(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert family_repo_mock.create.call_count == 0
 
@@ -229,7 +229,7 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     another_admin_user_context,
 ):
     new_family = create_family_create_dto(
@@ -244,8 +244,8 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 0
 
@@ -255,7 +255,7 @@ def test_create_success_when_corpus_org_different_to_usr_org_super(
     geography_repo_mock,
     collection_repo_mock,
     corpus_repo_mock,
-    metadata_repo_mock,
+    db_client_metadata_mock,
     super_user_context,
 ):
     new_family = create_family_create_dto(
@@ -267,7 +267,7 @@ def test_create_success_when_corpus_org_different_to_usr_org_super(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 1

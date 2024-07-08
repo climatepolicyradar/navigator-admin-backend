@@ -6,7 +6,7 @@ from tests.helpers.document import create_document_write_dto
 
 
 def test_update(
-    document_repo_mock, admin_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock, admin_user_context, family_repo_mock, db_client_metadata_mock
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
@@ -19,14 +19,14 @@ def test_update(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert family_repo_mock.get.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 1
     assert document_repo_mock.update.call_count == 1
     assert document_repo_mock.get.call_count == 2
 
 
 def test_update_when_missing(
-    document_repo_mock, admin_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock, admin_user_context, family_repo_mock, db_client_metadata_mock
 ):
     document_repo_mock.return_empty = True
     updated_doc = create_document_write_dto()
@@ -35,14 +35,14 @@ def test_update_when_missing(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert family_repo_mock.get.call_count == 0
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 1
 
 
 def test_update_raises_when_invalid_id(
-    document_repo_mock, admin_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock, admin_user_context, family_repo_mock, db_client_metadata_mock
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None  # needed to placate pyright
@@ -59,14 +59,14 @@ def test_update_raises_when_invalid_id(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert family_repo_mock.get.call_count == 0
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 0
 
 
 def test_update_raises_when_invalid_variant(
-    document_repo_mock, admin_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock, admin_user_context, family_repo_mock, db_client_metadata_mock
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None  # needed to placate pyright
@@ -83,14 +83,14 @@ def test_update_raises_when_invalid_variant(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 0
     assert family_repo_mock.get.call_count == 0
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 1
 
 
 def test_update_document_raises_when_metadata_invalid(
-    document_repo_mock, admin_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock, admin_user_context, family_repo_mock, db_client_metadata_mock
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None  # needed to placate pyright
@@ -112,14 +112,14 @@ def test_update_document_raises_when_metadata_invalid(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert family_repo_mock.get.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 1
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 1
 
 
 def test_update_when_no_org_associated_with_entity(
-    document_repo_mock, admin_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock, admin_user_context, family_repo_mock, db_client_metadata_mock
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
@@ -138,14 +138,17 @@ def test_update_when_no_org_associated_with_entity(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert family_repo_mock.get.call_count == 0
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 1
 
 
 def test_update_raises_when_org_mismatch(
-    document_repo_mock, another_admin_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock,
+    another_admin_user_context,
+    family_repo_mock,
+    db_client_metadata_mock,
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
@@ -166,14 +169,14 @@ def test_update_raises_when_org_mismatch(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert family_repo_mock.get.call_count == 0
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.update.call_count == 0
     assert document_repo_mock.get.call_count == 1
 
 
 def test_update_success_when_org_mismatch_superuser(
-    document_repo_mock, super_user_context, family_repo_mock, metadata_repo_mock
+    document_repo_mock, super_user_context, family_repo_mock, db_client_metadata_mock
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
@@ -187,7 +190,7 @@ def test_update_success_when_org_mismatch_superuser(
 
     assert document_repo_mock.get_org_from_import_id.call_count == 1
     assert family_repo_mock.get.call_count == 1
-    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 1
     assert document_repo_mock.update.call_count == 1
     assert document_repo_mock.get.call_count == 2
