@@ -13,3 +13,7 @@
 #
 # Trunk auto formatting
 e29b626fa766f08bf9b8cdb96bb5d1c98ccff660
+
+# Removing old comments denoting sections from when we used to have all endpoint
+# tests in a single file.
+7c4860190e2bb2a7fec569a143140f4fca010c4a
