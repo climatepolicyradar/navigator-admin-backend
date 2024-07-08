@@ -3,8 +3,6 @@ import pytest
 import app.service.collection as collection_service
 from app.errors import ValidationError
 
-# --- GET
-
 
 def test_get(collection_repo_mock):
     result = collection_service.get("id.1.2.3")

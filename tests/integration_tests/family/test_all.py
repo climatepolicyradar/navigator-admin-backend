@@ -5,8 +5,6 @@ from sqlalchemy.orm import Session
 from tests.helpers.utils import remove_trigger_cols_from_result
 from tests.integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
 
-# --- GET ALL
-
 
 def test_get_all_families_super(
     client: TestClient, data_db: Session, superuser_header_token

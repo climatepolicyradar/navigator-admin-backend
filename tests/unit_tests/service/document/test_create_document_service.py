@@ -5,18 +5,24 @@ from app.errors import AuthorisationError, RepositoryError, ValidationError
 from tests.helpers.document import create_document_create_dto
 
 
-def test_create(document_repo_mock, family_repo_mock, admin_user_context):
-    new_document = create_document_create_dto()
+def test_create(
+    document_repo_mock, family_repo_mock, admin_user_context, db_client_metadata_mock
+):
+    new_document = create_document_create_dto(metadata={"color": ["pink"]})
     document = doc_service.create(new_document, admin_user_context)
     assert document is not None
 
     assert family_repo_mock.get.call_count == 1
     assert family_repo_mock.get_organisation.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 1
     assert document_repo_mock.create.call_count == 1
 
 
-def test_create_when_db_fails(document_repo_mock, family_repo_mock, admin_user_context):
-    new_document = create_document_create_dto()
+def test_create_when_db_fails(
+    document_repo_mock, family_repo_mock, admin_user_context, db_client_metadata_mock
+):
+    new_document = create_document_create_dto(metadata={"color": ["pink"]})
     document_repo_mock.return_empty = True
 
     with pytest.raises(RepositoryError):
@@ -24,11 +30,13 @@ def test_create_when_db_fails(document_repo_mock, family_repo_mock, admin_user_c
 
     assert family_repo_mock.get.call_count == 1
     assert family_repo_mock.get_organisation.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 1
     assert document_repo_mock.create.call_count == 1
 
 
 def test_create_raises_when_invalid_family_id(
-    document_repo_mock, family_repo_mock, admin_user_context
+    document_repo_mock, family_repo_mock, admin_user_context, db_client_metadata_mock
 ):
     new_document = create_document_create_dto(family_import_id="invalid family")
     with pytest.raises(ValidationError) as e:
@@ -39,11 +47,13 @@ def test_create_raises_when_invalid_family_id(
 
     assert family_repo_mock.get.call_count == 0
     assert family_repo_mock.get_organisation.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.create.call_count == 0
 
 
 def test_create_raises_when_blank_variant(
-    document_repo_mock, family_repo_mock, admin_user_context
+    document_repo_mock, family_repo_mock, admin_user_context, db_client_metadata_mock
 ):
     new_document = create_document_create_dto(variant_name="")
     with pytest.raises(ValidationError) as e:
@@ -53,11 +63,13 @@ def test_create_raises_when_blank_variant(
 
     assert family_repo_mock.get.call_count == 0
     assert family_repo_mock.get_organisation.call_count == 0
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.create.call_count == 0
 
 
 def test_create_when_no_org_associated_with_entity(
-    document_repo_mock, family_repo_mock, admin_user_context
+    document_repo_mock, family_repo_mock, admin_user_context, db_client_metadata_mock
 ):
     new_document = create_document_create_dto()
     family_repo_mock.no_org = True
@@ -70,11 +82,16 @@ def test_create_when_no_org_associated_with_entity(
 
     assert family_repo_mock.get.call_count == 1
     assert family_repo_mock.get_organisation.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.create.call_count == 0
 
 
 def test_create_raises_when_org_mismatch(
-    document_repo_mock, family_repo_mock, another_admin_user_context
+    document_repo_mock,
+    family_repo_mock,
+    another_admin_user_context,
+    db_client_metadata_mock,
 ):
     new_document = create_document_create_dto()
     family_repo_mock.alternative_org = True
@@ -87,16 +104,45 @@ def test_create_raises_when_org_mismatch(
 
     assert family_repo_mock.get.call_count == 1
     assert family_repo_mock.get_organisation.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert document_repo_mock.create.call_count == 0
 
 
 def test_create_success_when_org_mismatch(
-    document_repo_mock, family_repo_mock, super_user_context
+    document_repo_mock, family_repo_mock, super_user_context, db_client_metadata_mock
 ):
-    new_document = create_document_create_dto()
+    new_document = create_document_create_dto(metadata={"color": ["pink"]})
     document = doc_service.create(new_document, super_user_context)
     assert document is not None
 
     assert family_repo_mock.get.call_count == 1
     assert family_repo_mock.get_organisation.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 1
     assert document_repo_mock.create.call_count == 1
+
+
+def test_create_document_raises_when_metadata_invalid(
+    document_repo_mock, admin_user_context, family_repo_mock, db_client_metadata_mock
+):
+    new_document = create_document_create_dto(metadata={"invalid": True})
+
+    with pytest.raises(ValidationError) as e:
+        document = doc_service.create(new_document, admin_user_context)
+        assert document is not None
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = "Missing metadata keys: {'color'}"
+    expected_extra_message = "Extra metadata keys: {'invalid'}"
+
+    assert e.value.message.startswith(expected_message)
+    assert len(e.value.message) == len(
+        expected_message + expected_missing_message + "," + expected_extra_message
+    )
+
+    assert family_repo_mock.get.call_count == 1
+    assert family_repo_mock.get_organisation.call_count == 1
+    assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
+    assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 1
+    assert document_repo_mock.create.call_count == 0

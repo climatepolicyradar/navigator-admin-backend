@@ -7,7 +7,6 @@ This file hands off to the family repo, adding the dependency of the db (future)
 import logging
 from typing import Optional, Union
 
-from db_client.functions import metadata
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -16,7 +15,7 @@ import app.clients.db.session as db_session
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.model.user import UserContext
-from app.repository import corpus_repo, family_repo
+from app.repository import family_repo
 from app.service import (
     app_user,
     category,
@@ -24,6 +23,7 @@ from app.service import (
     corpus,
     geography,
     id,
+    metadata,
     organisation,
 )
 
@@ -135,22 +135,8 @@ def update(
         user, entity_org_id, family.corpus_import_id
     )
 
-    # Get the taxonomy from the family's corpus.
-    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
-    if taxonomy is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
     # Validate metadata.
-    results = metadata.validate_metadata(
-        metadata.build_valid_taxonomy(taxonomy), family_dto.metadata
-    )
-
-    if len(results) > 0:
-        msg = f"Metadata validation failed: {results}"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
+    metadata.validate_metadata(db, family.corpus_import_id, family_dto.metadata)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
@@ -228,22 +214,8 @@ def create(
         user, entity_org_id, family.corpus_import_id
     )
 
-    # Get the taxonomy from the family's corpus.
-    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
-    if taxonomy is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
     # Validate metadata.
-    results = metadata.validate_metadata(
-        metadata.build_valid_taxonomy(taxonomy), family.metadata
-    )
-
-    if len(results) > 0:
-        msg = f"Metadata validation failed: {','.join(results)}"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
+    metadata.validate_metadata(db, family.corpus_import_id, family.metadata)
 
     try:
         import_id = family_repo.create(db, family, geo_id, entity_org_id)

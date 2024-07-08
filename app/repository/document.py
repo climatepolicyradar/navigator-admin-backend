@@ -96,6 +96,7 @@ def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
         "variant_name": dto.variant_name,
         "document_type": dto.type,
         "document_role": dto.role,
+        "valid_metadata": dto.metadata,
     }
 
 
@@ -122,7 +123,6 @@ def _document_tuple_from_create_dto(
 
 def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
     fdoc, pdoc, org, lang_user, lang_model = doc_query_return
-
     return DocumentReadDTO(
         import_id=str(fdoc.import_id),
         family_import_id=str(fdoc.family_import_id),
@@ -133,6 +133,11 @@ def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
         created=cast(datetime, fdoc.created),
         last_modified=cast(datetime, fdoc.last_modified),
         slug=str(fdoc.slugs[0].name if len(fdoc.slugs) > 0 else ""),
+        metadata=(
+            cast(dict, fdoc.valid_metadata)
+            if fdoc.valid_metadata is not None
+            else {"role": []}
+        ),
         physical_id=cast(int, pdoc.id),
         title=str(pdoc.title),
         md5_sum=str(pdoc.md5_sum) if pdoc.md5_sum is not None else None,
@@ -279,6 +284,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
             variant_name=new_values["variant_name"],
             document_role=new_values["role"],
             document_type=new_values["type"],
+            valid_metadata=new_values["metadata"],
         ),
     ]
 

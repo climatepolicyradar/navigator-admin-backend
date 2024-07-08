@@ -3,8 +3,6 @@ import pytest
 import app.service.document as doc_service
 from app.errors import ValidationError
 
-# --- GET
-
 
 def test_get(document_repo_mock):
     result = doc_service.get("id.1.2.3")

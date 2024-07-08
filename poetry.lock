@@ -518,7 +518,7 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "db-client"
-version = "3.7.2"
+version = "3.8.3"
 description = "All things to do with the datamodel and its storage. Including alembic migrations and datamodel code."
 optional = false
 python-versions = "^3.9"
@@ -538,8 +538,8 @@ SQLAlchemy-Utils = "^0.38.2"
 [package.source]
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
-reference = "v3.7.2"
-resolved_reference = "1decd35791785b5ce12cce2dadec548150184cb4"
+reference = "v3.8.3"
+resolved_reference = "1d4a57b35e2d4d55a8d646c1f2fa40e193eba9ee"
 
 [[package]]
 name = "dill"
@@ -3026,4 +3026,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "7abe9a62c289e6f003624e574d56c522858c3d2352b208284d8021d8f9f0c643"
+content-hash = "9af7dddf79a83303d5376e70c464c4de89a3ae8b74b16d08b2cfde99f0ba54fc"

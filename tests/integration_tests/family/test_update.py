@@ -436,7 +436,6 @@ def test_update_family_rollback(
         "keyword": [],
         "framework": [],
         "instrument": [],
-        "event_type": [],
     }
     assert rollback_family_repo.update.call_count == 1
 
@@ -513,7 +512,6 @@ def test_update_family_metadata_if_changed(
         "keyword": [],
         "framework": [],
         "instrument": [],
-        "event_type": [],
     }
 
     expected_meta = {
@@ -523,7 +521,6 @@ def test_update_family_metadata_if_changed(
         "keyword": [],
         "framework": [],
         "instrument": [],
-        "event_type": [],
     }
     family_data["metadata"] = expected_meta
     response = client.put(

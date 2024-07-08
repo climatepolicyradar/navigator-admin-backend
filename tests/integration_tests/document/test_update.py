@@ -45,6 +45,7 @@ def test_update_document_super(
         variant_name="Translation",
         role="SUMMARY",
         type="Annex",
+        metadata={"role": ["SUMMARY"]},
         title="Updated Title",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name="Ghotuo",
@@ -59,6 +60,7 @@ def test_update_document_super(
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
+    assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
@@ -70,6 +72,7 @@ def test_update_document_super(
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -99,6 +102,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
         variant_name="Translation",
         role="SUMMARY",
         type="Annex",
+        metadata={"role": ["SUMMARY"]},
         title="Updated Title",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name="Ghotuo",
@@ -114,6 +118,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
     assert data["type"] == "Annex"
+    assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
@@ -124,6 +129,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -155,6 +161,7 @@ def test_update_document_unfccc(
         variant_name="Translation",
         role="SUMMARY",
         type="Annex",
+        metadata={"role": ["SUMMARY"]},
         title="Updated Title",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name="Ghotuo",
@@ -169,6 +176,7 @@ def test_update_document_unfccc(
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
+    assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
@@ -180,6 +188,7 @@ def test_update_document_unfccc(
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -213,6 +222,7 @@ def test_update_document_no_source_url(
         variant_name="Original Language",
         role="MAIN",
         type="Law",
+        metadata={"role": ["MAIN"]},
         title="big title1",
         source_url=None,
         user_language_name="English",
@@ -231,12 +241,14 @@ def test_update_document_no_source_url(
     assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == new_document.source_url
+    assert data["metadata"] == {"role": ["MAIN"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
     assert pd.source_url == new_document.source_url
 
@@ -252,6 +264,52 @@ def test_update_document_no_source_url(
     assert data["user_language_name"] == lang.name
 
 
+def test_update_document_raises_when_metadata_invalid(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+
+    # Keep all values apart from the metadata the same.
+    new_document = DocumentWriteDTO(
+        variant_name="Original Language",
+        role="MAIN",
+        type="Law",
+        metadata={"color": ["pink"]},
+        title="big title1",
+        source_url=cast(AnyHttpUrl, "http://source1/"),
+        user_language_name="English",
+    )
+
+    response = client.put(
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "{'role'}"
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = f"Missing metadata keys: {key_text}"
+    expected_extra_message = (
+        f"Extra metadata keys: {list(new_document.metadata.keys())}"
+    )
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message) + len(
+        expected_missing_message
+    ) + len(expected_extra_message) + len(",")
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name == "Original Language"
+    assert fd.document_role == "MAIN"
+    assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
+    assert pd.title == "big title1"
+    assert pd.source_url == "http://source1/"
+
+
 def test_update_document_remove_variant(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
@@ -262,6 +320,7 @@ def test_update_document_remove_variant(
         variant_name=None,
         role="MAIN",
         type="Law",
+        metadata={"role": ["MAIN"]},
         title="title2",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name=None,
@@ -309,6 +368,7 @@ def test_update_document_remove_user_language(
         variant_name="Original Language",
         role="MAIN",
         type="Law",
+        metadata={"role": ["MAIN"]},
         title="big title1",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name=None,
@@ -326,12 +386,14 @@ def test_update_document_remove_user_language(
     assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == "http://update_source/"
+    assert data["metadata"] == {"role": ["MAIN"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
 
     # Check the user language in the db
@@ -366,6 +428,7 @@ def test_update_document_idempotent(
         "variant_name": doc["variant_name"],
         "role": doc["role"],
         "type": doc["type"],
+        "metadata": doc["metadata"],
         "title": doc["title"],
         "source_url": doc["source_url"],
         "user_language_name": doc["user_language_name"],
@@ -451,6 +514,7 @@ def test_update_document_blank_variant(
         variant_name="",
         role="SUMMARY",
         type="Annex",
+        metadata={"role": ["SUMMARY"]},
         title="Updated Title",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name="Ghotuo",
@@ -473,6 +537,7 @@ def test_update_document_idempotent_user_language(
         variant_name="Original Language",
         role="MAIN",
         type="Law",
+        metadata={"role": ["MAIN"]},
         title="title2",
         source_url=cast(AnyHttpUrl, "http://update_source"),
         user_language_name=None,
@@ -490,12 +555,14 @@ def test_update_document_idempotent_user_language(
     assert data["type"] == "Law"
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
+    assert data["metadata"] == {"role": ["MAIN"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "title2"
     assert pd.source_url == "http://update_source/"
 

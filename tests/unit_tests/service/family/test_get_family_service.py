@@ -9,8 +9,6 @@ import pytest
 import app.service.family as family_service
 from app.errors import ValidationError
 
-# --- GET
-
 
 def test_get_returns_family_if_exists(family_repo_mock):
     result = family_service.get("a.b.c.d")
