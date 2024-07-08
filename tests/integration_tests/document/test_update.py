@@ -60,7 +60,7 @@ def test_update_document_super(
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
-    assert data["metadata"] == {"role": "SUMMARY"}
+    assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
@@ -72,7 +72,7 @@ def test_update_document_super(
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
-    assert fd.valid_metadata == {"role": "SUMMARY"}
+    assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -118,7 +118,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
     assert data["type"] == "Annex"
-    assert data["metadata"] == {"role": "SUMMARY"}
+    assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
@@ -129,7 +129,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
-    assert fd.valid_metadata == {"role": "SUMMARY"}
+    assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -176,7 +176,7 @@ def test_update_document_unfccc(
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
-    assert data["metadata"] == {"role": "SUMMARY"}
+    assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
@@ -188,7 +188,7 @@ def test_update_document_unfccc(
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
-    assert fd.valid_metadata == {"role": "SUMMARY"}
+    assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
