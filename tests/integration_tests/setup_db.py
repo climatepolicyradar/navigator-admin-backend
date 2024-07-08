@@ -231,6 +231,54 @@ EXPECTED_ANALYTICS_SUMMARY = {
     "n_events": EXPECTED_NUM_EVENTS,
 }
 
+EXPECTED_NUM_CORPORA = 2
+EXPECTED_CCLW_CORPUS = {
+    "import_id": "CCLW.corpus.i00000001.n0000",
+    "title": "CCLW national policies",
+    "description": "CCLW national policies",
+    "corpus_text": (
+        "\n        <p>\n          The summary of this document was written by "
+        'researchers at the <a href="http://lse.ac.uk/grantham" target="_blank"> '
+        "Grantham Research Institute </a> . \n          If you want to use this summary"
+        ', please check <a href="'
+        'https://www.lse.ac.uk/granthaminstitute/cclw-terms-and-conditions" target='
+        '"_blank"> terms of use </a> for citation and licensing of third party data.'
+        "\n        </p>\n"
+    ),
+    "corpus_image_url": "corpora/CCLW.corpus.i00000001.n0000/logo.png",
+    "organisation_name": "CCLW",
+    "corpus_type_name": "Laws and Policies",
+    "corpus_type_description": "Laws and policies",
+}
+EXPECTED_UNFCCC_CORPUS = {
+    "import_id": "UNFCCC.corpus.i00000001.n0000",
+    "title": "UNFCCC Submissions",
+    "description": "UNFCCC Submissions",
+    "corpus_text": (
+        "\n        <p>\n          This document was downloaded from "
+        'the <a href="https://unfccc.int/" target="_blank"> UNFCCC website </a> . '
+        '\n          Please check <a href="https://unfccc.int/this-site/terms-of-use'
+        '" target="_blank"> terms of use </a> for citation and licensing of third '
+        "party data.\n        </p>\n"
+    ),
+    "corpus_image_url": None,
+    "organisation_name": "UNFCCC",
+    "corpus_type_name": "Intl. agreements",
+    "corpus_type_description": "Intl. agreements",
+}
+EXPECTED_CORPORA_KEYS = [
+    "import_id",
+    "title",
+    "description",
+    "corpus_text",
+    "corpus_image_url",
+    "organisation_id",
+    "organisation_name",
+    "corpus_type_name",
+    "corpus_type_description",
+    "metadata",
+]
+
 
 def setup_db(test_db: Session, configure_empty: bool = False):
     setup_test_data(test_db, configure_empty)
