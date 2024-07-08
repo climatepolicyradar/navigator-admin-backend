@@ -4,8 +4,6 @@ import app.service.collection as collection_service
 from app.errors import RepositoryError, ValidationError
 from tests.helpers.collection import create_collection_write_dto
 
-# --- UPDATE
-
 
 def test_update(collection_repo_mock):
     collection = collection_service.get("a.b.c.d")

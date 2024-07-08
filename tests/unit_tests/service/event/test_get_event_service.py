@@ -3,8 +3,6 @@ import pytest
 import app.service.event as event_service
 from app.errors import ValidationError
 
-# --- GET
-
 
 def test_get(event_repo_mock):
     result = event_service.get("id.1.2.3")
