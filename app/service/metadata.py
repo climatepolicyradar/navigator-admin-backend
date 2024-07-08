@@ -30,6 +30,7 @@ def validate_metadata(
     try:
         results = metadata_repo.validate_metadata(db, corpus_id, metadata, entity_key)
     except TypeError as e:
+        print(e.args)
         raise ValidationError(e.args[0] if len(e.args) > 0 else e.args) from e
 
     if results is not None and len(results) > 0:  # type: ignore

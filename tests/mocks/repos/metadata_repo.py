@@ -42,7 +42,8 @@ def mock_metadata_db_client(metadata_repo, monkeypatch: MonkeyPatch, mocker):
             "allowed_values": ["pink", "blue"],
         }
         if entity_key is not None:
-            return cast(TaxonomyData, color)
+            color_tax = {"color": color}
+            return cast(TaxonomyData, color_tax)
         size = {"allow_blanks": True, "allow_any": True, "allowed_values": []}
         return cast(TaxonomyData, {"color": color, "size": size})
 
