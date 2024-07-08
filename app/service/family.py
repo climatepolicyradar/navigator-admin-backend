@@ -7,7 +7,6 @@ This file hands off to the family repo, adding the dependency of the db (future)
 import logging
 from typing import Optional, Union
 
-from db_client.functions import metadata
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -24,6 +23,7 @@ from app.service import (
     corpus,
     geography,
     id,
+    metadata,
     organisation,
 )
 
@@ -143,14 +143,7 @@ def update(
         raise ValidationError(msg)
 
     # Validate metadata.
-    results = metadata.validate_metadata(
-        metadata.build_valid_taxonomy(taxonomy), family_dto.metadata
-    )
-
-    if len(results) > 0:
-        msg = f"Metadata validation failed: {results}"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
+    metadata.validate_metadata(db, family.corpus_import_id, family_dto.metadata)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
@@ -236,14 +229,7 @@ def create(
         raise ValidationError(msg)
 
     # Validate metadata.
-    results = metadata.validate_metadata(
-        metadata.build_valid_taxonomy(taxonomy), family.metadata
-    )
-
-    if len(results) > 0:
-        msg = f"Metadata validation failed: {','.join(results)}"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
+    metadata.validate_metadata(db, family.corpus_import_id, family.metadata)
 
     try:
         import_id = family_repo.create(db, family, geo_id, entity_org_id)
