@@ -15,7 +15,7 @@ import app.clients.db.session as db_session
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.model.user import UserContext
-from app.repository import corpus_repo, family_repo
+from app.repository import family_repo
 from app.service import (
     app_user,
     category,
@@ -135,13 +135,6 @@ def update(
         user, entity_org_id, family.corpus_import_id
     )
 
-    # Get the taxonomy from the family's corpus.
-    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
-    if taxonomy is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
     # Validate metadata.
     metadata.validate_metadata(db, family.corpus_import_id, family_dto.metadata)
 
@@ -220,13 +213,6 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.corpus_import_id
     )
-
-    # Get the taxonomy from the family's corpus.
-    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
-    if taxonomy is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
 
     # Validate metadata.
     metadata.validate_metadata(db, family.corpus_import_id, family.metadata)

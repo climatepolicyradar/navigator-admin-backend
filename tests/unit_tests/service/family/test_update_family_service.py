@@ -17,6 +17,7 @@ def test_update(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None
@@ -34,7 +35,8 @@ def test_update(
     assert family_repo_mock.update.call_count == 1
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert family_repo_mock.get.call_count == 2
 
@@ -45,6 +47,7 @@ def test_update_when_family_missing(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None
@@ -63,7 +66,8 @@ def test_update_when_family_missing(
     assert family_repo_mock.get.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -73,6 +77,7 @@ def test_update_raises_when_family_id_invalid(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -92,7 +97,8 @@ def test_update_raises_when_family_id_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 0
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -102,6 +108,7 @@ def test_update_raises_when_category_invalid(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -121,7 +128,8 @@ def test_update_raises_when_category_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 0
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -131,6 +139,7 @@ def test_update_raises_when_organisation_invalid(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -152,7 +161,8 @@ def test_update_raises_when_organisation_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -162,6 +172,7 @@ def test_update_family_raises_when_geography_invalid(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -182,7 +193,8 @@ def test_update_family_raises_when_geography_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -192,6 +204,7 @@ def test_update_family_raises_when_metadata_invalid(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -202,19 +215,49 @@ def test_update_family_raises_when_metadata_invalid(
         family_service.update("a.b.c.d", admin_user_context, updated_family)
 
     expected_message = "Metadata validation failed: "
-    expected_missing_message = "[\"Missing metadata keys: {'size', 'color'}\""
-    expected_extra_message = "\"Extra metadata keys: {'invalid'}\"]"
+    expected_missing_message = "Missing metadata keys: {'size', 'color'}"
+    expected_extra_message = "Extra metadata keys: {'invalid'}"
 
     assert e.value.message.startswith(expected_message)
     assert len(e.value.message) == len(
-        expected_message + expected_missing_message + ", " + expected_extra_message
+        expected_message + expected_missing_message + "," + expected_extra_message
     )
 
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
+    assert collection_repo_mock.get_org_from_collection_id.call_count == 0
+
+
+def test_update_family_raises_when_missing_taxonomy(
+    family_repo_mock,
+    collection_repo_mock,
+    geography_repo_mock,
+    corpus_repo_mock,
+    admin_user_context,
+    metadata_repo_mock,
+):
+    family = family_service.get("a.b.c.d")
+    assert family is not None  # needed to placate pyright
+
+    metadata_repo_mock.bad_taxonomy = True
+    updated_family = create_family_write_dto(metadata={"invalid": True})
+
+    with pytest.raises(ValidationError) as e:
+        family_service.update("a.b.c.d", admin_user_context, updated_family)
+
+    expected_msg = "No taxonomy found for corpus"
+    assert e.value.message == expected_msg
+
+    assert family_repo_mock.get.call_count == 2
+    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert family_repo_mock.update.call_count == 0
+    assert corpus_repo_mock.get_corpus_org_id.call_count == 1
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
 
@@ -224,6 +267,7 @@ def test_update_family_raises_when_collection_id_invalid(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -242,7 +286,8 @@ def test_update_family_raises_when_collection_id_invalid(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.validate.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
@@ -253,6 +298,7 @@ def test_update_family_raises_when_collection_missing(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -271,7 +317,8 @@ def test_update_family_raises_when_collection_missing(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.validate.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
 
@@ -282,6 +329,7 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
     geography_repo_mock,
     corpus_repo_mock,
     admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -299,8 +347,8 @@ def test_update_family_raises_when_collection_org_different_to_usr_org(
     assert family_repo_mock.get.call_count == 2
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
-    assert corpus_repo_mock.get_corpus_org_id.call_count == 1
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert collection_repo_mock.validate.call_count == 1
 
@@ -311,6 +359,7 @@ def test_update_raises_when_family_organisation_mismatch_with_user_org(
     geography_repo_mock,
     corpus_repo_mock,
     another_admin_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
@@ -332,7 +381,8 @@ def test_update_raises_when_family_organisation_mismatch_with_user_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.update.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 0
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 0
     assert collection_repo_mock.validate.call_count == 0
 
@@ -343,6 +393,7 @@ def test_update_success_when_family_organisation_mismatch_with_user_org(
     geography_repo_mock,
     corpus_repo_mock,
     super_user_context,
+    metadata_repo_mock,
 ):
     family = family_service.get("a.b.c.d")
     assert family_repo_mock.get.call_count == 1
@@ -360,7 +411,8 @@ def test_update_success_when_family_organisation_mismatch_with_user_org(
     assert geography_repo_mock.get_id_from_value.call_count == 1
     assert family_repo_mock.get.call_count == 2
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
-    assert corpus_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_taxonomy_from_corpus.call_count == 1
+    assert metadata_repo_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert collection_repo_mock.validate.call_count == 1
     assert family_repo_mock.update.call_count == 1
