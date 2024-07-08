@@ -41,12 +41,6 @@ def _tree_table_to_json(
 
 
 def _to_corpus_data(row) -> CorpusData:
-    print(row.taxonomy.keys())
-    for k, v in row.taxonomy.items():
-        for a, b in v.items():
-
-            print(type(b))
-
     return CorpusData(
         corpus_import_id=row.corpus_import_id,
         title=row.title,
