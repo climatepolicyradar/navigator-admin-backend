@@ -60,6 +60,7 @@ def test_update_document_super(
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
+    assert data["metadata"] == {"role": "SUMMARY"}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
@@ -71,6 +72,7 @@ def test_update_document_super(
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": "SUMMARY"}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -116,6 +118,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
     assert data["type"] == "Annex"
+    assert data["metadata"] == {"role": "SUMMARY"}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
@@ -126,6 +129,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": "SUMMARY"}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -172,6 +176,7 @@ def test_update_document_unfccc(
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
     assert data["role"] == "SUMMARY"
+    assert data["metadata"] == {"role": "SUMMARY"}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
@@ -183,6 +188,7 @@ def test_update_document_unfccc(
     assert fd.variant_name == "Translation"
     assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": "SUMMARY"}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -235,12 +241,14 @@ def test_update_document_no_source_url(
     assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == new_document.source_url
+    assert data["metadata"] == {"role": ["MAIN"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
     assert pd.source_url == new_document.source_url
 
@@ -378,12 +386,14 @@ def test_update_document_remove_user_language(
     assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == "http://update_source/"
+    assert data["metadata"] == {"role": ["MAIN"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
 
     # Check the user language in the db
@@ -545,12 +555,14 @@ def test_update_document_idempotent_user_language(
     assert data["type"] == "Law"
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
+    assert data["metadata"] == {"role": ["MAIN"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Original Language"
     assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "title2"
     assert pd.source_url == "http://update_source/"
 

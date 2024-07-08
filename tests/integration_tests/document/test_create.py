@@ -31,6 +31,7 @@ def test_create_document_cclw(client: TestClient, data_db: Session, user_header_
 
     assert actual_fd is not None
     assert actual_fd.variant_name is not None
+    assert actual_fd.valid_metadata is not None
 
     actual_pd = (
         data_db.query(PhysicalDocument)

@@ -140,6 +140,9 @@ EXPECTED_DOCUMENTS = [
         "status": "Created",
         "role": "MAIN",
         "type": "Law",
+        "metadata": {
+            "role": ["MAIN"],
+        },
         "slug": "",
         "title": "big title1",
         "md5_sum": "sum1",
@@ -156,6 +159,9 @@ EXPECTED_DOCUMENTS = [
         "status": "Created",
         "role": "MAIN",
         "type": "Law",
+        "metadata": {
+            "role": ["MAIN"],
+        },
         "slug": "",
         "title": "title2",
         "md5_sum": "sum2",
@@ -172,6 +178,9 @@ EXPECTED_DOCUMENTS = [
         "status": "Created",
         "role": "MAIN",
         "type": "Law",
+        "metadata": {
+            "role": ["MAIN"],
+        },
         "slug": "",
         "title": "title3",
         "md5_sum": "sum3",
@@ -489,6 +498,7 @@ def _setup_document_data(test_db: Session, configure_empty: bool = False) -> Non
                 document_status=data["status"],
                 document_type=data["type"],
                 document_role=data["role"],
+                valid_metadata=data["metadata"],
             )
             test_db.add(fd)
             test_db.flush()
