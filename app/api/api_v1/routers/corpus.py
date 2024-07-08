@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__file__)
     "/corpora/{import_id}",
     response_model=CorpusReadDTO,
 )
-async def get_document(import_id: str) -> CorpusReadDTO:
+async def get_corpus(import_id: str) -> CorpusReadDTO:
     """
     Returns a specific corpus given the import id.
 
@@ -47,7 +47,7 @@ async def get_document(import_id: str) -> CorpusReadDTO:
 
 
 @r.get("/corpora", response_model=list[CorpusReadDTO])
-async def get_all_documents(request: Request) -> list[CorpusReadDTO]:
+async def get_all_corpora(request: Request) -> list[CorpusReadDTO]:
     """
     Returns all corpora
 
@@ -63,7 +63,7 @@ async def get_all_documents(request: Request) -> list[CorpusReadDTO]:
 
 
 @r.get("/corpora/", response_model=list[CorpusReadDTO])
-async def search_document(request: Request) -> list[CorpusReadDTO]:
+async def search_corpora(request: Request) -> list[CorpusReadDTO]:
     """
     Searches for corpora matching URL parameters ("q" by default).
 
@@ -110,7 +110,7 @@ async def search_document(request: Request) -> list[CorpusReadDTO]:
     "/corpora/{import_id}",
     response_model=CorpusReadDTO,
 )
-async def update_document(
+async def update_corpus(
     request: Request, import_id: str, new_corpus: CorpusWriteDTO
 ) -> CorpusReadDTO:
     """
