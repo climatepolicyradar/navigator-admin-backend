@@ -29,7 +29,7 @@ def validate_metadata(
     """
     results = metadata_repo.validate_metadata(db, corpus_id, metadata, entity_key)
 
-    if len(results) > 0:  # type: ignore
+    if results is not None and len(results) > 0:  # type: ignore
         msg = f"Metadata validation failed: {','.join(cast(list, results))}"
         _LOGGER.error(msg)
         raise ValidationError(msg)
