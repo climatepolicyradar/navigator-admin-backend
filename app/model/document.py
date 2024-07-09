@@ -37,7 +37,7 @@ class DocumentWriteDTO(BaseModel):
 
     # From FamilyDocument
     variant_name: Optional[str]
-    role: Optional[str]
+    role: str
     type: Optional[str]
     metadata: Json
 
