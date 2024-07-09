@@ -310,6 +310,89 @@ def test_update_document_raises_when_metadata_invalid(
     assert pd.source_url == "http://source1/"
 
 
+def test_update_document_raises_when_metadata_required_field_blank(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+
+    # Keep all values apart from the metadata the same.
+    new_document = DocumentWriteDTO(
+        variant_name="Original Language",
+        role="MAIN",
+        type="Law",
+        metadata={"role": []},
+        title="big title1",
+        source_url=cast(AnyHttpUrl, "http://source1/"),
+        user_language_name="English",
+    )
+
+    response = client.put(
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "'role'"
+    expected_message = (
+        f"Metadata validation failed: Blank value for metadata key {key_text}"
+    )
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message)
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name == "Original Language"
+    assert fd.document_role == "MAIN"
+    assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
+    assert pd.title == "big title1"
+    assert pd.source_url == "http://source1/"
+
+
+def test_update_document_raises_when_metadata_required_field_none(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+
+    # Keep all values apart from the metadata the same.
+    new_document = DocumentWriteDTO(
+        variant_name="Original Language",
+        role="MAIN",
+        type="Law",
+        metadata={"role": []},
+        title="big title1",
+        source_url=cast(AnyHttpUrl, "http://source1/"),
+        user_language_name="English",
+    )
+
+    response = client.put(
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "'role'"
+    expected_message = (
+        "Metadata validation failed: "
+        f"Invalid value 'None' for metadata key {key_text} expected list."
+    )
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message)
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name == "Original Language"
+    assert fd.document_role == "MAIN"
+    assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"]}
+    assert pd.title == "big title1"
+    assert pd.source_url == "http://source1/"
+
+
 def test_update_document_remove_variant(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
