@@ -338,7 +338,9 @@ def test_create_document_when_empty_variant(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
-    new_document = create_document_create_dto(title="Empty variant", variant_name="")
+    new_document = create_document_create_dto(
+        title="Empty variant", family_import_id="A.0.0.2", variant_name=""
+    )
     response = client.post(
         "/api/v1/documents",
         json=new_document.model_dump(mode="json"),
