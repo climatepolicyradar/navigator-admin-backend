@@ -361,7 +361,7 @@ def test_update_document_raises_when_metadata_required_field_none(
         variant_name="Original Language",
         role="MAIN",
         type="Law",
-        metadata={"role": []},
+        metadata={"role": None},
         title="big title1",
         source_url=cast(AnyHttpUrl, "http://source1/"),
         user_language_name="English",
