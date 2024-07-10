@@ -485,7 +485,6 @@ def test_update_document_idempotent(
     doc = EXPECTED_DOCUMENTS[0]
     document = {
         "variant_name": doc["variant_name"],
-        "role": doc["role"],
         "type": doc["type"],
         "metadata": doc["metadata"],
         "title": doc["title"],
