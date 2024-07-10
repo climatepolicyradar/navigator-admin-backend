@@ -2,7 +2,7 @@ import logging
 from typing import Any, Sequence
 
 from db_client.models.base import AnyModel
-from db_client.models.dfce.family import FamilyDocumentRole, FamilyDocumentType, Variant
+from db_client.models.dfce.family import FamilyDocumentType, Variant
 from db_client.models.dfce.geography import Geography
 from db_client.models.document.physical_document import Language
 from db_client.models.organisation import Corpus, CorpusType, Organisation
@@ -92,12 +92,6 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
 
     # Now Document config
     doc_config = DocumentConfig(
-        roles=[
-            doc_role.name
-            for doc_role in db.query(FamilyDocumentRole)
-            .order_by(FamilyDocumentRole.name)
-            .all()
-        ],
         types=[
             doc_type.name
             for doc_type in db.query(FamilyDocumentType)
