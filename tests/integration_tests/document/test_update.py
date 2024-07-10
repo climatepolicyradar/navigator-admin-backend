@@ -43,7 +43,6 @@ def test_update_document_super(
     setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="Translation",
-        role="SUMMARY",
         type="Annex",
         metadata={"role": ["SUMMARY"]},
         title="Updated Title",
@@ -59,7 +58,6 @@ def test_update_document_super(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
     assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
@@ -70,7 +68,6 @@ def test_update_document_super(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
     assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
@@ -100,7 +97,6 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="Translation",
-        role="SUMMARY",
         type="Annex",
         metadata={"role": ["SUMMARY"]},
         title="Updated Title",
@@ -116,7 +112,6 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     data = response.json()
     assert data["import_id"] == "D.0.0.3"
     assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
     assert data["type"] == "Annex"
     assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["title"] == "Updated Title"
@@ -127,7 +122,6 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     fd, pd = _get_doc_tuple(data_db, "D.0.0.3")
     assert fd.import_id == "D.0.0.3"
     assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
     assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
@@ -159,7 +153,6 @@ def test_update_document_unfccc(
     setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="Translation",
-        role="SUMMARY",
         type="Annex",
         metadata={"role": ["SUMMARY"]},
         title="Updated Title",
@@ -175,7 +168,6 @@ def test_update_document_unfccc(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
     assert data["metadata"] == {"role": ["SUMMARY"]}
     assert data["type"] == "Annex"
     assert data["title"] == "Updated Title"
@@ -186,7 +178,6 @@ def test_update_document_unfccc(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
     assert fd.document_type == "Annex"
     assert fd.valid_metadata == {"role": ["SUMMARY"]}
     assert pd.title == "Updated Title"
@@ -220,7 +211,6 @@ def test_update_document_no_source_url(
     # Keep all values apart from the Source URL the same.
     new_document = DocumentWriteDTO(
         variant_name="Original Language",
-        role="MAIN",
         type="Law",
         metadata={"role": ["MAIN"]},
         title="big title1",
@@ -237,7 +227,6 @@ def test_update_document_no_source_url(
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
     assert data["variant_name"] == "Original Language"
-    assert data["role"] == "MAIN"
     assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == new_document.source_url
@@ -246,7 +235,6 @@ def test_update_document_no_source_url(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
     assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
@@ -272,7 +260,6 @@ def test_update_document_raises_when_metadata_invalid(
     # Keep all values apart from the metadata the same.
     new_document = DocumentWriteDTO(
         variant_name="Original Language",
-        role="MAIN",
         type="Law",
         metadata={"color": ["pink"]},
         title="big title1",
@@ -303,7 +290,6 @@ def test_update_document_raises_when_metadata_invalid(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
     assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
@@ -318,7 +304,6 @@ def test_update_document_raises_when_metadata_required_field_blank(
     # Keep all values apart from the metadata the same.
     new_document = DocumentWriteDTO(
         variant_name="Original Language",
-        role="MAIN",
         type="Law",
         metadata={"role": []},
         title="big title1",
@@ -344,7 +329,6 @@ def test_update_document_raises_when_metadata_required_field_blank(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
     assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
@@ -359,7 +343,6 @@ def test_update_document_raises_when_metadata_required_field_none(
     # Keep all values apart from the metadata the same.
     new_document = DocumentWriteDTO(
         variant_name="Original Language",
-        role="MAIN",
         type="Law",
         metadata={"role": None},
         title="big title1",
@@ -386,7 +369,6 @@ def test_update_document_raises_when_metadata_required_field_none(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
     assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
@@ -401,7 +383,6 @@ def test_update_document_remove_variant(
     # Keep all values apart from the variant the same.
     new_document = DocumentWriteDTO(
         variant_name=None,
-        role="MAIN",
         type="Law",
         metadata={"role": ["MAIN"]},
         title="title2",
@@ -417,7 +398,6 @@ def test_update_document_remove_variant(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] is None
-    assert data["role"] == "MAIN"
     assert data["type"] == "Law"
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
@@ -425,7 +405,6 @@ def test_update_document_remove_variant(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name is None
-    assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
     assert pd.title == "title2"
     assert pd.source_url == "http://update_source/"
@@ -449,7 +428,6 @@ def test_update_document_remove_user_language(
     # Keep all values apart from the language the same as in setup_db.py.
     new_document = DocumentWriteDTO(
         variant_name="Original Language",
-        role="MAIN",
         type="Law",
         metadata={"role": ["MAIN"]},
         title="big title1",
@@ -465,7 +443,6 @@ def test_update_document_remove_user_language(
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
     assert data["variant_name"] == "Original Language"
-    assert data["role"] == "MAIN"
     assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == "http://update_source/"
@@ -474,7 +451,6 @@ def test_update_document_remove_user_language(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
     assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "big title1"
@@ -509,7 +485,6 @@ def test_update_document_idempotent(
     doc = EXPECTED_DOCUMENTS[0]
     document = {
         "variant_name": doc["variant_name"],
-        "role": doc["role"],
         "type": doc["type"],
         "metadata": doc["metadata"],
         "title": doc["title"],
@@ -595,7 +570,6 @@ def test_update_document_blank_variant(
     setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="",
-        role="SUMMARY",
         type="Annex",
         metadata={"role": ["SUMMARY"]},
         title="Updated Title",
@@ -618,7 +592,6 @@ def test_update_document_idempotent_user_language(
     setup_db(data_db)
     new_document = DocumentWriteDTO(
         variant_name="Original Language",
-        role="MAIN",
         type="Law",
         metadata={"role": ["MAIN"]},
         title="title2",
@@ -634,7 +607,6 @@ def test_update_document_idempotent_user_language(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Original Language"
-    assert data["role"] == "MAIN"
     assert data["type"] == "Law"
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
@@ -643,7 +615,6 @@ def test_update_document_idempotent_user_language(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
     assert fd.document_type == "Law"
     assert fd.valid_metadata == {"role": ["MAIN"]}
     assert pd.title == "title2"
