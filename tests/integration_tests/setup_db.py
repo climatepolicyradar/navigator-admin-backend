@@ -138,7 +138,6 @@ EXPECTED_DOCUMENTS = [
         "family_import_id": "A.0.0.3",
         "variant_name": "Original Language",
         "status": "Created",
-        "role": "MAIN",
         "type": "Law",
         "metadata": {
             "role": ["MAIN"],
@@ -157,7 +156,6 @@ EXPECTED_DOCUMENTS = [
         "family_import_id": "A.0.0.3",
         "variant_name": "Original Language",
         "status": "Created",
-        "role": "MAIN",
         "type": "Law",
         "metadata": {
             "role": ["MAIN"],
@@ -176,7 +174,6 @@ EXPECTED_DOCUMENTS = [
         "family_import_id": "A.0.0.2",
         "variant_name": "Original Language",
         "status": "Created",
-        "role": "MAIN",
         "type": "Law",
         "metadata": {
             "role": ["MAIN"],
@@ -497,7 +494,6 @@ def _setup_document_data(test_db: Session, configure_empty: bool = False) -> Non
                 variant_name=data["variant_name"],
                 document_status=data["status"],
                 document_type=data["type"],
-                document_role=data["role"],
                 valid_metadata=data["metadata"],
             )
             test_db.add(fd)
