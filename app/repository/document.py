@@ -132,7 +132,7 @@ def _document_tuple_from_create_dto(
 
 
 def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
-    fdoc, pdoc, org, corpus_type, lang_user, lang_model = doc_query_return
+    fdoc, pdoc, corpus_type, org, lang_user, lang_model = doc_query_return
     return DocumentReadDTO(
         import_id=str(fdoc.import_id),
         family_import_id=str(fdoc.family_import_id),
