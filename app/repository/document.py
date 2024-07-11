@@ -17,6 +17,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocumentLanguage,
 )
 from db_client.models.organisation import Organisation
+from db_client.models.organisation.corpus import CorpusType
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import AnyHttpUrl
 from sqlalchemy import Column, and_
@@ -36,7 +37,9 @@ from app.repository.helpers import generate_import_id, generate_slug
 _LOGGER = logging.getLogger(__name__)
 
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
-ReadObj = Tuple[FamilyDocument, PhysicalDocument, Organisation, Language, Language]
+ReadObj = Tuple[
+    FamilyDocument, PhysicalDocument, CorpusType, Organisation, Language, Language
+]
 
 
 def _get_query(db: Session) -> Query:
@@ -49,7 +52,14 @@ def _get_query(db: Session) -> Query:
     pdl_user = aliased(PhysicalDocumentLanguage)
 
     return (
-        db.query(FamilyDocument, PhysicalDocument, Organisation, lang_user, lang_model)
+        db.query(
+            FamilyDocument,
+            PhysicalDocument,
+            CorpusType,
+            Organisation,
+            lang_user,
+            lang_model,
+        )
         .filter(FamilyDocument.family_import_id == Family.import_id)
         .join(Family, FamilyDocument.family_import_id == Family.import_id)
         .join(
@@ -59,6 +69,7 @@ def _get_query(db: Session) -> Query:
         )
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+        .join(CorpusType, Corpus.corpus_type_name == CorpusType.name)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
         .join(
             pdl_user,
@@ -121,10 +132,11 @@ def _document_tuple_from_create_dto(
 
 
 def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
-    fdoc, pdoc, org, lang_user, lang_model = doc_query_return
+    fdoc, pdoc, org, corpus_type, lang_user, lang_model = doc_query_return
     return DocumentReadDTO(
         import_id=str(fdoc.import_id),
         family_import_id=str(fdoc.family_import_id),
+        corpus_type=str(corpus_type.name),
         variant_name=str(fdoc.variant_name) if fdoc.variant_name is not None else None,
         status=cast(DocumentStatus, fdoc.document_status),
         type=str(fdoc.document_type) if fdoc.document_type is not None else None,

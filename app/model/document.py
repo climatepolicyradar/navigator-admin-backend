@@ -13,6 +13,7 @@ class DocumentReadDTO(BaseModel):
     # From FamilyDocument
     import_id: str
     family_import_id: str
+    corpus_type: str
     variant_name: Optional[str]
     status: DocumentStatus
     type: Optional[str]
