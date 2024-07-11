@@ -497,5 +497,5 @@ def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
     result = _get_query(db).filter(FamilyDocument.import_id == import_id).one_or_none()
     if result is None:
         return None
-    _, _, org, _, _ = result
+    _, _, _, org, _, _ = result
     return org.id
