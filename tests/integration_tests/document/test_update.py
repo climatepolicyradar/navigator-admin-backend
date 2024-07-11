@@ -332,10 +332,10 @@ def test_update_document_raises_when_metadata_required_field_none(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
-    key_text = "'role'"
     expected_message = (
         "Metadata validation failed: "
-        f"Invalid value 'None' for metadata key {key_text} expected list."
+        "Invalid value 'None' for metadata key 'role' expected list.,"
+        "Invalid value 'None' for metadata key 'type' expected list."
     )
     assert data["detail"].startswith(expected_message)
     assert len(data["detail"]) == len(expected_message)
@@ -449,18 +449,16 @@ def test_update_document_idempotent(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
-    doc = EXPECTED_DOCUMENTS[0]
-    document = {
-        "variant_name": doc["variant_name"],
-        "metadata": doc["metadata"],
-        "title": doc["title"],
-        "source_url": doc["source_url"],
-        "user_language_name": doc["user_language_name"],
-    }
-
+    new_document = create_document_write_dto(
+        title="big title1",
+        variant_name="Original Language",
+        metadata={"role": ["MAIN"], "type": ["Law"]},
+        source_url="http://source1/",
+        user_language_name="English",
+    )
     response = client.put(
-        f"/api/v1/documents/{doc['import_id']}",
-        json=document,
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
         headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
