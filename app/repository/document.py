@@ -105,7 +105,6 @@ def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
         "family_import_id": dto.family_import_id,
         "physical_document_id": 0,
         "variant_name": dto.variant_name,
-        "document_type": dto.type,
         "valid_metadata": dto.metadata,
     }
 
@@ -139,7 +138,6 @@ def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
         corpus_type=str(corpus_type.name),
         variant_name=str(fdoc.variant_name) if fdoc.variant_name is not None else None,
         status=cast(DocumentStatus, fdoc.document_status),
-        type=str(fdoc.document_type) if fdoc.document_type is not None else None,
         created=cast(datetime, fdoc.created),
         last_modified=cast(datetime, fdoc.last_modified),
         slug=str(fdoc.slugs[0].name if len(fdoc.slugs) > 0 else ""),
@@ -288,7 +286,6 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         .where(FamilyDocument.import_id == original_fd.import_id)
         .values(
             variant_name=new_values["variant_name"],
-            document_type=new_values["type"],
             valid_metadata=new_values["metadata"],
         ),
     ]
