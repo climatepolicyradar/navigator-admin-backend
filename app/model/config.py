@@ -7,7 +7,6 @@ from pydantic import BaseModel
 class DocumentConfig(BaseModel):
     """Everything you need to know about documents."""
 
-    types: Sequence[str]
     variants: Sequence[str]
 
 

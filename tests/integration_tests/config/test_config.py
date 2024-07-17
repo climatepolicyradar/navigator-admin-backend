@@ -62,7 +62,7 @@ def test_get_config_has_expected_shape(
     assert len(data["languages"]) == EXPECTED_LANGUAGES
 
     assert isinstance(data["document"], dict)
-    assert set(data["document"].keys()) == set(["types", "variants"])
+    assert set(data["document"].keys()) == set(["variants"])
 
 
 def test_get_config_has_correct_number_corpora_super(
