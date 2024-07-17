@@ -385,7 +385,7 @@ def test_create_document_when_invalid_metadata_cclw(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
-    key_text = "{'role'}"
+    key_text = "{'role', 'type'}"
 
     expected_message = "Metadata validation failed: "
     expected_missing_message = f"Missing metadata keys: {key_text}"
@@ -416,7 +416,7 @@ def test_create_document_when_invalid_metadata_unfccc(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
-    key_text = "{'role'}"
+    key_text = "{'role', 'type'}"
 
     expected_message = "Metadata validation failed: "
     expected_missing_message = f"Missing metadata keys: {key_text}"

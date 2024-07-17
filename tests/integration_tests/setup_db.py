@@ -140,9 +140,7 @@ EXPECTED_DOCUMENTS = [
         "variant_name": "Original Language",
         "status": "Created",
         "type": "Law",
-        "metadata": {
-            "role": ["MAIN"],
-        },
+        "metadata": {"role": ["MAIN"], "type": ["Law"]},
         "slug": "",
         "title": "big title1",
         "md5_sum": "sum1",
@@ -159,9 +157,7 @@ EXPECTED_DOCUMENTS = [
         "variant_name": "Original Language",
         "status": "Created",
         "type": "Law",
-        "metadata": {
-            "role": ["MAIN"],
-        },
+        "metadata": {"role": ["MAIN"], "type": ["Law"]},
         "slug": "",
         "title": "title2",
         "md5_sum": "sum2",
@@ -178,9 +174,7 @@ EXPECTED_DOCUMENTS = [
         "variant_name": "Original Language",
         "status": "Created",
         "type": "Law",
-        "metadata": {
-            "role": ["MAIN"],
-        },
+        "metadata": {"role": ["MAIN"], "type": ["Law"]},
         "slug": "",
         "title": "title3",
         "md5_sum": "sum3",
@@ -496,7 +490,7 @@ def _setup_document_data(test_db: Session, configure_empty: bool = False) -> Non
                 import_id=data["import_id"],
                 variant_name=data["variant_name"],
                 document_status=data["status"],
-                document_type=data["type"],
+                document_type=data["type"],  # TODO Remove PDCT-1244
                 valid_metadata=data["metadata"],
             )
             test_db.add(fd)
