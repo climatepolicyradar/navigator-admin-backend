@@ -61,12 +61,16 @@ def create_document_read_dto(
     title: str = "title",
     variant_name: Optional[str] = "Original Language",
     metadata: Optional[Json] = None,
+    corpus_type: Optional[str] = None,
 ) -> DocumentReadDTO:
     if metadata is None:
         metadata = {"role": ["MAIN"], "type": ["Law"]}
+    if corpus_type is None:
+        corpus_type = "Laws and Policies"
     return DocumentReadDTO(
         import_id=import_id,
         family_import_id=family_import_id,
+        corpus_type=corpus_type,
         variant_name=variant_name,
         status=DocumentStatus.CREATED,
         type="Law",
