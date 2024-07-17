@@ -136,6 +136,7 @@ EXPECTED_DOCUMENTS = [
     {
         "import_id": "D.0.0.1",
         "family_import_id": "A.0.0.3",
+        "corpus_type": "Intl. agreements",
         "variant_name": "Original Language",
         "status": "Created",
         "type": "Law",
@@ -154,6 +155,7 @@ EXPECTED_DOCUMENTS = [
     {
         "import_id": "D.0.0.2",
         "family_import_id": "A.0.0.3",
+        "corpus_type": "Intl. agreements",
         "variant_name": "Original Language",
         "status": "Created",
         "type": "Law",
@@ -172,6 +174,7 @@ EXPECTED_DOCUMENTS = [
     {
         "import_id": "D.0.0.3",
         "family_import_id": "A.0.0.2",
+        "corpus_type": "Laws and Policies",
         "variant_name": "Original Language",
         "status": "Created",
         "type": "Law",
