@@ -247,7 +247,7 @@ def test_config_documents(client: TestClient, data_db: Session, user_header_toke
     #
     # Documents..
     assert "roles" not in data["document"].keys()
-    assert "Action Plan" in data["document"]["types"]
+    assert "types" not in data["document"].keys()
     assert "Translation" in data["document"]["variants"]
 
 
