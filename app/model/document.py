@@ -16,7 +16,6 @@ class DocumentReadDTO(BaseModel):
     corpus_type: str
     variant_name: Optional[str]
     status: DocumentStatus
-    type: Optional[str]
     slug: str
     created: datetime
     last_modified: datetime
@@ -37,7 +36,6 @@ class DocumentWriteDTO(BaseModel):
 
     # From FamilyDocument
     variant_name: Optional[str]
-    type: Optional[str]
     metadata: Json
 
     title: str
@@ -51,7 +49,6 @@ class DocumentCreateDTO(BaseModel):
     # From FamilyDocument
     family_import_id: str
     variant_name: Optional[str] = None
-    type: Optional[str] = None
     metadata: Json
 
     # From PhysicalDocument

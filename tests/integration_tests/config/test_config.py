@@ -62,7 +62,7 @@ def test_get_config_has_expected_shape(
     assert len(data["languages"]) == EXPECTED_LANGUAGES
 
     assert isinstance(data["document"], dict)
-    assert set(data["document"].keys()) == set(["types", "variants"])
+    assert set(data["document"].keys()) == set(["variants"])
 
 
 def test_get_config_has_correct_number_corpora_super(
@@ -247,7 +247,7 @@ def test_config_documents(client: TestClient, data_db: Session, user_header_toke
     #
     # Documents..
     assert "roles" not in data["document"].keys()
-    assert "Action Plan" in data["document"]["types"]
+    assert "types" not in data["document"].keys()
     assert "Translation" in data["document"]["variants"]
 
 
