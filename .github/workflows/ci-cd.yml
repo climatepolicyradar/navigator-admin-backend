@@ -22,7 +22,7 @@ jobs:
     if: |
       github.event_name == 'pull_request' &&
       (! startsWith(github.ref, 'refs/tags') && ! startsWith(github.ref, 'refs/heads/main'))
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/check-auto-tagging-will-work.yml@v3
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/check-auto-tagging-will-work.yml@v8
 
   code-quality:
     if: |
@@ -36,7 +36,7 @@ jobs:
       checks: write
       # For repo checkout
       contents: read
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@v3
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator.yml@v8
 
   test:
     if: |
@@ -105,7 +105,7 @@ jobs:
 
   manual-semver:
     if: ${{ ! cancelled() && always() && startsWith(github.ref, 'refs/tags') }}
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@v3
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/semver.yml@v8
     secrets: inherit
     with:
       repo-name: navigator-admin-backend
@@ -116,7 +116,7 @@ jobs:
     needs: build
     permissions:
       contents: write
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/tag.yml@v3
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/tag.yml@v8
     with:
       repo-name: navigator-admin-backend
       semver-tag: main-${GITHUB_SHA::8}
@@ -130,6 +130,6 @@ jobs:
     needs: tag
     permissions:
       contents: write
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@v3
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/release.yml@v8
     with:
       new_tag: ${{ needs.tag.outputs.new_tag }}
