@@ -4,10 +4,12 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: db-client
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
     ignore:
-      - dependency-name: db_client
+      - dependency-name: db-client
     target-branch: main
