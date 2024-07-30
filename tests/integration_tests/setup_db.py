@@ -295,6 +295,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         name="Another org",
         description="because we will have more than one org",
         organisation_type="test",
+        display_name="Another org",
     )
     test_db.add(another_org)
     test_db.flush()
