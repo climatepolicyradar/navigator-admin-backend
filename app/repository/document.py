@@ -193,13 +193,13 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[DocumentReadDTO]:
     """
     Gets a list of documents from the repository searching the title.
 
     :param db Session: the database connection
-    :param dict query_params: Any search terms to filter on specified
+    :param dict search_params: Any search terms to filter on specified
         fields (title by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
@@ -208,8 +208,8 @@ def search(
     :return list[DocumentResponse]: A list of matching documents.
     """
     search = []
-    if "q" in query_params.keys():
-        term = f"%{escape_like(query_params['q'])}%"
+    if "q" in search_params.keys():
+        term = f"%{escape_like(search_params['q'])}%"
         search.append(PhysicalDocument.title.ilike(term))
 
     condition = and_(*search) if len(search) > 1 else search[0]
@@ -219,7 +219,7 @@ def search(
             query = query.filter(Organisation.id == org_id)
         result = (
             query.order_by(desc(FamilyDocument.last_modified))
-            .limit(query_params["max_results"])
+            .limit(search_params["max_results"])
             .all()
         )
     except OperationalError as e:

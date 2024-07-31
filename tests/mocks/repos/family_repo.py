@@ -35,13 +35,13 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[FamilyReadDTO]:
     _maybe_throw()
     _maybe_timeout()
     if family_repo.return_empty:
         return []
-    if "title" in query_params.keys():
+    if "title" in search_params.keys():
         return [create_family_read_dto("search1", collections=["x.y.z.1", "x.y.z.2"])]
     return [
         create_family_read_dto("search1", collections=["x.y.z.1", "x.y.z.2"]),

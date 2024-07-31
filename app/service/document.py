@@ -62,7 +62,7 @@ def all(user: UserContext) -> list[DocumentReadDTO]:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
-    query_params: dict[str, Union[str, int]], user: UserContext
+    search_params: dict[str, Union[str, int]], user: UserContext
 ) -> list[DocumentReadDTO]:
     """
     Searches for the search term against documents on specified fields.
@@ -70,7 +70,7 @@ def search(
     Where 'q' is used instead of an explicit field name, only the titles
     of all the documents are searched for the given term.
 
-    :param dict query_params: Search patterns to match against specified
+    :param dict search_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
     :param UserContext user: The current user context.
     :return list[DocumentReadDTO]: The list of documents matching the
@@ -78,7 +78,7 @@ def search(
     """
     with db_session.get_db() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
-        return document_repo.search(db, query_params, org_id)
+        return document_repo.search(db, search_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

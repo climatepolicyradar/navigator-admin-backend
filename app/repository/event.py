@@ -122,13 +122,13 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[EventReadDTO]:
     """
     Get family events matching a search term on the event title or type.
 
     :param db Session: The database connection.
-    :param dict query_params: Any search terms to filter on specified
+    :param dict search_params: Any search terms to filter on specified
         fields (title & event type name by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
@@ -137,8 +137,8 @@ def search(
     :return list[EventReadDTO]: A list of matching family events.
     """
     search = []
-    if "q" in query_params.keys():
-        term = f"%{escape_like(query_params['q'])}%"
+    if "q" in search_params.keys():
+        term = f"%{escape_like(search_params['q'])}%"
         search.append(
             or_(FamilyEvent.title.ilike(term), FamilyEvent.event_type_name.ilike(term))
         )
@@ -148,7 +148,7 @@ def search(
         query = _get_query(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
-        found = query.limit(query_params["max_results"]).all()
+        found = query.limit(search_params["max_results"]).all()
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
