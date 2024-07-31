@@ -38,7 +38,7 @@ pytest = "^8.3.2"
 pytest-dotenv = "^0.5.2"
 pytest-mock = "^3.7.0"
 black = "^23.1.0"
-pyright = "1.1.294"
+pyright = "1.1.374"
 pytest-asyncio = "^0.18.3"
 ruff = "^0.0.246"
 
