@@ -155,13 +155,13 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
 
     :param db Session: the database connection
-    :param dict query_params: Any search terms to filter on specified
+    :param dict search_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
@@ -171,28 +171,28 @@ def search(
         terms.
     """
     search = []
-    if "q" in query_params.keys():
-        term = f"%{escape_like(query_params['q'])}%"
+    if "q" in search_params.keys():
+        term = f"%{escape_like(search_params['q'])}%"
         search.append(or_(Family.title.ilike(term), Family.description.ilike(term)))
     else:
-        if "title" in query_params.keys():
-            term = f"%{escape_like(query_params['title'])}%"
+        if "title" in search_params.keys():
+            term = f"%{escape_like(search_params['title'])}%"
             search.append(Family.title.ilike(term))
 
-        if "summary" in query_params.keys():
-            term = f"%{escape_like(query_params['summary'])}%"
+        if "summary" in search_params.keys():
+            term = f"%{escape_like(search_params['summary'])}%"
             search.append(Family.description.ilike(term))
 
-    if "geography" in query_params.keys():
-        term = cast(str, query_params["geography"])
+    if "geography" in search_params.keys():
+        term = cast(str, search_params["geography"])
         search.append(
             or_(
                 Geography.display_value == term.title(), Geography.value == term.upper()
             )
         )
 
-    if "status" in query_params.keys():
-        term = cast(str, query_params["status"])
+    if "status" in search_params.keys():
+        term = cast(str, search_params["status"])
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
@@ -202,7 +202,7 @@ def search(
             query = query.filter(Organisation.id == org_id)
         found = (
             query.order_by(desc(Family.last_modified))
-            .limit(query_params["max_results"])
+            .limit(search_params["max_results"])
             .all()
         )
     except OperationalError as e:

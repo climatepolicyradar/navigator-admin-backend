@@ -64,7 +64,7 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
-    query_params: dict[str, Union[str, int]], user: UserContext
+    search_params: dict[str, Union[str, int]], user: UserContext
 ) -> list[FamilyReadDTO]:
     """
     Searches for the search term against families on specified fields.
@@ -73,7 +73,7 @@ def search(
     descriptions of all the Families are searched for the given term
     only.
 
-    :param dict query_params: Search patterns to match against specified
+    :param dict search_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
     :param UserContext user: The current user context.
     :return list[FamilyDTO]: The list of families matching the given
@@ -81,7 +81,7 @@ def search(
     """
     with db_session.get_db() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
-        return family_repo.search(db, query_params, org_id)
+        return family_repo.search(db, search_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
