@@ -99,7 +99,7 @@ app.include_router(
     ingest_router,
     prefix="/api/v1",
     tags=["ingest"],
-    dependencies=[],
+    dependencies=[Depends(check_user_auth)],
 )
 
 app.include_router(auth_router, prefix="/api", tags=["Authentication"])
