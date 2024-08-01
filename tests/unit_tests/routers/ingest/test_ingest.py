@@ -12,9 +12,8 @@ from fastapi.testclient import TestClient
 
 
 def test_create_when_ok(client: TestClient, family_service_mock, user_header_token):
-    new_data = json.dumps(
-        {
-            "new_import_id": "test",
+    new_data = {
+        "data": {
             "title": "test",
             "summary": "test",
             "geography": "CHN",
@@ -23,7 +22,7 @@ def test_create_when_ok(client: TestClient, family_service_mock, user_header_tok
             "collections": [],
             "corpus_import_id": "CCLW.corpus.i00000001.n0000",
         }
-    )
+    }
     response = client.post("/api/v1/ingest", json=new_data, headers=user_header_token)
     assert response.status_code == status.HTTP_201_CREATED
     # data = response.json()

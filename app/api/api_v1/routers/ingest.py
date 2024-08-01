@@ -1,5 +1,3 @@
-import json
-
 from fastapi import APIRouter, HTTPException, Request, status
 
 import app.service.family as family_service
@@ -9,7 +7,7 @@ ingest_router = r = APIRouter()
 
 
 @r.post("/ingest", response_model=str, status_code=status.HTTP_201_CREATED)
-async def ingest_data(request: Request, data: str) -> str:
+async def ingest_data(request: Request, new_data: str) -> str:
     """
     Creates a specific family given the import id.
 
@@ -19,7 +17,8 @@ async def ingest_data(request: Request, data: str) -> str:
     :return FamilyDTO: returns a FamilyDTO of the new family.
     """
     try:
-        family = family_service.create(json.loads(data), request.state.user)
+        print("HI!!!")
+        # family = family_service.create(null, request.state.user)
     except AuthorisationError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:
@@ -29,4 +28,4 @@ async def ingest_data(request: Request, data: str) -> str:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
-    return family
+    return ""
