@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, status
 
 from app.model.ingest import IngestDTO
 
