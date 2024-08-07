@@ -16,11 +16,14 @@ def test_ingest_when_not_authenticated(client: TestClient):
 
 
 def test_ingest_when_ok(client: TestClient, user_header_token):
-    request_data = {"test": "data"}
 
+    filename = open("tests/unit_tests/routers/ingest/test.json", "rb")
+    print(filename.read())
     response = client.post(
-        "/api/v1/ingest", json=request_data, headers=user_header_token
+        "/api/v1/ingest",
+        files={"new_data": filename},
+        headers=user_header_token,
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == request_data
+    assert response.json() == {"hello": "world"}
