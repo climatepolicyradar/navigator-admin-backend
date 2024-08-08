@@ -17,11 +17,9 @@ def test_ingest_when_not_authenticated(client: TestClient):
 
 def test_ingest_when_ok(client: TestClient, user_header_token):
 
-    filename = open("tests/unit_tests/routers/ingest/test.json", "rb")
-    print(filename.read())
     response = client.post(
         "/api/v1/ingest",
-        files={"new_data": filename},
+        files={"new_data": open("tests/unit_tests/routers/ingest/test.json", "rb")},
         headers=user_header_token,
     )
 

@@ -17,6 +17,5 @@ async def ingest_data(new_data: UploadFile) -> Json:
     :param UploadFile new_data: file containing json representation of data to ingest.
     :return Json: json representation of the data to ingest.
     """
-
     _LOGGER.info(new_data)
     return {"hello": "world"}
