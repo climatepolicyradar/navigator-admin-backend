@@ -3,11 +3,30 @@ import logging
 from fastapi import APIRouter, UploadFile, status
 
 from app.model.collection import CollectionCreateDTO
+from app.model.family import FamilyCreateDTO
 from app.model.general import Json
 
 ingest_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_collection_template():
+    collection_schema = CollectionCreateDTO.model_json_schema(mode="serialization")
+    collection_properties = collection_schema["properties"]
+
+    collection_template = {x: "" for x in collection_properties}
+    return collection_template
+
+
+def get_family_template():
+    family_schema = FamilyCreateDTO.model_json_schema(mode="serialization")
+    family_properties = family_schema["properties"]
+    del family_properties["corpus_import_id"]
+
+    family_template = {x: "" for x in family_properties}
+
+    return family_template
 
 
 @r.get(
@@ -23,14 +42,12 @@ async def get_ingest_template(corpus_type: str) -> Json:
     :return Json: json representation of ingest template.
     """
 
-    collection_schema = CollectionCreateDTO.model_json_schema(mode="serialization")
-    collection_properties = collection_schema["properties"]
-
-    collection_template = {x: "" for x in collection_properties}
-
     _LOGGER.info(corpus_type)
 
-    return {"collections": [collection_template]}
+    return {
+        "collections": [get_collection_template()],
+        "families": [get_family_template()],
+    }
 
 
 @r.post("/ingest", response_model=Json, status_code=status.HTTP_201_CREATED)

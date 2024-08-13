@@ -23,4 +23,40 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"collections": [{"title": "", "description": ""}]}
+    assert response.json() == {
+        "collections": [{"title": "", "description": ""}],
+        "families": [
+            {
+                "title": "",
+                "summary": "",
+                "geography": "",
+                "category": "",
+                "metadata": "",  # taxonomy?? - valid_metadata on corpus_type?
+                "collections": "",  # can we use title to look up the id??
+                # "corpus_import_id": "pre-populated based on corpus type?",
+                # "organisation": "add manually? - doesn't exist on the create DTO"
+                # "events": [
+                #     {
+                # "event_title": "",
+                # "date": "",
+                # "event_type_value": "",
+                # "family_import_id": "autogenerate",
+                # "family_document_import_id": "optional - does this link back to document?",
+                #     }
+                # ],
+                # "documents": [
+                #     {
+                # "family_import_id": "autogenerate",
+                # "variant_name": "optional",
+                # "metadata": {
+                #     "?": ""
+                # },  # taxonomy?? is this the same as families metadata?
+                # "title": "",
+                # "source_url": "optional",
+                # "user_language_name": "optional",
+                #         # "events": ["can we use title to look up the id??"],
+                #     }
+                # ],
+            }
+        ],
+    }
