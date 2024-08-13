@@ -10,16 +10,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @r.get(
-    "/ingest/template/{corpus_id}", response_model=Json, status_code=status.HTTP_200_OK
+    "/ingest/template/{corpus_type}",
+    response_model=Json,
+    status_code=status.HTTP_200_OK,
 )
-async def get_ingest_template(corpus_id: str) -> Json:
+async def get_ingest_template(corpus_type: str) -> Json:
     """
     Data ingest template endpoint.
 
-    :param str corpus_id: id of the corpus of data to ingest.
+    :param str corpus_type: type of the corpus of data to ingest.
     :return Json: json representation of ingest template.
     """
-    _LOGGER.info(corpus_id)
+    _LOGGER.info(corpus_type)
     return {"hello": "world"}
 
 

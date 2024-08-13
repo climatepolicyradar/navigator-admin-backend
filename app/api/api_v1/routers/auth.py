@@ -46,9 +46,13 @@ async def check_user_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    payload = False
-    if not request.is_disconnected():
-        payload = await request.json() if len(await request.body()) > 0 else False
+    try:
+        body = await request.body()
+        payload = await request.json() if body else False
+    except Exception as e:
+        _LOGGER.warning(f"⚠️ Failed to read request body: {e}")
+        payload = False
+
     _LOGGER.info(
         f"AUDIT: {user.email} is performing {operation} on {entity}",
         extra={
