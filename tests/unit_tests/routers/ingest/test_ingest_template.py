@@ -23,4 +23,4 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"title": "", "description": ""}
+    assert response.json() == {"collections": [{"title": "", "description": ""}]}

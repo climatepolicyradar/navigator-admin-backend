@@ -30,7 +30,7 @@ async def get_ingest_template(corpus_type: str) -> Json:
 
     _LOGGER.info(corpus_type)
 
-    return collection_template
+    return {"collections": [collection_template]}
 
 
 @r.post("/ingest", response_model=Json, status_code=status.HTTP_201_CREATED)
