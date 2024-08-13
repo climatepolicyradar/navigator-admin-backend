@@ -33,18 +33,11 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
                 "category": "",
                 "metadata": "",  # taxonomy?? - valid_metadata on corpus_type?
                 "collections": "",  # can we use title to look up the id??
-                # "corpus_import_id": "pre-populated based on corpus type?",
-                # "organisation": "add manually? - doesn't exist on the create DTO"
-                # "events": [
-                #     {
-                # "event_title": "",
-                # "date": "",
-                # "event_type_value": "",
-                # "family_import_id": "autogenerate",
-                # "family_document_import_id": "optional - does this link back to document?",
-                #     }
-                # ],
-                # "documents": [
+                "corpus_import_id": "",  # pre-populate based on corpus type?
+                "organisation": "",  # add manually? - doesn't exist on the create DTO
+                "events": '[{"event_title": "", "date": "", "event_type_value": ""}]',
+                "documents": '[{"variant_name": "", "metadata": "", "title": "", "source_url": "", "user_language_name": ""}]',
+                # [
                 #     {
                 # "family_import_id": "autogenerate",
                 # "variant_name": "optional",
