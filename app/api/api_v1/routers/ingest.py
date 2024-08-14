@@ -2,9 +2,13 @@ import logging
 
 from fastapi import APIRouter, UploadFile, status
 
-from app.model.document import DocumentCreateDTO
 from app.model.general import Json
-from app.model.ingest import IngestCollectionDTO, IngestEventDTO, IngestFamilyDTO
+from app.model.ingest import (
+    IngestCollectionDTO,
+    IngestDocumentDTO,
+    IngestEventDTO,
+    IngestFamilyDTO,
+)
 
 ingest_router = r = APIRouter()
 
@@ -31,7 +35,7 @@ def get_event_template(schema_type: str):
 
 
 def get_document_template():
-    document_schema = DocumentCreateDTO.model_json_schema(mode="serialization")
+    document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
 
     del document_template["family_import_id"]

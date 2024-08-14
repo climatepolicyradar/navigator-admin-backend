@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import AnyHttpUrl, BaseModel
 
 from app.model.general import Json
 
@@ -47,3 +47,15 @@ class IngestEventDTO(BaseModel):
 
     family_import_id: str
     family_document_import_id: Optional[str] = None
+
+
+class IngestDocumentDTO(BaseModel):
+    """Representation of a document for ingest."""
+
+    family_import_id: str
+    variant_name: Optional[str] = None
+    metadata: Json
+    events: IngestEventDTO
+    title: str
+    source_url: Optional[AnyHttpUrl] = None
+    user_language_name: Optional[str]
