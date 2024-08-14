@@ -80,6 +80,7 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
                 },
                 "events": [
                     {
+                        "import_id": {"title": "Import Id", "type": "string"},
                         "event_title": {"title": "Event Title", "type": "string"},
                         "date": {
                             "format": "date-time",
@@ -90,12 +91,17 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
                             "title": "Event Type Value",
                             "type": "string",
                         },
+                        "family_import_id": {
+                            "title": "Family Import Id",
+                            "type": "string",
+                        },
                     }
                 ],
                 "documents": [
                     {
                         "events": [
                             {
+                                "import_id": {"title": "Import Id", "type": "string"},
                                 "event_title": {
                                     "title": "Event Title",
                                     "type": "string",
@@ -108,6 +114,11 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
                                 "event_type_value": {
                                     "title": "Event Type Value",
                                     "type": "string",
+                                },
+                                "family_document_import_id": {
+                                    "title": "Family Document Import Id",
+                                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                                    "default": None,
                                 },
                             }
                         ],

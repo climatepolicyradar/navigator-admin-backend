@@ -1,12 +1,10 @@
 import logging
-from typing import Any
 
 from fastapi import APIRouter, UploadFile, status
 
 from app.model.document import DocumentCreateDTO
-from app.model.event import EventCreateDTO
 from app.model.general import Json
-from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
+from app.model.ingest import IngestCollectionDTO, IngestEventDTO, IngestFamilyDTO
 
 ingest_router = r = APIRouter()
 
@@ -20,22 +18,24 @@ def get_collection_template():
     return collection_template
 
 
-def get_event_template():
-    event_schema = EventCreateDTO.model_json_schema(mode="serialization")
+def get_event_template(schema_type: str):
+    event_schema = IngestEventDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
 
-    del event_template["family_import_id"]
-    del event_template["family_document_import_id"]
+    if schema_type == "family":
+        del event_template["family_document_import_id"]
+    elif schema_type == "document":
+        del event_template["family_import_id"]
 
     return event_template
 
 
-def get_document_template(event_template: Any):
+def get_document_template():
     document_schema = DocumentCreateDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
 
     del document_template["family_import_id"]
-    document_template["events"] = [event_template]
+    document_template["events"] = [get_event_template("document")]
 
     return document_template
 
@@ -189,11 +189,11 @@ def get_family_template(corpus_type: str):
 
     # add family metadata and event templates to the family template
     family_template["metadata"] = family_metadata
-    event_template = get_event_template()
-    family_template["events"] = [event_template]
+
+    family_template["events"] = [get_event_template("family")]
 
     # get document template
-    document_template = get_document_template(event_template)
+    document_template = get_document_template()
     # add document metadata template
     document_template["metadata"] = document_metadata
     # add document template to the family template

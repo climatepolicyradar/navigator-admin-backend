@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel
 
 from app.model.general import Json
@@ -29,3 +32,18 @@ class IngestFamilyDTO(BaseModel):
     metadata: Json
     collections: list[str]
     corpus_import_id: str
+
+
+class IngestEventDTO(BaseModel):
+    """
+    JSON Representation of an event for ingest.
+
+    """
+
+    import_id: str
+    event_title: str
+    date: datetime
+    event_type_value: str
+
+    family_import_id: str
+    family_document_import_id: Optional[str] = None
