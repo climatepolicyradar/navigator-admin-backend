@@ -1,5 +1,5 @@
-import json
 import logging
+from typing import Any
 
 from fastapi import APIRouter, UploadFile, status
 
@@ -21,23 +21,22 @@ def get_collection_template():
     return collection_template
 
 
-def get_family_event_template():
+def get_event_template():
     event_schema = EventCreateDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
 
     del event_template["family_import_id"]
     del event_template["family_document_import_id"]
-    _LOGGER.info(json.dumps(event_template, indent=4))
 
     return event_template
 
 
-def get_document_template():
+def get_document_template(event_template: Any):
     document_schema = DocumentCreateDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
 
     del document_template["family_import_id"]
-    document_template["events"] = ""
+    document_template["events"] = [event_template]
 
     return document_template
 
@@ -80,7 +79,7 @@ def get_family_template(corpus_type: str):
     family_schema = FamilyCreateDTO.model_json_schema(mode="serialization")
     family_template = family_schema["properties"]
 
-    # temp delete
+    # do we want to pre-populate this in the template or do it on ingest?
     del family_template["corpus_import_id"]
 
     # look up taxonomy by corpus type
@@ -90,15 +89,16 @@ def get_family_template(corpus_type: str):
 
     # add family metadata and event templates to the family template
     family_template["metadata"] = family_metadata
-    family_template["events"] = [get_family_event_template()]
+    event_template = get_event_template()
+    family_template["events"] = [event_template]
 
     # get document template
-    document_template = get_document_template()
+    document_template = get_document_template(event_template)
     # add document metadata template
     document_template["metadata"] = document_metadata
     # add document template to the family template
     family_template["documents"] = [document_template]
-    # _LOGGER.info(json.dumps(family_template, indent=4))
+
     return family_template
 
 

@@ -74,7 +74,23 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
                 ],
                 "documents": [
                     {
-                        "events": "",
+                        "events": [
+                            {
+                                "event_title": {
+                                    "title": "Event Title",
+                                    "type": "string",
+                                },
+                                "date": {
+                                    "format": "date-time",
+                                    "title": "Date",
+                                    "type": "string",
+                                },
+                                "event_type_value": {
+                                    "title": "Event Type Value",
+                                    "type": "string",
+                                },
+                            }
+                        ],
                         "variant_name": {
                             "anyOf": [{"type": "string"}, {"type": "null"}],
                             "default": None,
