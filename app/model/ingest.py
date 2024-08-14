@@ -3,6 +3,14 @@ from pydantic import BaseModel
 from app.model.general import Json
 
 
+class IngestCollectionDTO(BaseModel):
+    """Representation of a collection for ingest."""
+
+    import_id: str
+    title: str
+    description: str
+
+
 class IngestFamilyDTO(BaseModel):
     """
     A JSON representation of a family for ingest.

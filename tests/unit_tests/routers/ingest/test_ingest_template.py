@@ -26,6 +26,7 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
     assert response.json() == {
         "collections": [
             {
+                "import_id": {"title": "Import Id", "type": "string"},
                 "title": {"title": "Title", "type": "string"},
                 "description": {"title": "Description", "type": "string"},
             }

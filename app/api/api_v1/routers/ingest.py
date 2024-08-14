@@ -3,11 +3,10 @@ from typing import Any
 
 from fastapi import APIRouter, UploadFile, status
 
-from app.model.collection import CollectionCreateDTO
 from app.model.document import DocumentCreateDTO
 from app.model.event import EventCreateDTO
 from app.model.general import Json
-from app.model.ingest import IngestFamilyDTO
+from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
 
 ingest_router = r = APIRouter()
 
@@ -15,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_collection_template():
-    collection_schema = CollectionCreateDTO.model_json_schema(mode="serialization")
+    collection_schema = IngestCollectionDTO.model_json_schema(mode="serialization")
     collection_template = collection_schema["properties"]
 
     return collection_template
