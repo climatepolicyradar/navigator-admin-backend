@@ -6,8 +6,8 @@ from fastapi import APIRouter, UploadFile, status
 from app.model.collection import CollectionCreateDTO
 from app.model.document import DocumentCreateDTO
 from app.model.event import EventCreateDTO
-from app.model.family import FamilyCreateDTO
 from app.model.general import Json
+from app.model.ingest import IngestFamilyDTO
 
 ingest_router = r = APIRouter()
 
@@ -178,7 +178,7 @@ def get_metadata_template(corpus_type: str):
 
 
 def get_family_template(corpus_type: str):
-    family_schema = FamilyCreateDTO.model_json_schema(mode="serialization")
+    family_schema = IngestFamilyDTO.model_json_schema(mode="serialization")
     family_template = family_schema["properties"]
 
     del family_template["corpus_import_id"]

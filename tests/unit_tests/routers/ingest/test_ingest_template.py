@@ -32,6 +32,7 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
         ],
         "families": [
             {
+                "import_id": {"title": "Import Id", "type": "string"},
                 "title": {"title": "Title", "type": "string"},
                 "summary": {"title": "Summary", "type": "string"},
                 "geography": {"title": "Geography", "type": "string"},
