@@ -41,7 +41,7 @@ def get_document_template(event_template: Any):
     return document_template
 
 
-def get_family_metadata_template(corpus_type: str):
+def get_metadata_template(corpus_type: str):
     # hardcoding UNFCC taxonomy for the moment
     # will need to look up valid_metadata in the corpus_type table where name == corpus_type
     return {
@@ -83,7 +83,7 @@ def get_family_template(corpus_type: str):
     del family_template["corpus_import_id"]
 
     # look up taxonomy by corpus type
-    family_metadata = get_family_metadata_template(corpus_type)
+    family_metadata = get_metadata_template(corpus_type)
     # pull out document taxonomy
     document_metadata = family_metadata.pop("_document")
 

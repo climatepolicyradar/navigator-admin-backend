@@ -40,17 +40,26 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
                     "author": {
                         "allow_any": "false",
                         "allow_blanks": "false",
-                        "allowed_values": ["Author One", "Author Two"],
+                        "allowed_values": [
+                            "Author One",
+                            "Author Two",
+                        ],  # these will need updating with real values
                     },
                     "author_type": {
                         "allow_any": "false",
                         "allow_blanks": "false",
-                        "allowed_values": ["Type One", "Type Two"],
+                        "allowed_values": [
+                            "Type One",
+                            "Type Two",
+                        ],  # these will need updating with real values
                     },
                     "event_type": {
                         "allow_any": "false",
                         "allow_blanks": "false",
-                        "allowed_values": ["Event One", "Event Two"],
+                        "allowed_values": [
+                            "Event One",
+                            "Event Two",
+                        ],  # these will need updating with real values
                     },
                 },
                 "collections": {
@@ -100,12 +109,18 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
                             "role": {
                                 "allow_any": "false",
                                 "allow_blanks": "false",
-                                "allowed_values": ["Role One", "Role Two"],
+                                "allowed_values": [
+                                    "Role One",
+                                    "Role Two",
+                                ],  # these will need updating with real values
                             },
                             "type": {
                                 "allow_any": "false",
                                 "allow_blanks": "false",
-                                "allowed_values": ["Type One", "Type Two"],
+                                "allowed_values": [
+                                    "Type One",
+                                    "Type Two",
+                                ],  # these will need updating with real values
                             },
                         },
                         "title": {"title": "Title", "type": "string"},
