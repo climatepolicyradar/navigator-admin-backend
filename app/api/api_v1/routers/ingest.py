@@ -16,30 +16,28 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_collection_template():
     collection_schema = CollectionCreateDTO.model_json_schema(mode="serialization")
-    collection_properties = collection_schema["properties"]
-
-    collection_template = {x: "" for x in collection_properties}
+    collection_template = collection_schema["properties"]
 
     return collection_template
 
 
 def get_family_event_template():
     event_schema = EventCreateDTO.model_json_schema(mode="serialization")
-    event_properties = event_schema["properties"]
+    event_template = event_schema["properties"]
 
-    del event_properties["family_import_id"]
-    del event_properties["family_document_import_id"]
-    event_template = {x: "" for x in event_properties}
+    del event_template["family_import_id"]
+    del event_template["family_document_import_id"]
+    _LOGGER.info(json.dumps(event_template, indent=4))
 
     return event_template
 
 
 def get_document_template():
     document_schema = DocumentCreateDTO.model_json_schema(mode="serialization")
-    document_properties = document_schema["properties"]
+    document_template = document_schema["properties"]
 
-    del document_properties["family_import_id"]
-    document_template = {x: "" for x in document_properties}
+    del document_template["family_import_id"]
+    document_template["events"] = ""
 
     return document_template
 
@@ -48,21 +46,42 @@ def get_family_metadata_template(corpus_type: str):
     # hardcoding UNFCC taxonomy for the moment
     # will need to look up valid_metadata in the corpus_type table where name == corpus_type
     return {
-        "author": "",
-        "author_type": "",
-        "event_type": "",
-        "_document": {"type": "", "role": ""},
+        "author": {
+            "allow_any": "false",
+            "allow_blanks": "false",
+            "allowed_values": ["Author One", "Author Two"],
+        },
+        "author_type": {
+            "allow_any": "false",
+            "allow_blanks": "false",
+            "allowed_values": ["Type One", "Type Two"],
+        },
+        "event_type": {
+            "allow_any": "false",
+            "allow_blanks": "false",
+            "allowed_values": ["Event One", "Event Two"],
+        },
+        "_document": {
+            "role": {
+                "allow_any": "false",
+                "allow_blanks": "false",
+                "allowed_values": ["Role One", "Role Two"],
+            },
+            "type": {
+                "allow_any": "false",
+                "allow_blanks": "false",
+                "allowed_values": ["Type One", "Type Two"],
+            },
+        },
     }
 
 
 def get_family_template(corpus_type: str):
     family_schema = FamilyCreateDTO.model_json_schema(mode="serialization")
-    family_properties = family_schema["properties"]
+    family_template = family_schema["properties"]
 
-    # set all values to empty strings
-    family_template = {x: "" for x in family_properties}
-    # add organisation to be added manually by user (currently not part of the create family DTO)
-    family_template["organisation"] = ""
+    # temp delete
+    del family_template["corpus_import_id"]
 
     # look up taxonomy by corpus type
     family_metadata = get_family_metadata_template(corpus_type)
@@ -70,16 +89,16 @@ def get_family_template(corpus_type: str):
     document_metadata = family_metadata.pop("_document")
 
     # add family metadata and event templates to the family template
-    family_template["metadata"] = json.dumps(family_metadata)
-    family_template["events"] = json.dumps([get_family_event_template()])
+    family_template["metadata"] = family_metadata
+    family_template["events"] = [get_family_event_template()]
 
     # get document template
     document_template = get_document_template()
     # add document metadata template
     document_template["metadata"] = document_metadata
     # add document template to the family template
-    family_template["documents"] = json.dumps([document_template])
-
+    family_template["documents"] = [document_template]
+    # _LOGGER.info(json.dumps(family_template, indent=4))
     return family_template
 
 

@@ -24,19 +24,89 @@ def test_ingest_template_when_ok(client: TestClient, user_header_token):
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
-        "collections": [{"title": "", "description": ""}],
+        "collections": [
+            {
+                "title": {"title": "Title", "type": "string"},
+                "description": {"title": "Description", "type": "string"},
+            }
+        ],
         "families": [
             {
-                "title": "",
-                "summary": "",
-                "geography": "",
-                "category": "",
-                "metadata": '{"author": "", "author_type": "", "event_type": ""}',  # taxonomy?? - valid_metadata on corpus_type?
-                "collections": "",  # can we use title to look up the id??
-                "corpus_import_id": "",  # pre-populate based on corpus type?
-                "organisation": "",  # add manually? - doesn't exist on the create DTO
-                "events": '[{"event_title": "", "date": "", "event_type_value": ""}]',
-                "documents": '[{"variant_name": "", "metadata": {"type": "", "role": ""}, "title": "", "source_url": "", "user_language_name": ""}]',
+                "title": {"title": "Title", "type": "string"},
+                "summary": {"title": "Summary", "type": "string"},
+                "geography": {"title": "Geography", "type": "string"},
+                "category": {"title": "Category", "type": "string"},
+                "metadata": {
+                    "author": {
+                        "allow_any": "false",
+                        "allow_blanks": "false",
+                        "allowed_values": ["Author One", "Author Two"],
+                    },
+                    "author_type": {
+                        "allow_any": "false",
+                        "allow_blanks": "false",
+                        "allowed_values": ["Type One", "Type Two"],
+                    },
+                    "event_type": {
+                        "allow_any": "false",
+                        "allow_blanks": "false",
+                        "allowed_values": ["Event One", "Event Two"],
+                    },
+                },
+                "collections": {
+                    "items": {"type": "string"},
+                    "title": "Collections",
+                    "type": "array",
+                },
+                "events": [
+                    {
+                        "event_title": {"title": "Event Title", "type": "string"},
+                        "date": {
+                            "format": "date-time",
+                            "title": "Date",
+                            "type": "string",
+                        },
+                        "event_type_value": {
+                            "title": "Event Type Value",
+                            "type": "string",
+                        },
+                    }
+                ],
+                "documents": [
+                    {
+                        "events": "",
+                        "variant_name": {
+                            "anyOf": [{"type": "string"}, {"type": "null"}],
+                            "default": None,
+                            "title": "Variant Name",
+                        },
+                        "metadata": {
+                            "role": {
+                                "allow_any": "false",
+                                "allow_blanks": "false",
+                                "allowed_values": ["Role One", "Role Two"],
+                            },
+                            "type": {
+                                "allow_any": "false",
+                                "allow_blanks": "false",
+                                "allowed_values": ["Type One", "Type Two"],
+                            },
+                        },
+                        "title": {"title": "Title", "type": "string"},
+                        "source_url": {
+                            "anyOf": [
+                                {"format": "uri", "minLength": 1, "type": "string"},
+                                {"type": "null"},
+                            ],
+                            "default": None,
+                            "title": "Source Url",
+                        },
+                        "user_language_name": {
+                            "anyOf": [{"type": "string"}, {"type": "null"}],
+                            "title": "User Language Name",
+                        },
+                    }
+                ],
             }
         ],
     }
