@@ -5,6 +5,7 @@ from typing import Dict, Generator
 import pytest
 from db_client import run_migrations
 from fastapi.testclient import TestClient
+from pytest_mock_resources import PostgresConfig, create_postgres_fixture
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import sessionmaker
@@ -40,6 +41,16 @@ SUPER_ORG_ID = 50
 
 def get_test_db_url() -> str:
     return SQLALCHEMY_DATABASE_URI + f"_test_{uuid.uuid4()}"
+
+
+# Configuration of pytest mock postgres fixtures
+@pytest.fixture(scope="session")
+def pmr_postgres_config():
+    return PostgresConfig(image="postgres:14")
+
+
+# Engine Postgres fixture for our custom tests
+test_engine_fixture = create_postgres_fixture()
 
 
 @pytest.fixture(scope="function")
@@ -133,6 +144,43 @@ def data_db(slow_db):
 #     n_cols = data_db_connection.execute("select count(*) from collection")
 #     if n_cols.scalar() != 0:
 #         raise RuntimeError("Database not cleaned up properly")
+
+
+@pytest.fixture(scope="function")
+def test_db(test_engine_fixture):
+    """Create a fresh test database for each test."""
+
+    test_db_url = test_engine_fixture.url
+
+    # Create the test database
+    if database_exists(test_db_url):
+        drop_database(test_db_url)
+    create_database(test_db_url)
+
+    test_session = None
+    connection = None
+    try:
+        test_engine = create_engine(test_db_url)
+        connection = test_engine.connect()
+
+        run_migrations(test_engine)  # type: ignore for MockConnection
+        test_session_maker = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=test_engine,
+        )
+        test_session = test_session_maker()
+
+        # Run the tests
+        yield test_session
+    finally:
+        if test_session is not None:
+            test_session.close()
+
+        if connection is not None:
+            connection.close()  # type: ignore for MockConnection
+        # Drop the test database
+        drop_database(test_db_url)
 
 
 @pytest.fixture
