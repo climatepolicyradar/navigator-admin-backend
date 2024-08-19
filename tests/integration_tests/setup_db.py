@@ -20,7 +20,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.organisation import Corpus
+from db_client.models.organisation import Corpus, CorpusType
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
 
@@ -359,6 +359,35 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     )
 
     return cast(int, cclw.id), cast(int, another_org.id)
+
+
+def setup_corpus(test_db: Session) -> None:
+    org_id = _setup_organisation(test_db)
+    test_db.add(
+        Corpus(
+            import_id="1",
+            title="Test Title",
+            description="Test Description",
+            corpus_text="Test Text",
+            corpus_image_url="Test Image Url",
+            organisation_id=org_id,
+            corpus_type_name="Test Corpus",
+        )
+    )
+
+    test_db.add(
+        CorpusType(
+            name="Test Corpus",
+            description="Test Description",
+            valid_metadata={
+                "test": {
+                    "allow_any": "true",
+                    "allow_blanks": "false",
+                    "allowed_values": [],
+                }
+            },
+        )
+    )
 
 
 def _setup_collection_data(
