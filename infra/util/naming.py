@@ -1,4 +1,5 @@
 """Utility functions for naming things."""
+
 import pulumi
 
 

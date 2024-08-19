@@ -1,8 +1,8 @@
-# Admin Backend API server 
+# Admin Backend API server
 
 ---
 
-## Usage 
+## Usage
 
 To perform an initial deployment, run the following commands to setup the developer environment:
 
@@ -12,6 +12,4 @@ To perform an initial deployment, run the following commands to setup the develo
 
 To check whether this has been successful run the following command:
 
-            pulumi preview 
-
-
+            pulumi preview
