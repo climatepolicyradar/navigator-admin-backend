@@ -20,6 +20,7 @@ import app.service.corpus as corpus_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
+import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
 from app.clients.aws.client import get_s3_client
 from app.main import app
@@ -149,7 +150,7 @@ def db_client_metadata_mock(monkeypatch, mocker):
 @pytest.fixture
 def db_client_corpus_helpers_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
-    mock_corpus_helpers_db_client(db_client_corpus_helpers, monkeypatch, mocker)
+    mock_corpus_helpers_db_client(taxonomy_service, monkeypatch, mocker)
     yield db_client_corpus_helpers
 
 
