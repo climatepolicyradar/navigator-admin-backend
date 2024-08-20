@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, UploadFile, status
 
+import app.service.taxonomy as taxonomy
 from app.model.general import Json
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -45,139 +46,7 @@ def get_document_template():
 
 
 def get_metadata_template(corpus_type: str):
-    # hardcoding UNFCC taxonomy for the moment
-    # will need to look up valid_metadata in the corpus_type table where name == corpus_type
-    return {
-        "author": {"allow_any": "true", "allow_blanks": "false", "allowed_values": []},
-        "author_type": {
-            "allow_any": "false",
-            "allow_blanks": "false",
-            "allowed_values": ["Party", "Non-Party"],
-        },
-        "event_type": {
-            "allow_any": "false",
-            "allow_blanks": "true",
-            "allowed_values": [
-                "Amended",
-                "Appealed",
-                "Closed",
-                "Declaration Of Climate Emergency",
-                "Dismissed",
-                "Entered Into Force",
-                "Filing",
-                "Granted",
-                "Implementation Details",
-                "International Agreement",
-                "Net Zero Pledge",
-                "Other",
-                "Passed/Approved",
-                "Repealed/Replaced",
-                "Set",
-                "Settled",
-                "Updated",
-            ],
-        },
-        "_document": {
-            "role": {
-                "allow_any": "false",
-                "allow_blanks": "false",
-                "allowed_values": [
-                    "MAIN",
-                    "AMENDMENT",
-                    "SUPPORTING LEGISLATION",
-                    "SUMMARY",
-                    "PREVIOUS VERSION",
-                    "ANNEX",
-                    "SUPPORTING DOCUMENTATION",
-                    "INFORMATION WEBPAGE",
-                    "PRESS RELEASE",
-                    "DOCUMENT(S) STORED ON WEBPAGE",
-                ],
-            },
-            "type": {
-                "allow_any": "false",
-                "allow_blanks": "false",
-                "allowed_values": [
-                    "Accord",
-                    "Act",
-                    "Action Plan",
-                    "Agenda",
-                    "Annex",
-                    "Assessment",
-                    "Bill",
-                    "Constitution",
-                    "Criteria",
-                    "Decision",
-                    "Decision and Plan",
-                    "Decree",
-                    "Decree Law",
-                    "Directive",
-                    "Discussion Paper",
-                    "Edict",
-                    "EU Decision",
-                    "EU Directive",
-                    "EU Regulation",
-                    "Executive Order",
-                    "Framework",
-                    "Law",
-                    "Law and Plan",
-                    "Order",
-                    "Ordinance",
-                    "Plan",
-                    "Policy",
-                    "Press Release",
-                    "Programme",
-                    "Protocol",
-                    "Roadmap",
-                    "Regulation",
-                    "Resolution",
-                    "Royal Decree",
-                    "Rules",
-                    "Statement",
-                    "Strategic Assessment",
-                    "Strategy",
-                    "Summary",
-                    "Vision",
-                    "Biennial Report",
-                    "Biennial Update Report",
-                    "Facilitative Sharing of Views Report",
-                    "Global Stocktake Synthesis Report",
-                    "Industry Report",
-                    "Intersessional Document",
-                    "Long-Term Low-Emission Development Strategy",
-                    "National Communication",
-                    "National Inventory Report",
-                    "Pre-Session Document",
-                    "Progress Report",
-                    "Publication",
-                    "Report",
-                    "Submission to the Global Stocktake",
-                    "Summary Report",
-                    "Synthesis Report",
-                    "Technical Analysis Summary Report",
-                    "Nationally Determined Contribution",
-                    "Adaptation Communication",
-                    "National Adaptation Plan",
-                    "Technology Needs Assessment",
-                    "Fast-Start Finance Report",
-                    "IPCC Report",
-                    "Annual Compilation and Accounting Report",
-                    "Biennial Report,National Communication",
-                    "Biennial Update Report,National Communication",
-                    "National Adaptation Plan,Adaptation Communication",
-                    "National Communication,Biennial Report",
-                    "National Communication,Biennial Update Report",
-                    "Nationally Determined Contribution,Adaptation Communication",
-                    "Nationally Determined Contribution,National Communication",
-                    "Pre-Session Document,Annual Compilation and Accounting Report",
-                    "Pre-Session Document,Progress Report",
-                    "Pre-Session Document,Synthesis Report",
-                    "Publication,Report",
-                    "Technical Analysis Technical Report",
-                ],
-            },
-        },
-    }
+    return taxonomy.get(corpus_type)
 
 
 def get_family_template(corpus_type: str):
@@ -189,7 +58,7 @@ def get_family_template(corpus_type: str):
     # look up taxonomy by corpus type
     family_metadata = get_metadata_template(corpus_type)
     # pull out document taxonomy
-    document_metadata = family_metadata.pop("_document")
+    document_metadata = family_metadata.pop("_document") if family_metadata else {}
 
     # add family metadata and event templates to the family template
     family_template["metadata"] = family_metadata

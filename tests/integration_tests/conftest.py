@@ -147,9 +147,7 @@ def data_db(slow_db):
 
 
 @pytest.fixture(scope="function")
-def test_db(test_engine_fixture):
-    """Create a fresh test database for each test."""
-
+def test_db_connection(test_engine_fixture) -> Generator[Connection, None, None]:
     test_db_url = test_engine_fixture.url
 
     # Create the test database
@@ -157,30 +155,42 @@ def test_db(test_engine_fixture):
         drop_database(test_db_url)
     create_database(test_db_url)
 
-    test_session = None
-    connection = None
-    try:
-        test_engine = create_engine(test_db_url)
-        connection = test_engine.connect()
+    saved_db_url = os.environ["DATABASE_URL"]
+    os.environ["DATABASE_URL"] = str(test_db_url)
 
-        run_migrations(test_engine)  # type: ignore for MockConnection
-        test_session_maker = sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=test_engine,
-        )
-        test_session = test_session_maker()
+    test_engine = create_engine(test_db_url)
 
-        # Run the tests
-        yield test_session
-    finally:
-        if test_session is not None:
-            test_session.close()
+    run_migrations(test_engine)
+    connection = test_engine.connect()
 
-        if connection is not None:
-            connection.close()  # type: ignore for MockConnection
-        # Drop the test database
-        drop_database(test_db_url)
+    yield connection
+    connection.close()
+
+    os.environ["DATABASE_URL"] = saved_db_url
+    drop_database(test_db_url)
+
+
+@pytest.fixture(scope="function")
+def test_db(test_db_connection, monkeypatch):
+
+    outer = test_db_connection.begin_nested()
+    SessionLocal = sessionmaker(
+        autocommit=False, autoflush=False, bind=test_db_connection
+    )
+    session = SessionLocal()
+
+    def get_test_db():
+        return session
+
+    monkeypatch.setattr(db_session, "get_db", get_test_db)
+    yield session
+    if not outer.is_active:
+        print("Outer transaction already completed.")
+    else:
+        outer.rollback()
+    n_cols = test_db_connection.execute("select count(*) from collection")
+    if n_cols.scalar() != 0:
+        raise RuntimeError("Database not cleaned up properly")
 
 
 @pytest.fixture
