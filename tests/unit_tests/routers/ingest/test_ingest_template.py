@@ -4,8 +4,13 @@ Tests the route for retrieving a data ingest template by corpus.
 This uses service mocks and ensures the endpoint calls into each service.
 """
 
+from typing import Optional, cast
+
+from db_client.functions.corpus_helpers import TaxonomyData
 from fastapi import status
 from fastapi.testclient import TestClient
+
+import app.service.taxonomy as taxonomy
 
 
 def test_ingest_template_when_not_authenticated(client: TestClient):
@@ -16,20 +21,26 @@ def test_ingest_template_when_not_authenticated(client: TestClient):
 
 
 def test_ingest_template_when_ok(
-    client: TestClient, user_header_token, db_client_corpus_helpers_mock
+    client: TestClient, user_header_token, monkeypatch, mocker
 ):
-    # def mock_get(db: Session, corpus_type_name: str):
-    #     raise TypeError("This works!")
+    def mock_get_taxonomy_by_corpus_type_name(_, __) -> Optional[TaxonomyData]:
+        metadata = {
+            "allow_blanks": False,
+            "allow_any": False,
+            "allowed_values": [],
+        }
+        return cast(TaxonomyData, {"test": metadata, "_document": {"test": metadata}})
 
-    # client.app
-    # monkeypatch.setattr(corpus_helpers, "get_taxonomy_by_corpus_type_name", mock_get)
+    monkeypatch.setattr(
+        taxonomy,
+        "get_taxonomy_by_corpus_type_name",
+        mock_get_taxonomy_by_corpus_type_name,
+    )
 
     response = client.get(
         "/api/v1/ingest/template/test_corpus_type",
         headers=user_header_token,
     )
-
-    db_client_corpus_helpers_mock.mock_get_taxonomy_by_corpus_type_name.assert_called_once()
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
