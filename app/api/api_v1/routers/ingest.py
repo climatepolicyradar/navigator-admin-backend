@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, HTTPException, UploadFile, status
 
 import app.service.collection as collection
+import app.service.corpus as corpus
 import app.service.taxonomy as taxonomy
 from app.errors import ValidationError
 from app.model.general import Json
@@ -97,15 +98,19 @@ async def get_ingest_template(corpus_type: str) -> Json:
     }
 
 
-@r.post("/ingest", response_model=Json, status_code=status.HTTP_201_CREATED)
-async def ingest_data(new_data: UploadFile) -> Json:
+@r.post(
+    "/ingest/{corpus_import_id}",
+    response_model=Json,
+    status_code=status.HTTP_201_CREATED,
+)
+async def ingest_data(new_data: UploadFile, corpus_import_id: str) -> Json:
     """
     Bulk import endpoint.
 
     :param UploadFile new_data: file containing json representation of data to ingest.
     :return Json: json representation of the data to ingest.
     """
-
+    org_id = corpus.get_corpus_org_id(corpus_import_id)
     content = await new_data.read()
     data_dict = json.loads(content)
     collection_data = data_dict["collections"]
@@ -117,7 +122,7 @@ async def ingest_data(new_data: UploadFile) -> Json:
     try:
         for item in collection_data:
             dto = IngestCollectionDTO(**item).to_collection_create_dto()
-            import_id = collection.create(dto, org_id=1)
+            import_id = collection.create(dto, org_id=org_id)
             collection_import_ids.append(import_id)
 
         return {"collections": collection_import_ids}

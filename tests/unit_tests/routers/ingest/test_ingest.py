@@ -13,17 +13,17 @@ from fastapi.testclient import TestClient
 
 def test_ingest_when_not_authenticated(client: TestClient):
     response = client.post(
-        "/api/v1/ingest",
+        "/api/v1/ingest/test",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_ingest_collections_when_ok(
-    client: TestClient, user_header_token, collection_repo_mock
+    client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
 ):
 
     response = client.post(
-        "/api/v1/ingest",
+        "/api/v1/ingest/test",
         files={"new_data": open("tests/unit_tests/routers/ingest/test.json", "rb")},
         headers=user_header_token,
     )
@@ -35,7 +35,7 @@ def test_ingest_collections_when_ok(
 
 
 def test_ingest_collections_when_import_id_wrong_format(
-    client: TestClient, user_header_token
+    client: TestClient, user_header_token, corpus_service_mock
 ):
 
     invalid_import_id = "invalid"
@@ -53,7 +53,7 @@ def test_ingest_collections_when_import_id_wrong_format(
     test_data_file = io.BytesIO(test_data)
 
     response = client.post(
-        "/api/v1/ingest",
+        "/api/v1/ingest/test",
         files={"new_data": test_data_file},
         headers=user_header_token,
     )
@@ -63,12 +63,12 @@ def test_ingest_collections_when_import_id_wrong_format(
 
 
 def test_ingest_collections_when_no_collections(
-    client: TestClient, user_header_token, collection_repo_mock
+    client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
 ):
     test_data = json.dumps({"collections": []}).encode("utf-8")
     test_data_file = io.BytesIO(test_data)
     response = client.post(
-        "/api/v1/ingest",
+        "/api/v1/ingest/test",
         files={"new_data": test_data_file},
         headers=user_header_token,
     )
