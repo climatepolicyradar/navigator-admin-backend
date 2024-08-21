@@ -1,12 +1,12 @@
 {
   "collections": [
     {
-      "import_id": "1",
+      "import_id": "test.new.collection.0",
       "title": "Test title",
       "description": "Test description"
     },
     {
-      "import_id": "2",
+      "import_id": "test.new.collection.1",
       "title": "Test title",
       "description": "Test description"
     }

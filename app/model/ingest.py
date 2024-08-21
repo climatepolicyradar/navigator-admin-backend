@@ -20,7 +20,9 @@ class IngestCollectionDTO(BaseModel):
 
         :return CollectionCreateDTO: Converted CollectionCreateDTO instance.
         """
-        return CollectionCreateDTO(title=self.title, description=self.description)
+        return CollectionCreateDTO(
+            import_id=self.import_id, title=self.title, description=self.description
+        )
 
 
 class IngestFamilyDTO(BaseModel):

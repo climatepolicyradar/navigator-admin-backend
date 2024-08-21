@@ -43,7 +43,7 @@ def _collection_org_from_dto(
 ) -> Tuple[Collection, CollectionOrganisation]:
     return (
         Collection(
-            import_id="",
+            import_id=dto.import_id if dto.import_id else "",
             title=dto.title,
             description=dto.description,
         ),
@@ -225,9 +225,10 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
         new_collection, collection_organisation = _collection_org_from_dto(
             collection, org_id
         )
-        new_collection.import_id = cast(
-            Column, generate_import_id(db, CountedEntity.Collection, org_id)
-        )
+        if new_collection.import_id is None:
+            new_collection.import_id = cast(
+                Column, generate_import_id(db, CountedEntity.Collection, org_id)
+            )
         db.add(new_collection)
 
         collection_organisation.collection_import_id = new_collection.import_id
