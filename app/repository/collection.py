@@ -225,7 +225,8 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
         new_collection, collection_organisation = _collection_org_from_dto(
             collection, org_id
         )
-        if new_collection.import_id is None:
+
+        if not new_collection.import_id:
             new_collection.import_id = cast(
                 Column, generate_import_id(db, CountedEntity.Collection, org_id)
             )

@@ -47,8 +47,10 @@ async def check_user_auth(
         )
 
     try:
-        body = await request.body()
-        payload = await request.json() if body else False
+        if request.headers.get("content-type") == "application/json":
+            payload = await request.json()
+        else:
+            payload = False
     except Exception as e:
         _LOGGER.warning(f"⚠️ Failed to read request body: {e}")
         payload = False

@@ -10,7 +10,7 @@ from app.model.general import Json
 class IngestCollectionDTO(BaseModel):
     """Representation of a collection for ingest."""
 
-    import_id: str
+    import_id: Optional[str] = ""
     title: str
     description: str
 
@@ -21,7 +21,9 @@ class IngestCollectionDTO(BaseModel):
         :return CollectionCreateDTO: Converted CollectionCreateDTO instance.
         """
         return CollectionCreateDTO(
-            import_id=self.import_id, title=self.title, description=self.description
+            import_id=self.import_id,
+            title=self.title,
+            description=self.description,
         )
 
 
