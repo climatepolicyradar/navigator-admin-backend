@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import AnyHttpUrl, BaseModel
 
+from app.model.collection import CollectionCreateDTO
 from app.model.general import Json
 
 
@@ -12,6 +13,14 @@ class IngestCollectionDTO(BaseModel):
     import_id: str
     title: str
     description: str
+
+    def to_collection_create_dto(self) -> CollectionCreateDTO:
+        """
+        Convert IngestCollectionDTO to CollectionCreateDTO.
+
+        :return CollectionCreateDTO: Converted CollectionCreateDTO instance.
+        """
+        return CollectionCreateDTO(title=self.title, description=self.description)
 
 
 class IngestFamilyDTO(BaseModel):

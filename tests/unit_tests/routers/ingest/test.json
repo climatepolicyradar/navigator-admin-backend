@@ -1,1 +1,9 @@
-{ "test": "data" }
+{
+  "collections": [
+    {
+      "import_id": "1",
+      "title": "Test title",
+      "description": "Test description"
+    }
+  ]
+}

@@ -15,7 +15,9 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_when_ok(client: TestClient, user_header_token):
+def test_ingest_collection_when_ok(
+    client: TestClient, user_header_token, collection_repo_mock
+):
 
     response = client.post(
         "/api/v1/ingest",
@@ -23,5 +25,6 @@ def test_ingest_when_ok(client: TestClient, user_header_token):
         headers=user_header_token,
     )
 
+    assert collection_repo_mock.create.call_count == 1
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == {"hello": "world"}
+    assert response.json() == {"collections": ["test.new.collection.0"]}

@@ -1,7 +1,9 @@
+import json
 import logging
 
 from fastapi import APIRouter, UploadFile, status
 
+import app.service.collection as collection
 import app.service.taxonomy as taxonomy
 from app.model.general import Json
 from app.model.ingest import (
@@ -86,7 +88,7 @@ async def get_ingest_template(corpus_type: str) -> Json:
     :return Json: json representation of ingest template.
     """
 
-    _LOGGER.info(corpus_type)
+    _LOGGER.info(f"Creating template for corpus type: {corpus_type}")
 
     return {
         "collections": [get_collection_template()],
@@ -102,5 +104,11 @@ async def ingest_data(new_data: UploadFile) -> Json:
     :param UploadFile new_data: file containing json representation of data to ingest.
     :return Json: json representation of the data to ingest.
     """
-    _LOGGER.info(new_data)
-    return {"hello": "world"}
+
+    content = await new_data.read()
+    data_dict = json.loads(content)
+    collection_data = data_dict["collections"]
+    collection_import_ids = collection.create(
+        IngestCollectionDTO(**collection_data[0]).to_collection_create_dto(), org_id=1
+    )
+    return {"collections": [collection_import_ids]}
