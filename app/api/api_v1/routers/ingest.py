@@ -109,8 +109,11 @@ async def ingest_data(new_data: UploadFile) -> Json:
     content = await new_data.read()
     data_dict = json.loads(content)
     collection_data = data_dict["collections"]
-    collection_import_ids = []
 
+    if not collection_data:
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+
+    collection_import_ids = []
     try:
         for item in collection_data:
             dto = IngestCollectionDTO(**item).to_collection_create_dto()
