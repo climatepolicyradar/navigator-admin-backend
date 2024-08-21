@@ -65,10 +65,6 @@ def test_ingest_template_when_ok(
                             "title": "Event Type Value",
                             "type": "string",
                         },
-                        "family_import_id": {
-                            "title": "Family Import Id",
-                            "type": "string",
-                        },
                     }
                 ],
                 "documents": [
@@ -88,11 +84,6 @@ def test_ingest_template_when_ok(
                                 "event_type_value": {
                                     "title": "Event Type Value",
                                     "type": "string",
-                                },
-                                "family_document_import_id": {
-                                    "title": "Family Document Import Id",
-                                    "anyOf": [{"type": "string"}, {"type": "null"}],
-                                    "default": None,
                                 },
                             }
                         ],

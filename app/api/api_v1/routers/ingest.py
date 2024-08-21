@@ -23,14 +23,12 @@ def get_collection_template():
     return collection_template
 
 
-def get_event_template(schema_type: str):
+def get_event_template():
     event_schema = IngestEventDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
 
-    if schema_type == "family":
-        del event_template["family_document_import_id"]
-    elif schema_type == "document":
-        del event_template["family_import_id"]
+    del event_template["family_document_import_id"]
+    del event_template["family_import_id"]
 
     return event_template
 
@@ -40,7 +38,7 @@ def get_document_template():
     document_template = document_schema["properties"]
 
     del document_template["family_import_id"]
-    document_template["events"] = [get_event_template("document")]
+    document_template["events"] = [get_event_template()]
 
     return document_template
 
@@ -63,7 +61,7 @@ def get_family_template(corpus_type: str):
     # add family metadata and event templates to the family template
     family_template["metadata"] = family_metadata
 
-    family_template["events"] = [get_event_template("family")]
+    family_template["events"] = [get_event_template()]
 
     # get document template
     document_template = get_document_template()
