@@ -108,7 +108,11 @@ async def ingest_data(new_data: UploadFile) -> Json:
     content = await new_data.read()
     data_dict = json.loads(content)
     collection_data = data_dict["collections"]
-    collection_import_ids = collection.create(
-        IngestCollectionDTO(**collection_data[0]).to_collection_create_dto(), org_id=1
-    )
-    return {"collections": [collection_import_ids]}
+    collection_import_ids = []
+
+    for item in collection_data:
+        dto = IngestCollectionDTO(**item).to_collection_create_dto()
+        import_id = collection.create(dto, org_id=1)
+        collection_import_ids.append(import_id)
+
+    return {"collections": collection_import_ids}

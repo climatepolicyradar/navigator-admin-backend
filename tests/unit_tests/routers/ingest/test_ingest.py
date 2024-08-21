@@ -15,7 +15,7 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_collection_when_ok(
+def test_ingest_collections_when_ok(
     client: TestClient, user_header_token, collection_repo_mock
 ):
 
@@ -25,6 +25,7 @@ def test_ingest_collection_when_ok(
         headers=user_header_token,
     )
 
-    assert collection_repo_mock.create.call_count == 1
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == {"collections": ["test.new.collection.0"]}
+    assert response.json() == {
+        "collections": ["test.new.collection.0", "test.new.collection.0"]
+    }

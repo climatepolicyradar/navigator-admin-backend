@@ -4,6 +4,11 @@
       "import_id": "1",
       "title": "Test title",
       "description": "Test description"
+    },
+    {
+      "import_id": "2",
+      "title": "Test title",
+      "description": "Test description"
     }
   ]
 }
