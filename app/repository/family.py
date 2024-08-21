@@ -11,6 +11,7 @@ from db_client.models.dfce.family import (
     FamilyCorpus,
     FamilyDocument,
     FamilyEvent,
+    FamilyGeography,
     FamilyStatus,
     Slug,
 )
@@ -247,6 +248,7 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
 
     # Update basic fields
     if update_basics:
+        updates = 0
         result = db.execute(
             db_update(Family)
             .where(Family.import_id == import_id)
@@ -257,7 +259,16 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
                 family_category=new_values["category"],
             )
         )
-        if result.rowcount == 0:  # type: ignore
+        updates = result.rowcount  # type: ignore
+        # TODO: PDCT-1326 - Stage 3 - update to not assume single value
+        result = db.execute(
+            db_update(FamilyGeography)
+            .where(FamilyGeography.family_import_id == import_id)
+            .values(geography_id=geo_id)
+        )
+
+        updates += result.rowcount  # type: ignore
+        if updates == 0:  # type: ignore
             msg = "Could not update family fields: {family}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
@@ -348,6 +359,8 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
             family_category=family.category,
         )
         db.add(new_family)
+        # TODO: PDCT-1326 - Stage 3 - update to not assume single value
+        db.add(FamilyGeography(family_import_id=import_id, geography_id=geo_id))
 
         # Add corpus - family link.
         db.add(
@@ -406,6 +419,7 @@ def hard_delete(db: Session, import_id: str):
         db_delete(FamilyCorpus).where(FamilyCorpus.family_import_id == import_id),
         db_delete(Slug).where(Slug.family_import_id == import_id),
         db_delete(FamilyMetadata).where(FamilyMetadata.family_import_id == import_id),
+        db_delete(FamilyGeography).where(FamilyGeography.family_import_id == import_id),
         db_delete(Family).where(Family.import_id == import_id),
     ]
 

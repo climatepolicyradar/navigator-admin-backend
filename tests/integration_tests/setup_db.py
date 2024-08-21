@@ -11,6 +11,7 @@ from db_client.models.dfce.family import (
     FamilyCorpus,
     FamilyDocument,
     FamilyEvent,
+    FamilyGeography,
     Geography,
     Slug,
 )
@@ -422,6 +423,9 @@ def _setup_family_data(
                 geography_id=geo_id,
                 family_category=data["category"],
             )
+        )
+        test_db.add(
+            FamilyGeography(family_import_id=data["import_id"], geography_id=geo_id)
         )
 
         corpus = (
