@@ -110,7 +110,7 @@ async def ingest_data(new_data: UploadFile, corpus_import_id: str) -> Json:
     :param UploadFile new_data: file containing json representation of data to ingest.
     :return Json: json representation of the data to ingest.
     """
-    org_id = corpus.get_corpus_org_id(corpus_import_id)
+
     content = await new_data.read()
     data_dict = json.loads(content)
     collection_data = data_dict["collections"]
@@ -120,6 +120,7 @@ async def ingest_data(new_data: UploadFile, corpus_import_id: str) -> Json:
 
     collection_import_ids = []
     try:
+        org_id = corpus.get_corpus_org_id(corpus_import_id)
         for item in collection_data:
             dto = IngestCollectionDTO(**item).to_collection_create_dto()
             import_id = collection.create(dto, org_id=org_id)
