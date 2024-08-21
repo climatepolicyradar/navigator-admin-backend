@@ -169,7 +169,7 @@ async def create_collection(
     :return str: returns the import_id of the new collection.
     """
     try:
-        return collection_service.create(new_collection, request.state.user)
+        return collection_service.create(new_collection, request.state.user.org_id)
     except ValidationError as e:
         _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)

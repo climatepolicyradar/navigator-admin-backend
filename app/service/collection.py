@@ -161,7 +161,7 @@ def update(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     collection: CollectionCreateDTO,
-    user: UserContext,
+    org_id: int,
     db: Optional[Session] = None,
 ) -> str:
     """
@@ -177,7 +177,7 @@ def create(
         db = db_session.get_db()
 
     try:
-        import_id = collection_repo.create(db, collection, user.org_id)
+        import_id = collection_repo.create(db, collection, org_id)
         if len(import_id) == 0:
             db.rollback()
         return import_id
