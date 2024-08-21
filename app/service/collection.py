@@ -177,6 +177,9 @@ def create(
         db = db_session.get_db()
 
     try:
+        if collection.import_id:
+            validate_import_id(collection.import_id)
+
         import_id = collection_repo.create(db, collection, org_id)
         if len(import_id) == 0:
             db.rollback()

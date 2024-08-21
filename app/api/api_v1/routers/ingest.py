@@ -1,10 +1,11 @@
 import json
 import logging
 
-from fastapi import APIRouter, UploadFile, status
+from fastapi import APIRouter, HTTPException, UploadFile, status
 
 import app.service.collection as collection
 import app.service.taxonomy as taxonomy
+from app.errors import ValidationError
 from app.model.general import Json
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -110,9 +111,12 @@ async def ingest_data(new_data: UploadFile) -> Json:
     collection_data = data_dict["collections"]
     collection_import_ids = []
 
-    for item in collection_data:
-        dto = IngestCollectionDTO(**item).to_collection_create_dto()
-        import_id = collection.create(dto, org_id=1)
-        collection_import_ids.append(import_id)
+    try:
+        for item in collection_data:
+            dto = IngestCollectionDTO(**item).to_collection_create_dto()
+            import_id = collection.create(dto, org_id=1)
+            collection_import_ids.append(import_id)
 
-    return {"collections": collection_import_ids}
+        return {"collections": collection_import_ids}
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
