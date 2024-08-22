@@ -35,6 +35,7 @@ def create_collection_create_dto(
     title: str = "title", description="description"
 ) -> CollectionCreateDTO:
     return CollectionCreateDTO(
+        import_id="",
         title=title,
         description=description,
     )

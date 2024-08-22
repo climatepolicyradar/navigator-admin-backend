@@ -28,7 +28,11 @@ def test_ingest_template_when_ok(
     assert response.json() == {
         "collections": [
             {
-                "import_id": {"title": "Import Id", "type": "string"},
+                "import_id": {
+                    "title": "Import Id",
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                    "default": "",
+                },
                 "title": {"title": "Title", "type": "string"},
                 "description": {"title": "Description", "type": "string"},
             }
