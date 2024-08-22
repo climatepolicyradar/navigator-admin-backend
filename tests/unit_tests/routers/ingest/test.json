@@ -10,5 +10,35 @@
       "title": "Test title",
       "description": "Test description"
     }
+  ],
+  "families": [
+    {
+      "import_id": "test.new.family.0",
+      "title": "Test",
+      "summary": "Test",
+      "geography": "Test",
+      "category": "UNFCCC",
+      "metadata": {
+        "color": ["blue"],
+        "size": []
+      },
+      "collections": ["test.new.collection.0"],
+      "events": [],
+      "documents": []
+    },
+    {
+      "import_id": "test.new.family.1",
+      "title": "Test",
+      "summary": "Test",
+      "geography": "Test",
+      "category": "UNFCCC",
+      "metadata": {
+        "color": ["pink"],
+        "size": []
+      },
+      "collections": ["test.new.collection.1"],
+      "events": [],
+      "documents": []
+    }
   ]
 }

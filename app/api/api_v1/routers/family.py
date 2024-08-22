@@ -19,6 +19,7 @@ from app.api.api_v1.query_params import (
 )
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from app.service import app_user, corpus
 
 families_router = r = APIRouter()
 
@@ -160,8 +161,14 @@ async def create_family(request: Request, new_family: FamilyCreateDTO) -> str:
     :raises HTTPException: If the family is not found a 404 is returned.
     :return FamilyDTO: returns a FamilyDTO of the new family.
     """
+    corpus_import_id = new_family.corpus_import_id
+    entity_org_id: int = corpus.get_corpus_org_id(corpus_import_id)
+
     try:
-        family = family_service.create(new_family, request.state.user)
+        app_user.raise_if_unauthorised_to_make_changes(
+            request.state.user, entity_org_id, corpus_import_id
+        )
+        family = family_service.create(new_family, entity_org_id)
     except AuthorisationError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
     except ValidationError as e:

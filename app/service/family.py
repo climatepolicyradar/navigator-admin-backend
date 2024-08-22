@@ -167,7 +167,7 @@ def update(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     family: FamilyCreateDTO,
-    user: UserContext,
+    entity_org_id: int,
     db: Optional[Session] = None,
 ) -> str:
     """
@@ -183,17 +183,12 @@ def create(
     if db is None:
         db = db_session.get_db()
 
-    # Validate geography
     geo_id = geography.get_id(db, family.geography)
 
-    # Validate category
+    # Validations
     category.validate(family.category)
-
-    # Get the organisation from the user's email
     corpus.validate(db, family.corpus_import_id)
-    entity_org_id: int = corpus.get_corpus_org_id(family.corpus_import_id, db)
 
-    # Validate collection ids.
     collections = set(family.collections)
     collection.validate_multiple_ids(collections)
     collection.validate(collections, db)
@@ -208,13 +203,6 @@ def create(
         _LOGGER.error(msg)
         raise AuthorisationError(msg)
 
-    # Validate that the corpus we want to add the new family to exists and is from the
-    # same organisation as the user.
-    app_user.raise_if_unauthorised_to_make_changes(
-        user, entity_org_id, family.corpus_import_id
-    )
-
-    # Validate metadata.
     metadata.validate_metadata(db, family.corpus_import_id, family.metadata)
 
     try:

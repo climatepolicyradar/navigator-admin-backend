@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 
 import app.service.collection as collection
 import app.service.corpus as corpus
+import app.service.family as family
 import app.service.taxonomy as taxonomy
 from app.errors import ValidationError
 from app.model.general import Json
@@ -98,12 +99,39 @@ async def get_ingest_template(corpus_type: str) -> Json:
     }
 
 
+def ingest_data(data: dict, corpus_import_id: str):
+    collection_data = data["collections"]
+    family_data = data["families"]
+
+    if not collection_data:
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+
+    collection_import_ids = []
+    family_import_ids = []
+    try:
+        org_id = corpus.get_corpus_org_id(corpus_import_id)
+        for coll in collection_data:
+            dto = IngestCollectionDTO(**coll).to_collection_create_dto()
+            import_id = collection.create(dto, org_id)
+            collection_import_ids.append(import_id)
+        for fam in family_data:
+            dto = IngestFamilyDTO(
+                **fam, corpus_import_id=corpus_import_id
+            ).to_family_create_dto(corpus_import_id)
+            import_id = family.create(dto, org_id)
+            family_import_ids.append(import_id)
+
+        return {"collections": collection_import_ids, "families": family_import_ids}
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+
+
 @r.post(
     "/ingest/{corpus_import_id}",
     response_model=Json,
     status_code=status.HTTP_201_CREATED,
 )
-async def ingest_data(new_data: UploadFile, corpus_import_id: str) -> Json:
+async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
     """
     Bulk import endpoint.
 
@@ -113,19 +141,5 @@ async def ingest_data(new_data: UploadFile, corpus_import_id: str) -> Json:
 
     content = await new_data.read()
     data_dict = json.loads(content)
-    collection_data = data_dict["collections"]
 
-    if not collection_data:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-
-    collection_import_ids = []
-    try:
-        org_id = corpus.get_corpus_org_id(corpus_import_id)
-        for item in collection_data:
-            dto = IngestCollectionDTO(**item).to_collection_create_dto()
-            import_id = collection.create(dto, org_id=org_id)
-            collection_import_ids.append(import_id)
-
-        return {"collections": collection_import_ids}
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    return ingest_data(data_dict, corpus_import_id)
