@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -26,5 +27,6 @@ class CollectionWriteDTO(BaseModel):
 class CollectionCreateDTO(BaseModel):
     """Representation of a Collection for creating."""
 
+    import_id: Optional[str]
     title: str
     description: str

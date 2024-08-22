@@ -5,6 +5,7 @@ from app.api.api_v1.routers.config import config_router
 from app.api.api_v1.routers.document import document_router
 from app.api.api_v1.routers.event import event_router
 from app.api.api_v1.routers.family import families_router
+from app.api.api_v1.routers.ingest import ingest_router
 
 __all__ = (
     "analytics_router",
@@ -14,4 +15,5 @@ __all__ = (
     "document_router",
     "event_router",
     "families_router",
+    "ingest_router",
 )

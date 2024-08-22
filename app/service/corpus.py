@@ -1,14 +1,16 @@
 import logging
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
+import app.clients.db.session as db_session
 from app.errors import RepositoryError, ValidationError
 from app.repository import corpus_repo
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_corpus_org_id(db: Session, corpus_import_id: str) -> int:
+def get_corpus_org_id(corpus_import_id: str, db: Optional[Session] = None) -> int:
     """Get the organisation ID a corpus belongs to.
 
     :param Session db: The DB session to connect to.
@@ -17,6 +19,9 @@ def get_corpus_org_id(db: Session, corpus_import_id: str) -> int:
     :return Optional[int]: Return the organisation ID the given corpus
         belongs to or None.
     """
+    if db is None:
+        db = db_session.get_db()
+
     org_id = corpus_repo.get_corpus_org_id(db, corpus_import_id)
     if org_id is None:
         msg = f"No organisation associated with corpus {corpus_import_id}"

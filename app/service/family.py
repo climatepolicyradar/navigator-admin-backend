@@ -130,7 +130,7 @@ def update(
     geo_id = geography.get_id(db, family_dto.geography)
 
     # Validate family belongs to same org as current user.
-    entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
+    entity_org_id: int = corpus.get_corpus_org_id(family.corpus_import_id, db)
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.corpus_import_id
     )
@@ -191,7 +191,7 @@ def create(
 
     # Get the organisation from the user's email
     corpus.validate(db, family.corpus_import_id)
-    entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
+    entity_org_id: int = corpus.get_corpus_org_id(family.corpus_import_id, db)
 
     # Validate collection ids.
     collections = set(family.collections)

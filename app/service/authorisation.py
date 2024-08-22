@@ -1,12 +1,11 @@
-from db_client.models.organisation.authorisation import (
+from app.errors import AuthorisationError
+from app.model.authorisation import (
     AUTH_TABLE,
     HTTP_MAP_TO_OPERATION,
     AuthAccess,
     AuthEndpoint,
     AuthOperation,
 )
-
-from app.errors import AuthorisationError
 from app.model.user import UserContext
 
 

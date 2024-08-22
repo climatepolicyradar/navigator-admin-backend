@@ -6,6 +6,7 @@ Service mocks should only be used for router tests.
 
 from typing import Dict
 
+import db_client.functions.corpus_helpers as db_client_corpus_helpers
 import db_client.functions.metadata as db_client_metadata
 import pytest
 from fastapi.testclient import TestClient
@@ -19,6 +20,7 @@ import app.service.corpus as corpus_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
+import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
 from app.clients.aws.client import get_s3_client
 from app.main import app
@@ -39,6 +41,7 @@ from tests.mocks.repos.app_user_repo import mock_app_user_repo
 from tests.mocks.repos.collection_repo import mock_collection_repo
 from tests.mocks.repos.config_repo import mock_config_repo
 from tests.mocks.repos.corpus_repo import mock_corpus_repo
+from tests.mocks.repos.db_client_corpus_helpers import mock_corpus_helpers_db_client
 from tests.mocks.repos.db_client_metadata import mock_metadata_db_client
 from tests.mocks.repos.document_repo import mock_document_repo
 from tests.mocks.repos.event_repo import mock_event_repo
@@ -142,6 +145,13 @@ def db_client_metadata_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_metadata_db_client(db_client_metadata, monkeypatch, mocker)
     yield db_client_metadata
+
+
+@pytest.fixture
+def db_client_corpus_helpers_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_corpus_helpers_db_client(taxonomy_service, monkeypatch, mocker)
+    yield db_client_corpus_helpers
 
 
 # ----- Mock services
