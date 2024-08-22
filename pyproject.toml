@@ -40,8 +40,6 @@ pytest-mock = "^3.7.0"
 black = "^24.4.2"
 pyright = "1.1.374"
 pytest-asyncio = "^0.18.3"
-pytest-mock-resources = "^2.10.1"
-python-on-whales = "^0.70.0"
 ruff = "^0.0.246"
 
 [build-system]

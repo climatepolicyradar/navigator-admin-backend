@@ -5,7 +5,6 @@ from typing import Dict, Generator
 import pytest
 from db_client import run_migrations
 from fastapi.testclient import TestClient
-from pytest_mock_resources import PostgresConfig, create_postgres_fixture
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import sessionmaker
@@ -41,16 +40,6 @@ SUPER_ORG_ID = 50
 
 def get_test_db_url() -> str:
     return SQLALCHEMY_DATABASE_URI + f"_test_{uuid.uuid4()}"
-
-
-# Configuration of pytest mock postgres fixtures
-@pytest.fixture(scope="session")
-def pmr_postgres_config():
-    return PostgresConfig(image="postgres:14")
-
-
-# Engine Postgres fixture for our custom tests
-test_engine_fixture = create_postgres_fixture()
 
 
 @pytest.fixture(scope="function")
@@ -144,53 +133,6 @@ def data_db(slow_db):
 #     n_cols = data_db_connection.execute("select count(*) from collection")
 #     if n_cols.scalar() != 0:
 #         raise RuntimeError("Database not cleaned up properly")
-
-
-@pytest.fixture(scope="function")
-def test_db_connection(test_engine_fixture) -> Generator[Connection, None, None]:
-    test_db_url = test_engine_fixture.url
-
-    # Create the test database
-    if database_exists(test_db_url):
-        drop_database(test_db_url)
-    create_database(test_db_url)
-
-    saved_db_url = os.environ["DATABASE_URL"]
-    os.environ["DATABASE_URL"] = str(test_db_url)
-
-    test_engine = create_engine(test_db_url)
-
-    run_migrations(test_engine)
-    connection = test_engine.connect()
-
-    yield connection
-    connection.close()
-
-    os.environ["DATABASE_URL"] = saved_db_url
-    drop_database(test_db_url)
-
-
-@pytest.fixture(scope="function")
-def test_db(test_db_connection, monkeypatch):
-
-    outer = test_db_connection.begin_nested()
-    SessionLocal = sessionmaker(
-        autocommit=False, autoflush=False, bind=test_db_connection
-    )
-    session = SessionLocal()
-
-    def get_test_db():
-        return session
-
-    monkeypatch.setattr(db_session, "get_db", get_test_db)
-    yield session
-    if not outer.is_active:
-        print("Outer transaction already completed.")
-    else:
-        outer.rollback()
-    n_cols = test_db_connection.execute("select count(*) from collection")
-    if n_cols.scalar() != 0:
-        raise RuntimeError("Database not cleaned up properly")
 
 
 @pytest.fixture

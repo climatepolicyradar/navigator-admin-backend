@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 
 def test_ingest_when_corpus_import_id_invalid(
-    test_db: Session, client: TestClient, user_header_token
+    data_db: Session, client: TestClient, user_header_token
 ):
     invalid_corpus = "test"
     response = client.post(
@@ -24,7 +24,7 @@ def test_ingest_when_corpus_import_id_invalid(
 
 
 def test_ingest_collections_when_ok(
-    test_db: Session, client: TestClient, user_header_token
+    data_db: Session, client: TestClient, user_header_token
 ):
 
     response = client.post(
@@ -40,7 +40,7 @@ def test_ingest_collections_when_ok(
 
 
 def test_ingest_collections_when_import_id_empty(
-    test_db: Session, client: TestClient, user_header_token
+    data_db: Session, client: TestClient, user_header_token
 ):
 
     test_data = json.dumps(
@@ -67,7 +67,7 @@ def test_ingest_collections_when_import_id_empty(
 
 
 def test_ingest_collections_when_no_import_id(
-    test_db: Session, client: TestClient, user_header_token
+    data_db: Session, client: TestClient, user_header_token
 ):
 
     test_data = json.dumps(

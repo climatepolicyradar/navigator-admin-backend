@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 
 def test_get_template_unfcc(
-    test_db: Session, client: TestClient, non_cclw_user_header_token
+    data_db: Session, client: TestClient, non_cclw_user_header_token
 ):
     response = client.get(
         "/api/v1/ingest/template/Intl. agreements", headers=non_cclw_user_header_token
@@ -14,7 +14,11 @@ def test_get_template_unfcc(
     assert response.json() == {
         "collections": [
             {
-                "import_id": {"title": "Import Id", "type": "string"},
+                "import_id": {
+                    "title": "Import Id",
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                    "default": "",
+                },
                 "title": {"title": "Title", "type": "string"},
                 "description": {"title": "Description", "type": "string"},
             }
