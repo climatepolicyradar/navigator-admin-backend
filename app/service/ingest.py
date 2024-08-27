@@ -16,9 +16,20 @@ from app.service.collection import validate_import_id
 
 
 def save_collections(
-    db: Session, collection_data: list[dict], org_id: int
+    db: Session, collection_data: list[dict], corpus_import_id: str
 ) -> list[str]:
+    """
+    Creates new collection with the values passed.
+
+    :param Session db: The database session to use for saving collections.
+    :param list[dict] collection_data: The data to use for creating collections.
+    :param str corpus_import_id: The import_id of the corpus the collections belong to.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return str: The new import_ids for the saved collections.
+    """
     collection_import_ids = []
+    org_id = corpus.get_corpus_org_id(corpus_import_id)
     for coll in collection_data:
         dto = IngestCollectionDTO(**coll).to_collection_create_dto()
         if dto.import_id:
@@ -26,6 +37,29 @@ def save_collections(
         import_id = collection.create(db, dto, org_id)
         collection_import_ids.append(import_id)
     return collection_import_ids
+
+
+def save_families(
+    db: Session, family_data: list[dict], corpus_import_id: str
+) -> list[str]:
+    """
+    Creates new families with the values passed.
+
+    :param Session db: The database session to use for saving families.
+    :param list[dict] families_data: The data to use for creating families.
+    :param str corpus_import_id: The import_id of the corpus the families belong to.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return str: The new import_ids for the saved families.
+    """
+    family_import_ids = []
+    for fam in family_data:
+        IngestFamilyDTO(**fam, corpus_import_id=corpus_import_id).to_family_create_dto(
+            corpus_import_id
+        )
+        # import_id = family.create(dto, org_id)
+        family_import_ids.append("created")
+    return family_import_ids
 
 
 def import_data(data: dict, corpus_import_id: str) -> dict:
@@ -46,18 +80,13 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     if not data:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
-    family_import_ids = []
     response = {}
-    org_id = corpus.get_corpus_org_id(corpus_import_id)
+
     if collection_data:
-        response["collections"] = save_collections(db, collection_data, org_id)
+        response["collections"] = save_collections(
+            db, collection_data, corpus_import_id
+        )
     if family_data:
-        for fam in family_data:
-            IngestFamilyDTO(
-                **fam, corpus_import_id=corpus_import_id
-            ).to_family_create_dto(corpus_import_id)
-            # import_id = family.create(dto, org_id)
-            family_import_ids.append("created")
-            response["families"] = family_import_ids
+        response["families"] = save_families(db, family_data, corpus_import_id)
 
     return response
