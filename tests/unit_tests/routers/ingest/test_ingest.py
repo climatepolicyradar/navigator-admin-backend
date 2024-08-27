@@ -42,28 +42,6 @@ def test_ingest_collections_when_ok(
     }
 
 
-def test_ingest_families_when_ok(
-    client: TestClient,
-    user_header_token,
-    corpus_repo_mock,
-    db_client_metadata_mock,
-):
-
-    response = client.post(
-        "/api/v1/ingest/test",
-        files={
-            "new_data": open("tests/unit_tests/routers/ingest/test_families.json", "rb")
-        },
-        headers=user_header_token,
-    )
-
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == {
-        "families": ["created", "created"],
-        # "families": ["test.new.family.0", "test.new.family.0"],
-    }
-
-
 def test_ingest_collections_when_import_id_wrong_format(
     client: TestClient, user_header_token, corpus_service_mock
 ):
@@ -93,7 +71,7 @@ def test_ingest_collections_when_import_id_wrong_format(
     assert response.json().get("detail") == "The import id invalid is invalid!"
 
 
-def test_ingest_collections_when_no_collections(
+def test_ingest_when_no_data(
     client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
 ):
     test_data = json.dumps({}).encode("utf-8")
@@ -107,3 +85,59 @@ def test_ingest_collections_when_no_collections(
     assert collection_repo_mock.create.call_count == 0
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_ingest_families_when_ok(
+    client: TestClient,
+    user_header_token,
+    corpus_repo_mock,
+    geography_repo_mock,
+    db_client_metadata_mock,
+):
+
+    response = client.post(
+        "/api/v1/ingest/test",
+        files={
+            "new_data": open("tests/unit_tests/routers/ingest/test_families.json", "rb")
+        },
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json() == {
+        "families": ["created", "created"],
+        # "families": ["test.new.family.0", "test.new.family.0"],
+    }
+
+
+def test_ingest_families_when_geography_invalid(
+    client: TestClient, user_header_token, corpus_service_mock, geography_repo_mock
+):
+    geography_repo_mock.error = True
+    test_data = json.dumps(
+        {
+            "families": [
+                {
+                    "import_id": "test.new.family.0",
+                    "title": "Test",
+                    "summary": "Test",
+                    "geography": "invalid",
+                    "category": "UNFCCC",
+                    "metadata": {},
+                    "collections": [],
+                    "events": [],
+                    "documents": [],
+                },
+            ],
+        }
+    ).encode("utf-8")
+    test_data_file = io.BytesIO(test_data)
+
+    response = client.post(
+        "/api/v1/ingest/test",
+        files={"new_data": test_data_file},
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json().get("detail") == "The geography value invalid is invalid!"

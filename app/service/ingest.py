@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 import app.repository.collection as collection
 import app.service.corpus as corpus
+import app.service.geography as geography
 from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
 from app.service.collection import validate_import_id
 
@@ -54,9 +55,10 @@ def save_families(
     """
     family_import_ids = []
     for fam in family_data:
-        IngestFamilyDTO(**fam, corpus_import_id=corpus_import_id).to_family_create_dto(
-            corpus_import_id
-        )
+        dto = IngestFamilyDTO(
+            **fam, corpus_import_id=corpus_import_id
+        ).to_family_create_dto(corpus_import_id)
+        geography.get_id(db, dto.geography)
         # import_id = family.create(dto, org_id)
         family_import_ids.append("created")
     return family_import_ids
