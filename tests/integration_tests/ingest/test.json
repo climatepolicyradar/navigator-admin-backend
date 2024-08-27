@@ -1,0 +1,44 @@
+{
+  "collections": [
+    {
+      "import_id": "test.new.collection.0",
+      "title": "Test title",
+      "description": "Test description"
+    },
+    {
+      "import_id": "test.new.collection.1",
+      "title": "Test title",
+      "description": "Test description"
+    }
+  ],
+  "families": [
+    {
+      "import_id": "test.new.family.0",
+      "title": "Test",
+      "summary": "Test",
+      "geography": "South Asia",
+      "category": "UNFCCC",
+      "metadata": {
+        "author_type": ["Non-Party"],
+        "author": ["Test"]
+      },
+      "collections": ["test.new.collection.0"],
+      "events": [],
+      "documents": []
+    },
+    {
+      "import_id": "test.new.family.1",
+      "title": "Test",
+      "summary": "Test",
+      "geography": "South Asia",
+      "category": "UNFCCC",
+      "metadata": {
+        "author_type": ["Party"],
+        "author": ["Test"]
+      },
+      "collections": ["test.new.collection.1"],
+      "events": [],
+      "documents": []
+    }
+  ]
+}

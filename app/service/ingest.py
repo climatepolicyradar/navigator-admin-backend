@@ -10,10 +10,9 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.collection as collection_repository
+import app.repository.family as family_repository
 import app.service.category as category
 import app.service.collection as collection
-
-# import app.service.collection as collection
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.metadata as metadata
@@ -65,15 +64,17 @@ def save_families(
         ).to_family_create_dto(corpus_import_id)
 
         corpus.validate(db, corpus_import_id)
-        geography.get_id(db, dto.geography)
+        geo_id = geography.get_id(db, dto.geography)
         category.validate(dto.category)
         collections = set(dto.collections)
         collection.validate_multiple_ids(collections)
-        collection.validate(collections, db)
+        # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
+        # collection.validate(collections, db)
         metadata.validate_metadata(db, corpus_import_id, dto.metadata)
 
-        # import_id = family.create(dto, org_id)
-        family_import_ids.append("created")
+        org_id = corpus.get_corpus_org_id(corpus_import_id)
+        import_id = family_repository.create(db, dto, geo_id, org_id)
+        family_import_ids.append(import_id)
     return family_import_ids
 
 

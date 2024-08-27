@@ -49,7 +49,7 @@ class IngestFamilyDTO(BaseModel):
         :return FamilyCreateDTO: Converted FamilyCreateDTO instance.
         """
         return FamilyCreateDTO(
-            # import_id=self.import_id,
+            import_id=self.import_id,
             title=self.title,
             summary=self.summary,
             geography=self.geography,

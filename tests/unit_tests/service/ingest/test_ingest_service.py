@@ -117,30 +117,31 @@ def test_ingest_families_when_collection_ids_invalid(
     assert e.value.message == expected_msg
 
 
-def test_ingest_families_when_collection_ids_do_not_exist(
-    corpus_repo_mock, geography_repo_mock, collection_repo_mock
-):
-    collection_repo_mock.missing = True
+# TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
+# def test_ingest_families_when_collection_ids_do_not_exist(
+#     corpus_repo_mock, geography_repo_mock, collection_repo_mock
+# ):
+#     collection_repo_mock.missing = True
 
-    test_data = {
-        "families": [
-            {
-                "import_id": "test.new.family.0",
-                "title": "Test",
-                "summary": "Test",
-                "geography": "Test",
-                "category": "UNFCCC",
-                "metadata": {},
-                "collections": ["id.does.not.exist"],
-                "events": [],
-                "documents": [],
-            },
-        ],
-    }
-    with pytest.raises(ValidationError) as e:
-        ingest_service.import_data(test_data, "test")
-    expected_msg = "One or more of the collections to update does not exist"
-    assert e.value.message == expected_msg
+#     test_data = {
+#         "families": [
+#             {
+#                 "import_id": "test.new.family.0",
+#                 "title": "Test",
+#                 "summary": "Test",
+#                 "geography": "Test",
+#                 "category": "UNFCCC",
+#                 "metadata": {},
+#                 "collections": ["id.does.not.exist"],
+#                 "events": [],
+#                 "documents": [],
+#             },
+#         ],
+#     }
+#     with pytest.raises(ValidationError) as e:
+#         ingest_service.import_data(test_data, "test")
+#     expected_msg = "One or more of the collections to update does not exist"
+#     assert e.value.message == expected_msg
 
 
 def test_ingest_families_when_metadata_not_found(

@@ -57,6 +57,7 @@ class FamilyCreateDTO(BaseModel):
      - organisation comes from the user's organisation
     """
 
+    import_id: Optional[str]
     title: str
     summary: str
     geography: str
