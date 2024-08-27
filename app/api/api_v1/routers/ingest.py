@@ -50,6 +50,7 @@ def get_document_template(corpus_type: str) -> dict:
     """
     Gets a document template for a given corpus type.
 
+    :param str corpus_type: The corpus_type to use to get the document template.
     :return dict: The document template.
     """
     document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
@@ -65,6 +66,8 @@ def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dic
     """
     Gets a metadata template for a given corpus type and entity.
 
+    :param str corpus_type: The corpus_type to use to get the metadata template.
+    :param str metadata_type: The metadata_type to use to get the metadata template.
     :return dict: The metadata template.
     """
     metadata = taxonomy.get(corpus_type)
@@ -81,6 +84,7 @@ def get_family_template(corpus_type: str) -> dict:
     """
     Gets a family template for a given corpus type.
 
+    :param str corpus_type: The corpus_type to use to get the family template.
     :return dict: The family template.
     """
     family_schema = IngestFamilyDTO.model_json_schema(mode="serialization")
