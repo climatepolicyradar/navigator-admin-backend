@@ -167,3 +167,27 @@ def test_ingest_families_when_metadata_not_found(
         ingest_service.import_data(test_data, "test")
     expected_msg = "No taxonomy found for corpus"
     assert e.value.message == expected_msg
+
+
+def test_ingest_families_when_metadata_invalid(
+    corpus_repo_mock, geography_repo_mock, collection_repo_mock, db_client_metadata_mock
+):
+    test_data = {
+        "families": [
+            {
+                "import_id": "test.new.family.0",
+                "title": "Test",
+                "summary": "Test",
+                "geography": "Test",
+                "category": "UNFCCC",
+                "metadata": {},
+                "collections": ["id.does.not.exist"],
+                "events": [],
+                "documents": [],
+            },
+        ],
+    }
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    expected_msg = "Metadata validation failed: Missing metadata keys:"
+    assert expected_msg in e.value.message
