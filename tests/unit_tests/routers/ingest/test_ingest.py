@@ -18,25 +18,47 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_when_ok(
+def test_ingest_collections_when_ok(
     client: TestClient,
     user_header_token,
     collection_repo_mock,
     corpus_repo_mock,
-    family_repo_mock,
-    geography_repo_mock,
     db_client_metadata_mock,
 ):
 
     response = client.post(
         "/api/v1/ingest/test",
-        files={"new_data": open("tests/unit_tests/routers/ingest/test.json", "rb")},
+        files={
+            "new_data": open(
+                "tests/unit_tests/routers/ingest/test_collections.json", "rb"
+            )
+        },
         headers=user_header_token,
     )
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
         "collections": ["test.new.collection.0", "test.new.collection.0"],
+    }
+
+
+def test_ingest_families_when_ok(
+    client: TestClient,
+    user_header_token,
+    corpus_repo_mock,
+    db_client_metadata_mock,
+):
+
+    response = client.post(
+        "/api/v1/ingest/test",
+        files={
+            "new_data": open("tests/unit_tests/routers/ingest/test_families.json", "rb")
+        },
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json() == {
         "families": ["created", "created"],
         # "families": ["test.new.family.0", "test.new.family.0"],
     }
@@ -74,7 +96,7 @@ def test_ingest_collections_when_import_id_wrong_format(
 def test_ingest_collections_when_no_collections(
     client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
 ):
-    test_data = json.dumps({"collections": [], "families": []}).encode("utf-8")
+    test_data = json.dumps({}).encode("utf-8")
     test_data_file = io.BytesIO(test_data)
     response = client.post(
         "/api/v1/ingest/test",

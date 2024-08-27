@@ -99,28 +99,33 @@ async def get_ingest_template(corpus_type: str) -> Json:
 
 
 def ingest_data(data: dict, corpus_import_id: str):
-    collection_data = data["collections"]
-    family_data = data["families"]
+    collection_data = data["collections"] if "collections" in data else None
+    family_data = data["families"] if "families" in data else None
 
-    if not collection_data:
+    if not data:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
     collection_import_ids = []
     family_import_ids = []
+    response = {}
     try:
         org_id = corpus.get_corpus_org_id(corpus_import_id)
-        for coll in collection_data:
-            dto = IngestCollectionDTO(**coll).to_collection_create_dto()
-            import_id = collection.create(dto, org_id)
-            collection_import_ids.append(import_id)
-        for fam in family_data:
-            dto = IngestFamilyDTO(
-                **fam, corpus_import_id=corpus_import_id
-            ).to_family_create_dto(corpus_import_id)
-            # import_id = family.create(dto, org_id)
-            family_import_ids.append("created")
+        if collection_data:
+            for coll in collection_data:
+                dto = IngestCollectionDTO(**coll).to_collection_create_dto()
+                import_id = collection.create(dto, org_id)
+                collection_import_ids.append(import_id)
+                response["collections"] = collection_import_ids
+        if family_data:
+            for fam in family_data:
+                dto = IngestFamilyDTO(
+                    **fam, corpus_import_id=corpus_import_id
+                ).to_family_create_dto(corpus_import_id)
+                # import_id = family.create(dto, org_id)
+                family_import_ids.append("created")
+                response["families"] = family_import_ids
 
-        return {"collections": collection_import_ids, "families": family_import_ids}
+        return response
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
