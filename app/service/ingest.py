@@ -9,8 +9,11 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
-import app.repository.collection as collection
+import app.repository.collection as collection_repository
 import app.service.category as category
+import app.service.collection as collection
+
+# import app.service.collection as collection
 import app.service.corpus as corpus
 import app.service.geography as geography
 from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
@@ -36,7 +39,7 @@ def save_collections(
         dto = IngestCollectionDTO(**coll).to_collection_create_dto()
         if dto.import_id:
             validate_import_id(dto.import_id)
-        import_id = collection.create(db, dto, org_id)
+        import_id = collection_repository.create(db, dto, org_id)
         collection_import_ids.append(import_id)
     return collection_import_ids
 
@@ -59,9 +62,12 @@ def save_families(
         dto = IngestFamilyDTO(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
+
         corpus.validate(db, corpus_import_id)
         geography.get_id(db, dto.geography)
         category.validate(dto.category)
+        collections = set(dto.collections)
+        collection.validate_multiple_ids(collections)
 
         # import_id = family.create(dto, org_id)
         family_import_ids.append("created")

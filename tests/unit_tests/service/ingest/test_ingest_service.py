@@ -91,3 +91,27 @@ def test_ingest_families_when_corpus_invalid(corpus_repo_mock):
         ingest_service.import_data(test_data, "test")
     expected_msg = "Corpus 'test' not found"
     assert e.value.message == expected_msg
+
+
+def test_ingest_families_when_collection_ids_invalid(
+    corpus_repo_mock, geography_repo_mock
+):
+    test_data = {
+        "families": [
+            {
+                "import_id": "test.new.family.0",
+                "title": "Test",
+                "summary": "Test",
+                "geography": "Test",
+                "category": "UNFCCC",
+                "metadata": {},
+                "collections": ["invalid"],
+                "events": [],
+                "documents": [],
+            },
+        ],
+    }
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    expected_msg = "The import ids are invalid: ['invalid']"
+    assert e.value.message == expected_msg
