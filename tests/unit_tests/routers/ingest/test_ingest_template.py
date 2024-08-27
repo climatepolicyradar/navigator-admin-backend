@@ -56,68 +56,66 @@ def test_ingest_template_when_ok(
                     "title": "Collections",
                     "type": "array",
                 },
-                "events": [
-                    {
-                        "import_id": {"title": "Import Id", "type": "string"},
-                        "event_title": {"title": "Event Title", "type": "string"},
-                        "date": {
-                            "format": "date-time",
-                            "title": "Date",
-                            "type": "string",
-                        },
-                        "event_type_value": {
-                            "title": "Event Type Value",
-                            "type": "string",
-                        },
-                    }
-                ],
-                "documents": [
-                    {
-                        "events": [
-                            {
-                                "import_id": {"title": "Import Id", "type": "string"},
-                                "event_title": {
-                                    "title": "Event Title",
-                                    "type": "string",
-                                },
-                                "date": {
-                                    "format": "date-time",
-                                    "title": "Date",
-                                    "type": "string",
-                                },
-                                "event_type_value": {
-                                    "title": "Event Type Value",
-                                    "type": "string",
-                                },
-                            }
-                        ],
-                        "variant_name": {
-                            "anyOf": [{"type": "string"}, {"type": "null"}],
-                            "default": None,
-                            "title": "Variant Name",
-                        },
-                        "metadata": {
-                            "test": {
-                                "allow_any": False,
-                                "allow_blanks": False,
-                                "allowed_values": [],
-                            },
-                        },
-                        "title": {"title": "Title", "type": "string"},
-                        "source_url": {
-                            "anyOf": [
-                                {"format": "uri", "minLength": 1, "type": "string"},
-                                {"type": "null"},
-                            ],
-                            "default": None,
-                            "title": "Source Url",
-                        },
-                        "user_language_name": {
-                            "anyOf": [{"type": "string"}, {"type": "null"}],
-                            "title": "User Language Name",
-                        },
-                    }
-                ],
+                "events": {
+                    "items": {"type": "string"},
+                    "title": "Events",
+                    "type": "array",
+                },
+                "documents": {
+                    "items": {"type": "string"},
+                    "title": "Documents",
+                    "type": "array",
+                },
+            }
+        ],
+        "events": [
+            {
+                "import_id": {"title": "Import Id", "type": "string"},
+                "event_title": {"title": "Event Title", "type": "string"},
+                "date": {
+                    "format": "date-time",
+                    "title": "Date",
+                    "type": "string",
+                },
+                "event_type_value": {
+                    "title": "Event Type Value",
+                    "type": "string",
+                },
+            }
+        ],
+        "documents": [
+            {
+                "import_id": {"title": "Import Id", "type": "string"},
+                "events": {
+                    "items": {"type": "string"},
+                    "title": "Events",
+                    "type": "array",
+                },
+                "variant_name": {
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                    "default": None,
+                    "title": "Variant Name",
+                },
+                "metadata": {
+                    "test": {
+                        "allow_any": False,
+                        "allow_blanks": False,
+                        "allowed_values": [],
+                    },
+                },
+                "title": {"title": "Title", "type": "string"},
+                "source_url": {
+                    "anyOf": [
+                        {"format": "uri", "minLength": 1, "type": "string"},
+                        {"type": "null"},
+                    ],
+                    "default": None,
+                    "title": "Source Url",
+                },
+                "user_language_name": {
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                    "title": "User Language Name",
+                },
             }
         ],
     }
