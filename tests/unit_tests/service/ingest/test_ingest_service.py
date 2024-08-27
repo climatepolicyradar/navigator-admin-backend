@@ -4,7 +4,7 @@ import app.service.ingest as ingest_service
 from app.errors import ValidationError
 
 
-def test_ingest_collections_when_import_id_wrong_format(corpus_service_mock):
+def test_ingest_collections_when_import_id_wrong_format(corpus_repo_mock):
 
     invalid_import_id = "invalid"
     test_data = {
@@ -24,9 +24,7 @@ def test_ingest_collections_when_import_id_wrong_format(corpus_service_mock):
     assert e.value.message == expected_msg
 
 
-def test_ingest_families_when_geography_invalid(
-    corpus_service_mock, geography_repo_mock
-):
+def test_ingest_families_when_geography_invalid(corpus_repo_mock, geography_repo_mock):
     geography_repo_mock.error = True
     test_data = {
         "families": [
@@ -49,9 +47,7 @@ def test_ingest_families_when_geography_invalid(
     assert e.value.message == expected_msg
 
 
-def test_ingest_families_when_category_invalid(
-    corpus_service_mock, geography_repo_mock
-):
+def test_ingest_families_when_category_invalid(corpus_repo_mock, geography_repo_mock):
     test_data = {
         "families": [
             {
@@ -70,4 +66,28 @@ def test_ingest_families_when_category_invalid(
     with pytest.raises(ValidationError) as e:
         ingest_service.import_data(test_data, "test")
     expected_msg = "Test is not a valid FamilyCategory"
+    assert e.value.message == expected_msg
+
+
+def test_ingest_families_when_corpus_invalid(corpus_repo_mock):
+    corpus_repo_mock.valid = False
+
+    test_data = {
+        "families": [
+            {
+                "import_id": "test.new.family.0",
+                "title": "Test",
+                "summary": "Test",
+                "geography": "Test",
+                "category": "Test",
+                "metadata": {},
+                "collections": [],
+                "events": [],
+                "documents": [],
+            },
+        ],
+    }
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    expected_msg = "Corpus 'test' not found"
     assert e.value.message == expected_msg

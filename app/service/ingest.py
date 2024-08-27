@@ -59,8 +59,10 @@ def save_families(
         dto = IngestFamilyDTO(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
+        corpus.validate(db, corpus_import_id)
         geography.get_id(db, dto.geography)
         category.validate(dto.category)
+
         # import_id = family.create(dto, org_id)
         family_import_ids.append("created")
     return family_import_ids
