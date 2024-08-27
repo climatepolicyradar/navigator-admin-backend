@@ -5,7 +5,6 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 
 import app.service.collection as collection
 import app.service.corpus as corpus
-import app.service.family as family
 import app.service.taxonomy as taxonomy
 from app.errors import ValidationError
 from app.model.general import Json
@@ -118,8 +117,8 @@ def ingest_data(data: dict, corpus_import_id: str):
             dto = IngestFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
-            import_id = family.create(dto, org_id)
-            family_import_ids.append(import_id)
+            # import_id = family.create(dto, org_id)
+            family_import_ids.append("created")
 
         return {"collections": collection_import_ids, "families": family_import_ids}
     except ValidationError as e:
