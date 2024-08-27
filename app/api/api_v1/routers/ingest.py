@@ -3,12 +3,9 @@ import logging
 
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, UploadFile, status
 
-import app.service.collection as collection
-import app.service.corpus as corpus
 import app.service.taxonomy as taxonomy
-from app.errors import ValidationError
 from app.model.general import Json
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -16,6 +13,7 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
+from app.service.ingest import import_data
 
 ingest_router = r = APIRouter()
 
@@ -121,38 +119,6 @@ async def get_ingest_template(corpus_type: str) -> Json:
     }
 
 
-def ingest_data(data: dict, corpus_import_id: str) -> dict:
-    collection_data = data["collections"] if "collections" in data else None
-    family_data = data["families"] if "families" in data else None
-
-    if not data:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-
-    collection_import_ids = []
-    family_import_ids = []
-    response = {}
-    try:
-        org_id = corpus.get_corpus_org_id(corpus_import_id)
-        if collection_data:
-            for coll in collection_data:
-                dto = IngestCollectionDTO(**coll).to_collection_create_dto()
-                import_id = collection.create(dto, org_id)
-                collection_import_ids.append(import_id)
-                response["collections"] = collection_import_ids
-        if family_data:
-            for fam in family_data:
-                dto = IngestFamilyDTO(
-                    **fam, corpus_import_id=corpus_import_id
-                ).to_family_create_dto(corpus_import_id)
-                # import_id = family.create(dto, org_id)
-                family_import_ids.append("created")
-                response["families"] = family_import_ids
-
-        return response
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
-
-
 @r.post(
     "/ingest/{corpus_import_id}",
     response_model=Json,
@@ -169,4 +135,4 @@ async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
     content = await new_data.read()
     data_dict = json.loads(content)
 
-    return ingest_data(data_dict, corpus_import_id)
+    return import_data(data_dict, corpus_import_id)
