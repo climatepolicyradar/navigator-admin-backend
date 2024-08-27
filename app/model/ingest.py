@@ -28,14 +28,7 @@ class IngestCollectionDTO(BaseModel):
 
 
 class IngestFamilyDTO(BaseModel):
-    """
-    A JSON representation of a family for ingest.
-
-    Note:
-     - corpus_import_id is auto populated
-     - slug is auto generated
-     - organisation comes from the user's organisation
-    """
+    """Representation of a family for ingest."""
 
     import_id: str
     title: str
@@ -50,10 +43,7 @@ class IngestFamilyDTO(BaseModel):
 
 
 class IngestEventDTO(BaseModel):
-    """
-    JSON Representation of an event for ingest.
-
-    """
+    """Representation of an event for ingest."""
 
     import_id: str
     event_title: str
