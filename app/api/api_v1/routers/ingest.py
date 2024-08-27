@@ -1,6 +1,8 @@
 import json
 import logging
 
+from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
+from db_client.models.organisation.counters import CountedEntity
 from fastapi import APIRouter, HTTPException, UploadFile, status
 
 import app.service.collection as collection
@@ -37,19 +39,21 @@ def get_event_template() -> dict:
 def get_document_template(corpus_type: str) -> dict:
     document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
-    document_template["metadata"] = get_metadata_template(corpus_type, "document")
+    document_template["metadata"] = get_metadata_template(
+        corpus_type, CountedEntity.Document
+    )
 
     return document_template
 
 
-def get_metadata_template(corpus_type: str, metadata_type: str) -> dict:
+def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dict:
     metadata = taxonomy.get(corpus_type)
     if not metadata:
         return {}
-    if metadata_type == "document":
-        return metadata.pop("_document")
-    elif metadata_type == "family":
-        metadata.pop("_document")
+    if metadata_type == CountedEntity.Document:
+        return metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
+    elif metadata_type == CountedEntity.Family:
+        metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
     return metadata
 
 
@@ -59,7 +63,7 @@ def get_family_template(corpus_type: str) -> dict:
 
     del family_template["corpus_import_id"]
 
-    family_metadata = get_metadata_template(corpus_type, "family")
+    family_metadata = get_metadata_template(corpus_type, CountedEntity.Family)
     family_template["metadata"] = family_metadata
 
     return family_template
