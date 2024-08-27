@@ -20,21 +20,21 @@ ingest_router = r = APIRouter()
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_collection_template():
+def get_collection_template() -> dict:
     collection_schema = IngestCollectionDTO.model_json_schema(mode="serialization")
     collection_template = collection_schema["properties"]
 
     return collection_template
 
 
-def get_event_template():
+def get_event_template() -> dict:
     event_schema = IngestEventDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
 
     return event_template
 
 
-def get_document_template(corpus_type: str):
+def get_document_template(corpus_type: str) -> dict:
     document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
     document_template["metadata"] = get_metadata_template(corpus_type, "document")
@@ -42,7 +42,7 @@ def get_document_template(corpus_type: str):
     return document_template
 
 
-def get_metadata_template(corpus_type: str, metadata_type: str):
+def get_metadata_template(corpus_type: str, metadata_type: str) -> dict:
     metadata = taxonomy.get(corpus_type)
     if not metadata:
         return {}
@@ -53,7 +53,7 @@ def get_metadata_template(corpus_type: str, metadata_type: str):
     return metadata
 
 
-def get_family_template(corpus_type: str):
+def get_family_template(corpus_type: str) -> dict:
     family_schema = IngestFamilyDTO.model_json_schema(mode="serialization")
     family_template = family_schema["properties"]
 
