@@ -68,6 +68,7 @@ def save_families(
         category.validate(dto.category)
         collections = set(dto.collections)
         collection.validate_multiple_ids(collections)
+        collection.validate(collections, db)
 
         # import_id = family.create(dto, org_id)
         family_import_ids.append("created")
