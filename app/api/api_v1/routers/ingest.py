@@ -3,9 +3,10 @@ import logging
 
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
-from fastapi import APIRouter, UploadFile, status
+from fastapi import APIRouter, HTTPException, UploadFile, status
 
 import app.service.taxonomy as taxonomy
+from app.errors import ValidationError
 from app.model.general import Json
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -134,5 +135,7 @@ async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
 
     content = await new_data.read()
     data_dict = json.loads(content)
-
-    return import_data(data_dict, corpus_import_id)
+    try:
+        return import_data(data_dict, corpus_import_id)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)

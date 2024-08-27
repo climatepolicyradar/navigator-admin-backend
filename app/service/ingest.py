@@ -6,11 +6,26 @@ import of data and other services for validation etc.
 """
 
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
-import app.service.collection as collection
+import app.clients.db.session as db_session
+import app.repository.collection as collection
 import app.service.corpus as corpus
-from app.errors import ValidationError
 from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
+from app.service.collection import validate_import_id
+
+
+def save_collections(
+    db: Session, collection_data: list[dict], org_id: int
+) -> list[str]:
+    collection_import_ids = []
+    for coll in collection_data:
+        dto = IngestCollectionDTO(**coll).to_collection_create_dto()
+        if dto.import_id:
+            validate_import_id(dto.import_id)
+        import_id = collection.create(db, dto, org_id)
+        collection_import_ids.append(import_id)
+    return collection_import_ids
 
 
 def import_data(data: dict, corpus_import_id: str) -> dict:
@@ -23,32 +38,26 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     :raises ValidationError: raised should the import_id be invalid.
     :return dict: Import ids of the saved entities.
     """
+    db = db_session.get_db()
+
     collection_data = data["collections"] if "collections" in data else None
     family_data = data["families"] if "families" in data else None
 
     if not data:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
-    collection_import_ids = []
     family_import_ids = []
     response = {}
-    try:
-        org_id = corpus.get_corpus_org_id(corpus_import_id)
-        if collection_data:
-            for coll in collection_data:
-                dto = IngestCollectionDTO(**coll).to_collection_create_dto()
-                import_id = collection.create(dto, org_id)
-                collection_import_ids.append(import_id)
-                response["collections"] = collection_import_ids
-        if family_data:
-            for fam in family_data:
-                dto = IngestFamilyDTO(
-                    **fam, corpus_import_id=corpus_import_id
-                ).to_family_create_dto(corpus_import_id)
-                # import_id = family.create(dto, org_id)
-                family_import_ids.append("created")
-                response["families"] = family_import_ids
+    org_id = corpus.get_corpus_org_id(corpus_import_id)
+    if collection_data:
+        response["collections"] = save_collections(db, collection_data, org_id)
+    if family_data:
+        for fam in family_data:
+            IngestFamilyDTO(
+                **fam, corpus_import_id=corpus_import_id
+            ).to_family_create_dto(corpus_import_id)
+            # import_id = family.create(dto, org_id)
+            family_import_ids.append("created")
+            response["families"] = family_import_ids
 
-        return response
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    return response
