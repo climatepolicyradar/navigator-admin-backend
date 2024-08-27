@@ -10,7 +10,7 @@ from app.model.general import Json
 class IngestCollectionDTO(BaseModel):
     """Representation of a collection for ingest."""
 
-    import_id: Optional[str] = ""
+    import_id: str
     title: str
     description: str
 
@@ -28,14 +28,7 @@ class IngestCollectionDTO(BaseModel):
 
 
 class IngestFamilyDTO(BaseModel):
-    """
-    A JSON representation of a family for ingest.
-
-    Note:
-     - corpus_import_id is auto populated
-     - slug is auto generated
-     - organisation comes from the user's organisation
-    """
+    """Representation of a family for ingest."""
 
     import_id: str
     title: str
@@ -44,31 +37,27 @@ class IngestFamilyDTO(BaseModel):
     category: str
     metadata: Json
     collections: list[str]
+    documents: list[str]
+    events: list[str]
     corpus_import_id: str
 
 
 class IngestEventDTO(BaseModel):
-    """
-    JSON Representation of an event for ingest.
-
-    """
+    """Representation of an event for ingest."""
 
     import_id: str
     event_title: str
     date: datetime
     event_type_value: str
 
-    family_import_id: str
-    family_document_import_id: Optional[str] = None
-
 
 class IngestDocumentDTO(BaseModel):
     """Representation of a document for ingest."""
 
-    family_import_id: str
+    import_id: str
     variant_name: Optional[str] = None
     metadata: Json
-    events: IngestEventDTO
+    events: list[str]
     title: str
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
