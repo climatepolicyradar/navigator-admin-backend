@@ -34,8 +34,8 @@ def test_ingest_families_when_geography_invalid(
                 "import_id": "test.new.family.0",
                 "title": "Test",
                 "summary": "Test",
-                "geography": "invalid",
-                "category": "UNFCCC",
+                "geography": "Invalid",
+                "category": "Test",
                 "metadata": {},
                 "collections": [],
                 "events": [],
@@ -45,5 +45,29 @@ def test_ingest_families_when_geography_invalid(
     }
     with pytest.raises(ValidationError) as e:
         ingest_service.import_data(test_data, "test")
-    expected_msg = "The geography value invalid is invalid!"
+    expected_msg = "The geography value Invalid is invalid!"
+    assert e.value.message == expected_msg
+
+
+def test_ingest_families_when_category_invalid(
+    corpus_service_mock, geography_repo_mock
+):
+    test_data = {
+        "families": [
+            {
+                "import_id": "test.new.family.0",
+                "title": "Test",
+                "summary": "Test",
+                "geography": "Test",
+                "category": "Test",
+                "metadata": {},
+                "collections": [],
+                "events": [],
+                "documents": [],
+            },
+        ],
+    }
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    expected_msg = "Test is not a valid FamilyCategory"
     assert e.value.message == expected_msg
