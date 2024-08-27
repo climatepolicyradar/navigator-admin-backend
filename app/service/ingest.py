@@ -16,6 +16,7 @@ import app.service.collection as collection
 # import app.service.collection as collection
 import app.service.corpus as corpus
 import app.service.geography as geography
+import app.service.metadata as metadata
 from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
 from app.service.collection import validate_import_id
 
@@ -69,6 +70,7 @@ def save_families(
         collections = set(dto.collections)
         collection.validate_multiple_ids(collections)
         collection.validate(collections, db)
+        metadata.validate_metadata(db, corpus_import_id, dto.metadata)
 
         # import_id = family.create(dto, org_id)
         family_import_ids.append("created")

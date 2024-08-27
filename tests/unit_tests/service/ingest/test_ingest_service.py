@@ -141,3 +141,29 @@ def test_ingest_families_when_collection_ids_do_not_exist(
         ingest_service.import_data(test_data, "test")
     expected_msg = "One or more of the collections to update does not exist"
     assert e.value.message == expected_msg
+
+
+def test_ingest_families_when_metadata_not_found(
+    corpus_repo_mock, geography_repo_mock, collection_repo_mock, db_client_metadata_mock
+):
+    db_client_metadata_mock.bad_taxonomy = True
+
+    test_data = {
+        "families": [
+            {
+                "import_id": "test.new.family.0",
+                "title": "Test",
+                "summary": "Test",
+                "geography": "Test",
+                "category": "UNFCCC",
+                "metadata": {},
+                "collections": ["id.does.not.exist"],
+                "events": [],
+                "documents": [],
+            },
+        ],
+    }
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    expected_msg = "No taxonomy found for corpus"
+    assert e.value.message == expected_msg
