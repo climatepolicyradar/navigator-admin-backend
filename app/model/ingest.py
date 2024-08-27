@@ -10,7 +10,7 @@ from app.model.general import Json
 class IngestCollectionDTO(BaseModel):
     """Representation of a collection for ingest."""
 
-    import_id: Optional[str] = ""
+    import_id: str
     title: str
     description: str
 

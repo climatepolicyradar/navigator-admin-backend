@@ -64,29 +64,3 @@ def test_ingest_collections_when_import_id_empty(
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {"collections": ["UNFCCC.collection.i00000001.n0000"]}
-
-
-def test_ingest_collections_when_no_import_id(
-    data_db: Session, client: TestClient, user_header_token
-):
-
-    test_data = json.dumps(
-        {
-            "collections": [
-                {
-                    "title": "Test title",
-                    "description": "Test description",
-                }
-            ]
-        }
-    ).encode("utf-8")
-    test_data_file = io.BytesIO(test_data)
-
-    response = client.post(
-        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-        files={"new_data": test_data_file},
-        headers=user_header_token,
-    )
-
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == {"collections": ["UNFCCC.collection.i00000001.n0000"]}
