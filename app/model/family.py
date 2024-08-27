@@ -52,7 +52,7 @@ class FamilyCreateDTO(BaseModel):
     A JSON representation of a family for creating.
 
     Note:
-     - import_id is auto generated
+     - import_id is auto generated if not supplied
      - slug is auto generated
      - organisation comes from the user's organisation
     """

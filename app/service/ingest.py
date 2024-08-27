@@ -63,6 +63,8 @@ def save_families(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
 
+        if dto.import_id:
+            validate_import_id(dto.import_id)
         corpus.validate(db, corpus_import_id)
         geo_id = geography.get_id(db, dto.geography)
         category.validate(dto.category)
