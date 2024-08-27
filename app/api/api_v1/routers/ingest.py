@@ -60,19 +60,10 @@ def get_family_template(corpus_type: str):
     # look up taxonomy by corpus type
     family_metadata = get_metadata_template(corpus_type)
     # pull out document taxonomy
-    document_metadata = family_metadata.pop("_document") if family_metadata else {}
+    family_metadata.pop("_document") if family_metadata else {}
 
     # add family metadata and event templates to the family template
     family_template["metadata"] = family_metadata
-
-    family_template["events"] = [get_event_template()]
-
-    # get document template
-    document_template = get_document_template()
-    # add document metadata template
-    document_template["metadata"] = document_metadata
-    # add document template to the family template
-    family_template["documents"] = [document_template]
 
     return family_template
 
@@ -95,6 +86,8 @@ async def get_ingest_template(corpus_type: str) -> Json:
     return {
         "collections": [get_collection_template()],
         "families": [get_family_template(corpus_type)],
+        "documents": [get_document_template()],
+        "events": [get_event_template()],
     }
 
 
