@@ -4,6 +4,42 @@ import app.service.ingest as ingest_service
 from app.errors import ValidationError
 
 
+def test_ingest_when_ok(
+    corpus_repo_mock,
+    geography_repo_mock,
+    db_client_metadata_mock,
+    collection_repo_mock,
+    family_repo_mock,
+):
+    test_data = {
+        "collections": [
+            {
+                "import_id": "",
+                "title": "Test title",
+                "description": "Test description",
+            },
+        ],
+        "families": [
+            {
+                "import_id": "",
+                "title": "Test",
+                "summary": "Test",
+                "geography": "Test",
+                "category": "UNFCCC",
+                "metadata": {"color": ["blue"], "size": [""]},
+                "collections": [],
+                "events": [],
+                "documents": [],
+            },
+        ],
+    }
+
+    assert ingest_service.import_data(test_data, "test") == {
+        "collections": ["test.new.collection.0"],
+        "families": ["created"],
+    }
+
+
 def test_ingest_collections_when_import_id_wrong_format(corpus_repo_mock):
     invalid_import_id = "invalid"
     test_data = {
