@@ -83,3 +83,18 @@ def test_ingest_when_no_data(
     assert collection_repo_mock.create.call_count == 0
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_ingest_data_when_db_error(
+    client: TestClient, user_header_token, corpus_repo_mock, collection_repo_mock
+):
+    collection_repo_mock.throw_repository_error = True
+
+    response = client.post(
+        "/api/v1/ingest/test",
+        files={"new_data": open("tests/unit_tests/routers/ingest/test.json", "rb")},
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    assert response.json().get("detail") == "bad collection repo"
