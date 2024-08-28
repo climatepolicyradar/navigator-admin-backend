@@ -350,7 +350,10 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     :return str: The ID of the created family.
     """
     try:
-        import_id = cast(Column, generate_import_id(db, CountedEntity.Family, org_id))
+        import_id = family.import_id or cast(
+            Column,
+            generate_import_id(db, CountedEntity.Family, org_id),
+        )
         new_family = Family(
             import_id=import_id,
             title=family.title,

@@ -5,10 +5,8 @@ from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from fastapi import APIRouter, HTTPException, UploadFile, status
 
-import app.service.collection as collection
-import app.service.corpus as corpus
 import app.service.taxonomy as taxonomy
-from app.errors import ValidationError
+from app.errors import RepositoryError, ValidationError
 from app.model.general import Json
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -16,13 +14,14 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
+from app.service.ingest import import_data
 
 ingest_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_collection_template() -> dict:
+def _get_collection_template() -> dict:
     """
     Gets a collection template.
 
@@ -34,7 +33,7 @@ def get_collection_template() -> dict:
     return collection_template
 
 
-def get_event_template() -> dict:
+def _get_event_template() -> dict:
     """
     Gets an event template.
 
@@ -46,7 +45,7 @@ def get_event_template() -> dict:
     return event_template
 
 
-def get_document_template(corpus_type: str) -> dict:
+def _get_document_template(corpus_type: str) -> dict:
     """
     Gets a document template for a given corpus type.
 
@@ -55,14 +54,14 @@ def get_document_template(corpus_type: str) -> dict:
     """
     document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
-    document_template["metadata"] = get_metadata_template(
+    document_template["metadata"] = _get_metadata_template(
         corpus_type, CountedEntity.Document
     )
 
     return document_template
 
 
-def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dict:
+def _get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dict:
     """
     Gets a metadata template for a given corpus type and entity.
 
@@ -80,7 +79,7 @@ def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dic
     return metadata
 
 
-def get_family_template(corpus_type: str) -> dict:
+def _get_family_template(corpus_type: str) -> dict:
     """
     Gets a family template for a given corpus type.
 
@@ -92,7 +91,7 @@ def get_family_template(corpus_type: str) -> dict:
 
     del family_template["corpus_import_id"]
 
-    family_metadata = get_metadata_template(corpus_type, CountedEntity.Family)
+    family_metadata = _get_metadata_template(corpus_type, CountedEntity.Family)
     family_template["metadata"] = family_metadata
 
     return family_template
@@ -114,10 +113,10 @@ async def get_ingest_template(corpus_type: str) -> Json:
     _LOGGER.info(f"Creating template for corpus type: {corpus_type}")
 
     return {
-        "collections": [get_collection_template()],
-        "families": [get_family_template(corpus_type)],
-        "documents": [get_document_template(corpus_type)],
-        "events": [get_event_template()],
+        "collections": [_get_collection_template()],
+        "families": [_get_family_template(corpus_type)],
+        "documents": [_get_document_template(corpus_type)],
+        "events": [_get_event_template()],
     }
 
 
@@ -126,7 +125,7 @@ async def get_ingest_template(corpus_type: str) -> Json:
     response_model=Json,
     status_code=status.HTTP_201_CREATED,
 )
-async def ingest_data(new_data: UploadFile, corpus_import_id: str) -> Json:
+async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
     """
     Bulk import endpoint.
 
@@ -136,19 +135,21 @@ async def ingest_data(new_data: UploadFile, corpus_import_id: str) -> Json:
 
     content = await new_data.read()
     data_dict = json.loads(content)
-    collection_data = data_dict["collections"]
-
-    if not collection_data:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-
-    collection_import_ids = []
     try:
-        org_id = corpus.get_corpus_org_id(corpus_import_id)
-        for item in collection_data:
-            dto = IngestCollectionDTO(**item).to_collection_create_dto()
-            import_id = collection.create(dto, org_id=org_id)
-            collection_import_ids.append(import_id)
-
-        return {"collections": collection_import_ids}
+        return import_data(data_dict, corpus_import_id)
     except ValidationError as e:
+        _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        _LOGGER.error(e.message)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+    except HTTPException as e:
+        _LOGGER.error(e)
+        raise e
+    except Exception as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unexpected error"
+        )

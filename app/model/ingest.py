@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import AnyHttpUrl, BaseModel
 
 from app.model.collection import CollectionCreateDTO
+from app.model.family import FamilyCreateDTO
 from app.model.general import Json
 
 
@@ -40,6 +41,23 @@ class IngestFamilyDTO(BaseModel):
     documents: list[str]
     events: list[str]
     corpus_import_id: str
+
+    def to_family_create_dto(self, corpus_import_id: str) -> FamilyCreateDTO:
+        """
+        Convert IngestFamilyDTO to FamilyCreateDTO.
+
+        :return FamilyCreateDTO: Converted FamilyCreateDTO instance.
+        """
+        return FamilyCreateDTO(
+            import_id=self.import_id,
+            title=self.title,
+            summary=self.summary,
+            geography=self.geography,
+            category=self.category,
+            metadata=self.metadata,
+            collections=self.collections,
+            corpus_import_id=corpus_import_id,
+        )
 
 
 class IngestEventDTO(BaseModel):

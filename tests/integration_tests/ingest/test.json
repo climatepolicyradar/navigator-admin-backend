@@ -16,11 +16,11 @@
       "import_id": "test.new.family.0",
       "title": "Test",
       "summary": "Test",
-      "geography": "Test",
+      "geography": "South Asia",
       "category": "UNFCCC",
       "metadata": {
-        "color": ["blue"],
-        "size": []
+        "author_type": ["Non-Party"],
+        "author": ["Test"]
       },
       "collections": ["test.new.collection.0"],
       "events": [],
@@ -30,11 +30,11 @@
       "import_id": "test.new.family.1",
       "title": "Test",
       "summary": "Test",
-      "geography": "Test",
+      "geography": "South Asia",
       "category": "UNFCCC",
       "metadata": {
-        "color": ["pink"],
-        "size": []
+        "author_type": ["Party"],
+        "author": ["Test"]
       },
       "collections": ["test.new.collection.1"],
       "events": [],

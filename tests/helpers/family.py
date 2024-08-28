@@ -73,6 +73,7 @@ def create_family_create_dto(
     if collections is None:
         collections = []
     return FamilyCreateDTO(
+        import_id="",
         title=title,
         summary=summary,
         geography=geography,

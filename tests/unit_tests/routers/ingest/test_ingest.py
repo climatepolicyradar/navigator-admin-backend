@@ -18,8 +18,14 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_collections_when_ok(
-    client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
+def test_ingest_data_when_ok(
+    client: TestClient,
+    user_header_token,
+    collection_repo_mock,
+    geography_repo_mock,
+    corpus_repo_mock,
+    family_repo_mock,
+    db_client_metadata_mock,
 ):
 
     response = client.post(
@@ -30,11 +36,12 @@ def test_ingest_collections_when_ok(
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
-        "collections": ["test.new.collection.0", "test.new.collection.0"]
+        "collections": ["test.new.collection.0", "test.new.collection.0"],
+        "families": ["created", "created"],
     }
 
 
-def test_ingest_collections_when_import_id_wrong_format(
+def test_ingest_when_data_invalid(
     client: TestClient, user_header_token, corpus_service_mock
 ):
 
@@ -46,8 +53,8 @@ def test_ingest_collections_when_import_id_wrong_format(
                     "import_id": invalid_import_id,
                     "title": "Test title",
                     "description": "Test description",
-                }
-            ]
+                },
+            ],
         }
     ).encode("utf-8")
     test_data_file = io.BytesIO(test_data)
@@ -62,10 +69,10 @@ def test_ingest_collections_when_import_id_wrong_format(
     assert response.json().get("detail") == "The import id invalid is invalid!"
 
 
-def test_ingest_collections_when_no_collections(
+def test_ingest_when_no_data(
     client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
 ):
-    test_data = json.dumps({"collections": []}).encode("utf-8")
+    test_data = json.dumps({}).encode("utf-8")
     test_data_file = io.BytesIO(test_data)
     response = client.post(
         "/api/v1/ingest/test",
@@ -76,3 +83,18 @@ def test_ingest_collections_when_no_collections(
     assert collection_repo_mock.create.call_count == 0
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_ingest_data_when_db_error(
+    client: TestClient, user_header_token, corpus_repo_mock, collection_repo_mock
+):
+    collection_repo_mock.throw_repository_error = True
+
+    response = client.post(
+        "/api/v1/ingest/test",
+        files={"new_data": open("tests/unit_tests/routers/ingest/test.json", "rb")},
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    assert response.json().get("detail") == "bad collection repo"
