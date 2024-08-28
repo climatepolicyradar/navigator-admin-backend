@@ -32,11 +32,23 @@ def test_ingest_when_ok(
                 "documents": [],
             },
         ],
+        "documents": [
+            {
+                "import_id": "",
+                "variant_name": "",
+                "metadata": {},
+                "events": [],
+                "title": "",
+                "source_url": None,
+                "user_language_name": "",
+            }
+        ],
     }
 
     assert ingest_service.import_data(test_data, "test") == {
         "collections": ["test.new.collection.0"],
         "families": ["created"],
+        "documents": ["test.new.document.0"],
     }
 
 

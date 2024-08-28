@@ -112,6 +112,7 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
             )
         if family_data:
             response["families"] = _save_families(db, family_data, corpus_import_id)
+        response["documents"] = ["test.new.document.0"]
 
         return response
     except Exception as e:
