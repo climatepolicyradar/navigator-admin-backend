@@ -17,7 +17,7 @@ import app.service.collection as collection
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.metadata as metadata
-from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
+from app.model.ingest import IngestCollectionDTO, IngestDocumentDTO, IngestFamilyDTO
 from app.service.collection import validate_import_id
 
 
@@ -99,6 +99,7 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
 
     collection_data = data["collections"] if "collections" in data else None
     family_data = data["families"] if "families" in data else None
+    document_data = data["documents"]
 
     if not data:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
@@ -112,7 +113,15 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
             )
         if family_data:
             response["families"] = _save_families(db, family_data, corpus_import_id)
-        response["documents"] = ["test.new.document.0"]
+
+        document_import_ids = []
+        # org_id = corpus.get_corpus_org_id(corpus_import_id)
+        for doc in document_data:
+            dto = IngestDocumentDTO(
+                **doc,
+            ).to_document_create_dto()
+            document_import_ids.append(dto.import_id)
+        response["documents"] = document_import_ids
 
         return response
     except Exception as e:

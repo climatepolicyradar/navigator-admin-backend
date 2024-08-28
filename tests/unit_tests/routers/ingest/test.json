@@ -38,7 +38,25 @@
       },
       "collections": ["test.new.collection.1"],
       "events": [],
-      "documents": []
+      "documents": ["test.new.document.0"]
+    }
+  ],
+  "documents": [
+    {
+      "import_id": "test.new.document.0",
+      "variant_name": "",
+      "metadata": {},
+      "events": [],
+      "title": "",
+      "user_language_name": ""
+    },
+    {
+      "import_id": "test.new.document.1",
+      "variant_name": "",
+      "metadata": {},
+      "events": [],
+      "title": "",
+      "user_language_name": ""
     }
   ]
 }
