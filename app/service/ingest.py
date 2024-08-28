@@ -42,10 +42,6 @@ def _save_collections(
         if dto.import_id:
             validate_import_id(dto.import_id)
         import_id = collection_repository.create(db, dto, org_id)
-        # if not validate_import_id(import_id):
-        #     raise RepositoryError(
-        #         f"Collection could not be saved - invalid import id: {import_id}"
-        #     )
 
         collection_import_ids.append(import_id)
     return collection_import_ids
@@ -119,7 +115,7 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
 
         return response
     except Exception as e:
-        #     db.rollback()
+        db.rollback()
         raise e
     finally:
         db.commit()
