@@ -21,7 +21,7 @@ ingest_router = r = APIRouter()
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_collection_template() -> dict:
+def _get_collection_template() -> dict:
     """
     Gets a collection template.
 
@@ -33,7 +33,7 @@ def get_collection_template() -> dict:
     return collection_template
 
 
-def get_event_template() -> dict:
+def _get_event_template() -> dict:
     """
     Gets an event template.
 
@@ -45,7 +45,7 @@ def get_event_template() -> dict:
     return event_template
 
 
-def get_document_template(corpus_type: str) -> dict:
+def _get_document_template(corpus_type: str) -> dict:
     """
     Gets a document template for a given corpus type.
 
@@ -54,14 +54,14 @@ def get_document_template(corpus_type: str) -> dict:
     """
     document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
-    document_template["metadata"] = get_metadata_template(
+    document_template["metadata"] = _get_metadata_template(
         corpus_type, CountedEntity.Document
     )
 
     return document_template
 
 
-def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dict:
+def _get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dict:
     """
     Gets a metadata template for a given corpus type and entity.
 
@@ -79,7 +79,7 @@ def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dic
     return metadata
 
 
-def get_family_template(corpus_type: str) -> dict:
+def _get_family_template(corpus_type: str) -> dict:
     """
     Gets a family template for a given corpus type.
 
@@ -91,7 +91,7 @@ def get_family_template(corpus_type: str) -> dict:
 
     del family_template["corpus_import_id"]
 
-    family_metadata = get_metadata_template(corpus_type, CountedEntity.Family)
+    family_metadata = _get_metadata_template(corpus_type, CountedEntity.Family)
     family_template["metadata"] = family_metadata
 
     return family_template
@@ -113,10 +113,10 @@ async def get_ingest_template(corpus_type: str) -> Json:
     _LOGGER.info(f"Creating template for corpus type: {corpus_type}")
 
     return {
-        "collections": [get_collection_template()],
-        "families": [get_family_template(corpus_type)],
-        "documents": [get_document_template(corpus_type)],
-        "events": [get_event_template()],
+        "collections": [_get_collection_template()],
+        "families": [_get_family_template(corpus_type)],
+        "documents": [_get_document_template(corpus_type)],
+        "events": [_get_event_template()],
     }
 
 

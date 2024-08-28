@@ -22,7 +22,7 @@ from app.service.collection import validate_import_id
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def save_collections(
+def _save_collections(
     db: Session, collection_data: list[dict], corpus_import_id: str
 ) -> list[str]:
     """
@@ -47,7 +47,7 @@ def save_collections(
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def save_families(
+def _save_families(
     db: Session, family_data: list[dict], corpus_import_id: str
 ) -> list[str]:
     """
@@ -61,6 +61,7 @@ def save_families(
     :return str: The new import_ids for the saved families.
     """
     family_import_ids = []
+    org_id = corpus.get_corpus_org_id(corpus_import_id)
     for fam in family_data:
         dto = IngestFamilyDTO(
             **fam, corpus_import_id=corpus_import_id
@@ -77,7 +78,6 @@ def save_families(
         # collection.validate(collections, db)
         metadata.validate_metadata(db, corpus_import_id, dto.metadata)
 
-        org_id = corpus.get_corpus_org_id(corpus_import_id)
         import_id = family_repository.create(db, dto, geo_id, org_id)
         family_import_ids.append(import_id)
     return family_import_ids
@@ -105,10 +105,10 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     response = {}
 
     if collection_data:
-        response["collections"] = save_collections(
+        response["collections"] = _save_collections(
             db, collection_data, corpus_import_id
         )
     if family_data:
-        response["families"] = save_families(db, family_data, corpus_import_id)
+        response["families"] = _save_families(db, family_data, corpus_import_id)
 
     return response
