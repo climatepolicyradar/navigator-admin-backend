@@ -26,13 +26,11 @@ def _save_collections(
     db: Session, collection_data: list[dict], corpus_import_id: str
 ) -> list[str]:
     """
-    Creates new collection with the values passed.
+    Creates new collections with the values passed.
 
     :param Session db: The database session to use for saving collections.
     :param list[dict] collection_data: The data to use for creating collections.
     :param str corpus_import_id: The import_id of the corpus the collections belong to.
-    :raises RepositoryError: raised on a database error
-    :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_ids for the saved collections.
     """
     collection_import_ids = []
@@ -57,8 +55,6 @@ def _save_families(
     :param Session db: The database session to use for saving families.
     :param list[dict] families_data: The data to use for creating families.
     :param str corpus_import_id: The import_id of the corpus the families belong to.
-    :raises RepositoryError: raised on a database error
-    :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_ids for the saved families.
     """
     family_import_ids = []
@@ -82,6 +78,25 @@ def _save_families(
         import_id = family_repository.create(db, dto, geo_id, org_id)
         family_import_ids.append(import_id)
     return family_import_ids
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def _save_documents(db: Session, document_data: list[dict]) -> list[str]:
+    """
+    Creates new documents with the values passed.
+
+    :param Session db: The database session to use for saving documents.
+    :param list[dict] document_data: The data to use for creating documents.
+    :param str corpus_import_id: The import_id of the corpus the documents belong to.
+    :return str: The new import_ids for the saved documents.
+    """
+    document_import_ids = []
+    for doc in document_data:
+        dto = IngestDocumentDTO(
+            **doc,
+        ).to_document_create_dto()
+        document_import_ids.append(dto.import_id)
+    return document_import_ids
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -113,16 +128,8 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
             )
         if family_data:
             response["families"] = _save_families(db, family_data, corpus_import_id)
-
         if document_data:
-            document_import_ids = []
-            # org_id = corpus.get_corpus_org_id(corpus_import_id)
-            for doc in document_data:
-                dto = IngestDocumentDTO(
-                    **doc,
-                ).to_document_create_dto()
-                document_import_ids.append(dto.import_id)
-            response["documents"] = document_import_ids
+            response["documents"] = _save_documents(db, document_data)
 
         return response
     except Exception as e:

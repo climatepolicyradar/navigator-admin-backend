@@ -34,7 +34,7 @@ def test_ingest_when_ok(
         ],
         "documents": [
             {
-                "import_id": "",
+                "import_id": "test.new.document.0",
                 "variant_name": "",
                 "metadata": {},
                 "events": [],
