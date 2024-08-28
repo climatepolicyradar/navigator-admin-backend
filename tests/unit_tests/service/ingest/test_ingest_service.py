@@ -1,7 +1,7 @@
 import pytest
 
 import app.service.ingest as ingest_service
-from app.errors import ValidationError
+from app.errors import RepositoryError, ValidationError
 
 
 def test_ingest_when_ok(
@@ -38,6 +38,24 @@ def test_ingest_when_ok(
         "collections": ["test.new.collection.0"],
         "families": ["created"],
     }
+
+
+def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
+    collection_repo_mock.throw_repository_error = True
+
+    test_data = {
+        "collections": [
+            {
+                "import_id": "",
+                "title": "Test title",
+                "description": "Test description",
+            }
+        ]
+    }
+
+    with pytest.raises(RepositoryError) as e:
+        ingest_service.import_data(test_data, "test")
+    assert e.value.message == "bad collection repo"
 
 
 def test_ingest_collections_when_import_id_wrong_format(corpus_repo_mock):

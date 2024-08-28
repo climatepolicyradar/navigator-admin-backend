@@ -6,7 +6,7 @@ from db_client.models.organisation.counters import CountedEntity
 from fastapi import APIRouter, HTTPException, UploadFile, status
 
 import app.service.taxonomy as taxonomy
-from app.errors import RepositoryError, ValidationError
+from app.errors import ValidationError
 from app.model.general import Json
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -139,7 +139,7 @@ async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
         return import_data(data_dict, corpus_import_id)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
-    except RepositoryError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
-        )
+    # except Exception as e:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+    #     )

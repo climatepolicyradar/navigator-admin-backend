@@ -35,3 +35,23 @@ def test_ingest_collections_when_ok(
         "collections": ["test.new.collection.0", "test.new.collection.1"],
         "families": ["test.new.family.0", "test.new.family.1"],
     }
+
+
+# def test_ingest_rollback(
+#     client: TestClient, data_db: Session, rollback_collection_repo, user_header_token
+# ):
+#     setup_db(data_db)
+
+#     response = client.post(
+#         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+#         files={"new_data": open("tests/integration_tests/ingest/test.json", "rb")},
+#         headers=user_header_token,
+#     )
+
+#     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+#     actual_collection = (
+#         data_db.query(Collection)
+#         .filter(Collection.import_id == "test.new.collection.0")
+#         .one_or_none()
+#     )
+#     assert actual_collection is None
