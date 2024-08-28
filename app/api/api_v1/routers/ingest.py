@@ -145,6 +145,9 @@ async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except HTTPException as e:
+        _LOGGER.error(e)
+        raise e
     except Exception as e:
         _LOGGER.error(e)
         raise HTTPException(
