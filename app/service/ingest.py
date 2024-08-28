@@ -6,6 +6,7 @@ import of data and other services for validation etc.
 """
 
 from fastapi import HTTPException, status
+from pydantic import ConfigDict, validate_call
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -20,6 +21,7 @@ from app.model.ingest import IngestCollectionDTO, IngestFamilyDTO
 from app.service.collection import validate_import_id
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_collections(
     db: Session, collection_data: list[dict], corpus_import_id: str
 ) -> list[str]:
@@ -44,6 +46,7 @@ def save_collections(
     return collection_import_ids
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_families(
     db: Session, family_data: list[dict], corpus_import_id: str
 ) -> list[str]:
@@ -80,6 +83,7 @@ def save_families(
     return family_import_ids
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(data: dict, corpus_import_id: str) -> dict:
     """
     Imports data for a given corpus_import_id.
