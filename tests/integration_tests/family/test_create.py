@@ -34,7 +34,7 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
 
     actual_family_geo = (
         data_db.query(FamilyGeography)
-        .filter(FamilyGeography.import_id == expected_import_id)
+        .filter(FamilyGeography.family_import_id == expected_import_id)
         .one()
     )
     assert actual_family_geo.value == "CHN"
