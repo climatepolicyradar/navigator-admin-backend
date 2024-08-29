@@ -5,6 +5,7 @@ This layer uses the corpus, collection, family, document and event repos to hand
 import of data and other services for validation etc.
 """
 
+from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.orm import Session
@@ -82,7 +83,9 @@ def _save_families(
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def _save_documents(db: Session, document_data: list[dict]) -> list[str]:
+def _save_documents(
+    db: Session, document_data: list[dict], corpus_import_id: str
+) -> list[str]:
     """
     Creates new documents with the values passed.
 
@@ -99,6 +102,12 @@ def _save_documents(db: Session, document_data: list[dict]) -> list[str]:
 
         if dto.variant_name == "":
             raise ValidationError("Variant name is empty")
+        metadata.validate_metadata(
+            db,
+            corpus_import_id,
+            dto.metadata,
+            EntitySpecificTaxonomyKeys.DOCUMENT.value,
+        )
 
         document_import_ids.append(dto.import_id)
     return document_import_ids
@@ -134,7 +143,7 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
         if family_data:
             response["families"] = _save_families(db, family_data, corpus_import_id)
         if document_data:
-            response["documents"] = _save_documents(db, document_data)
+            response["documents"] = _save_documents(db, document_data, corpus_import_id)
 
         return response
     except Exception as e:
