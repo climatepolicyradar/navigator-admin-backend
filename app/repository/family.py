@@ -111,10 +111,18 @@ def _update_intention(
     ]
     update_collections = set(original_collections) != set(family.collections)
     update_title = cast(str, original_family.title) != family.title
+    # TODO: PDCT-1406: Properly implement multi-geography support
+    update_geo = (
+        db.query(FamilyGeography)
+        .filter(FamilyGeography.family_import_id == import_id)
+        .one()
+        .geography_id
+        != geo_id
+    )
     update_basics = (
         update_title
+        or update_geo
         or original_family.description != family.summary
-        or original_family.geography_id != geo_id
         or original_family.family_category != family.category
     )
     existing_metadata = (
