@@ -35,7 +35,7 @@ def test_ingest_when_ok(
         "documents": [
             {
                 "import_id": "test.new.document.0",
-                "variant_name": "",
+                "variant_name": "Original Language",
                 "metadata": {},
                 "events": [],
                 "title": "",
@@ -282,3 +282,23 @@ def test_ingest_families_when_metadata_invalid(
         ingest_service.import_data(test_data, "test")
     expected_msg = "Metadata validation failed: Missing metadata keys:"
     assert expected_msg in e.value.message
+
+
+def test_ingest_documents_when_variant_empty(
+    corpus_repo_mock, geography_repo_mock, collection_repo_mock, db_client_metadata_mock
+):
+    test_data = {
+        "documents": [
+            {
+                "import_id": "test.new.document.0",
+                "variant_name": "",
+                "metadata": {},
+                "events": [],
+                "title": "",
+                "user_language_name": "",
+            },
+        ],
+    }
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    assert e.value.message == "Variant name is empty"

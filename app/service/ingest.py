@@ -17,6 +17,7 @@ import app.service.collection as collection
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.metadata as metadata
+from app.errors import ValidationError
 from app.model.ingest import IngestCollectionDTO, IngestDocumentDTO, IngestFamilyDTO
 from app.service.collection import validate_import_id
 
@@ -95,6 +96,10 @@ def _save_documents(db: Session, document_data: list[dict]) -> list[str]:
         dto = IngestDocumentDTO(
             **doc,
         ).to_document_create_dto()
+
+        if dto.variant_name == "":
+            raise ValidationError("Variant name is empty")
+
         document_import_ids.append(dto.import_id)
     return document_import_ids
 
