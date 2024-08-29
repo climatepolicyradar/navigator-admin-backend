@@ -1,7 +1,13 @@
 from typing import Optional
 
 from db_client.models.dfce.collection import CollectionFamily
-from db_client.models.dfce.family import Family, FamilyCorpus, FamilyGeography, Slug
+from db_client.models.dfce.family import (
+    Family,
+    FamilyCorpus,
+    FamilyGeography,
+    Geography,
+    Slug,
+)
 from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.organisation.corpus import Corpus
 from fastapi import status
@@ -32,12 +38,13 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
 
-    actual_family_geo = (
-        data_db.query(FamilyGeography)
+    actual_geo = (
+        data_db.query(Geography)
+        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
         .filter(FamilyGeography.family_import_id == expected_import_id)
         .one()
     )
-    assert actual_family_geo.value == "CHN"
+    assert actual_geo.value == "CHN"
     metadata = (
         data_db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == expected_import_id)
