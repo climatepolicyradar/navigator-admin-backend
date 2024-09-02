@@ -21,7 +21,7 @@ def test_ingest_when_ok(
         ],
         "families": [
             {
-                "import_id": "",
+                "import_id": "test.new.family.0",
                 "title": "Test",
                 "summary": "Test",
                 "geography": "Test",
@@ -287,7 +287,9 @@ def test_save_documents_when_variant_empty():
     ]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_documents(test_data, "test")
+        ingest_service.save_documents(
+            test_data, "test", {"test.new.document.0": "test.new.family.0"}
+        )
     assert e.value.message == "Variant name is empty"
 
 
@@ -304,7 +306,9 @@ def test_ingest_documents_when_metadata_invalid(db_client_metadata_mock):
     ]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_documents(test_data, "test")
+        ingest_service.save_documents(
+            test_data, "test", {"test.new.document.0": "test.new.family.0"}
+        )
     expected_msg = "Metadata validation failed: Missing metadata keys:"
     assert expected_msg in e.value.message
 

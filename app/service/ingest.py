@@ -93,7 +93,10 @@ def save_families(
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_documents(
-    document_data: list[dict], corpus_import_id: str, db: Optional[Session] = None
+    document_data: list[dict],
+    corpus_import_id: str,
+    family_document_mapping: dict,
+    db: Optional[Session] = None,
 ) -> list[str]:
     """
     Creates new documents with the values passed.
@@ -108,9 +111,13 @@ def save_documents(
 
     document_import_ids = []
     for doc in document_data:
-        dto = IngestDocumentDTO(
-            **doc,
-        ).to_document_create_dto()
+        family_import_id = family_document_mapping[doc["import_id"]]
+        # if not family_import_id:
+        #     raise ValidationError(
+        #         f"No family associated with document: {doc['import_id']}"
+        #     )
+
+        dto = IngestDocumentDTO(**doc).to_document_create_dto(family_import_id)
 
         if dto.variant_name == "":
             raise ValidationError("Variant name is empty")
@@ -142,6 +149,14 @@ def validate_entity_relationships(data: dict) -> None:
         raise ValidationError(f"No family found for document(s): {unmatched}")
 
 
+def create_family_document_mapping(family_data: dict) -> dict:
+    family_document_mapping = {}
+    for fam in family_data:
+        for doc in fam["documents"]:
+            family_document_mapping[doc] = fam["import_id"]
+    return family_document_mapping
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(data: dict, corpus_import_id: str) -> dict:
     """
@@ -167,14 +182,18 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     try:
         validate_entity_relationships(data)
 
+        family_document_mapping = {}
         if collection_data:
             response["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
             response["families"] = save_families(family_data, corpus_import_id, db)
+            family_document_mapping = create_family_document_mapping(family_data)
         if document_data:
-            response["documents"] = save_documents(document_data, corpus_import_id, db)
+            response["documents"] = save_documents(
+                document_data, corpus_import_id, family_document_mapping, db
+            )
 
         return response
     except Exception as e:
