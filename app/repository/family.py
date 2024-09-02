@@ -22,7 +22,7 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, func, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -34,29 +34,38 @@ from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Corpus, Organisation]
+FamilyGeoMetaOrg = Tuple[Family, str, FamilyMetadata, Corpus, Organisation]
 
 
 def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
+    geo_subquery = (
+        db.query(
+            func.min(Geography.value).label("value"),
+            FamilyGeography.family_import_id,
+        )
+        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
+        .filter(FamilyGeography.family_import_id == Family.import_id)
+        .group_by(Geography.value, FamilyGeography.family_import_id)
+    ).subquery("geo_subquery")
+
     return (
-        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
-        .join(Geography, Family.geography_id == Geography.id)
+        db.query(Family, geo_subquery.c.value, FamilyMetadata, Corpus, Organisation)  # type: ignore
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
+        .filter(geo_subquery.c.family_import_id == Family.import_id)  # type: ignore
     )
 
 
 def _family_to_dto(
     db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
 ) -> FamilyReadDTO:
-    fam, geo, meta, corpus, org = fam_geo_meta_corp_org
+    fam, geo_value, meta, corpus, org = fam_geo_meta_corp_org
 
-    geo_value = cast(str, geo.value)
     metadata = cast(dict, meta.value)
     org = cast(str, org.name)
     return FamilyReadDTO(
@@ -102,10 +111,18 @@ def _update_intention(
     ]
     update_collections = set(original_collections) != set(family.collections)
     update_title = cast(str, original_family.title) != family.title
+    # TODO: PDCT-1406: Properly implement multi-geography support
+    update_geo = (
+        db.query(FamilyGeography)
+        .filter(FamilyGeography.family_import_id == import_id)
+        .one()
+        .geography_id
+        != geo_id
+    )
     update_basics = (
         update_title
+        or update_geo
         or original_family.description != family.summary
-        or original_family.geography_id != geo_id
         or original_family.family_category != family.category
     )
     existing_metadata = (
@@ -255,12 +272,11 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
             .values(
                 title=new_values["title"],
                 description=new_values["summary"],
-                geography_id=geo_id,
                 family_category=new_values["category"],
             )
         )
         updates = result.rowcount  # type: ignore
-        # TODO: PDCT-1326 - Stage 3 - update to not assume single value
+        # TODO: PDCT-1406: Properly implement multi-geography support
         result = db.execute(
             db_update(FamilyGeography)
             .where(FamilyGeography.family_import_id == import_id)
@@ -358,11 +374,11 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
             import_id=import_id,
             title=family.title,
             description=family.summary,
-            geography_id=geo_id,
             family_category=family.category,
         )
         db.add(new_family)
-        # TODO: PDCT-1326 - Stage 3 - update to not assume single value
+
+        # TODO: PDCT-1406: Properly implement multi-geography support
         db.add(FamilyGeography(family_import_id=import_id, geography_id=geo_id))
 
         # Add corpus - family link.

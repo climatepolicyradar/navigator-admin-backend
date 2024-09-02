@@ -449,7 +449,6 @@ def _setup_family_data(
                 import_id=data["import_id"],
                 title=data["title"],
                 description=data["summary"],
-                geography_id=geo_id,
                 family_category=data["category"],
             )
         )
