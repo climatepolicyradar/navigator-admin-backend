@@ -219,7 +219,8 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
     :param db Session: the database connection
     :param CollectionDTO collection: the values for the new collection
     :param int org_id: a validated organisation id
-    :return bool: True if new collection was created otherwise false.
+    :raises RepositoryError: If a collection could not be created
+    :return str: import id of new collection
     """
     try:
         new_collection, collection_organisation = _collection_org_from_dto(

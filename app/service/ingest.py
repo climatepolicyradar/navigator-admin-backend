@@ -113,6 +113,23 @@ def _save_documents(
     return document_import_ids
 
 
+def validate_entity_relationships(data: dict) -> None:
+    family_documents = []
+    if "families" in data:
+        for fam in data["families"]:
+            family_documents.append(fam["documents"])
+
+    documents = []
+    if "documents" in data:
+        for doc in data["documents"]:
+            documents.append(doc["import_id"])
+
+    family_document_set = set(family_documents)
+    unmatched = [x for x in documents if x not in family_document_set]
+    if unmatched:
+        raise ValidationError(f"No family found for document(s): {unmatched}")
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(data: dict, corpus_import_id: str) -> dict:
     """
