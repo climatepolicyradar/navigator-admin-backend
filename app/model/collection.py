@@ -27,6 +27,6 @@ class CollectionWriteDTO(BaseModel):
 class CollectionCreateDTO(BaseModel):
     """Representation of a Collection for creating."""
 
-    import_id: Optional[str]
+    import_id: Optional[str] = None
     title: str
     description: str
