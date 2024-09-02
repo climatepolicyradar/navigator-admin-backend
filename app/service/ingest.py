@@ -5,6 +5,8 @@ This layer uses the corpus, collection, family, document and event repos to hand
 import of data and other services for validation etc.
 """
 
+from typing import Optional
+
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
@@ -24,8 +26,8 @@ from app.service.collection import validate_import_id
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def _save_collections(
-    db: Session, collection_data: list[dict], corpus_import_id: str
+def save_collections(
+    collection_data: list[dict], corpus_import_id: str, db: Optional[Session] = None
 ) -> list[str]:
     """
     Creates new collections with the values passed.
@@ -35,6 +37,9 @@ def _save_collections(
     :param str corpus_import_id: The import_id of the corpus the collections belong to.
     :return str: The new import_ids for the saved collections.
     """
+    if db is None:
+        db = db_session.get_db()
+
     collection_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
     for coll in collection_data:
@@ -48,8 +53,8 @@ def _save_collections(
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def _save_families(
-    db: Session, family_data: list[dict], corpus_import_id: str
+def save_families(
+    family_data: list[dict], corpus_import_id: str, db: Optional[Session] = None
 ) -> list[str]:
     """
     Creates new families with the values passed.
@@ -59,6 +64,10 @@ def _save_families(
     :param str corpus_import_id: The import_id of the corpus the families belong to.
     :return str: The new import_ids for the saved families.
     """
+
+    if db is None:
+        db = db_session.get_db()
+
     family_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
     for fam in family_data:
@@ -83,8 +92,8 @@ def _save_families(
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def _save_documents(
-    db: Session, document_data: list[dict], corpus_import_id: str
+def save_documents(
+    document_data: list[dict], corpus_import_id: str, db: Optional[Session] = None
 ) -> list[str]:
     """
     Creates new documents with the values passed.
@@ -94,6 +103,9 @@ def _save_documents(
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
     :return str: The new import_ids for the saved documents.
     """
+    if db is None:
+        db = db_session.get_db()
+
     document_import_ids = []
     for doc in document_data:
         dto = IngestDocumentDTO(
@@ -117,7 +129,7 @@ def validate_entity_relationships(data: dict) -> None:
     family_documents = []
     if "families" in data:
         for fam in data["families"]:
-            family_documents.append(fam["documents"])
+            family_documents.extend(fam["documents"])
 
     documents = []
     if "documents" in data:
@@ -153,14 +165,16 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     response = {}
 
     try:
+        validate_entity_relationships(data)
+
         if collection_data:
-            response["collections"] = _save_collections(
-                db, collection_data, corpus_import_id
+            response["collections"] = save_collections(
+                collection_data, corpus_import_id, db
             )
         if family_data:
-            response["families"] = _save_families(db, family_data, corpus_import_id)
+            response["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
-            response["documents"] = _save_documents(db, document_data, corpus_import_id)
+            response["documents"] = save_documents(document_data, corpus_import_id, db)
 
         return response
     except Exception as e:

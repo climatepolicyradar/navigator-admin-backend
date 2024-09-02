@@ -24,7 +24,7 @@
       },
       "collections": ["test.new.collection.0"],
       "events": [],
-      "documents": []
+      "documents": ["test.new.document.0", "test.new.document.1"]
     },
     {
       "import_id": "test.new.family.1",
@@ -44,16 +44,14 @@
   "documents": [
     {
       "import_id": "test.new.document.0",
-      "variant_name": "",
-      "metadata": {},
+      "metadata": { "color": ["pink"] },
       "events": [],
       "title": "",
       "user_language_name": ""
     },
     {
       "import_id": "test.new.document.1",
-      "variant_name": "",
-      "metadata": {},
+      "metadata": { "color": ["pink"] },
       "events": [],
       "title": "",
       "user_language_name": ""
