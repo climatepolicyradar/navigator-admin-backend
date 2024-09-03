@@ -112,10 +112,6 @@ def save_documents(
     document_import_ids = []
     for doc in document_data:
         family_import_id = family_document_mapping[doc["import_id"]]
-        # if not family_import_id:
-        #     raise ValidationError(
-        #         f"No family associated with document: {doc['import_id']}"
-        #     )
 
         dto = IngestDocumentDTO(**doc).to_document_create_dto(family_import_id)
 
