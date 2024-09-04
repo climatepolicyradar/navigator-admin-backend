@@ -66,21 +66,16 @@ def test_get_template_unfcc(
                     "title": "Collections",
                     "type": "array",
                 },
-                "documents": {
-                    "items": {"type": "string"},
-                    "title": "Documents",
-                    "type": "array",
-                },
-                "events": {
-                    "items": {"type": "string"},
-                    "title": "Events",
-                    "type": "array",
-                },
             }
         ],
         "events": [
             {
                 "import_id": {"title": "Import Id", "type": "string"},
+                "family_import_id": {"title": "Family Import Id", "type": "string"},
+                "family_document_import_id": {
+                    "title": "Family Document Import Id",
+                    "type": "string",
+                },
                 "event_title": {"title": "Event Title", "type": "string"},
                 "date": {
                     "format": "date-time",
@@ -96,6 +91,7 @@ def test_get_template_unfcc(
         "documents": [
             {
                 "import_id": {"title": "Import Id", "type": "string"},
+                "family_import_id": {"title": "Family Import Id", "type": "string"},
                 "events": {
                     "items": {"type": "string"},
                     "title": "Events",
