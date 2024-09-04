@@ -1491,13 +1491,13 @@ ptyprocess = ">=0.5"
 
 [[package]]
 name = "pip"
-version = "23.3.2"
+version = "24.2"
 description = "The PyPA recommended tool for installing Python packages."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pip-23.3.2-py3-none-any.whl", hash = "sha256:5052d7889c1f9d05224cd41741acb7c5d6fa735ab34e339624a614eaaa7e7d76"},
-    {file = "pip-23.3.2.tar.gz", hash = "sha256:7fd9972f96db22c8077a1ee2691b172c8089b17a5652a44494a9ecb0d78f9149"},
+    {file = "pip-24.2-py3-none-any.whl", hash = "sha256:2cd581cf58ab7fcfca4ce8efa6dcacd0de5bf8d0a3eb9ec927e07405f4d9e2a2"},
+    {file = "pip-24.2.tar.gz", hash = "sha256:5b5e490b5e9cb275c879595064adce9ebd31b854e3e803740b72f9ccf34a45b8"},
 ]
 
 [[package]]
@@ -3094,4 +3094,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "89540257d30b1776f732a17ef25c5adbcd9d52fdb351ec62451c307391a7cf73"
+content-hash = "7a4fee98910a25d1c00f85710c6fe48c4079b46a31ecddf55dd7750b1f7776bd"
