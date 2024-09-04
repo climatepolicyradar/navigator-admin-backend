@@ -10,6 +10,7 @@ def test_ingest_when_ok(
     db_client_metadata_mock,
     collection_repo_mock,
     family_repo_mock,
+    document_repo_mock,
 ):
     test_data = {
         "collections": [
@@ -48,7 +49,7 @@ def test_ingest_when_ok(
     assert ingest_service.import_data(test_data, "test") == {
         "collections": ["test.new.collection.0"],
         "families": ["created"],
-        "documents": ["test.new.document.0"],
+        "documents": ["test.new.doc.0"],
     }
 
 

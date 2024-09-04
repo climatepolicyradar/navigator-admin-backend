@@ -1,4 +1,5 @@
 from db_client.models.dfce.collection import Collection
+from db_client.models.dfce.family import Family, FamilyDocument
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -14,11 +15,47 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
         headers=user_header_token,
     )
 
+    expected_collection_import_ids = ["test.new.collection.0", "test.new.collection.1"]
+    expected_family_import_ids = ["test.new.family.0", "test.new.family.1"]
+    expected_document_import_ids = ["test.new.document.0", "test.new.document.1"]
+
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
-        "collections": ["test.new.collection.0", "test.new.collection.1"],
-        "families": ["test.new.family.0", "test.new.family.1"],
+        "collections": expected_collection_import_ids,
+        "families": expected_family_import_ids,
+        "documents": expected_document_import_ids,
     }
+
+    saved_collections = (
+        data_db.query(Collection)
+        .filter(Collection.import_id.in_(expected_collection_import_ids))
+        .all()
+    )
+
+    assert saved_collections
+    for coll in saved_collections:
+        assert coll.import_id in expected_collection_import_ids
+
+    saved_families = (
+        data_db.query(Family)
+        .filter(Family.import_id.in_(expected_family_import_ids))
+        .all()
+    )
+
+    assert saved_families
+    for fam in saved_families:
+        assert fam.import_id in expected_family_import_ids
+
+    saved_documents = (
+        data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id.in_(expected_document_import_ids))
+        .all()
+    )
+
+    assert saved_documents
+    for doc in saved_documents:
+        assert doc.import_id in expected_document_import_ids
+        assert doc.family_import_id in expected_family_import_ids
 
 
 def test_ingest_rollback(

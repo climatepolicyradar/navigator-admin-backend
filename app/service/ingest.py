@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.collection as collection_repository
+import app.repository.document as document_repository
 import app.repository.family as family_repository
 import app.service.category as category
 import app.service.collection as collection
@@ -123,8 +124,8 @@ def save_documents(
             dto.metadata,
             EntitySpecificTaxonomyKeys.DOCUMENT.value,
         )
-
-        document_import_ids.append(dto.import_id)
+        import_id = document_repository.create(db, dto)
+        document_import_ids.append(import_id)
     return document_import_ids
 
 

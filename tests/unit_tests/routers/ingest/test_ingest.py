@@ -25,6 +25,7 @@ def test_ingest_data_when_ok(
     geography_repo_mock,
     corpus_repo_mock,
     family_repo_mock,
+    document_repo_mock,
     db_client_metadata_mock,
 ):
 
@@ -38,7 +39,7 @@ def test_ingest_data_when_ok(
     assert response.json() == {
         "collections": ["test.new.collection.0", "test.new.collection.0"],
         "families": ["created", "created"],
-        "documents": ["test.new.document.0", "test.new.document.1"],
+        "documents": ["test.new.doc.0", "test.new.doc.0"],
     }
 
 
