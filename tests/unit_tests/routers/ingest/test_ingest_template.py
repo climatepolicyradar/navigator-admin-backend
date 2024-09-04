@@ -69,8 +69,11 @@ def test_ingest_template_when_ok(
                     "type": "string",
                 },
                 "event_type_value": {
-                    "title": "Event Type Value",
-                    "type": "string",
+                    "test": {
+                        "allow_any": False,
+                        "allow_blanks": False,
+                        "allowed_values": [],
+                    },
                 },
             }
         ],

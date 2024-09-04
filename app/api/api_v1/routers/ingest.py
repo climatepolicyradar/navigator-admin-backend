@@ -33,7 +33,7 @@ def _get_collection_template() -> dict:
     return collection_template
 
 
-def _get_event_template() -> dict:
+def _get_event_template(corpus_type: str) -> dict:
     """
     Gets an event template.
 
@@ -41,6 +41,9 @@ def _get_event_template() -> dict:
     """
     event_schema = IngestEventDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
+    event_template["event_type_value"] = _get_metadata_template(
+        corpus_type, CountedEntity.Event
+    )
 
     return event_template
 
@@ -74,8 +77,11 @@ def _get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> di
         return {}
     if metadata_type == CountedEntity.Document:
         return metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
+    elif metadata_type == CountedEntity.Event:
+        return metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
     elif metadata_type == CountedEntity.Family:
         metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
+        metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
     return metadata
 
 
@@ -116,7 +122,7 @@ async def get_ingest_template(corpus_type: str) -> Json:
         "collections": [_get_collection_template()],
         "families": [_get_family_template(corpus_type)],
         "documents": [_get_document_template(corpus_type)],
-        "events": [_get_event_template()],
+        "events": [_get_event_template(corpus_type)],
     }
 
 

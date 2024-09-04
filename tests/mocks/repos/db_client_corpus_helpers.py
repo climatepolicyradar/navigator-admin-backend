@@ -12,7 +12,14 @@ def mock_corpus_helpers_db_client(taxonomy_service, monkeypatch: MonkeyPatch, mo
             "allow_any": False,
             "allowed_values": [],
         }
-        return cast(TaxonomyData, {"test": metadata, "_document": {"test": metadata}})
+        return cast(
+            TaxonomyData,
+            {
+                "test": metadata,
+                "event_type": {"test": metadata},
+                "_document": {"test": metadata},
+            },
+        )
 
     monkeypatch.setattr(
         taxonomy_service,
