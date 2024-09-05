@@ -306,3 +306,58 @@ def test_validate_entity_relationships_when_no_family_matching_document():
     with pytest.raises(ValidationError) as e:
         ingest_service.validate_entity_relationships(test_data)
     assert e.value.message == f"No family with id ['{fam_import_id}'] found"
+
+
+def test_ingest_documents_when_no_family():
+    fam_import_id = "test.new.family.0"
+    test_data = {
+        "documents": [
+            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
+        ]
+    }
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    assert e.value.message == f"No family with id ['{fam_import_id}'] found"
+
+
+def test_ingest_documents_when_import_id_wrong_format():
+    invalid_import_id = "invalid"
+    test_data = [
+        {
+            "import_id": invalid_import_id,
+            "family_import_id": "test.new.family.0",
+            "variant_name": "Original Language",
+            "metadata": {"color": ["blue"]},
+            "events": [],
+            "title": "",
+            "source_url": None,
+            "user_language_name": "",
+        }
+    ]
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.save_documents(test_data, "test")
+    expected_msg = f"The import id {invalid_import_id} is invalid!"
+    assert e.value.message == expected_msg
+
+
+def test_ingest_documents_when_family_import_id_wrong_format():
+    invalid_family_import_id = "invalid"
+    test_data = [
+        {
+            "import_id": "test.new.document.0",
+            "family_import_id": invalid_family_import_id,
+            "variant_name": "Original Language",
+            "metadata": {"color": ["blue"]},
+            "events": [],
+            "title": "",
+            "source_url": None,
+            "user_language_name": "",
+        }
+    ]
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.save_documents(test_data, "test")
+    expected_msg = f"The import id {invalid_family_import_id} is invalid!"
+    assert e.value.message == expected_msg

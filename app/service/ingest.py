@@ -113,6 +113,9 @@ def save_documents(
     for doc in document_data:
         dto = IngestDocumentDTO(**doc).to_document_create_dto()
 
+        if dto.import_id:
+            validate_import_id(dto.import_id)
+        validate_import_id(dto.family_import_id)
         if dto.variant_name == "":
             raise ValidationError("Variant name is empty")
         metadata.validate_metadata(
