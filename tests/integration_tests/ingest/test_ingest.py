@@ -32,7 +32,7 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
         .all()
     )
 
-    assert saved_collections
+    assert len(saved_collections) == 2
     for coll in saved_collections:
         assert coll.import_id in expected_collection_import_ids
 
@@ -42,7 +42,7 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
         .all()
     )
 
-    assert saved_families
+    assert len(saved_families) == 2
     for fam in saved_families:
         assert fam.import_id in expected_family_import_ids
 
@@ -52,7 +52,7 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
         .all()
     )
 
-    assert saved_documents
+    assert len(saved_documents) == 2
     for doc in saved_documents:
         assert doc.import_id in expected_document_import_ids
         assert doc.family_import_id in expected_family_import_ids
