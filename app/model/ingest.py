@@ -39,8 +39,6 @@ class IngestFamilyDTO(BaseModel):
     category: str
     metadata: Json
     collections: list[str]
-    documents: list[str]
-    events: list[str]
     corpus_import_id: str
 
     def to_family_create_dto(self, corpus_import_id: str) -> FamilyCreateDTO:
@@ -65,6 +63,8 @@ class IngestEventDTO(BaseModel):
     """Representation of an event for ingest."""
 
     import_id: str
+    family_import_id: str
+    family_document_import_id: str
     event_title: str
     date: datetime
     event_type_value: str
@@ -74,6 +74,7 @@ class IngestDocumentDTO(BaseModel):
     """Representation of a document for ingest."""
 
     import_id: str
+    family_import_id: str
     variant_name: Optional[str] = None
     metadata: Json
     events: list[str]
@@ -81,7 +82,7 @@ class IngestDocumentDTO(BaseModel):
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
 
-    def to_document_create_dto(self, family_import_id) -> DocumentCreateDTO:
+    def to_document_create_dto(self) -> DocumentCreateDTO:
         """
         Convert IngestDocumentDTO to DocumentCreateDTO.
 
@@ -90,7 +91,7 @@ class IngestDocumentDTO(BaseModel):
 
         return DocumentCreateDTO(
             import_id=self.import_id,
-            family_import_id=family_import_id,
+            family_import_id=self.family_import_id,
             variant_name=self.variant_name,
             metadata=self.metadata,
             title=self.title,

@@ -22,9 +22,7 @@
         "author_type": ["Non-Party"],
         "author": ["Test"]
       },
-      "collections": ["test.new.collection.0"],
-      "events": [],
-      "documents": ["test.new.document.0", "test.new.document.1"]
+      "collections": ["test.new.collection.0"]
     },
     {
       "import_id": "test.new.family.1",
@@ -36,14 +34,13 @@
         "author_type": ["Party"],
         "author": ["Test"]
       },
-      "collections": ["test.new.collection.1"],
-      "events": [],
-      "documents": []
+      "collections": ["test.new.collection.1"]
     }
   ],
   "documents": [
     {
       "import_id": "test.new.document.0",
+      "family_import_id": "test.new.family.0",
       "metadata": { "role": ["MAIN"], "type": ["Law"] },
       "events": [],
       "title": "",
@@ -51,6 +48,7 @@
     },
     {
       "import_id": "test.new.document.1",
+      "family_import_id": "test.new.family.1",
       "metadata": { "role": ["MAIN"], "type": ["Law"] },
       "events": [],
       "title": "",

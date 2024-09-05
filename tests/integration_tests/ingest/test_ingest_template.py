@@ -37,43 +37,10 @@ def test_get_template_unfcc(
                         "allow_blanks": False,
                         "allowed_values": ["Party", "Non-Party"],
                     },
-                    "event_type": {
-                        "allow_any": False,
-                        "allow_blanks": True,
-                        "allowed_values": [
-                            "Amended",
-                            "Appealed",
-                            "Closed",
-                            "Declaration Of Climate Emergency",
-                            "Dismissed",
-                            "Entered Into Force",
-                            "Filing",
-                            "Granted",
-                            "Implementation Details",
-                            "International Agreement",
-                            "Net Zero Pledge",
-                            "Other",
-                            "Passed/Approved",
-                            "Repealed/Replaced",
-                            "Set",
-                            "Settled",
-                            "Updated",
-                        ],
-                    },
                 },
                 "collections": {
                     "items": {"type": "string"},
                     "title": "Collections",
-                    "type": "array",
-                },
-                "documents": {
-                    "items": {"type": "string"},
-                    "title": "Documents",
-                    "type": "array",
-                },
-                "events": {
-                    "items": {"type": "string"},
-                    "title": "Events",
                     "type": "array",
                 },
             }
@@ -81,6 +48,11 @@ def test_get_template_unfcc(
         "events": [
             {
                 "import_id": {"title": "Import Id", "type": "string"},
+                "family_import_id": {"title": "Family Import Id", "type": "string"},
+                "family_document_import_id": {
+                    "title": "Family Document Import Id",
+                    "type": "string",
+                },
                 "event_title": {"title": "Event Title", "type": "string"},
                 "date": {
                     "format": "date-time",
@@ -88,14 +60,34 @@ def test_get_template_unfcc(
                     "type": "string",
                 },
                 "event_type_value": {
-                    "title": "Event Type Value",
-                    "type": "string",
+                    "allow_any": False,
+                    "allow_blanks": True,
+                    "allowed_values": [
+                        "Amended",
+                        "Appealed",
+                        "Closed",
+                        "Declaration Of Climate Emergency",
+                        "Dismissed",
+                        "Entered Into Force",
+                        "Filing",
+                        "Granted",
+                        "Implementation Details",
+                        "International Agreement",
+                        "Net Zero Pledge",
+                        "Other",
+                        "Passed/Approved",
+                        "Repealed/Replaced",
+                        "Set",
+                        "Settled",
+                        "Updated",
+                    ],
                 },
             }
         ],
         "documents": [
             {
                 "import_id": {"title": "Import Id", "type": "string"},
+                "family_import_id": {"title": "Family Import Id", "type": "string"},
                 "events": {
                     "items": {"type": "string"},
                     "title": "Events",
