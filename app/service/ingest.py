@@ -96,7 +96,6 @@ def save_families(
 def save_documents(
     document_data: list[dict],
     corpus_import_id: str,
-    family_document_mapping: dict,
     db: Optional[Session] = None,
 ) -> list[str]:
     """
@@ -112,9 +111,7 @@ def save_documents(
 
     document_import_ids = []
     for doc in document_data:
-        family_import_id = family_document_mapping[doc["import_id"]]
-
-        dto = IngestDocumentDTO(**doc).to_document_create_dto(family_import_id)
+        dto = IngestDocumentDTO(**doc).to_document_create_dto()
 
         if dto.variant_name == "":
             raise ValidationError("Variant name is empty")
@@ -124,34 +121,27 @@ def save_documents(
             dto.metadata,
             EntitySpecificTaxonomyKeys.DOCUMENT.value,
         )
+
         import_id = document_repository.create(db, dto)
         document_import_ids.append(import_id)
     return document_import_ids
 
 
 def validate_entity_relationships(data: dict) -> None:
-    family_documents = []
+    families = []
     if "families" in data:
         for fam in data["families"]:
-            family_documents.extend(fam["documents"])
+            families.append(fam["import_id"])
 
     documents = []
     if "documents" in data:
         for doc in data["documents"]:
-            documents.append(doc["import_id"])
+            documents.append(doc["family_import_id"])
 
-    family_document_set = set(family_documents)
+    family_document_set = set(families)
     unmatched = [x for x in documents if x not in family_document_set]
     if unmatched:
-        raise ValidationError(f"No family found for document(s): {unmatched}")
-
-
-def create_family_document_mapping(family_data: dict) -> dict:
-    family_document_mapping = {}
-    for fam in family_data:
-        for doc in fam["documents"]:
-            family_document_mapping[doc] = fam["import_id"]
-    return family_document_mapping
+        raise ValidationError(f"No family with id {unmatched} found")
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -179,18 +169,14 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     try:
         validate_entity_relationships(data)
 
-        family_document_mapping = {}
         if collection_data:
             response["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
             response["families"] = save_families(family_data, corpus_import_id, db)
-            family_document_mapping = create_family_document_mapping(family_data)
         if document_data:
-            response["documents"] = save_documents(
-                document_data, corpus_import_id, family_document_mapping, db
-            )
+            response["documents"] = save_documents(document_data, corpus_import_id, db)
 
         return response
     except Exception as e:

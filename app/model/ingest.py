@@ -82,7 +82,7 @@ class IngestDocumentDTO(BaseModel):
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
 
-    def to_document_create_dto(self, family_import_id) -> DocumentCreateDTO:
+    def to_document_create_dto(self) -> DocumentCreateDTO:
         """
         Convert IngestDocumentDTO to DocumentCreateDTO.
 
@@ -91,7 +91,7 @@ class IngestDocumentDTO(BaseModel):
 
         return DocumentCreateDTO(
             import_id=self.import_id,
-            family_import_id=family_import_id,
+            family_import_id=self.family_import_id,
             variant_name=self.variant_name,
             metadata=self.metadata,
             title=self.title,

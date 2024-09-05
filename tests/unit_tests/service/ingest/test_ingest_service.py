@@ -29,13 +29,12 @@ def test_ingest_when_ok(
                 "category": "UNFCCC",
                 "metadata": {"color": ["blue"], "size": [""]},
                 "collections": [],
-                "events": [],
-                "documents": ["test.new.document.0"],
             },
         ],
         "documents": [
             {
                 "import_id": "test.new.document.0",
+                "family_import_id": "test.new.family.0",
                 "variant_name": "Original Language",
                 "metadata": {"color": ["blue"]},
                 "events": [],
@@ -100,8 +99,6 @@ def test_ingest_families_when_import_id_wrong_format(
             "category": "UNFCCC",
             "metadata": {"color": ["blue"], "size": [""]},
             "collections": [],
-            "events": [],
-            "documents": [],
         },
     ]
 
@@ -122,8 +119,6 @@ def test_ingest_families_when_geography_invalid(corpus_repo_mock, geography_repo
             "category": "Test",
             "metadata": {},
             "collections": [],
-            "events": [],
-            "documents": [],
         },
     ]
 
@@ -143,8 +138,6 @@ def test_ingest_families_when_category_invalid(corpus_repo_mock, geography_repo_
             "category": "Test",
             "metadata": {},
             "collections": [],
-            "events": [],
-            "documents": [],
         },
     ]
 
@@ -166,8 +159,6 @@ def test_ingest_families_when_corpus_invalid(corpus_repo_mock):
             "category": "Test",
             "metadata": {},
             "collections": [],
-            "events": [],
-            "documents": [],
         },
     ]
 
@@ -189,8 +180,6 @@ def test_ingest_families_when_collection_ids_invalid(
             "category": "UNFCCC",
             "metadata": {},
             "collections": ["invalid"],
-            "events": [],
-            "documents": [],
         },
     ]
 
@@ -216,8 +205,6 @@ def test_ingest_families_when_collection_ids_invalid(
 #                 "category": "UNFCCC",
 #                 "metadata": {},
 #                 "collections": ["id.does.not.exist"],
-#                 "events": [],
-#                 "documents": [],
 #             },
 #         ],
 #     }
@@ -241,8 +228,6 @@ def test_ingest_families_when_metadata_not_found(
             "category": "UNFCCC",
             "metadata": {},
             "collections": ["id.does.not.exist"],
-            "events": [],
-            "documents": [],
         },
     ]
 
@@ -264,8 +249,6 @@ def test_ingest_families_when_metadata_invalid(
             "category": "UNFCCC",
             "metadata": {},
             "collections": ["id.does.not.exist"],
-            "events": [],
-            "documents": [],
         },
     ]
 
@@ -279,6 +262,7 @@ def test_save_documents_when_variant_empty():
     test_data = [
         {
             "import_id": "test.new.document.0",
+            "family_import_id": "test.new.family.0",
             "variant_name": "",
             "metadata": {},
             "events": [],
@@ -288,9 +272,7 @@ def test_save_documents_when_variant_empty():
     ]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_documents(
-            test_data, "test", {"test.new.document.0": "test.new.family.0"}
-        )
+        ingest_service.save_documents(test_data, "test")
     assert e.value.message == "Variant name is empty"
 
 
@@ -298,6 +280,7 @@ def test_ingest_documents_when_metadata_invalid(db_client_metadata_mock):
     test_data = [
         {
             "import_id": "test.new.document.0",
+            "family_import_id": "test.new.family.0",
             "variant_name": None,
             "metadata": {},
             "events": [],
@@ -307,26 +290,19 @@ def test_ingest_documents_when_metadata_invalid(db_client_metadata_mock):
     ]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_documents(
-            test_data, "test", {"test.new.document.0": "test.new.family.0"}
-        )
+        ingest_service.save_documents(test_data, "test")
     expected_msg = "Metadata validation failed: Missing metadata keys:"
     assert expected_msg in e.value.message
 
 
 def test_validate_entity_relationships_when_no_family_matching_document():
-    doc_import_id = "test.new.document.0"
-    test_data = {"documents": [{"import_id": doc_import_id}]}
+    fam_import_id = "test.new.family.0"
+    test_data = {
+        "documents": [
+            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
+        ]
+    }
 
     with pytest.raises(ValidationError) as e:
         ingest_service.validate_entity_relationships(test_data)
-    assert e.value.message == f"No family found for document(s): ['{doc_import_id}']"
-
-
-def test_ingest_documents_when_no_family():
-    doc_import_id = "test.new.document.0"
-    test_data = {"documents": [{"import_id": doc_import_id}]}
-
-    with pytest.raises(ValidationError) as e:
-        ingest_service.import_data(test_data, "test")
-    assert e.value.message == f"No family found for document(s): ['{doc_import_id}']"
+    assert e.value.message == f"No family with id ['{fam_import_id}'] found"
