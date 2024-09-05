@@ -121,7 +121,6 @@ def save_documents(
             dto.metadata,
             EntitySpecificTaxonomyKeys.DOCUMENT.value,
         )
-
         import_id = document_repository.create(db, dto)
         document_import_ids.append(import_id)
     return document_import_ids
