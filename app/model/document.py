@@ -46,6 +46,7 @@ class DocumentWriteDTO(BaseModel):
 class DocumentCreateDTO(BaseModel):
     """Representation of a Document."""
 
+    import_id: Optional[str] = None
     # From FamilyDocument
     family_import_id: str
     variant_name: Optional[str] = None

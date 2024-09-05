@@ -23,7 +23,6 @@ def create_document_create_dto(
     return DocumentCreateDTO(
         family_import_id=family_import_id,
         variant_name=variant_name,
-        type="Law",
         metadata=metadata,
         title=title,
         source_url=source_url,
@@ -43,7 +42,6 @@ def create_document_write_dto(
         metadata = {"role": ["MAIN"], "type": ["Law"]}
     return DocumentWriteDTO(
         variant_name=variant_name,
-        type="Law",
         metadata=metadata,
         title=title,
         source_url=(
@@ -73,7 +71,6 @@ def create_document_read_dto(
         corpus_type=corpus_type,
         variant_name=variant_name,
         status=DocumentStatus.CREATED,
-        type="Law",
         metadata=metadata,
         slug="",
         physical_id=1,

@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import AnyHttpUrl, BaseModel
 
 from app.model.collection import CollectionCreateDTO
+from app.model.document import DocumentCreateDTO
 from app.model.family import FamilyCreateDTO
 from app.model.general import Json
 
@@ -79,3 +80,20 @@ class IngestDocumentDTO(BaseModel):
     title: str
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
+
+    def to_document_create_dto(self, family_import_id) -> DocumentCreateDTO:
+        """
+        Convert IngestDocumentDTO to DocumentCreateDTO.
+
+        :return DocumentCreateDTO: Converted DocumentCreateDTO instance.
+        """
+
+        return DocumentCreateDTO(
+            import_id=self.import_id,
+            family_import_id=family_import_id,
+            variant_name=self.variant_name,
+            metadata=self.metadata,
+            title=self.title,
+            source_url=self.source_url,
+            user_language_name=self.user_language_name,
+        )
