@@ -43,7 +43,7 @@ def _collection_org_from_dto(
 ) -> Tuple[Collection, CollectionOrganisation]:
     return (
         Collection(
-            import_id=dto.import_id if dto.import_id else "",
+            import_id=dto.import_id if dto.import_id else None,
             title=dto.title,
             description=dto.description,
         ),

@@ -102,7 +102,7 @@ def _get_query(db: Session) -> Query:
 
 def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
     return {
-        "import_id": dto.import_id if dto.import_id else "",
+        "import_id": dto.import_id if dto.import_id else None,
         "family_import_id": dto.family_import_id,
         "physical_document_id": 0,
         "variant_name": dto.variant_name,
