@@ -25,6 +25,7 @@
       "import_id": "test.new.document.0",
       "family_import_id": "test.new.family.0",
       "metadata": { "role": ["MAIN"], "type": ["Law"] },
+      "variant_name": "Original Language",
       "events": [],
       "title": "",
       "user_language_name": ""

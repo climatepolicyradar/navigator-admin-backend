@@ -8,7 +8,6 @@ import of data and other services for validation etc.
 from typing import Optional
 
 from db_client.functions.corpus_helpers import get_taxonomy_from_corpus
-from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.orm import Session
@@ -20,7 +19,6 @@ import app.repository.event as event_repository
 import app.repository.family as family_repository
 import app.service.corpus as corpus
 import app.service.geography as geography
-import app.service.metadata as metadata
 import app.service.validation as validation
 from app.errors import ValidationError
 from app.model.ingest import (
@@ -109,19 +107,9 @@ def save_documents(
 
     document_import_ids = []
     for doc in document_data:
+        validation.validate_document(doc, corpus_import_id)
         dto = IngestDocumentDTO(**doc).to_document_create_dto()
 
-        if dto.import_id:
-            validate_import_id(dto.import_id)
-        validate_import_id(dto.family_import_id)
-        if dto.variant_name == "":
-            raise ValidationError("Variant name is empty")
-        metadata.validate_metadata(
-            db,
-            corpus_import_id,
-            dto.metadata,
-            EntitySpecificTaxonomyKeys.DOCUMENT.value,
-        )
         import_id = document_repository.create(db, dto)
         document_import_ids.append(import_id)
     return document_import_ids
