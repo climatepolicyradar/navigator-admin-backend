@@ -95,8 +95,7 @@ def test_save_collections_when_import_id_wrong_format(corpus_repo_mock):
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_collections(test_data, "test")
-    expected_msg = "The import id invalid is invalid!"
-    assert e.value.message == expected_msg
+    assert e.value.message == "The import id invalid is invalid!"
 
 
 def test_ingest_families_when_import_id_wrong_format(
@@ -117,47 +116,7 @@ def test_ingest_families_when_import_id_wrong_format(
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_families(test_data, "test")
-    expected_msg = "The import id invalid is invalid!"
-    assert e.value.message == expected_msg
-
-
-def test_ingest_families_when_geography_invalid(corpus_repo_mock, geography_repo_mock):
-    geography_repo_mock.error = True
-    test_data = [
-        {
-            "import_id": "test.new.family.0",
-            "title": "Test",
-            "summary": "Test",
-            "geography": "Invalid",
-            "category": "Test",
-            "metadata": {},
-            "collections": [],
-        },
-    ]
-
-    with pytest.raises(ValidationError) as e:
-        ingest_service.save_families(test_data, "test")
-    expected_msg = "The geography value Invalid is invalid!"
-    assert e.value.message == expected_msg
-
-
-def test_ingest_families_when_category_invalid(corpus_repo_mock, geography_repo_mock):
-    test_data = [
-        {
-            "import_id": "test.new.family.0",
-            "title": "Test",
-            "summary": "Test",
-            "geography": "Test",
-            "category": "Test",
-            "metadata": {},
-            "collections": [],
-        },
-    ]
-
-    with pytest.raises(ValidationError) as e:
-        ingest_service.save_families(test_data, "test")
-    expected_msg = "Test is not a valid FamilyCategory"
-    assert e.value.message == expected_msg
+    assert e.value.message == "The import id invalid is invalid!"
 
 
 def test_ingest_families_when_corpus_invalid(corpus_repo_mock):
@@ -177,8 +136,44 @@ def test_ingest_families_when_corpus_invalid(corpus_repo_mock):
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_families(test_data, "test")
-    expected_msg = "Corpus 'test' not found"
-    assert e.value.message == expected_msg
+    assert e.value.message == "Corpus 'test' not found"
+
+
+def test_ingest_families_when_geography_invalid(corpus_repo_mock, geography_repo_mock):
+    geography_repo_mock.error = True
+    test_data = [
+        {
+            "import_id": "test.new.family.0",
+            "title": "Test",
+            "summary": "Test",
+            "geography": "Invalid",
+            "category": "Test",
+            "metadata": {},
+            "collections": [],
+        },
+    ]
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.save_families(test_data, "test")
+    assert e.value.message == "The geography value Invalid is invalid!"
+
+
+def test_ingest_families_when_category_invalid(corpus_repo_mock, geography_repo_mock):
+    test_data = [
+        {
+            "import_id": "test.new.family.0",
+            "title": "Test",
+            "summary": "Test",
+            "geography": "Test",
+            "category": "Test",
+            "metadata": {},
+            "collections": [],
+        },
+    ]
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.save_families(test_data, "test")
+    assert e.value.message == "Test is not a valid FamilyCategory"
 
 
 def test_ingest_families_when_collection_ids_invalid(
@@ -198,8 +193,7 @@ def test_ingest_families_when_collection_ids_invalid(
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_families(test_data, "test")
-    expected_msg = "The import ids are invalid: ['invalid']"
-    assert e.value.message == expected_msg
+    assert e.value.message == "The import ids are invalid: ['invalid']"
 
 
 # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
@@ -246,8 +240,7 @@ def test_ingest_families_when_metadata_not_found(
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_families(test_data, "test")
-    expected_msg = "No taxonomy found for corpus"
-    assert e.value.message == expected_msg
+    assert e.value.message == "No taxonomy found for corpus"
 
 
 def test_ingest_families_when_metadata_invalid(
@@ -267,8 +260,7 @@ def test_ingest_families_when_metadata_invalid(
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_families(test_data, "test")
-    expected_msg = "Metadata validation failed: Missing metadata keys:"
-    assert expected_msg in e.value.message
+    assert "Metadata validation failed: Missing metadata keys:" in e.value.message
 
 
 def test_save_documents_when_variant_empty():
@@ -304,8 +296,7 @@ def test_ingest_documents_when_metadata_invalid(db_client_metadata_mock):
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_documents(test_data, "test")
-    expected_msg = "Metadata validation failed: Missing metadata keys:"
-    assert expected_msg in e.value.message
+    assert "Metadata validation failed: Missing metadata keys:" in e.value.message
 
 
 def test_validate_entity_relationships_when_no_family_matching_document():
@@ -351,8 +342,7 @@ def test_ingest_documents_when_import_id_wrong_format():
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_documents(test_data, "test")
-    expected_msg = f"The import id {invalid_import_id} is invalid!"
-    assert e.value.message == expected_msg
+    assert e.value.message == f"The import id {invalid_import_id} is invalid!"
 
 
 def test_ingest_documents_when_family_import_id_wrong_format():
@@ -372,8 +362,7 @@ def test_ingest_documents_when_family_import_id_wrong_format():
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_documents(test_data, "test")
-    expected_msg = f"The import id {invalid_family_import_id} is invalid!"
-    assert e.value.message == expected_msg
+    assert e.value.message == f"The import id {invalid_family_import_id} is invalid!"
 
 
 def test_ingest_events_when_import_id_wrong_format():
@@ -390,8 +379,7 @@ def test_ingest_events_when_import_id_wrong_format():
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_events(test_data, "test")
-    expected_msg = f"The import id {invalid_import_id} is invalid!"
-    assert e.value.message == expected_msg
+    assert e.value.message == f"The import id {invalid_import_id} is invalid!"
 
 
 def test_ingest_events_when_family_import_id_wrong_format():
@@ -408,5 +396,4 @@ def test_ingest_events_when_family_import_id_wrong_format():
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_events(test_data, "test")
-    expected_msg = f"The import id {invalid_import_id} is invalid!"
-    assert e.value.message == expected_msg
+    assert e.value.message == f"The import id {invalid_import_id} is invalid!"
