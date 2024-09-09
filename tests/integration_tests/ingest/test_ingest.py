@@ -1,3 +1,4 @@
+from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
 from fastapi import status
@@ -18,12 +19,14 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
     expected_collection_import_ids = ["test.new.collection.0", "test.new.collection.1"]
     expected_family_import_ids = ["test.new.family.0", "test.new.family.1"]
     expected_document_import_ids = ["test.new.document.0", "test.new.document.1"]
+    expected_event_import_ids = ["test.new.event.0", "test.new.event.1"]
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
         "collections": expected_collection_import_ids,
         "families": expected_family_import_ids,
         "documents": expected_document_import_ids,
+        "events": expected_event_import_ids,
     }
 
     saved_collections = (
@@ -46,15 +49,26 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
     for fam in saved_families:
         assert fam.import_id in expected_family_import_ids
 
-    saved_documents = (
+    saved_events = (
         data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id.in_(expected_document_import_ids))
         .all()
     )
 
-    assert len(saved_documents) == 2
-    for doc in saved_documents:
+    assert len(saved_events) == 2
+    for doc in saved_events:
         assert doc.import_id in expected_document_import_ids
+        assert doc.family_import_id in expected_family_import_ids
+
+    saved_events = (
+        data_db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id.in_(expected_event_import_ids))
+        .all()
+    )
+
+    assert len(saved_events) == 2
+    for doc in saved_events:
+        assert doc.import_id in expected_event_import_ids
         assert doc.family_import_id in expected_family_import_ids
 
 
