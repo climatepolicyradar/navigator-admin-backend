@@ -23,6 +23,7 @@ import app.service.collection as collection
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.metadata as metadata
+import app.service.validation as validation
 from app.errors import ValidationError
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -51,9 +52,8 @@ def save_collections(
     collection_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
     for coll in collection_data:
+        validation.validate_collection(coll)
         dto = IngestCollectionDTO(**coll).to_collection_create_dto()
-        if dto.import_id:
-            validate_import_id(dto.import_id)
         import_id = collection_repository.create(db, dto, org_id)
 
         collection_import_ids.append(import_id)

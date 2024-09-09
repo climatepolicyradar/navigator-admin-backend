@@ -71,7 +71,7 @@ def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
     test_data = {
         "collections": [
             {
-                "import_id": "",
+                "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
             }
