@@ -139,7 +139,9 @@ def test_save_families_when_corpus_invalid(corpus_repo_mock):
     assert e.value.message == "Corpus 'test' not found"
 
 
-def test_save_families_when_geography_invalid(corpus_repo_mock, geography_repo_mock):
+def test_save_families_when_geography_invalid(
+    corpus_repo_mock, db_client_metadata_mock, geography_repo_mock
+):
     geography_repo_mock.error = True
     test_data = [
         {
@@ -147,8 +149,8 @@ def test_save_families_when_geography_invalid(corpus_repo_mock, geography_repo_m
             "title": "Test",
             "summary": "Test",
             "geography": "Invalid",
-            "category": "Test",
-            "metadata": {},
+            "category": "UNFCCC",
+            "metadata": {"color": ["blue"], "size": [""]},
             "collections": [],
         },
     ]
