@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 
 import app.service.ingest as ingest_service
@@ -11,6 +13,7 @@ def test_ingest_when_ok(
     collection_repo_mock,
     family_repo_mock,
     document_repo_mock,
+    event_repo_mock,
 ):
     test_data = {
         "collections": [
@@ -43,12 +46,22 @@ def test_ingest_when_ok(
                 "user_language_name": "",
             }
         ],
+        "events": [
+            {
+                "import_id": "test.new.event.0",
+                "family_import_id": "test.new.family.0",
+                "event_title": "Test",
+                "date": datetime.now(),
+                "event_type_value": "Amended",
+            }
+        ],
     }
 
     assert ingest_service.import_data(test_data, "test") == {
         "collections": ["test.new.collection.0"],
         "families": ["created"],
         "documents": ["test.new.doc.0"],
+        "events": ["test.new.event.0"],
     }
 
 

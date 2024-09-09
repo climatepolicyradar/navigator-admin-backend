@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 import app.repository.collection as collection_repository
 import app.repository.document as document_repository
+import app.repository.event as event_repository
 import app.repository.family as family_repository
 import app.service.category as category
 import app.service.collection as collection
@@ -22,7 +23,12 @@ import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.metadata as metadata
 from app.errors import ValidationError
-from app.model.ingest import IngestCollectionDTO, IngestDocumentDTO, IngestFamilyDTO
+from app.model.ingest import (
+    IngestCollectionDTO,
+    IngestDocumentDTO,
+    IngestEventDTO,
+    IngestFamilyDTO,
+)
 from app.service.collection import validate_import_id
 
 
@@ -145,7 +151,12 @@ def save_events(
     if db is None:
         db = db_session.get_db()
 
-    return []
+    event_import_ids = []
+    for ev in event_data:
+        dto = IngestEventDTO(**ev).to_event_create_dto()
+        import_id = event_repository.create(db, dto)
+        event_import_ids.append(import_id)
+    return event_import_ids
 
 
 def validate_entity_relationships(data: dict) -> None:
@@ -181,6 +192,7 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     collection_data = data["collections"] if "collections" in data else None
     family_data = data["families"] if "families" in data else None
     document_data = data["documents"] if "documents" in data else None
+    event_data = data["events"] if "events" in data else None
 
     if not data:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
@@ -198,6 +210,8 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
             response["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
             response["documents"] = save_documents(document_data, corpus_import_id, db)
+        if event_data:
+            response["events"] = save_events(event_data, db)
 
         return response
     except Exception as e:
