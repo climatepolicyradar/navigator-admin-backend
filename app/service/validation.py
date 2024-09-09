@@ -1,3 +1,5 @@
+from typing import Optional
+
 from db_client.functions.corpus_helpers import TaxonomyData
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 
@@ -40,7 +42,7 @@ def validate_document(document: dict, corpus_import_id: str) -> None:
     )
 
 
-def validate_event(event: dict, taxonomy: TaxonomyData) -> None:
+def validate_event(event: dict, taxonomy: Optional[TaxonomyData]) -> None:
     validate_import_id(event["import_id"])
     validate_import_id(event["family_import_id"])
     allowed_event_types = taxonomy["event_type"]["allowed_values"] if taxonomy else None

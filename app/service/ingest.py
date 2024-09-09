@@ -27,7 +27,6 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
-from app.service.collection import validate_import_id
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -133,21 +132,11 @@ def save_events(
         db = db_session.get_db()
 
     event_taxonomy = get_taxonomy_from_corpus(db, corpus_import_id)
-    allowed_event_types = (
-        event_taxonomy["event_type"]["allowed_values"] if event_taxonomy else None
-    )
 
     event_import_ids = []
     for ev in event_data:
+        validation.validate_event(ev, event_taxonomy)
         dto = IngestEventDTO(**ev).to_event_create_dto()
-        if (
-            isinstance(allowed_event_types, list)
-            and dto.event_type_value not in allowed_event_types
-        ):
-            raise ValidationError(f"Event type ['{dto.event_type_value}'] is invalid!")
-        if dto.import_id:
-            validate_import_id(dto.import_id)
-        validate_import_id(dto.family_import_id)
 
         import_id = event_repository.create(db, dto)
         event_import_ids.append(import_id)
