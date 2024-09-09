@@ -18,7 +18,7 @@ def test_ingest_when_ok(
     test_data = {
         "collections": [
             {
-                "import_id": "",
+                "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
             },
@@ -31,7 +31,7 @@ def test_ingest_when_ok(
                 "geography": "Test",
                 "category": "UNFCCC",
                 "metadata": {"color": ["blue"], "size": [""]},
-                "collections": [],
+                "collections": ["test.new.collection.0"],
             },
         ],
         "documents": [
