@@ -154,6 +154,10 @@ def save_events(
     event_import_ids = []
     for ev in event_data:
         dto = IngestEventDTO(**ev).to_event_create_dto()
+
+        if dto.import_id:
+            validate_import_id(dto.import_id)
+
         import_id = event_repository.create(db, dto)
         event_import_ids.append(import_id)
     return event_import_ids
