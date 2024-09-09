@@ -43,7 +43,6 @@
       "family_import_id": "test.new.family.0",
       "metadata": { "color": ["pink"] },
       "variant_name": "Test",
-      "events": [],
       "title": "",
       "user_language_name": ""
     },
@@ -52,7 +51,6 @@
       "family_import_id": "test.new.family.1",
       "metadata": { "color": ["pink"] },
       "variant_name": "Test",
-      "events": [],
       "title": "",
       "user_language_name": ""
     }
