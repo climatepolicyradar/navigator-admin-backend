@@ -1,0 +1,42 @@
+{
+  "collections": [
+    {
+      "import_id": "test.new.collection.0",
+      "title": "Test title",
+      "description": "Test description"
+    }
+  ],
+  "families": [
+    {
+      "import_id": "test.new.family.0",
+      "title": "Test",
+      "summary": "Test",
+      "geography": "South Asia",
+      "category": "UNFCCC",
+      "metadata": {
+        "author_type": ["Non-Party"],
+        "author": ["Test"]
+      },
+      "collections": ["test.new.collection.0"]
+    }
+  ],
+  "documents": [
+    {
+      "import_id": "test.new.document.0",
+      "family_import_id": "test.new.family.0",
+      "metadata": { "role": ["MAIN"], "type": ["Law"] },
+      "events": [],
+      "title": "",
+      "user_language_name": ""
+    }
+  ],
+  "events": [
+    {
+      "import_id": "test.new.event.0",
+      "family_import_id": "test.new.family.0",
+      "event_title": "Test",
+      "date": "2024-01-01",
+      "event_type_value": "Invalid"
+    }
+  ]
+}

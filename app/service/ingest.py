@@ -7,6 +7,7 @@ import of data and other services for validation etc.
 
 from typing import Optional
 
+from db_client.functions.corpus_helpers import get_taxonomy_from_corpus
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
@@ -138,6 +139,7 @@ def save_documents(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_events(
     event_data: list[dict],
+    corpus_import_id: str,
     db: Optional[Session] = None,
 ) -> list[str]:
     """
@@ -151,10 +153,19 @@ def save_events(
     if db is None:
         db = db_session.get_db()
 
+    event_taxonomy = get_taxonomy_from_corpus(db, corpus_import_id)
+    allowed_event_types = (
+        event_taxonomy["event_type"]["allowed_values"] if event_taxonomy else None
+    )
+
     event_import_ids = []
     for ev in event_data:
         dto = IngestEventDTO(**ev).to_event_create_dto()
-
+        if (
+            isinstance(allowed_event_types, list)
+            and dto.event_type_value not in allowed_event_types
+        ):
+            raise ValidationError(f"Event type ['{dto.event_type_value}'] is invalid!")
         if dto.import_id:
             validate_import_id(dto.import_id)
         validate_import_id(dto.family_import_id)
@@ -216,7 +227,7 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
         if document_data:
             response["documents"] = save_documents(document_data, corpus_import_id, db)
         if event_data:
-            response["events"] = save_events(event_data, db)
+            response["events"] = save_events(event_data, corpus_import_id, db)
 
         return response
     except Exception as e:

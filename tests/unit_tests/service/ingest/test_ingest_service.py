@@ -389,7 +389,7 @@ def test_ingest_events_when_import_id_wrong_format():
     ]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_events(test_data)
+        ingest_service.save_events(test_data, "test")
     expected_msg = f"The import id {invalid_import_id} is invalid!"
     assert e.value.message == expected_msg
 
@@ -407,6 +407,6 @@ def test_ingest_events_when_family_import_id_wrong_format():
     ]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_events(test_data)
+        ingest_service.save_events(test_data, "test")
     expected_msg = f"The import id {invalid_import_id} is invalid!"
     assert e.value.message == expected_msg
