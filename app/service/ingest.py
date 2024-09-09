@@ -48,9 +48,9 @@ def save_collections(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
     for coll in collection_data:
         validation.validate_collection(coll)
+
         dto = IngestCollectionDTO(**coll).to_collection_create_dto()
         import_id = collection_repository.create(db, dto, org_id)
-
         collection_import_ids.append(import_id)
     return collection_import_ids
 
@@ -75,14 +75,15 @@ def save_families(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
     for fam in family_data:
         validation.validate_family(fam, corpus_import_id)
+        # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
+        # collection.validate(collections, db)
+
         dto = IngestFamilyDTO(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
-
-        geo_id = geography.get_id(db, dto.geography)
-        # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
-        # collection.validate(collections, db)
-        import_id = family_repository.create(db, dto, geo_id, org_id)
+        import_id = family_repository.create(
+            db, dto, geography.get_id(db, dto.geography), org_id
+        )
         family_import_ids.append(import_id)
     return family_import_ids
 
@@ -107,8 +108,8 @@ def save_documents(
     document_import_ids = []
     for doc in document_data:
         validation.validate_document(doc, corpus_import_id)
-        dto = IngestDocumentDTO(**doc).to_document_create_dto()
 
+        dto = IngestDocumentDTO(**doc).to_document_create_dto()
         import_id = document_repository.create(db, dto)
         document_import_ids.append(import_id)
     return document_import_ids
@@ -136,8 +137,8 @@ def save_events(
     event_import_ids = []
     for ev in event_data:
         validation.validate_event(ev, event_taxonomy)
-        dto = IngestEventDTO(**ev).to_event_create_dto()
 
+        dto = IngestEventDTO(**ev).to_event_create_dto()
         import_id = event_repository.create(db, dto)
         event_import_ids.append(import_id)
     return event_import_ids
