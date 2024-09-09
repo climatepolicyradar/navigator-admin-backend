@@ -365,7 +365,7 @@ def test_save_documents_when_no_family():
     assert e.value.message == f"No family with id ['{fam_import_id}'] found"
 
 
-def test_ingest_events_when_import_id_wrong_format():
+def test_save_events_when_import_id_wrong_format():
     invalid_import_id = "invalid"
     test_data = [
         {
@@ -382,7 +382,7 @@ def test_ingest_events_when_import_id_wrong_format():
     assert e.value.message == f"The import id {invalid_import_id} is invalid!"
 
 
-def test_ingest_events_when_family_import_id_wrong_format():
+def test_save_events_when_family_import_id_wrong_format():
     invalid_import_id = "invalid"
     test_data = [
         {

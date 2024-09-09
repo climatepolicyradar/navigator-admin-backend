@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 
 import app.service.validation as validation_service
@@ -162,7 +164,7 @@ def test_validate_document_when_ok(db_client_metadata_mock):
     validation_service.validate_document(test_document, "test")
 
 
-def test_validate_documents_when_import_id_wrong_format():
+def test_validate_document_when_import_id_wrong_format():
     invalid_import_id = "invalid"
     test_document = {
         "import_id": invalid_import_id,
@@ -180,7 +182,7 @@ def test_validate_documents_when_import_id_wrong_format():
     assert e.value.message == f"The import id {invalid_import_id} is invalid!"
 
 
-def test_validate_documents_when_family_import_id_wrong_format():
+def test_validate_document_when_family_import_id_wrong_format():
     invalid_family_import_id = "invalid"
     test_document = {
         "import_id": "test.new.document.0",
@@ -198,7 +200,7 @@ def test_validate_documents_when_family_import_id_wrong_format():
     assert e.value.message == f"The import id {invalid_family_import_id} is invalid!"
 
 
-def test_validate_documents_when_variant_empty():
+def test_validate_document_when_variant_empty():
     test_document = {
         "import_id": "test.new.document.0",
         "family_import_id": "test.new.family.0",
@@ -214,7 +216,7 @@ def test_validate_documents_when_variant_empty():
     assert e.value.message == "Variant name is empty"
 
 
-def test_validate_documents_when_metadata_invalid(db_client_metadata_mock):
+def test_validate_document_when_metadata_invalid(db_client_metadata_mock):
     test_document = {
         "import_id": "test.new.document.0",
         "family_import_id": "test.new.family.0",
@@ -228,3 +230,62 @@ def test_validate_documents_when_metadata_invalid(db_client_metadata_mock):
     with pytest.raises(ValidationError) as e:
         validation_service.validate_document(test_document, "test")
     assert "Metadata validation failed: Missing metadata keys:" in e.value.message
+
+
+def test_validate_event_when_ok():
+    test_event = {
+        "import_id": "test.new.event.0",
+        "family_import_id": "test.new.family.0",
+        "event_title": "Test",
+        "date": datetime.now(),
+        "event_type_value": "Amended",
+    }
+
+    validation_service.validate_event(test_event, {})
+
+
+def test_validate_event_when_import_id_wrong_format():
+    invalid_import_id = "invalid"
+    test_event = {
+        "import_id": invalid_import_id,
+        "family_import_id": "test.new.family.0",
+        "event_title": "Test",
+        "date": datetime.now(),
+        "event_type_value": "Amended",
+    }
+
+    with pytest.raises(ValidationError) as e:
+        validation_service.validate_event(test_event, {})
+    assert e.value.message == f"The import id {invalid_import_id} is invalid!"
+
+
+def test_validate_event_when_family_import_id_wrong_format():
+    invalid_import_id = "invalid"
+    test_event = {
+        "import_id": "test.new.event.0",
+        "family_import_id": invalid_import_id,
+        "event_title": "Test",
+        "date": datetime.now(),
+        "event_type_value": "Amended",
+    }
+
+    with pytest.raises(ValidationError) as e:
+        validation_service.validate_event(test_event, {})
+    assert e.value.message == f"The import id {invalid_import_id} is invalid!"
+
+
+def test_validate_event_when_event_type_invalid():
+    invalid_event_type = "invalid"
+    test_event = {
+        "import_id": "test.new.event.0",
+        "family_import_id": "test.new.family.0",
+        "event_title": "Test",
+        "date": datetime.now(),
+        "event_type_value": invalid_event_type,
+    }
+
+    with pytest.raises(ValidationError) as e:
+        validation_service.validate_event(
+            test_event, {"event_type": {"allowed_values": ["test"]}}
+        )
+    assert e.value.message == f"Event type ['{invalid_event_type}'] is invalid!"

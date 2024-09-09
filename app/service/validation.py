@@ -1,3 +1,4 @@
+from db_client.functions.corpus_helpers import TaxonomyData
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 
 import app.clients.db.session as db_session
@@ -37,3 +38,14 @@ def validate_document(document: dict, corpus_import_id: str) -> None:
         document["metadata"],
         EntitySpecificTaxonomyKeys.DOCUMENT.value,
     )
+
+
+def validate_event(event: dict, taxonomy: TaxonomyData) -> None:
+    validate_import_id(event["import_id"])
+    validate_import_id(event["family_import_id"])
+    allowed_event_types = taxonomy["event_type"]["allowed_values"] if taxonomy else None
+    if (
+        isinstance(allowed_event_types, list)
+        and event["event_type_value"] not in allowed_event_types
+    ):
+        raise ValidationError(f"Event type ['{event['event_type_value']}'] is invalid!")
