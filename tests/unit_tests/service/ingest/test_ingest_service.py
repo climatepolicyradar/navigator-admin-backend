@@ -392,3 +392,21 @@ def test_ingest_events_when_import_id_wrong_format():
         ingest_service.save_events(test_data)
     expected_msg = f"The import id {invalid_import_id} is invalid!"
     assert e.value.message == expected_msg
+
+
+def test_ingest_events_when_family_import_id_wrong_format():
+    invalid_import_id = "invalid"
+    test_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": invalid_import_id,
+            "event_title": "Test",
+            "date": datetime.now(),
+            "event_type_value": "Amended",
+        }
+    ]
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.save_events(test_data)
+    expected_msg = f"The import id {invalid_import_id} is invalid!"
+    assert e.value.message == expected_msg

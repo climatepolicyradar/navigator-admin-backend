@@ -157,6 +157,7 @@ def save_events(
 
         if dto.import_id:
             validate_import_id(dto.import_id)
+        validate_import_id(dto.family_import_id)
 
         import_id = event_repository.create(db, dto)
         event_import_ids.append(import_id)
