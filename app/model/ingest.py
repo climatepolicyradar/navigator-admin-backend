@@ -64,7 +64,7 @@ class IngestEventDTO(BaseModel):
 
     import_id: str
     family_import_id: str
-    family_document_import_id: str
+    family_document_import_id: Optional[str] = None
     event_title: str
     date: datetime
     event_type_value: str

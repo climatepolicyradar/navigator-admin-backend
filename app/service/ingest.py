@@ -129,6 +129,25 @@ def save_documents(
     return document_import_ids
 
 
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def save_events(
+    event_data: list[dict],
+    db: Optional[Session] = None,
+) -> list[str]:
+    """
+    Creates new documents with the values passed.
+
+    :param Session db: The database session to use for saving documents.
+    :param list[dict] document_data: The data to use for creating documents.
+    :param str corpus_import_id: The import_id of the corpus the documents belong to.
+    :return str: The new import_ids for the saved documents.
+    """
+    if db is None:
+        db = db_session.get_db()
+
+    return []
+
+
 def validate_entity_relationships(data: dict) -> None:
     families = []
     if "families" in data:
