@@ -46,6 +46,10 @@ def validate_event(event: dict, taxonomy: Optional[TaxonomyData]) -> None:
     validate_import_id(event["import_id"])
     validate_import_id(event["family_import_id"])
     allowed_event_types = taxonomy["event_type"]["allowed_values"] if taxonomy else None
+    if not allowed_event_types:
+        raise ValidationError(
+            f"No allowed event types found for event {event['import_id']}"
+        )
     if (
         isinstance(allowed_event_types, list)
         and event["event_type_value"] not in allowed_event_types

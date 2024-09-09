@@ -85,11 +85,6 @@ def test_ingest_template_when_ok(
             {
                 "import_id": {"title": "Import Id", "type": "string"},
                 "family_import_id": {"title": "Family Import Id", "type": "string"},
-                "events": {
-                    "items": {"type": "string"},
-                    "title": "Events",
-                    "type": "array",
-                },
                 "variant_name": {
                     "anyOf": [{"type": "string"}, {"type": "null"}],
                     "default": None,

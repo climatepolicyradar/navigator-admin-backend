@@ -92,7 +92,6 @@ class IngestDocumentDTO(BaseModel):
     family_import_id: str
     variant_name: Optional[str] = None
     metadata: Json
-    events: list[str]
     title: str
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
