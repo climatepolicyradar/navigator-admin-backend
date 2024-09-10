@@ -184,7 +184,10 @@ def create(
         db = db_session.get_db()
 
     # Validate geography
-    geo_id = geography.get_id(db, family.geography)
+    geo_ids = []
+    for geo_id in family.geographies:
+        id = geography.get_id(db, geo_id)
+        geo_ids.append(id)
 
     # Validate category
     category.validate(family.category)
@@ -218,7 +221,7 @@ def create(
     metadata.validate_metadata(db, family.corpus_import_id, family.metadata)
 
     try:
-        import_id = family_repo.create(db, family, geo_id, entity_org_id)
+        import_id = family_repo.create(db, family, geo_ids, entity_org_id)
         if len(import_id) == 0:
             db.rollback()
         return import_id

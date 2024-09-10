@@ -55,7 +55,7 @@ def create_family_read_dto(
 def create_family_create_dto(
     title: str = "title",
     summary: str = "summary",
-    geography: str = "CHN",
+    geographies: list[str] = ["CHN"],
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     collections: Optional[list[str]] = None,
@@ -75,7 +75,7 @@ def create_family_create_dto(
     return FamilyCreateDTO(
         title=title,
         summary=summary,
-        geography=geography,
+        geographies=geographies,
         category=category,
         metadata=metadata,
         collections=collections,

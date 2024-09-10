@@ -41,7 +41,9 @@ class FamilyRepo(Protocol):
         ...
 
     @staticmethod
-    def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> str:
+    def create(
+        db: Session, family: FamilyCreateDTO, geo_ids: list[int], org_id: int
+    ) -> str:
         """Creates a family"""
         ...
 

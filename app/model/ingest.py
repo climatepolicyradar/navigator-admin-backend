@@ -35,7 +35,7 @@ class IngestFamilyDTO(BaseModel):
     import_id: str
     title: str
     summary: str
-    geography: str
+    geographies: list[str]
     category: str
     metadata: Json
     collections: list[str]
@@ -51,7 +51,7 @@ class IngestFamilyDTO(BaseModel):
             import_id=self.import_id,
             title=self.title,
             summary=self.summary,
-            geography=self.geography,
+            geographies=self.geographies,
             category=self.category,
             metadata=self.metadata,
             collections=self.collections,

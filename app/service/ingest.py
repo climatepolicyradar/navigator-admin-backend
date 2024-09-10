@@ -19,10 +19,10 @@ import app.repository.family as family_repository
 import app.service.category as category
 import app.service.collection as collection
 import app.service.corpus as corpus
-import app.service.geography as geography
 import app.service.metadata as metadata
 from app.errors import ValidationError
 from app.model.ingest import IngestCollectionDTO, IngestDocumentDTO, IngestFamilyDTO
+from app.service import geography
 from app.service.collection import validate_import_id
 
 
@@ -79,7 +79,9 @@ def save_families(
         if dto.import_id:
             validate_import_id(dto.import_id)
         corpus.validate(db, corpus_import_id)
-        geo_id = geography.get_id(db, dto.geography)
+        geo_ids = []
+        for geo in dto.geographies:
+            geo_ids.append(geography.get_id(db, geo))
         category.validate(dto.category)
         collections = set(dto.collections)
         collection.validate_multiple_ids(collections)
@@ -87,7 +89,7 @@ def save_families(
         # collection.validate(collections, db)
         metadata.validate_metadata(db, corpus_import_id, dto.metadata)
 
-        import_id = family_repository.create(db, dto, geo_id, org_id)
+        import_id = family_repository.create(db, dto, geo_ids, org_id)
         family_import_ids.append(import_id)
     return family_import_ids
 
