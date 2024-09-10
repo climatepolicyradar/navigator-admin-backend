@@ -60,7 +60,7 @@ class FamilyCreateDTO(BaseModel):
     import_id: Optional[str] = None
     title: str
     summary: str
-    geographies: Union[str, list[str]]
+    geography: Union[str, list[str]]
     category: str
     metadata: Json
     collections: list[str]

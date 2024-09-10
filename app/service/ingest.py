@@ -88,7 +88,7 @@ def save_families(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
         geo_ids = []
-        for geo in dto.geographies:
+        for geo in dto.geography:
             geo_ids.append(geography.get_id(db, geo))
         import_id = family_repository.create(db, dto, geo_ids, org_id)
         family_import_ids.append(import_id)

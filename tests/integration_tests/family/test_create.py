@@ -145,7 +145,7 @@ def test_create_family_when_invalid_geo(
         title="Title",
         summary="test test test",
     )
-    new_family.geographies = ["UK"]
+    new_family.geography = ["UK"]
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )

@@ -52,7 +52,7 @@ class IngestFamilyDTO(BaseModel):
             import_id=self.import_id,
             title=self.title,
             summary=self.summary,
-            geographies=self.geographies,
+            geography=self.geographies,
             category=self.category,
             metadata=self.metadata,
             collections=self.collections,
