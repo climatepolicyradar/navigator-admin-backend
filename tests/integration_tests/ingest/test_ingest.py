@@ -103,7 +103,7 @@ def test_ingest_when_corpus_import_id_invalid(
     response = client.post(
         f"/api/v1/ingest/{invalid_corpus}",
         files={
-            "new_data": open("tests/integration_tests/ingest/test_bulk_data.json", "rb")
+            "new_data": open(os.path.join("tests", "integration_tests", "ingest", "test_bulk_data.json"), "rb")
         },
         headers=user_header_token,
     )
