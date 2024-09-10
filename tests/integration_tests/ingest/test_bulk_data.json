@@ -42,7 +42,7 @@
       "import_id": "test.new.document.0",
       "family_import_id": "test.new.family.0",
       "metadata": { "role": ["MAIN"], "type": ["Law"] },
-      "events": [],
+      "variant_name": "Original Language",
       "title": "",
       "user_language_name": ""
     },
@@ -50,9 +50,25 @@
       "import_id": "test.new.document.1",
       "family_import_id": "test.new.family.1",
       "metadata": { "role": ["MAIN"], "type": ["Law"] },
-      "events": [],
+      "variant_name": "Original Language",
       "title": "",
       "user_language_name": ""
+    }
+  ],
+  "events": [
+    {
+      "import_id": "test.new.event.0",
+      "family_import_id": "test.new.family.0",
+      "event_title": "Test",
+      "date": "2024-01-01",
+      "event_type_value": "Amended"
+    },
+    {
+      "import_id": "test.new.event.1",
+      "family_import_id": "test.new.family.1",
+      "event_title": "Test",
+      "date": "2024-01-01",
+      "event_type_value": "Amended"
     }
   ]
 }

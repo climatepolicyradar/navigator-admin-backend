@@ -55,7 +55,11 @@ def test_get_template_unfcc(
                 "family_import_id": {"title": "Family Import Id", "type": "string"},
                 "family_document_import_id": {
                     "title": "Family Document Import Id",
-                    "type": "string",
+                    "anyOf": [
+                        {"type": "string"},
+                        {"type": "null"},
+                    ],
+                    "default": None,
                 },
                 "event_title": {"title": "Event Title", "type": "string"},
                 "date": {
@@ -92,11 +96,6 @@ def test_get_template_unfcc(
             {
                 "import_id": {"title": "Import Id", "type": "string"},
                 "family_import_id": {"title": "Family Import Id", "type": "string"},
-                "events": {
-                    "items": {"type": "string"},
-                    "title": "Events",
-                    "type": "array",
-                },
                 "variant_name": {
                     "anyOf": [{"type": "string"}, {"type": "null"}],
                     "default": None,
