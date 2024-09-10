@@ -82,7 +82,7 @@ def test_ingest_rollback(
     response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
         files={
-            "new_data": open("tests/integration_tests/ingest/test_bulk_data.json", "rb")
+            "new_data": open(os.path.join("tests", "integration_tests", "ingest", "test_bulk_data.json"), "rb")
         },
         headers=user_header_token,
     )
