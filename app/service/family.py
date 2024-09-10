@@ -183,7 +183,7 @@ def create(
     if db is None:
         db = db_session.get_db()
 
-    # Validate geography
+    # Validate geographies
     geo_ids = []
     for geo_id in family.geographies:
         id = geography.get_id(db, geo_id)

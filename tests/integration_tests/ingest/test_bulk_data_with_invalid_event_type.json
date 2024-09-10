@@ -11,7 +11,7 @@
       "import_id": "test.new.family.0",
       "title": "Test",
       "summary": "Test",
-      "geography": "South Asia",
+      "geographies": ["South Asia"],
       "category": "UNFCCC",
       "metadata": {
         "author_type": ["Non-Party"],
