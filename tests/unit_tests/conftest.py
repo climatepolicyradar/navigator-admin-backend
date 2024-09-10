@@ -22,6 +22,7 @@ import app.service.event as event_service
 import app.service.family as family_service
 import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
+import app.service.validation as validation_service
 from app.clients.aws.client import get_s3_client
 from app.main import app
 from app.model.user import UserContext
@@ -55,6 +56,7 @@ from tests.mocks.services.corpus_service import mock_corpus_service
 from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
+from tests.mocks.services.validation_service import mock_validation_service
 
 ORG_ID = 1
 
@@ -211,6 +213,13 @@ def corpus_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_corpus_service(corpus_service, monkeypatch, mocker)
     yield corpus_service
+
+
+@pytest.fixture
+def validation_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_validation_service(validation_service, monkeypatch, mocker)
+    yield validation_service
 
 
 # ----- User tokens

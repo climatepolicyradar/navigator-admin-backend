@@ -5,6 +5,7 @@ from pydantic import AnyHttpUrl, BaseModel
 
 from app.model.collection import CollectionCreateDTO
 from app.model.document import DocumentCreateDTO
+from app.model.event import EventCreateDTO
 from app.model.family import FamilyCreateDTO
 from app.model.general import Json
 
@@ -64,10 +65,24 @@ class IngestEventDTO(BaseModel):
 
     import_id: str
     family_import_id: str
-    family_document_import_id: str
+    family_document_import_id: Optional[str] = None
     event_title: str
     date: datetime
     event_type_value: str
+
+    def to_event_create_dto(self) -> EventCreateDTO:
+        """
+        Convert IngestEventDTO to EventCreateDTO.
+
+        :return EventCreateDTO: Converted EventCreateDTO instance.
+        """
+        return EventCreateDTO(
+            import_id=self.import_id,
+            family_import_id=self.family_import_id,
+            event_title=self.event_title,
+            date=self.date,
+            event_type_value=self.event_type_value,
+        )
 
 
 class IngestDocumentDTO(BaseModel):
@@ -77,7 +92,6 @@ class IngestDocumentDTO(BaseModel):
     family_import_id: str
     variant_name: Optional[str] = None
     metadata: Json
-    events: list[str]
     title: str
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]

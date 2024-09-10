@@ -16,11 +16,11 @@
       "import_id": "test.new.family.0",
       "title": "Test",
       "summary": "Test",
-      "geography": "South Asia",
+      "geography": "Test",
       "category": "UNFCCC",
       "metadata": {
-        "author_type": ["Non-Party"],
-        "author": ["Test"]
+        "color": ["blue"],
+        "size": []
       },
       "collections": ["test.new.collection.0"]
     },
@@ -28,11 +28,11 @@
       "import_id": "test.new.family.1",
       "title": "Test",
       "summary": "Test",
-      "geography": "South Asia",
+      "geography": "Test",
       "category": "UNFCCC",
       "metadata": {
-        "author_type": ["Party"],
-        "author": ["Test"]
+        "color": ["pink"],
+        "size": []
       },
       "collections": ["test.new.collection.1"]
     }
@@ -41,16 +41,16 @@
     {
       "import_id": "test.new.document.0",
       "family_import_id": "test.new.family.0",
-      "metadata": { "role": ["MAIN"], "type": ["Law"] },
-      "events": [],
+      "metadata": { "color": ["pink"] },
+      "variant_name": "Test",
       "title": "",
       "user_language_name": ""
     },
     {
       "import_id": "test.new.document.1",
       "family_import_id": "test.new.family.1",
-      "metadata": { "role": ["MAIN"], "type": ["Law"] },
-      "events": [],
+      "metadata": { "color": ["pink"] },
+      "variant_name": "Test",
       "title": "",
       "user_language_name": ""
     }

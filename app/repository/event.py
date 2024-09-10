@@ -69,6 +69,7 @@ def _event_to_dto(family_event_meta: FamilyEventTuple) -> EventReadDTO:
 
 def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
     return {
+        "import_id": dto.import_id if dto.import_id else None,
         "family_import_id": dto.family_import_id,
         "family_document_import_id": dto.family_document_import_id,
         "date": dto.date,
@@ -179,9 +180,11 @@ def create(db: Session, event: EventCreateDTO) -> str:
             )
 
         org_name = cast(str, org.name)
-        new_family_event.import_id = cast(
-            Column, generate_import_id(db, CountedEntity.Event, org_name)
-        )
+
+        if not new_family_event.import_id:
+            new_family_event.import_id = cast(
+                Column, generate_import_id(db, CountedEntity.Event, org_name)
+            )
 
         db.add(new_family_event)
     except Exception:
