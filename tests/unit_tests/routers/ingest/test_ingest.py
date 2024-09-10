@@ -100,7 +100,7 @@ def test_ingest_data_when_db_error(
         "/api/v1/ingest/test",
         files={
             "new_data": open(
-                "tests/unit_tests/routers/ingest/test_bulk_data.json", "rb"
+                os.path.join("tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"), "rb"
             )
         },
         headers=user_header_token,
