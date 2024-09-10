@@ -12,7 +12,9 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
 
     response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-        files={"new_data": open("tests/integration_tests/ingest/test.json", "rb")},
+        files={
+            "new_data": open("tests/integration_tests/ingest/test_bulk_data.json", "rb")
+        },
         headers=user_header_token,
     )
 
@@ -79,7 +81,9 @@ def test_ingest_rollback(
 
     response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-        files={"new_data": open("tests/integration_tests/ingest/test.json", "rb")},
+        files={
+            "new_data": open("tests/integration_tests/ingest/test_bulk_data.json", "rb")
+        },
         headers=user_header_token,
     )
 
@@ -98,7 +102,9 @@ def test_ingest_when_corpus_import_id_invalid(
     invalid_corpus = "test"
     response = client.post(
         f"/api/v1/ingest/{invalid_corpus}",
-        files={"new_data": open("tests/integration_tests/ingest/test.json", "rb")},
+        files={
+            "new_data": open("tests/integration_tests/ingest/test_bulk_data.json", "rb")
+        },
         headers=user_header_token,
     )
 
@@ -116,7 +122,8 @@ def test_ingest_events_when_event_type_invalid(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
         files={
             "new_data": open(
-                "tests/integration_tests/ingest/test_invalid_event_type.json", "rb"
+                "tests/integration_tests/ingest/test_bulk_data_with_invalid_event_type.json",
+                "rb",
             )
         },
         headers=user_header_token,
