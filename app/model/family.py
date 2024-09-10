@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
@@ -60,7 +60,7 @@ class FamilyCreateDTO(BaseModel):
     import_id: Optional[str] = None
     title: str
     summary: str
-    geographies: list[str]
+    geographies: Union[str, list[str]]
     category: str
     metadata: Json
     collections: list[str]
