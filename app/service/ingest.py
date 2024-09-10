@@ -174,7 +174,7 @@ def import_data(data: dict, corpus_import_id: str) -> dict:
     :param dict data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
     :raises RepositoryError: raised on a database error.
-    :raises ValidationError: raised should the import_id be invalid.
+    :raises ValidationError: raised should the data be invalid.
     :return dict: Import ids of the saved entities.
     """
     db = db_session.get_db()
