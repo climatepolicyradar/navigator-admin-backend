@@ -5,7 +5,7 @@ This layer uses the corpus, collection, family, document and event repos to hand
 import of data and other services for validation etc.
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
@@ -30,12 +30,14 @@ from app.model.ingest import (
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_collections(
-    collection_data: list[dict], corpus_import_id: str, db: Optional[Session] = None
+    collection_data: list[dict[str, Any]],
+    corpus_import_id: str,
+    db: Optional[Session] = None,
 ) -> list[str]:
     """
     Creates new collections with the values passed.
 
-    :param list[dict] collection_data: The data to use for creating collections.
+    :param list[dict[str, Any]] collection_data: The data to use for creating collections.
     :param str corpus_import_id: The import_id of the corpus the collections belong to.
     :param Optional[Session] The database session to use for saving collections.
     :return str: The new import_ids for the saved collections.
@@ -58,12 +60,14 @@ def save_collections(
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_families(
-    family_data: list[dict], corpus_import_id: str, db: Optional[Session] = None
+    family_data: list[dict[str, Any]],
+    corpus_import_id: str,
+    db: Optional[Session] = None,
 ) -> list[str]:
     """
     Creates new families with the values passed.
 
-    :param list[dict] families_data: The data to use for creating families.
+    :param list[dict[str, Any]] families_data: The data to use for creating families.
     :param str corpus_import_id: The import_id of the corpus the families belong to.
     :param Optional[Session] The database session to use for saving families.
     :return str: The new import_ids for the saved families.
@@ -93,14 +97,14 @@ def save_families(
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_documents(
-    document_data: list[dict],
+    document_data: list[dict[str, Any]],
     corpus_import_id: str,
     db: Optional[Session] = None,
 ) -> list[str]:
     """
     Creates new documents with the values passed.
 
-    :param list[dict] document_data: The data to use for creating documents.
+    :param list[dict[str, Any]] document_data: The data to use for creating documents.
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
     :param Optional[Session] The database session to use for saving documents.
     :return str: The new import_ids for the saved documents.
@@ -122,14 +126,14 @@ def save_documents(
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_events(
-    event_data: list[dict],
+    event_data: list[dict[str, Any]],
     corpus_import_id: str,
     db: Optional[Session] = None,
 ) -> list[str]:
     """
     Creates new events with the values passed.
 
-    :param list[dict] event_data: The data to use for creating events.
+    :param list[dict[str, Any]] event_data: The data to use for creating events.
     :param str corpus_import_id: The import_id of the corpus the events belong to.
     :param Optional[Session] The database session to use for saving events.
     :return str: The new import_ids for the saved events.
@@ -149,7 +153,14 @@ def save_events(
     return event_import_ids
 
 
-def validate_entity_relationships(data: dict) -> None:
+def validate_entity_relationships(data: dict[str, Any]) -> None:
+    """
+    Validates relationships between entities contained in data based on import_ids.
+    For documents, it validates that the family the document is linked to exists.
+
+    :param dict[str, Any] data: The data object containing entities to be validated.
+    :raises ValidationError: raised should there be any unmatched relationships.
+    """
     families = []
     if "families" in data:
         for fam in data["families"]:
@@ -167,15 +178,15 @@ def validate_entity_relationships(data: dict) -> None:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def import_data(data: dict, corpus_import_id: str) -> dict:
+def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     """
     Imports data for a given corpus_import_id.
 
-    :param dict data: The data to be imported.
+    :param dict[str, Any] data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
-    :return dict: Import ids of the saved entities.
+    :return dict[str, str]: Import ids of the saved entities.
     """
     db = db_session.get_db()
 
