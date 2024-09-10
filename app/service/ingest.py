@@ -39,8 +39,8 @@ def save_collections(
 
     :param list[dict[str, Any]] collection_data: The data to use for creating collections.
     :param str corpus_import_id: The import_id of the corpus the collections belong to.
-    :param Optional[Session] The database session to use for saving collections.
-    :return str: The new import_ids for the saved collections.
+    :param Optional[Session] The database session to use for saving collections or None.
+    :return list[str]: The new import_ids for the saved collections.
     """
     if db is None:
         db = db_session.get_db()
@@ -69,8 +69,8 @@ def save_families(
 
     :param list[dict[str, Any]] families_data: The data to use for creating families.
     :param str corpus_import_id: The import_id of the corpus the families belong to.
-    :param Optional[Session] The database session to use for saving families.
-    :return str: The new import_ids for the saved families.
+    :param Optional[Session] The database session to use for saving families or None.
+    :return list[str]: The new import_ids for the saved families.
     """
 
     if db is None:
@@ -106,8 +106,8 @@ def save_documents(
 
     :param list[dict[str, Any]] document_data: The data to use for creating documents.
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
-    :param Optional[Session] The database session to use for saving documents.
-    :return str: The new import_ids for the saved documents.
+    :param Optional[Session] The database session to use for saving documents or None.
+    :return list[str]: The new import_ids for the saved documents.
     """
     if db is None:
         db = db_session.get_db()
@@ -135,8 +135,8 @@ def save_events(
 
     :param list[dict[str, Any]] event_data: The data to use for creating events.
     :param str corpus_import_id: The import_id of the corpus the events belong to.
-    :param Optional[Session] The database session to use for saving events.
-    :return str: The new import_ids for the saved events.
+    :param Optional[Session] The database session to use for saving events or None.
+    :return list[str]: The new import_ids for the saved events.
     """
     if db is None:
         db = db_session.get_db()
@@ -145,8 +145,8 @@ def save_events(
 
     event_import_ids = []
 
-    for ev in event_data:
-        dto = IngestEventDTO(**ev).to_event_create_dto()
+    for event in event_data:
+        dto = IngestEventDTO(**event).to_event_create_dto()
         import_id = event_repository.create(db, dto)
         event_import_ids.append(import_id)
 
