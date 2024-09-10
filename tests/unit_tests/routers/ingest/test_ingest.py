@@ -6,6 +6,7 @@ This uses service mocks and ensures the endpoint calls into each service.
 
 import io
 import json
+import os
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -33,7 +34,10 @@ def test_ingest_data_when_ok(
         "/api/v1/ingest/test",
         files={
             "new_data": open(
-                os.path.join("tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"), "rb"
+                os.path.join(
+                    "tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"
+                ),
+                "rb",
             )
         },
         headers=user_header_token,
@@ -100,7 +104,10 @@ def test_ingest_data_when_db_error(
         "/api/v1/ingest/test",
         files={
             "new_data": open(
-                os.path.join("tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"), "rb"
+                os.path.join(
+                    "tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"
+                ),
+                "rb",
             )
         },
         headers=user_header_token,

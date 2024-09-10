@@ -37,6 +37,7 @@ def validate_family(family: dict[str, Any], corpus_import_id: str) -> None:
     Validates a family.
 
     :param dict[str, Any] family: The family object to be validated.
+    :param str corpus_import_id: The corpus_import_id to be used for validating the family object.
     :raises ValidationError: raised should the data be invalid.
     """
     db = db_session.get_db()
@@ -54,6 +55,7 @@ def validate_families(families: list[dict[str, Any]], corpus_import_id: str) -> 
     Validates a list of families.
 
     :param list[dict[str, Any]] families: The list of family objects to be validated.
+    :param str corpus_import_id: The corpus_import_id to be used for validating the family objects.
     """
     for fam in families:
         validate_family(fam, corpus_import_id)
@@ -64,6 +66,7 @@ def validate_document(document: dict[str, Any], corpus_import_id: str) -> None:
     Validates a document.
 
     :param dict[str, Any] document: The document object to be validated.
+    :param str corpus_import_id: The corpus_import_id to be used for validating the document object.
     :raises ValidationError: raised should the data be invalid.
     """
     db = db_session.get_db()
@@ -85,6 +88,7 @@ def validate_documents(documents: list[dict[str, Any]], corpus_import_id: str) -
     Validates a list of documents.
 
     :param list[dict[str, Any]] documents: The list of document objects to be validated.
+    :param str corpus_import_id: The corpus_import_id to be used for validating the document objects.
     """
     for doc in documents:
         validate_document(doc, corpus_import_id)
@@ -95,6 +99,7 @@ def validate_event(event: dict[str, Any], taxonomy: Optional[TaxonomyData]) -> N
     Validates an event.
 
     :param dict[str, Any] event: The event object to be validated.
+    :param Optional[TaxonomyData] taxonomy: The taxonomy to be used to validate the type of the event object.
     :raises ValidationError: raised should the data be invalid.
     """
     validate_import_id(event["import_id"])
@@ -116,6 +121,7 @@ def validate_events(events: list[dict[str, Any]], corpus_import_id: str) -> None
     Validates a list of events.
 
     :param list[dict[str, Any]] events: The list of event objects to be validated.
+    :param str corpus_import_id: The corpus_import_id to be used for validating the event objects.
     """
     db = db_session.get_db()
 
