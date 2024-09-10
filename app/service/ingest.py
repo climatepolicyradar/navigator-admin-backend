@@ -7,7 +7,6 @@ import of data and other services for validation etc.
 
 from typing import Optional
 
-from db_client.functions.corpus_helpers import get_taxonomy_from_corpus
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.orm import Session
@@ -36,22 +35,24 @@ def save_collections(
     """
     Creates new collections with the values passed.
 
-    :param Session db: The database session to use for saving collections.
     :param list[dict] collection_data: The data to use for creating collections.
     :param str corpus_import_id: The import_id of the corpus the collections belong to.
+    :param Optional[Session] The database session to use for saving collections.
     :return str: The new import_ids for the saved collections.
     """
     if db is None:
         db = db_session.get_db()
 
+    validation.validate_collections(collection_data)
+
     collection_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
-    for coll in collection_data:
-        validation.validate_collection(coll)
 
+    for coll in collection_data:
         dto = IngestCollectionDTO(**coll).to_collection_create_dto()
         import_id = collection_repository.create(db, dto, org_id)
         collection_import_ids.append(import_id)
+
     return collection_import_ids
 
 
@@ -62,22 +63,23 @@ def save_families(
     """
     Creates new families with the values passed.
 
-    :param Session db: The database session to use for saving families.
     :param list[dict] families_data: The data to use for creating families.
     :param str corpus_import_id: The import_id of the corpus the families belong to.
+    :param Optional[Session] The database session to use for saving families.
     :return str: The new import_ids for the saved families.
     """
 
     if db is None:
         db = db_session.get_db()
 
+    validation.validate_families(family_data, corpus_import_id)
+
     family_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
+
     for fam in family_data:
-        validation.validate_family(fam, corpus_import_id)
         # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
         # collection.validate(collections, db)
-
         dto = IngestFamilyDTO(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
@@ -85,6 +87,7 @@ def save_families(
             db, dto, geography.get_id(db, dto.geography), org_id
         )
         family_import_ids.append(import_id)
+
     return family_import_ids
 
 
@@ -97,21 +100,23 @@ def save_documents(
     """
     Creates new documents with the values passed.
 
-    :param Session db: The database session to use for saving documents.
     :param list[dict] document_data: The data to use for creating documents.
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
+    :param Optional[Session] The database session to use for saving documents.
     :return str: The new import_ids for the saved documents.
     """
     if db is None:
         db = db_session.get_db()
 
-    document_import_ids = []
-    for doc in document_data:
-        validation.validate_document(doc, corpus_import_id)
+    validation.validate_documents(document_data, corpus_import_id)
 
+    document_import_ids = []
+
+    for doc in document_data:
         dto = IngestDocumentDTO(**doc).to_document_create_dto()
         import_id = document_repository.create(db, dto)
         document_import_ids.append(import_id)
+
     return document_import_ids
 
 
@@ -122,25 +127,25 @@ def save_events(
     db: Optional[Session] = None,
 ) -> list[str]:
     """
-    Creates new documents with the values passed.
+    Creates new events with the values passed.
 
-    :param Session db: The database session to use for saving documents.
-    :param list[dict] document_data: The data to use for creating documents.
-    :param str corpus_import_id: The import_id of the corpus the documents belong to.
-    :return str: The new import_ids for the saved documents.
+    :param list[dict] event_data: The data to use for creating events.
+    :param str corpus_import_id: The import_id of the corpus the events belong to.
+    :param Optional[Session] The database session to use for saving events.
+    :return str: The new import_ids for the saved events.
     """
     if db is None:
         db = db_session.get_db()
 
-    event_taxonomy = get_taxonomy_from_corpus(db, corpus_import_id)
+    validation.validate_events(event_data, corpus_import_id)
 
     event_import_ids = []
-    for ev in event_data:
-        validation.validate_event(ev, event_taxonomy)
 
+    for ev in event_data:
         dto = IngestEventDTO(**ev).to_event_create_dto()
         import_id = event_repository.create(db, dto)
         event_import_ids.append(import_id)
+
     return event_import_ids
 
 

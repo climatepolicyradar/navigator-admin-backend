@@ -9,7 +9,6 @@ from app.errors import RepositoryError, ValidationError
 def test_ingest_when_ok(
     corpus_repo_mock,
     geography_repo_mock,
-    db_client_metadata_mock,
     collection_repo_mock,
     family_repo_mock,
     document_repo_mock,
@@ -83,30 +82,23 @@ def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
     assert "bad collection repo" == e.value.message
 
 
-def test_save_families_when_corpus_invalid(corpus_repo_mock):
-    corpus_repo_mock.valid = False
+def test_save_families_when_corpus_invalid(corpus_repo_mock, validation_service_mock):
+    corpus_repo_mock.error = True
 
     test_data = [{"import_id": "test.new.family.0"}]
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_families(test_data, "test")
-    assert "Corpus 'test' not found" == e.value.message
+    assert "No organisation associated with corpus test" == e.value.message
 
 
-def test_save_families_when_data_invalid(
-    corpus_repo_mock, db_client_metadata_mock, geography_repo_mock
-):
-    geography_repo_mock.error = True
-    test_data = [
-        {
-            "import_id": "test.new.family.0",
-            "category": "Invalid",
-        },
-    ]
+def test_save_families_when_data_invalid(corpus_repo_mock, validation_service_mock):
+    validation_service_mock.throw_validation_error = True
+    test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_families(test_data, "test")
-    assert "Invalid is not a valid FamilyCategory" == e.value.message
+    assert "Error" == e.value.message
 
 
 # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
@@ -134,21 +126,14 @@ def test_save_families_when_data_invalid(
 #     assert e.value.message == expected_msg
 
 
-def test_save_documents_when_data_invalid():
-    test_data = [
-        {
-            "import_id": "test.new.document.0",
-            "family_import_id": "test.new.family.0",
-            "variant_name": "",
-            "metadata": {},
-            "title": "",
-            "user_language_name": "",
-        },
-    ]
+def test_save_documents_when_data_invalid(validation_service_mock):
+    validation_service_mock.throw_validation_error = True
+
+    test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_documents(test_data, "test")
-    assert "Variant name is empty" == e.value.message
+    assert "Error" == e.value.message
 
 
 def test_validate_entity_relationships_when_no_family_matching_document():
@@ -177,21 +162,11 @@ def test_save_documents_when_no_family():
     assert f"No family with id ['{fam_import_id}'] found" == e.value.message
 
 
-def test_save_events_when_data_invalid(db_client_metadata_mock):
-    invalid_event_type = "invalid"
-    test_data = [
-        {
-            "import_id": "test.new.event.0",
-            "family_import_id": "test.new.family.0",
-            "event_title": "Test",
-            "date": datetime.now(),
-            "event_type_value": invalid_event_type,
-        }
-    ]
+def test_save_events_when_data_invalid(validation_service_mock):
+    validation_service_mock.throw_validation_error = True
+
+    test_data = [{"import_id": "imvalid"}]
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_events(test_data, "test")
-    assert (
-        f"No allowed event types found for event {test_data[0]['import_id']}"
-        == e.value.message
-    )
+    assert "Error" == e.value.message

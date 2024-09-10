@@ -1,6 +1,6 @@
 from typing import Optional
 
-from db_client.functions.corpus_helpers import TaxonomyData
+from db_client.functions.corpus_helpers import TaxonomyData, get_taxonomy_from_corpus
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 
 import app.clients.db.session as db_session
@@ -16,6 +16,11 @@ def validate_collection(collection: dict) -> None:
     validate_import_id(collection["import_id"])
 
 
+def validate_collections(collections: list[dict]) -> None:
+    for coll in collections:
+        validate_collection(coll)
+
+
 def validate_family(family: dict, corpus_import_id: str) -> None:
     db = db_session.get_db()
 
@@ -25,6 +30,11 @@ def validate_family(family: dict, corpus_import_id: str) -> None:
     collections = set(family["collections"])
     collection.validate_multiple_ids(collections)
     metadata.validate_metadata(db, corpus_import_id, family["metadata"])
+
+
+def validate_families(families: list[dict], corpus_import_id: str) -> None:
+    for fam in families:
+        validate_family(fam, corpus_import_id)
 
 
 def validate_document(document: dict, corpus_import_id: str) -> None:
@@ -42,6 +52,11 @@ def validate_document(document: dict, corpus_import_id: str) -> None:
     )
 
 
+def validate_documents(documents: list[dict], corpus_import_id: str) -> None:
+    for doc in documents:
+        validate_document(doc, corpus_import_id)
+
+
 def validate_event(event: dict, taxonomy: Optional[TaxonomyData]) -> None:
     validate_import_id(event["import_id"])
     validate_import_id(event["family_import_id"])
@@ -55,3 +70,12 @@ def validate_event(event: dict, taxonomy: Optional[TaxonomyData]) -> None:
         and event["event_type_value"] not in allowed_event_types
     ):
         raise ValidationError(f"Event type ['{event['event_type_value']}'] is invalid!")
+
+
+def validate_events(events: list[dict], corpus_import_id: str) -> None:
+    db = db_session.get_db()
+
+    event_taxonomy = get_taxonomy_from_corpus(db, corpus_import_id)
+
+    for ev in events:
+        validate_event(ev, event_taxonomy)
