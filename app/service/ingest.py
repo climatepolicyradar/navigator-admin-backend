@@ -39,7 +39,7 @@ def save_collections(
 
     :param list[dict[str, Any]] collection_data: The data to use for creating collections.
     :param str corpus_import_id: The import_id of the corpus the collections belong to.
-    :param Optional[Session] The database session to use for saving collections or None.
+    :param Optional[Session] db: The database session to use for saving collections or None.
     :return list[str]: The new import_ids for the saved collections.
     """
     if db is None:
@@ -67,9 +67,9 @@ def save_families(
     """
     Creates new families with the values passed.
 
-    :param list[dict[str, Any]] families_data: The data to use for creating families.
+    :param list[dict[str, Any]] family_data: The data to use for creating families.
     :param str corpus_import_id: The import_id of the corpus the families belong to.
-    :param Optional[Session] The database session to use for saving families or None.
+    :param Optional[Session] db: The database session to use for saving families or None.
     :return list[str]: The new import_ids for the saved families.
     """
 
@@ -106,7 +106,7 @@ def save_documents(
 
     :param list[dict[str, Any]] document_data: The data to use for creating documents.
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
-    :param Optional[Session] The database session to use for saving documents or None.
+    :param Optional[Session] db: The database session to use for saving documents or None.
     :return list[str]: The new import_ids for the saved documents.
     """
     if db is None:
@@ -135,7 +135,7 @@ def save_events(
 
     :param list[dict[str, Any]] event_data: The data to use for creating events.
     :param str corpus_import_id: The import_id of the corpus the events belong to.
-    :param Optional[Session] The database session to use for saving events or None.
+    :param Optional[Session] db: The database session to use for saving events or None.
     :return list[str]: The new import_ids for the saved events.
     """
     if db is None:
