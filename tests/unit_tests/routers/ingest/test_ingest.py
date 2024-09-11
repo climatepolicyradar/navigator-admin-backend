@@ -6,10 +6,11 @@ This uses service mocks and ensures the endpoint calls into each service.
 
 import io
 import json
-import os
 
 from fastapi import status
 from fastapi.testclient import TestClient
+
+from tests.helpers.ingest import IngestJSONBuilder
 
 
 def test_ingest_when_not_authenticated(client: TestClient):
@@ -29,17 +30,26 @@ def test_ingest_data_when_ok(
     document_repo_mock,
     db_client_metadata_mock,
 ):
+    test_data_file = (
+        IngestJSONBuilder()
+        .with_collection()
+        .with_collection(import_id="test.new.collection.1")
+        .with_family()
+        .with_family(
+            import_id="test.new.family.1", collections=["test.new.collection.1"]
+        )
+        .with_document()
+        .with_document(
+            import_id="test.new.document.1", family_import_id="test.new.family.1"
+        )
+        .with_event()
+        .with_event(import_id="test.new.event.1", family_import_id="test.new.family.1")
+        .build()
+    )
 
     response = client.post(
         "/api/v1/ingest/test",
-        files={
-            "new_data": open(
-                os.path.join(
-                    "tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"
-                ),
-                "rb",
-            )
-        },
+        files={"new_data": test_data_file},
         headers=user_header_token,
     )
 
@@ -54,20 +64,7 @@ def test_ingest_data_when_ok(
 def test_ingest_when_data_invalid(
     client: TestClient, user_header_token, corpus_service_mock
 ):
-
-    invalid_import_id = "invalid"
-    test_data = json.dumps(
-        {
-            "collections": [
-                {
-                    "import_id": invalid_import_id,
-                    "title": "Test title",
-                    "description": "Test description",
-                },
-            ],
-        }
-    ).encode("utf-8")
-    test_data_file = io.BytesIO(test_data)
+    test_data_file = IngestJSONBuilder().with_collection(import_id="invalid").build()
 
     response = client.post(
         "/api/v1/ingest/test",
@@ -99,17 +96,17 @@ def test_ingest_data_when_db_error(
     client: TestClient, user_header_token, corpus_repo_mock, collection_repo_mock
 ):
     collection_repo_mock.throw_repository_error = True
-
+    test_data_file = (
+        IngestJSONBuilder()
+        .with_collection()
+        .with_family()
+        .with_document()
+        .with_event()
+        .build()
+    )
     response = client.post(
         "/api/v1/ingest/test",
-        files={
-            "new_data": open(
-                os.path.join(
-                    "tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"
-                ),
-                "rb",
-            )
-        },
+        files={"new_data": test_data_file},
         headers=user_header_token,
     )
 
