@@ -172,16 +172,15 @@ def create(db: Session, event: EventCreateDTO) -> str:
 
         family_import_id = new_family_event.family_import_id
 
-        # Generate the import_id for the new event
-        org = family_repo.get_organisation(db, cast(str, family_import_id))
-        if org is None:
-            raise ValidationError(
-                f"Cannot find counter to generate id for {family_import_id}"
-            )
-
-        org_name = cast(str, org.name)
-
         if not new_family_event.import_id:
+            # Generate the import_id for the new event
+            org = family_repo.get_organisation(db, cast(str, family_import_id))
+            if org is None:
+                raise ValidationError(
+                    f"Cannot find counter to generate id for {family_import_id}"
+                )
+
+            org_name = cast(str, org.name)
             new_family_event.import_id = cast(
                 Column, generate_import_id(db, CountedEntity.Event, org_name)
             )
