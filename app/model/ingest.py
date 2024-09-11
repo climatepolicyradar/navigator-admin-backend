@@ -94,7 +94,7 @@ class IngestDocumentDTO(BaseModel):
     metadata: Json
     title: str
     source_url: Optional[AnyHttpUrl] = None
-    user_language_name: Optional[str]
+    user_language_name: Optional[str] = None
 
     def to_document_create_dto(self) -> DocumentCreateDTO:
         """
