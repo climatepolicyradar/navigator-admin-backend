@@ -209,6 +209,7 @@ def test_get_template_unfcc(
                 "user_language_name": {
                     "anyOf": [{"type": "string"}, {"type": "null"}],
                     "title": "User Language Name",
+                    "default": None,
                 },
             }
         ],

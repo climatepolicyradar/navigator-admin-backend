@@ -109,6 +109,7 @@ def test_ingest_template_when_ok(
                 "user_language_name": {
                     "anyOf": [{"type": "string"}, {"type": "null"}],
                     "title": "User Language Name",
+                    "default": None,
                 },
             }
         ],
