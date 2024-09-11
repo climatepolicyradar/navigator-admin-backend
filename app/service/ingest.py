@@ -87,9 +87,10 @@ def save_families(
         dto = IngestFamilyDTO(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
-        import_id = family_repository.create(
-            db, dto, geography.get_id(db, dto.geography), org_id
-        )
+        geo_ids = []
+        for geo in dto.geography:
+            geo_ids.append(geography.get_id(db, geo))
+        import_id = family_repository.create(db, dto, geo_ids, org_id)
         family_import_ids.append(import_id)
 
     return family_import_ids

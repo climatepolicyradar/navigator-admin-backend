@@ -28,7 +28,7 @@ def test_ingest_when_ok(
                 "import_id": "test.new.family.0",
                 "title": "Test",
                 "summary": "Test",
-                "geography": "Test",
+                "geographies": ["Test"],
                 "category": "UNFCCC",
                 "metadata": {"color": ["blue"], "size": [""]},
                 "collections": ["test.new.collection.0"],
