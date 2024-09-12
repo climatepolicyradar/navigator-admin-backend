@@ -38,7 +38,11 @@ def test_ingest_template_when_ok(
                 "import_id": {"title": "Import Id", "type": "string"},
                 "title": {"title": "Title", "type": "string"},
                 "summary": {"title": "Summary", "type": "string"},
-                "geography": {"title": "Geography", "type": "string"},
+                "geographies": {
+                    "items": {"type": "string"},
+                    "title": "Geographies",
+                    "type": "array",
+                },
                 "category": {"title": "Category", "type": "string"},
                 "metadata": {
                     "test": {
@@ -109,6 +113,7 @@ def test_ingest_template_when_ok(
                 "user_language_name": {
                     "anyOf": [{"type": "string"}, {"type": "null"}],
                     "title": "User Language Name",
+                    "default": None,
                 },
             }
         ],

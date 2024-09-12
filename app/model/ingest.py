@@ -36,7 +36,7 @@ class IngestFamilyDTO(BaseModel):
     import_id: str
     title: str
     summary: str
-    geography: str
+    geographies: list[str]
     category: str
     metadata: Json
     collections: list[str]
@@ -52,7 +52,7 @@ class IngestFamilyDTO(BaseModel):
             import_id=self.import_id,
             title=self.title,
             summary=self.summary,
-            geography=self.geography,
+            geography=self.geographies,
             category=self.category,
             metadata=self.metadata,
             collections=self.collections,
@@ -94,7 +94,7 @@ class IngestDocumentDTO(BaseModel):
     metadata: Json
     title: str
     source_url: Optional[AnyHttpUrl] = None
-    user_language_name: Optional[str]
+    user_language_name: Optional[str] = None
 
     def to_document_create_dto(self) -> DocumentCreateDTO:
         """

@@ -355,7 +355,9 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
     return True
 
 
-def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> str:
+def create(
+    db: Session, family: FamilyCreateDTO, geo_ids: list[int], org_id: int
+) -> str:
     """
     Creates a new family.
 
@@ -379,7 +381,8 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
         db.add(new_family)
 
         # TODO: PDCT-1406: Properly implement multi-geography support
-        db.add(FamilyGeography(family_import_id=import_id, geography_id=geo_id))
+        for geo_id in geo_ids:
+            db.add(FamilyGeography(family_import_id=import_id, geography_id=geo_id))
 
         # Add corpus - family link.
         db.add(

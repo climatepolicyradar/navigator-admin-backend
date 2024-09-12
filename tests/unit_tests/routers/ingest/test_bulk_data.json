@@ -16,7 +16,7 @@
       "import_id": "test.new.family.0",
       "title": "Test",
       "summary": "Test",
-      "geography": "Test",
+      "geographies": ["Test"],
       "category": "UNFCCC",
       "metadata": {
         "color": ["blue"],
@@ -28,7 +28,7 @@
       "import_id": "test.new.family.1",
       "title": "Test",
       "summary": "Test",
-      "geography": "Test",
+      "geographies": ["Test"],
       "category": "UNFCCC",
       "metadata": {
         "color": ["pink"],
