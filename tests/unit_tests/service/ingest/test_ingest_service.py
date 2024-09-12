@@ -160,6 +160,17 @@ def test_validate_entity_relationships_when_no_family_matching_event():
     assert f"No family with id {fam_import_id} found for event" == e.value.message
 
 
+def test_validate_entity_relationships_when_no_collection_matching_family():
+    coll_import_id = "test.new.collection.0"
+    test_data = {
+        "families": [{"import_id": "test.new.event.0", "collections": [coll_import_id]}]
+    }
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.validate_entity_relationships(test_data)
+    assert f"No collection with id {coll_import_id} found for family" == e.value.message
+
+
 def test_save_documents_when_no_family():
     fam_import_id = "test.new.family.0"
     test_data = {

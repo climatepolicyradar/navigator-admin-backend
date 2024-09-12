@@ -162,10 +162,17 @@ def validate_entity_relationships(data: dict[str, Any]) -> None:
     :param dict[str, Any] data: The data object containing entities to be validated.
     :raises ValidationError: raised should there be any unmatched relationships.
     """
+    collections = []
+    if "collections" in data:
+        for coll in data["collections"]:
+            collections.append(coll["import_id"])
+
     families = []
+    family_collection_import_ids = []
     if "families" in data:
         for fam in data["families"]:
             families.append(fam["import_id"])
+            family_collection_import_ids.extend(fam["collections"])
 
     document_family_import_ids = []
     if "documents" in data:
@@ -176,6 +183,11 @@ def validate_entity_relationships(data: dict[str, Any]) -> None:
     if "events" in data:
         for event in data["events"]:
             event_family_import_ids.append(event["family_import_id"])
+
+    collections_set = set(collections)
+    for fam_coll in family_collection_import_ids:
+        if fam_coll not in collections_set:
+            raise ValidationError(f"No collection with id {fam_coll} found for family")
 
     families_set = set(families)
     for doc_fam in document_family_import_ids:
