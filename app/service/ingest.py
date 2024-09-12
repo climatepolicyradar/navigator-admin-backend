@@ -167,15 +167,24 @@ def validate_entity_relationships(data: dict[str, Any]) -> None:
         for fam in data["families"]:
             families.append(fam["import_id"])
 
-    documents = []
+    document_family_import_ids = []
     if "documents" in data:
-        for doc in data["documents"]:
-            documents.append(doc["family_import_id"])
+        for entity in data["documents"]:
+            document_family_import_ids.append(entity["family_import_id"])
 
-    family_document_set = set(families)
-    unmatched = [x for x in documents if x not in family_document_set]
-    if unmatched:
-        raise ValidationError(f"No family with id {unmatched} found")
+    event_family_import_ids = []
+    if "events" in data:
+        for event in data["events"]:
+            event_family_import_ids.append(event["family_import_id"])
+
+    families_set = set(families)
+    for doc_fam in document_family_import_ids:
+        if doc_fam not in families_set:
+            raise ValidationError(f"No family with id {doc_fam} found for document")
+
+    for event_fam in event_family_import_ids:
+        if event_fam not in families_set:
+            raise ValidationError(f"No family with id {event_fam} found for event")
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

@@ -404,16 +404,17 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
         # Update the FamilyDocument with the new PhysicalDocument id
         family_doc.physical_document_id = phys_doc.id
 
-        # Generate the import_id for the new document
-        org = family_repo.get_organisation(db, cast(str, family_doc.family_import_id))
-        if org is None:
-            raise ValidationError(
-                f"Cannot find counter to generate id for {family_doc.family_import_id}"
-            )
-
-        org_name = cast(str, org.name)
-
         if not family_doc.import_id:
+            org = family_repo.get_organisation(
+                db, cast(str, family_doc.family_import_id)
+            )
+            if org is None:
+                raise ValidationError(
+                    f"Cannot find counter to generate id for {family_doc.family_import_id}"
+                )
+            org_name = cast(str, org.name)
+
+            # Generate the import_id for the new document
             family_doc.import_id = cast(
                 Column, generate_import_id(db, CountedEntity.Document, org_name)
             )
