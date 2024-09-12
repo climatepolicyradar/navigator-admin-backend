@@ -1,7 +1,7 @@
 import json
 import logging
 from io import BytesIO
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 
@@ -33,7 +33,7 @@ class IngestJSONBuilder(BaseModel):
         import_id: str = "test.new.family.0",
         title: str = "Test",
         summary: str = "Test",
-        geographies: str = "South Asia",
+        geographies: list[str] = ["South Asia"],
         category: str = "UNFCCC",
         metadata: dict[str, Any] = {"author_type": ["Non-Party"], "author": ["Test"]},
         collections: list[str] = ["test.new.collection.0"],
@@ -45,7 +45,7 @@ class IngestJSONBuilder(BaseModel):
                 "import_id": import_id,
                 "title": title,
                 "summary": summary,
-                "geography": geographies,
+                "geographies": geographies,
                 "category": category,
                 "metadata": metadata,
                 "collections": collections,
@@ -58,7 +58,7 @@ class IngestJSONBuilder(BaseModel):
         import_id: str = "test.new.document.0",
         family_import_id: str = "test.new.family.0",
         metadata: dict[str, Any] = {"role": ["MAIN"], "type": ["Law"]},
-        variant_name: str = "Original Language",
+        variant_name: Optional[str] = None,
         title: str = "",
         user_language_name: str = "",
     ) -> "IngestJSONBuilder":
@@ -86,7 +86,7 @@ class IngestJSONBuilder(BaseModel):
     ) -> "IngestJSONBuilder":
         """Add a document to the JSON data."""
 
-        self.data.setdefault("documents", []).append(
+        self.data.setdefault("events", []).append(
             {
                 "import_id": import_id,
                 "family_import_id": family_import_id,
