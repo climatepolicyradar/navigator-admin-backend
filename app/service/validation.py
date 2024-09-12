@@ -73,6 +73,7 @@ def validate_document(document: dict[str, Any], corpus_import_id: str) -> None:
 
     validate_import_id(document["import_id"])
     validate_import_id(document["family_import_id"])
+    print(">>>>>>>>>>>>>>>>", document["variant_name"])
     if document["variant_name"] == "":
         raise ValidationError("Variant name is empty")
     metadata.validate_metadata(
