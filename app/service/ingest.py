@@ -28,6 +28,8 @@ from app.model.ingest import (
     IngestFamilyDTO,
 )
 
+DOCUMENT_INGEST_LIMIT = 1000
+
 
 class IngestEntityList(str, Enum):
     """Name of the list of entities that can be ingested."""
@@ -124,11 +126,14 @@ def save_documents(
     validation.validate_documents(document_data, corpus_import_id)
 
     document_import_ids = []
+    saved_documents_counter = 0
 
     for doc in document_data:
-        dto = IngestDocumentDTO(**doc).to_document_create_dto()
-        import_id = document_repository.create(db, dto)
-        document_import_ids.append(import_id)
+        if saved_documents_counter < DOCUMENT_INGEST_LIMIT:
+            dto = IngestDocumentDTO(**doc).to_document_create_dto()
+            import_id = document_repository.create(db, dto)
+            document_import_ids.append(import_id)
+            saved_documents_counter += 1
 
     return document_import_ids
 

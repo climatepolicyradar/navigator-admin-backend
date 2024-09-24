@@ -58,8 +58,8 @@ def test_ingest_when_ok(
 
     assert {
         "collections": ["test.new.collection.0"],
-        "families": ["created"],
-        "documents": ["test.new.doc.0"],
+        "families": ["test.new.family.0"],
+        "documents": ["test.new.document.0"],
         "events": ["test.new.event.0"],
     } == ingest_service.import_data(test_data, "test")
 
@@ -111,7 +111,37 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     assert "Error" == e.value.message
 
 
-def test_save_documents_when_no_family():
+def test_do_not_save_documents_over_ingest_limit(
+    validation_service_mock, document_repo_mock, monkeypatch
+):
+    monkeypatch.setattr(ingest_service, "DOCUMENT_INGEST_LIMIT", 1)
+
+    test_data = [
+        {
+            "import_id": "test.new.document.0",
+            "family_import_id": "test.new.family.0",
+            "variant_name": "Original Language",
+            "metadata": {"color": ["blue"]},
+            "title": "",
+            "source_url": None,
+            "user_language_name": "",
+        },
+        {
+            "import_id": "test.new.document.1",
+            "family_import_id": "test.new.family.1",
+            "variant_name": "Original Language",
+            "metadata": {"color": ["blue"]},
+            "title": "",
+            "source_url": None,
+            "user_language_name": "",
+        },
+    ]
+
+    saved_documents = ingest_service.save_documents(test_data, "test")
+    assert ["test.new.document.0"] == saved_documents
+
+
+def test_ingest_documents_when_no_family():
     fam_import_id = "test.new.family.0"
     test_data = {
         "documents": [
