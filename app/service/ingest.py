@@ -92,8 +92,6 @@ def save_families(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for fam in family_data:
-        # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
-        # collection.validate(collections, db)
         dto = IngestFamilyDTO(
             **fam, corpus_import_id=corpus_import_id
         ).to_family_create_dto(corpus_import_id)
