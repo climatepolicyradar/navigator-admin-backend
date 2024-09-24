@@ -111,6 +111,29 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     assert "Error" == e.value.message
 
 
+def test_save_documents_when_no_family():
+    fam_import_id = "test.new.family.0"
+    test_data = {
+        "documents": [
+            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
+        ]
+    }
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.import_data(test_data, "test")
+    assert f"No entity with id {fam_import_id} found" == e.value.message
+
+
+def test_save_events_when_data_invalid(validation_service_mock):
+    validation_service_mock.throw_validation_error = True
+
+    test_data = [{"import_id": "invalid"}]
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.save_events(test_data, "test")
+    assert "Error" == e.value.message
+
+
 def test_validate_entity_relationships_when_no_family_matching_document():
     fam_import_id = "test.new.family.0"
     test_data = {
@@ -144,26 +167,3 @@ def test_validate_entity_relationships_when_no_collection_matching_family():
     with pytest.raises(ValidationError) as e:
         ingest_service.validate_entity_relationships(test_data)
     assert f"No entity with id {coll_import_id} found" == e.value.message
-
-
-def test_save_documents_when_no_family():
-    fam_import_id = "test.new.family.0"
-    test_data = {
-        "documents": [
-            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
-        ]
-    }
-
-    with pytest.raises(ValidationError) as e:
-        ingest_service.import_data(test_data, "test")
-    assert f"No entity with id {fam_import_id} found" == e.value.message
-
-
-def test_save_events_when_data_invalid(validation_service_mock):
-    validation_service_mock.throw_validation_error = True
-
-    test_data = [{"import_id": "imvalid"}]
-
-    with pytest.raises(ValidationError) as e:
-        ingest_service.save_events(test_data, "test")
-    assert "Error" == e.value.message
