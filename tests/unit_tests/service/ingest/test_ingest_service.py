@@ -146,7 +146,7 @@ def test_validate_entity_relationships_when_no_family_matching_document():
 
     with pytest.raises(ValidationError) as e:
         ingest_service.validate_entity_relationships(test_data)
-    assert f"No family with id {fam_import_id} found for document" == e.value.message
+    assert f"No entity with id {fam_import_id} found" == e.value.message
 
 
 def test_validate_entity_relationships_when_no_family_matching_event():
@@ -157,7 +157,18 @@ def test_validate_entity_relationships_when_no_family_matching_event():
 
     with pytest.raises(ValidationError) as e:
         ingest_service.validate_entity_relationships(test_data)
-    assert f"No family with id {fam_import_id} found for event" == e.value.message
+    assert f"No entity with id {fam_import_id} found" == e.value.message
+
+
+def test_validate_entity_relationships_when_no_collection_matching_family():
+    coll_import_id = "test.new.collection.0"
+    test_data = {
+        "families": [{"import_id": "test.new.event.0", "collections": [coll_import_id]}]
+    }
+
+    with pytest.raises(ValidationError) as e:
+        ingest_service.validate_entity_relationships(test_data)
+    assert f"No entity with id {coll_import_id} found" == e.value.message
 
 
 def test_save_documents_when_no_family():
@@ -170,7 +181,7 @@ def test_save_documents_when_no_family():
 
     with pytest.raises(ValidationError) as e:
         ingest_service.import_data(test_data, "test")
-    assert f"No family with id {fam_import_id} found for document" == e.value.message
+    assert f"No entity with id {fam_import_id} found" == e.value.message
 
 
 def test_save_events_when_data_invalid(validation_service_mock):

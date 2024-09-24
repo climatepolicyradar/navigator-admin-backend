@@ -5,6 +5,7 @@ This layer uses the corpus, collection, family, document and event repos to hand
 import of data and other services for validation etc.
 """
 
+from enum import Enum
 from typing import Any, Optional
 
 from fastapi import HTTPException, status
@@ -26,6 +27,15 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
+
+
+class IngestEntityList(str, Enum):
+    """Name of the list of entities that can be ingested."""
+
+    Collections = "collections"
+    Families = "families"
+    Documents = "documents"
+    Events = "events"
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -154,37 +164,90 @@ def save_events(
     return event_import_ids
 
 
+def _collect_import_ids(
+    entity_list_name: IngestEntityList,
+    data: dict[str, Any],
+    import_id_type_name: Optional[str] = None,
+) -> list[str]:
+    """
+    Extracts a list of import_ids (or family_import_ids if specified) for the specified entity list in data.
+
+    :param IngestEntityList entity_list_name: The name of the entity list from which the import_ids are to be extracted.
+    :param dict[str, Any] data: The data structure containing the entity lists used for extraction.
+    :param Optional[str] import_id_type_name: the name of the type of import_id to be extracted or None.
+    :return list[str]: A list of extracted import_ids for the specified entity list.
+    """
+    import_id_key = import_id_type_name or "import_id"
+    import_ids = []
+    if entity_list_name.value in data:
+        for entity in data[entity_list_name.value]:
+            import_ids.append(entity[import_id_key])
+    return import_ids
+
+
+def _match_import_ids(
+    parent_references: list[str], parent_import_ids: set[str]
+) -> None:
+    """
+    Validates that all the references to parent entities exist in the set of parent import_ids passed in
+
+    :param list[str] parent_references: List of import_ids referencing parent entities to be validated.
+    :param set[str] parent_import_ids: Set of parent import_ids to validate against.
+    :raises ValidationError: raised if a parent reference is not found in the parent_import_ids.
+    """
+    for id in parent_references:
+        if id not in parent_import_ids:
+            raise ValidationError(f"No entity with id {id} found")
+
+
+def _validate_collections_exist_for_families(data: dict[str, Any]) -> None:
+    """
+    Validates that collections the families are linked to exist based on import_id links in data.
+
+    :param dict[str, Any] data: The data object containing entities to be validated.
+    """
+    collections = _collect_import_ids(IngestEntityList.Collections, data)
+    collections_set = set(collections)
+
+    family_collection_import_ids = []
+    if "families" in data:
+        for fam in data["families"]:
+            family_collection_import_ids.extend(fam["collections"])
+
+    _match_import_ids(family_collection_import_ids, collections_set)
+
+
+def _validate_families_exist_for_events_and_documents(data: dict[str, Any]) -> None:
+    """
+    Validates that families the documents and events are linked to exist
+    based on import_id links in data.
+
+    :param dict[str, Any] data: The data object containing entities to be validated.
+    """
+    families = _collect_import_ids(IngestEntityList.Families, data)
+    families_set = set(families)
+
+    document_family_import_ids = _collect_import_ids(
+        IngestEntityList.Documents, data, "family_import_id"
+    )
+    event_family_import_ids = _collect_import_ids(
+        IngestEntityList.Events, data, "family_import_id"
+    )
+
+    _match_import_ids(document_family_import_ids, families_set)
+    _match_import_ids(event_family_import_ids, families_set)
+
+
 def validate_entity_relationships(data: dict[str, Any]) -> None:
     """
-    Validates relationships between entities contained in data based on import_ids.
+    Validates relationships between entities contained in data.
     For documents, it validates that the family the document is linked to exists.
 
     :param dict[str, Any] data: The data object containing entities to be validated.
-    :raises ValidationError: raised should there be any unmatched relationships.
     """
-    families = []
-    if "families" in data:
-        for fam in data["families"]:
-            families.append(fam["import_id"])
 
-    document_family_import_ids = []
-    if "documents" in data:
-        for entity in data["documents"]:
-            document_family_import_ids.append(entity["family_import_id"])
-
-    event_family_import_ids = []
-    if "events" in data:
-        for event in data["events"]:
-            event_family_import_ids.append(event["family_import_id"])
-
-    families_set = set(families)
-    for doc_fam in document_family_import_ids:
-        if doc_fam not in families_set:
-            raise ValidationError(f"No family with id {doc_fam} found for document")
-
-    for event_fam in event_family_import_ids:
-        if event_fam not in families_set:
-            raise ValidationError(f"No family with id {event_fam} found for event")
+    _validate_collections_exist_for_families(data)
+    _validate_families_exist_for_events_and_documents(data)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
