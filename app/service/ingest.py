@@ -8,6 +8,7 @@ import of data and other services for validation etc.
 from enum import Enum
 from typing import Any, Optional
 
+from db_client.models.dfce.family import Family, FamilyDocument
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.orm import Session
@@ -70,6 +71,18 @@ def save_collections(
     return collection_import_ids
 
 
+def family_exists_in_db(db, import_id):
+    return db.query(Family).filter(Family.import_id == import_id).one_or_none()
+
+
+def document_exists_in_db(db, import_id):
+    return (
+        db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == import_id)
+        .one_or_none()
+    )
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def save_families(
     family_data: list[dict[str, Any]],
@@ -94,14 +107,15 @@ def save_families(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for fam in family_data:
-        dto = IngestFamilyDTO(
-            **fam, corpus_import_id=corpus_import_id
-        ).to_family_create_dto(corpus_import_id)
-        geo_ids = []
-        for geo in dto.geography:
-            geo_ids.append(geography.get_id(db, geo))
-        import_id = family_repository.create(db, dto, geo_ids, org_id)
-        family_import_ids.append(import_id)
+        if not family_exists_in_db(db, fam["import_id"]):
+            dto = IngestFamilyDTO(
+                **fam, corpus_import_id=corpus_import_id
+            ).to_family_create_dto(corpus_import_id)
+            geo_ids = []
+            for geo in dto.geography:
+                geo_ids.append(geography.get_id(db, geo))
+            import_id = family_repository.create(db, dto, geo_ids, org_id)
+            family_import_ids.append(import_id)
 
     return family_import_ids
 
@@ -129,7 +143,10 @@ def save_documents(
     saved_documents_counter = 0
 
     for doc in document_data:
-        if saved_documents_counter < DOCUMENT_INGEST_LIMIT:
+        if (
+            not document_exists_in_db(db, doc["import_id"])
+            and saved_documents_counter < DOCUMENT_INGEST_LIMIT
+        ):
             dto = IngestDocumentDTO(**doc).to_document_create_dto()
             import_id = document_repository.create(db, dto)
             document_import_ids.append(import_id)

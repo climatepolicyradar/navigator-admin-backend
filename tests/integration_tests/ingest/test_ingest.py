@@ -1,3 +1,5 @@
+import io
+import json
 import os
 
 from db_client.models.dfce import FamilyEvent
@@ -106,6 +108,54 @@ def test_ingest_rollback(
         .one_or_none()
     )
     assert actual_collection is None
+
+
+def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_token):
+    test_data = {
+        "families": [
+            {
+                "import_id": "test.new.family.0",
+                "title": "Test",
+                "summary": "Test",
+                "geographies": ["South Asia"],
+                "category": "UNFCCC",
+                "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
+                "collections": [],
+            }
+        ],
+        "documents": [
+            {
+                "import_id": f"test.new.document.{i}",
+                "family_import_id": "test.new.family.0",
+                "metadata": {"role": ["MAIN"], "type": ["Law"]},
+                "variant_name": "Original Language",
+                "title": f"Document{i}",
+                "user_language_name": "",
+            }
+            for i in range(1001)
+        ],
+    }
+
+    test_json = json.dumps(test_data).encode("utf-8")
+    test_data_file = io.BytesIO(test_json)
+
+    response = client.post(
+        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        files={"new_data": test_data_file},
+        headers=user_header_token,
+    )
+
+    assert ["test.new.family.0"] == response.json()["families"]
+    assert "test.new.document.1000" not in response.json()["documents"]
+
+    response = client.post(
+        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        files={"new_data": test_data_file},
+        headers=user_header_token,
+    )
+
+    assert not response.json()["families"]
+    assert ["test.new.document.1000"] == response.json()["documents"]
 
 
 def test_ingest_when_corpus_import_id_invalid(
