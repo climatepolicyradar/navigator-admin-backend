@@ -71,16 +71,32 @@ def save_collections(
     return collection_import_ids
 
 
-def family_exists_in_db(db, import_id):
-    return db.query(Family).filter(Family.import_id == import_id).one_or_none()
+def _family_exists_in_db(db: Session, import_id: str) -> bool:
+    """
+    Check if a family exists in the database by import_id.
+
+    :param Session db: The database session.
+    :param str import_id: The import_id of the family.
+    :return bool: True if the family exists, False otherwise.
+    """
+    family_exists = db.query(Family).filter(Family.import_id == import_id).one_or_none()
+    return family_exists is not None
 
 
-def document_exists_in_db(db, import_id):
-    return (
+def _document_exists_in_db(db: Session, import_id: str) -> bool:
+    """
+    Check if a document exists in the database by import_id.
+
+    :param Session db: The database session.
+    :param str import_id: The import_id of the document.
+    :return bool: True if the document exists, False otherwise.
+    """
+    document_exists = (
         db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == import_id)
         .one_or_none()
     )
+    return document_exists is not None
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -107,7 +123,7 @@ def save_families(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for fam in family_data:
-        if not family_exists_in_db(db, fam["import_id"]):
+        if not _family_exists_in_db(db, fam["import_id"]):
             dto = IngestFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
@@ -144,7 +160,7 @@ def save_documents(
 
     for doc in document_data:
         if (
-            not document_exists_in_db(db, doc["import_id"])
+            not _document_exists_in_db(db, doc["import_id"])
             and saved_documents_counter < DOCUMENT_INGEST_LIMIT
         ):
             dto = IngestDocumentDTO(**doc).to_document_create_dto()
