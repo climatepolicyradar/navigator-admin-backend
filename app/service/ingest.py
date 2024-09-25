@@ -8,7 +8,7 @@ import of data and other services for validation etc.
 from enum import Enum
 from typing import Any, Optional
 
-from db_client.models.dfce.family import Family, FamilyDocument
+from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.orm import Session
@@ -97,6 +97,20 @@ def _document_exists_in_db(db: Session, import_id: str) -> bool:
         .one_or_none()
     )
     return document_exists is not None
+
+
+def _event_exists_in_db(db: Session, import_id: str) -> bool:
+    """
+    Check if a event exists in the database by import_id.
+
+    :param Session db: The database session.
+    :param str import_id: The import_id of the event.
+    :return bool: True if the document exists, False otherwise.
+    """
+    event_exists = (
+        db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
+    )
+    return event_exists is not None
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -193,9 +207,10 @@ def save_events(
     event_import_ids = []
 
     for event in event_data:
-        dto = IngestEventDTO(**event).to_event_create_dto()
-        import_id = event_repository.create(db, dto)
-        event_import_ids.append(import_id)
+        if not _event_exists_in_db(db, event["import_id"]):
+            dto = IngestEventDTO(**event).to_event_create_dto()
+            import_id = event_repository.create(db, dto)
+            event_import_ids.append(import_id)
 
     return event_import_ids
 

@@ -111,10 +111,12 @@ def test_ingest_rollback(
 
 
 def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_token):
+    family_import_id = "test.new.family.0"
+    event_import_id = "test.new.event.0"
     test_data = {
         "families": [
             {
-                "import_id": "test.new.family.0",
+                "import_id": family_import_id,
                 "title": "Test",
                 "summary": "Test",
                 "geographies": ["South Asia"],
@@ -126,13 +128,22 @@ def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_to
         "documents": [
             {
                 "import_id": f"test.new.document.{i}",
-                "family_import_id": "test.new.family.0",
+                "family_import_id": family_import_id,
                 "metadata": {"role": ["MAIN"], "type": ["Law"]},
                 "variant_name": "Original Language",
                 "title": f"Document{i}",
                 "user_language_name": "",
             }
             for i in range(1001)
+        ],
+        "events": [
+            {
+                "import_id": event_import_id,
+                "family_import_id": family_import_id,
+                "event_title": "Test",
+                "date": "2024-01-01",
+                "event_type_value": "Amended",
+            }
         ],
     }
 
@@ -145,7 +156,8 @@ def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_to
         headers=user_header_token,
     )
 
-    assert ["test.new.family.0"] == response.json()["families"]
+    assert [family_import_id] == response.json()["families"]
+    assert [event_import_id] == response.json()["events"]
     assert "test.new.document.1000" not in response.json()["documents"]
 
     response = client.post(
@@ -155,6 +167,7 @@ def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_to
     )
 
     assert not response.json()["families"]
+    assert not response.json()["events"]
     assert ["test.new.document.1000"] == response.json()["documents"]
 
 
