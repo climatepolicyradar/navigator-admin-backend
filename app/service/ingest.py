@@ -6,12 +6,13 @@ import of data and other services for validation etc.
 """
 
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Type, TypeVar
 
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
+from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -42,60 +43,24 @@ class IngestEntityList(str, Enum):
     Events = "events"
 
 
-def _collection_exists_in_db(db: Session, import_id: str) -> bool:
-    """
-    Check if a collection exists in the database by import_id.
+class BaseModel(DeclarativeMeta):
+    import_id: str
 
+
+T = TypeVar("T", bound=BaseModel)
+
+
+def _exists_in_db(entity: Type[T], import_id: str, db: Session) -> bool:
+    """
+    Check if a entity exists in the database by import_id.
+
+    :param Type[T] entity: The model of the entity to be looked up in the db.
+    :param str import_id: The import_id of the entity.
     :param Session db: The database session.
-    :param str import_id: The import_id of the collection.
-    :return bool: True if the collection exists, False otherwise.
+    :return bool: True if the entity exists, False otherwise.
     """
-    collection_exists = (
-        db.query(Collection).filter(Collection.import_id == import_id).one_or_none()
-    )
-    return collection_exists is not None
-
-
-def _family_exists_in_db(db: Session, import_id: str) -> bool:
-    """
-    Check if a family exists in the database by import_id.
-
-    :param Session db: The database session.
-    :param str import_id: The import_id of the family.
-    :return bool: True if the family exists, False otherwise.
-    """
-    family_exists = db.query(Family).filter(Family.import_id == import_id).one_or_none()
-    return family_exists is not None
-
-
-def _document_exists_in_db(db: Session, import_id: str) -> bool:
-    """
-    Check if a document exists in the database by import_id.
-
-    :param Session db: The database session.
-    :param str import_id: The import_id of the document.
-    :return bool: True if the document exists, False otherwise.
-    """
-    document_exists = (
-        db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == import_id)
-        .one_or_none()
-    )
-    return document_exists is not None
-
-
-def _event_exists_in_db(db: Session, import_id: str) -> bool:
-    """
-    Check if a event exists in the database by import_id.
-
-    :param Session db: The database session.
-    :param str import_id: The import_id of the event.
-    :return bool: True if the document exists, False otherwise.
-    """
-    event_exists = (
-        db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
-    )
-    return event_exists is not None
+    entity_exists = db.query(entity).filter(entity.import_id == import_id).one_or_none()
+    return entity_exists is not None
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -121,7 +86,7 @@ def save_collections(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for coll in collection_data:
-        if not _collection_exists_in_db(db, coll["import_id"]):
+        if not _exists_in_db(Collection, coll["import_id"], db):
             dto = IngestCollectionDTO(**coll).to_collection_create_dto()
             import_id = collection_repository.create(db, dto, org_id)
             collection_import_ids.append(import_id)
@@ -153,7 +118,7 @@ def save_families(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for fam in family_data:
-        if not _family_exists_in_db(db, fam["import_id"]):
+        if not _exists_in_db(Family, fam["import_id"], db):
             dto = IngestFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
@@ -190,7 +155,7 @@ def save_documents(
 
     for doc in document_data:
         if (
-            not _document_exists_in_db(db, doc["import_id"])
+            not _exists_in_db(FamilyDocument, doc["import_id"], db)
             and saved_documents_counter < DOCUMENT_INGEST_LIMIT
         ):
             dto = IngestDocumentDTO(**doc).to_document_create_dto()
@@ -223,7 +188,7 @@ def save_events(
     event_import_ids = []
 
     for event in event_data:
-        if not _event_exists_in_db(db, event["import_id"]):
+        if not _exists_in_db(FamilyEvent, event["import_id"], db):
             dto = IngestEventDTO(**event).to_event_create_dto()
             import_id = event_repository.create(db, dto)
             event_import_ids.append(import_id)
