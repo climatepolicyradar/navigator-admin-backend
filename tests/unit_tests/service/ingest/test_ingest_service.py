@@ -1,4 +1,5 @@
 from datetime import datetime
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -6,6 +7,7 @@ import app.service.ingest as ingest_service
 from app.errors import RepositoryError, ValidationError
 
 
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_ingest_when_ok(
     corpus_repo_mock,
     geography_repo_mock,
@@ -64,6 +66,7 @@ def test_ingest_when_ok(
     } == ingest_service.import_data(test_data, "test")
 
 
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
     collection_repo_mock.throw_repository_error = True
 
@@ -111,6 +114,7 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     assert "Error" == e.value.message
 
 
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_do_not_save_documents_over_ingest_limit(
     validation_service_mock, document_repo_mock, monkeypatch
 ):

@@ -7,6 +7,7 @@ This uses service mocks and ensures the endpoint calls into each service.
 import io
 import json
 import os
+from unittest.mock import Mock, patch
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -19,6 +20,7 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_ingest_data_when_ok(
     client: TestClient,
     user_header_token,
@@ -95,8 +97,12 @@ def test_ingest_when_no_data(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_ingest_data_when_db_error(
-    client: TestClient, user_header_token, corpus_repo_mock, collection_repo_mock
+    client: TestClient,
+    user_header_token,
+    corpus_repo_mock,
+    collection_repo_mock,
 ):
     collection_repo_mock.throw_repository_error = True
 
