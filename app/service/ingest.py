@@ -8,6 +8,7 @@ import of data and other services for validation etc.
 from enum import Enum
 from typing import Any, Optional
 
+from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
@@ -41,34 +42,18 @@ class IngestEntityList(str, Enum):
     Events = "events"
 
 
-@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def save_collections(
-    collection_data: list[dict[str, Any]],
-    corpus_import_id: str,
-    db: Optional[Session] = None,
-) -> list[str]:
+def _collection_exists_in_db(db: Session, import_id: str) -> bool:
     """
-    Creates new collections with the values passed.
+    Check if a collection exists in the database by import_id.
 
-    :param list[dict[str, Any]] collection_data: The data to use for creating collections.
-    :param str corpus_import_id: The import_id of the corpus the collections belong to.
-    :param Optional[Session] db: The database session to use for saving collections or None.
-    :return list[str]: The new import_ids for the saved collections.
+    :param Session db: The database session.
+    :param str import_id: The import_id of the collection.
+    :return bool: True if the collection exists, False otherwise.
     """
-    if db is None:
-        db = db_session.get_db()
-
-    validation.validate_collections(collection_data)
-
-    collection_import_ids = []
-    org_id = corpus.get_corpus_org_id(corpus_import_id)
-
-    for coll in collection_data:
-        dto = IngestCollectionDTO(**coll).to_collection_create_dto()
-        import_id = collection_repository.create(db, dto, org_id)
-        collection_import_ids.append(import_id)
-
-    return collection_import_ids
+    collection_exists = (
+        db.query(Collection).filter(Collection.import_id == import_id).one_or_none()
+    )
+    return collection_exists is not None
 
 
 def _family_exists_in_db(db: Session, import_id: str) -> bool:
@@ -111,6 +96,37 @@ def _event_exists_in_db(db: Session, import_id: str) -> bool:
         db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
     )
     return event_exists is not None
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def save_collections(
+    collection_data: list[dict[str, Any]],
+    corpus_import_id: str,
+    db: Optional[Session] = None,
+) -> list[str]:
+    """
+    Creates new collections with the values passed.
+
+    :param list[dict[str, Any]] collection_data: The data to use for creating collections.
+    :param str corpus_import_id: The import_id of the corpus the collections belong to.
+    :param Optional[Session] db: The database session to use for saving collections or None.
+    :return list[str]: The new import_ids for the saved collections.
+    """
+    if db is None:
+        db = db_session.get_db()
+
+    validation.validate_collections(collection_data)
+
+    collection_import_ids = []
+    org_id = corpus.get_corpus_org_id(corpus_import_id)
+
+    for coll in collection_data:
+        if not _collection_exists_in_db(db, coll["import_id"]):
+            dto = IngestCollectionDTO(**coll).to_collection_create_dto()
+            import_id = collection_repository.create(db, dto, org_id)
+            collection_import_ids.append(import_id)
+
+    return collection_import_ids
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

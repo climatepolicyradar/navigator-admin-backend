@@ -113,7 +113,15 @@ def test_ingest_rollback(
 def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_token):
     family_import_id = "test.new.family.0"
     event_import_id = "test.new.event.0"
+    collection_import_id = "test.new.collection.0"
     test_data = {
+        "collections": [
+            {
+                "import_id": collection_import_id,
+                "title": "Test title",
+                "description": "Test description",
+            },
+        ],
         "families": [
             {
                 "import_id": family_import_id,
@@ -122,7 +130,7 @@ def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_to
                 "geographies": ["South Asia"],
                 "category": "UNFCCC",
                 "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
-                "collections": [],
+                "collections": [collection_import_id],
             }
         ],
         "documents": [
@@ -158,6 +166,7 @@ def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_to
 
     assert [family_import_id] == response.json()["families"]
     assert [event_import_id] == response.json()["events"]
+    assert [collection_import_id] == response.json()["collections"]
     assert "test.new.document.1000" not in response.json()["documents"]
 
     response = client.post(
@@ -168,6 +177,7 @@ def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_to
 
     assert not response.json()["families"]
     assert not response.json()["events"]
+    assert not response.json()["collections"]
     assert ["test.new.document.1000"] == response.json()["documents"]
 
 
