@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Union, cast
 
+from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ from app.errors import RepositoryError, ValidationError
 from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 from app.model.user import UserContext
 from app.service import app_user, id
+from app.service import metadata as metadata_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +114,17 @@ def create(
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.import_id
     )
+
+    # TODO: Remove this wrangling as part of PDCT-1435.
+    event_metadata = {"event_type": [event.event_type_value]}
+
+    metadata_service.validate_metadata(
+        db,
+        family.corpus_import_id,
+        event_metadata,
+        EntitySpecificTaxonomyKeys.EVENT.value,
+    )
+
     try:
         import_id = event_repo.create(db, event)
         if len(import_id) == 0:
