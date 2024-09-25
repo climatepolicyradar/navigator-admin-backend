@@ -45,9 +45,9 @@ def test_ingest_data_when_ok(
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
-        "collections": ["test.new.collection.0", "test.new.collection.0"],
-        "families": ["created", "created"],
-        "documents": ["test.new.doc.0", "test.new.doc.0"],
+        "collections": ["test.new.collection.0", "test.new.collection.1"],
+        "families": ["test.new.family.0", "test.new.family.1"],
+        "documents": ["test.new.document.0", "test.new.document.1"],
     }
 
 

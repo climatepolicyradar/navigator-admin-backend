@@ -57,7 +57,7 @@ def mock_collection_repo(collection_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         if collection_repo.return_empty:
             raise exc.NoResultFound()
-        return "test.new.collection.0"
+        return data.import_id if data.import_id else "test.new.collection.0"
 
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()

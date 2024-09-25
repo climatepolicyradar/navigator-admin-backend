@@ -286,6 +286,20 @@ def validate_entity_relationships(data: dict[str, Any]) -> None:
     _validate_families_exist_for_events_and_documents(data)
 
 
+def _validate_ingest_data(data: dict[str, Any]) -> None:
+    """
+    Validates data to be ingested.
+
+    :param dict[str, Any] data: The data object to be validated.
+    :raises HTTPException: raised if data is empty or None.
+    """
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+
+    validate_entity_relationships(data)
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     """
@@ -297,6 +311,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     :raises ValidationError: raised should the data be invalid.
     :return dict[str, str]: Import ids of the saved entities.
     """
+    _validate_ingest_data(data)
+
     db = db_session.get_db()
 
     collection_data = data["collections"] if "collections" in data else None
@@ -304,14 +320,9 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     document_data = data["documents"] if "documents" in data else None
     event_data = data["events"] if "events" in data else None
 
-    if not data:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-
     response = {}
 
     try:
-        validate_entity_relationships(data)
-
         if collection_data:
             response["collections"] = save_collections(
                 collection_data, corpus_import_id, db
