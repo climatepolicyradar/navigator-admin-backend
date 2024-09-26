@@ -6,10 +6,13 @@ import of data and other services for validation etc.
 """
 
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Type, TypeVar
 
+from db_client.models.dfce.collection import Collection
+from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
+from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -28,6 +31,8 @@ from app.model.ingest import (
     IngestFamilyDTO,
 )
 
+DOCUMENT_INGEST_LIMIT = 1000
+
 
 class IngestEntityList(str, Enum):
     """Name of the list of entities that can be ingested."""
@@ -36,6 +41,26 @@ class IngestEntityList(str, Enum):
     Families = "families"
     Documents = "documents"
     Events = "events"
+
+
+class BaseModel(DeclarativeMeta):
+    import_id: str
+
+
+T = TypeVar("T", bound=BaseModel)
+
+
+def _exists_in_db(entity: Type[T], import_id: str, db: Session) -> bool:
+    """
+    Check if a entity exists in the database by import_id.
+
+    :param Type[T] entity: The model of the entity to be looked up in the db.
+    :param str import_id: The import_id of the entity.
+    :param Session db: The database session.
+    :return bool: True if the entity exists, False otherwise.
+    """
+    entity_exists = db.query(entity).filter(entity.import_id == import_id).one_or_none()
+    return entity_exists is not None
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -61,9 +86,10 @@ def save_collections(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for coll in collection_data:
-        dto = IngestCollectionDTO(**coll).to_collection_create_dto()
-        import_id = collection_repository.create(db, dto, org_id)
-        collection_import_ids.append(import_id)
+        if not _exists_in_db(Collection, coll["import_id"], db):
+            dto = IngestCollectionDTO(**coll).to_collection_create_dto()
+            import_id = collection_repository.create(db, dto, org_id)
+            collection_import_ids.append(import_id)
 
     return collection_import_ids
 
@@ -92,16 +118,15 @@ def save_families(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for fam in family_data:
-        # TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
-        # collection.validate(collections, db)
-        dto = IngestFamilyDTO(
-            **fam, corpus_import_id=corpus_import_id
-        ).to_family_create_dto(corpus_import_id)
-        geo_ids = []
-        for geo in dto.geography:
-            geo_ids.append(geography.get_id(db, geo))
-        import_id = family_repository.create(db, dto, geo_ids, org_id)
-        family_import_ids.append(import_id)
+        if not _exists_in_db(Family, fam["import_id"], db):
+            dto = IngestFamilyDTO(
+                **fam, corpus_import_id=corpus_import_id
+            ).to_family_create_dto(corpus_import_id)
+            geo_ids = []
+            for geo in dto.geography:
+                geo_ids.append(geography.get_id(db, geo))
+            import_id = family_repository.create(db, dto, geo_ids, org_id)
+            family_import_ids.append(import_id)
 
     return family_import_ids
 
@@ -126,11 +151,17 @@ def save_documents(
     validation.validate_documents(document_data, corpus_import_id)
 
     document_import_ids = []
+    saved_documents_counter = 0
 
     for doc in document_data:
-        dto = IngestDocumentDTO(**doc).to_document_create_dto()
-        import_id = document_repository.create(db, dto)
-        document_import_ids.append(import_id)
+        if (
+            not _exists_in_db(FamilyDocument, doc["import_id"], db)
+            and saved_documents_counter < DOCUMENT_INGEST_LIMIT
+        ):
+            dto = IngestDocumentDTO(**doc).to_document_create_dto()
+            import_id = document_repository.create(db, dto)
+            document_import_ids.append(import_id)
+            saved_documents_counter += 1
 
     return document_import_ids
 
@@ -157,9 +188,10 @@ def save_events(
     event_import_ids = []
 
     for event in event_data:
-        dto = IngestEventDTO(**event).to_event_create_dto()
-        import_id = event_repository.create(db, dto)
-        event_import_ids.append(import_id)
+        if not _exists_in_db(FamilyEvent, event["import_id"], db):
+            dto = IngestEventDTO(**event).to_event_create_dto()
+            import_id = event_repository.create(db, dto)
+            event_import_ids.append(import_id)
 
     return event_import_ids
 
@@ -250,6 +282,20 @@ def validate_entity_relationships(data: dict[str, Any]) -> None:
     _validate_families_exist_for_events_and_documents(data)
 
 
+def _validate_ingest_data(data: dict[str, Any]) -> None:
+    """
+    Validates data to be ingested.
+
+    :param dict[str, Any] data: The data object to be validated.
+    :raises HTTPException: raised if data is empty or None.
+    """
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+
+    validate_entity_relationships(data)
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     """
@@ -261,6 +307,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     :raises ValidationError: raised should the data be invalid.
     :return dict[str, str]: Import ids of the saved entities.
     """
+    _validate_ingest_data(data)
+
     db = db_session.get_db()
 
     collection_data = data["collections"] if "collections" in data else None
@@ -268,14 +316,9 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     document_data = data["documents"] if "documents" in data else None
     event_data = data["events"] if "events" in data else None
 
-    if not data:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-
     response = {}
 
     try:
-        validate_entity_relationships(data)
-
         if collection_data:
             response["collections"] = save_collections(
                 collection_data, corpus_import_id, db

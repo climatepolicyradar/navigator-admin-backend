@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "admin_backend"
-version = "2.15.4"
+version = "2.16.1"
 description = ""
 authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
 packages = [{ include = "app" }, { include = "tests" }]

@@ -1,3 +1,5 @@
+import io
+import json
 import os
 
 from db_client.models.dfce import FamilyEvent
@@ -58,14 +60,14 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
     for fam in saved_families:
         assert fam.import_id in expected_family_import_ids
 
-    saved_events = (
+    saved_documents = (
         data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id.in_(expected_document_import_ids))
         .all()
     )
 
-    assert len(saved_events) == 2
-    for doc in saved_events:
+    assert len(saved_documents) == 2
+    for doc in saved_documents:
         assert doc.import_id in expected_document_import_ids
         assert doc.family_import_id in expected_family_import_ids
 
@@ -76,9 +78,9 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
     )
 
     assert len(saved_events) == 2
-    for doc in saved_events:
-        assert doc.import_id in expected_event_import_ids
-        assert doc.family_import_id in expected_family_import_ids
+    for ev in saved_events:
+        assert ev.import_id in expected_event_import_ids
+        assert ev.family_import_id in expected_family_import_ids
 
 
 def test_ingest_rollback(
@@ -106,6 +108,89 @@ def test_ingest_rollback(
         .one_or_none()
     )
     assert actual_collection is None
+
+
+def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_token):
+    family_import_id = "test.new.family.0"
+    event_import_id = "test.new.event.0"
+    collection_import_id = "test.new.collection.0"
+    test_data = {
+        "collections": [
+            {
+                "import_id": collection_import_id,
+                "title": "Test title",
+                "description": "Test description",
+            },
+        ],
+        "families": [
+            {
+                "import_id": family_import_id,
+                "title": "Test",
+                "summary": "Test",
+                "geographies": ["South Asia"],
+                "category": "UNFCCC",
+                "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
+                "collections": [collection_import_id],
+            }
+        ],
+        "documents": [
+            {
+                "import_id": f"test.new.document.{i}",
+                "family_import_id": family_import_id,
+                "metadata": {"role": ["MAIN"], "type": ["Law"]},
+                "variant_name": "Original Language",
+                "title": f"Document{i}",
+                "user_language_name": "",
+            }
+            for i in range(1001)
+        ],
+        "events": [
+            {
+                "import_id": event_import_id,
+                "family_import_id": family_import_id,
+                "event_title": "Test",
+                "date": "2024-01-01",
+                "event_type_value": "Amended",
+            }
+        ],
+    }
+
+    test_json = json.dumps(test_data).encode("utf-8")
+    test_data_file = io.BytesIO(test_json)
+
+    response = client.post(
+        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        files={"new_data": test_data_file},
+        headers=user_header_token,
+    )
+
+    assert (
+        not data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "test.new.document.1000")
+        .one_or_none()
+    )
+    assert [family_import_id] == response.json()["families"]
+    assert [event_import_id] == response.json()["events"]
+    assert [collection_import_id] == response.json()["collections"]
+    assert "test.new.document.1000" not in response.json()["documents"]
+
+    response = client.post(
+        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        files={"new_data": test_data_file},
+        headers=user_header_token,
+    )
+
+    assert (
+        "test.new.document.1000"
+        == data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "test.new.document.1000")
+        .one_or_none()
+        .import_id
+    )
+    assert not response.json()["families"]
+    assert not response.json()["events"]
+    assert not response.json()["collections"]
+    assert ["test.new.document.1000"] == response.json()["documents"]
 
 
 def test_ingest_when_corpus_import_id_invalid(

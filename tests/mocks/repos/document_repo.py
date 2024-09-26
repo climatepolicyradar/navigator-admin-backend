@@ -59,7 +59,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         if document_repo.return_empty:
             raise exc.NoResultFound()
-        return "test.new.doc.0"
+        return data.import_id if data.import_id else "test.new.doc.0"
 
     def mock_delete(_, import_id: str) -> bool:
         maybe_throw()
