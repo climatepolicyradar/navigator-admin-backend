@@ -1,10 +1,20 @@
+import json
+import logging
 import re
 from urllib.parse import quote_plus, urlsplit
 
 from botocore.exceptions import ClientError
+from pydantic import BaseModel
 
-from app.clients.aws.client import AWSClient
+from app.clients.aws.client import AWSClient, get_s3_client
 from app.errors import RepositoryError
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class S3UploadConfig(BaseModel):
+    bucket_name: str
+    object_name: str
 
 
 def _encode_characters_in_path(s3_path: str) -> str:
@@ -63,6 +73,29 @@ def get_s3_url(region: str, bucket: str, key: str) -> str:
     :return str: the s3 url
     """
     return f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
+
+
+def upload_json_to_s3(config: S3UploadConfig, json_data: dict) -> None:
+    """
+    Upload a JSON file to S3
+
+    :param S3UploadConfig config: The configuration required for the upload.
+    :param dict json_data: The json data to be uploaded to S3.
+    """
+    s3_client = get_s3_client()
+    try:
+        s3_client.put_object(
+            Bucket=config.bucket_name,
+            Key=config.object_name,
+            Body=json.dumps(json_data),
+            ContentType="application/json",
+        )
+        _LOGGER.info(
+            f"🎉 Successfully uploaded JSON to S3: {config.bucket_name}/{config.object_name}"
+        )
+    except Exception as e:
+        _LOGGER.error(f"💥 Failed to upload JSON to S3:{e}]")
+        raise
 
 
 # TODO: add more s3 functions like listing and reading files here

@@ -6,6 +6,7 @@ Service mocks should only be used for router tests.
 
 from typing import Dict
 
+import boto3
 import db_client.functions.corpus_helpers as db_client_corpus_helpers
 import db_client.functions.metadata as db_client_metadata
 import pytest
@@ -288,6 +289,13 @@ def test_s3_client(s3_document_bucket_names):
         )
 
         yield s3_client
+
+
+@pytest.fixture
+def basic_s3_client():
+    with mock_s3():
+        conn = boto3.client("s3", region_name="eu-west-2")
+        yield conn
 
 
 # -- now UserContexts
