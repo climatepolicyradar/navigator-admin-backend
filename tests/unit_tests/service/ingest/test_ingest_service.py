@@ -1,4 +1,5 @@
 import json
+import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -87,17 +88,18 @@ def test_ingest_when_db_error(corpus_repo_mock, basic_s3_client, collection_repo
 
 
 def test_json_saved_to_s3_on_ingest(basic_s3_client):
+    bucket_name = os.environ["INGEST_JSON_BUCKET"]
     json_data = {"key": "value"}
 
     ingest_service.import_data({"key": "value"}, "test")
 
-    response = basic_s3_client.list_objects_v2(Bucket="my-bucket")
+    response = basic_s3_client.list_objects_v2(Bucket=bucket_name)
     assert "Contents" in response
     objects = response["Contents"]
     assert len(objects) == 1
 
     key = objects[0]["Key"]
-    response = basic_s3_client.get_object(Bucket="my-bucket", Key=key)
+    response = basic_s3_client.get_object(Bucket=bucket_name, Key=key)
     body = response["Body"].read().decode("utf-8")
     assert json.loads(body) == json_data
 

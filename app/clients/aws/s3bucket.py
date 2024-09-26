@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 from datetime import datetime
 from typing import Any
@@ -109,7 +110,7 @@ def upload_ingest_json_to_s3(corpus_import_id: str, data: dict[str, Any]) -> Non
     :param str corpus_import_id: The import_id of the corpus the ingest data belongs to.
     :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
     """
-    ingest_upload_bucket = "my-bucket"
+    ingest_upload_bucket = os.environ["INGEST_JSON_BUCKET"]
     s3_client = get_s3_client()
     s3_client.create_bucket(
         Bucket=ingest_upload_bucket,
