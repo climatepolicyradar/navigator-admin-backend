@@ -1,6 +1,7 @@
 import io
 import json
 import os
+from unittest.mock import Mock, patch
 
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
@@ -12,6 +13,7 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
+@patch("app.service.ingest.upload_ingest_json_to_s3", Mock(return_value=None))
 def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token):
 
     response = client.post(
@@ -83,6 +85,7 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, user_header_token)
         assert ev.family_import_id in expected_family_import_ids
 
 
+@patch("app.service.ingest.upload_ingest_json_to_s3", Mock(return_value=None))
 def test_ingest_rollback(
     client: TestClient, data_db: Session, rollback_collection_repo, user_header_token
 ):
@@ -110,6 +113,7 @@ def test_ingest_rollback(
     assert actual_collection is None
 
 
+@patch("app.service.ingest.upload_ingest_json_to_s3", Mock(return_value=None))
 def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_token):
     family_import_id = "test.new.family.0"
     event_import_id = "test.new.event.0"
@@ -193,6 +197,7 @@ def test_ingest_idempotency(data_db: Session, client: TestClient, user_header_to
     assert ["test.new.document.1000"] == response.json()["documents"]
 
 
+@patch("app.service.ingest.upload_ingest_json_to_s3", Mock(return_value=None))
 def test_ingest_when_corpus_import_id_invalid(
     data_db: Session, client: TestClient, user_header_token
 ):
@@ -217,6 +222,7 @@ def test_ingest_when_corpus_import_id_invalid(
     )
 
 
+@patch("app.service.ingest.upload_ingest_json_to_s3")
 def test_ingest_events_when_event_type_invalid(
     data_db: Session, client: TestClient, user_header_token
 ):

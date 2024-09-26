@@ -20,16 +20,8 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_ingest_data_when_ok(
-    client: TestClient,
-    user_header_token,
-    collection_repo_mock,
-    geography_repo_mock,
-    corpus_repo_mock,
-    family_repo_mock,
-    document_repo_mock,
-    db_client_metadata_mock,
+    client: TestClient, user_header_token, ingest_service_mock
 ):
 
     response = client.post(
@@ -50,11 +42,15 @@ def test_ingest_data_when_ok(
         "collections": ["test.new.collection.0", "test.new.collection.1"],
         "families": ["test.new.family.0", "test.new.family.1"],
         "documents": ["test.new.document.0", "test.new.document.1"],
+        "events": ["test.new.event.0", "test.new.event.1"],
     }
 
 
 def test_ingest_when_data_invalid(
-    client: TestClient, user_header_token, corpus_service_mock
+    client: TestClient,
+    user_header_token,
+    corpus_service_mock,
+    basic_s3_client,
 ):
 
     invalid_import_id = "invalid"
@@ -82,7 +78,11 @@ def test_ingest_when_data_invalid(
 
 
 def test_ingest_when_no_data(
-    client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
+    client: TestClient,
+    user_header_token,
+    collection_repo_mock,
+    corpus_service_mock,
+    basic_s3_client,
 ):
     test_data = json.dumps({}).encode("utf-8")
     test_data_file = io.BytesIO(test_data)
@@ -99,12 +99,9 @@ def test_ingest_when_no_data(
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_ingest_data_when_db_error(
-    client: TestClient,
-    user_header_token,
-    corpus_repo_mock,
-    collection_repo_mock,
+    client: TestClient, user_header_token, ingest_service_mock
 ):
-    collection_repo_mock.throw_repository_error = True
+    ingest_service_mock.throw_repository_error = True
 
     response = client.post(
         "/api/v1/ingest/test",
@@ -120,4 +117,4 @@ def test_ingest_data_when_db_error(
     )
 
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-    assert response.json().get("detail") == "bad collection repo"
+    assert response.json().get("detail") == "bad repo"

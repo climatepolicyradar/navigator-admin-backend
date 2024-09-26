@@ -23,6 +23,7 @@ import app.repository.family as family_repository
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.validation as validation
+from app.clients.aws.s3bucket import upload_ingest_json_to_s3
 from app.errors import ValidationError
 from app.model.ingest import (
     IngestCollectionDTO,
@@ -297,7 +298,7 @@ def _validate_ingest_data(data: dict[str, Any]) -> None:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
+def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, list[str]]:
     """
     Imports data for a given corpus_import_id.
 
@@ -305,8 +306,10 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
-    :return dict[str, str]: Import ids of the saved entities.
+    :return dict[str, list[str]]: Import ids of the saved entities.
     """
+    upload_ingest_json_to_s3(corpus_import_id, data)
+
     _validate_ingest_data(data)
 
     db = db_session.get_db()

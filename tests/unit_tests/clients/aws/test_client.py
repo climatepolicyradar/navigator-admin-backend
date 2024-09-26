@@ -14,7 +14,7 @@ def test_upload_json_to_s3_when_ok(basic_s3_client):
     config = S3UploadConfig(bucket_name="my-bucket", object_name="data.json")
     json_data = {"key": "value"}
 
-    upload_json_to_s3(config, json_data)
+    upload_json_to_s3(basic_s3_client, config, json_data)
 
     response = basic_s3_client.get_object(Bucket="my-bucket", Key="data.json")
     body = response["Body"].read().decode("utf-8")
@@ -26,6 +26,6 @@ def test_upload_json_to_s3_when_error(basic_s3_client):
     json_data = {"key": "value"}
 
     with pytest.raises(ClientError) as e:
-        upload_json_to_s3(config, json_data)
+        upload_json_to_s3(basic_s3_client, config, json_data)
 
     assert e.value.response["Error"]["Code"] == "NoSuchBucket"

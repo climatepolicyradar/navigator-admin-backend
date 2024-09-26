@@ -1,4 +1,4 @@
-from datetime import datetime
+import json
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,6 +9,7 @@ from app.errors import RepositoryError, ValidationError
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_ingest_when_ok(
+    basic_s3_client,
     corpus_repo_mock,
     geography_repo_mock,
     collection_repo_mock,
@@ -52,7 +53,7 @@ def test_ingest_when_ok(
                 "import_id": "test.new.event.0",
                 "family_import_id": "test.new.family.0",
                 "event_title": "Test",
-                "date": datetime.now(),
+                "date": "2000-01-01T00:00:00.000Z",
                 "event_type_value": "Amended",
             }
         ],
@@ -67,7 +68,7 @@ def test_ingest_when_ok(
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
+def test_ingest_when_db_error(corpus_repo_mock, basic_s3_client, collection_repo_mock):
     collection_repo_mock.throw_repository_error = True
 
     test_data = {
@@ -83,6 +84,22 @@ def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
     with pytest.raises(RepositoryError) as e:
         ingest_service.import_data(test_data, "test")
     assert "bad collection repo" == e.value.message
+
+
+def test_json_saved_to_s3_on_ingest(basic_s3_client):
+    json_data = {"key": "value"}
+
+    ingest_service.import_data({"key": "value"}, "test")
+
+    response = basic_s3_client.list_objects_v2(Bucket="my-bucket")
+    assert "Contents" in response
+    objects = response["Contents"]
+    assert len(objects) == 1
+
+    key = objects[0]["Key"]
+    response = basic_s3_client.get_object(Bucket="my-bucket", Key=key)
+    body = response["Body"].read().decode("utf-8")
+    assert json.loads(body) == json_data
 
 
 def test_save_families_when_corpus_invalid(corpus_repo_mock, validation_service_mock):
@@ -145,7 +162,7 @@ def test_do_not_save_documents_over_ingest_limit(
     assert ["test.new.document.0"] == saved_documents
 
 
-def test_ingest_documents_when_no_family():
+def test_ingest_documents_when_no_family(basic_s3_client):
     fam_import_id = "test.new.family.0"
     test_data = {
         "documents": [

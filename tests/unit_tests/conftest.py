@@ -21,6 +21,7 @@ import app.service.corpus as corpus_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
+import app.service.ingest as ingest_service
 import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
 import app.service.validation as validation_service
@@ -57,6 +58,7 @@ from tests.mocks.services.corpus_service import mock_corpus_service
 from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
+from tests.mocks.services.ingest_service import mock_ingest_service
 from tests.mocks.services.validation_service import mock_validation_service
 
 ORG_ID = 1
@@ -214,6 +216,13 @@ def corpus_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_corpus_service(corpus_service, monkeypatch, mocker)
     yield corpus_service
+
+
+@pytest.fixture
+def ingest_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_ingest_service(ingest_service, monkeypatch, mocker)
+    yield ingest_service
 
 
 @pytest.fixture

@@ -1,6 +1,8 @@
 import json
 import logging
 import re
+from datetime import datetime
+from typing import Any
 from urllib.parse import quote_plus, urlsplit
 
 from botocore.exceptions import ClientError
@@ -75,14 +77,16 @@ def get_s3_url(region: str, bucket: str, key: str) -> str:
     return f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
 
 
-def upload_json_to_s3(config: S3UploadConfig, json_data: dict) -> None:
+def upload_json_to_s3(
+    s3_client: AWSClient, config: S3UploadConfig, json_data: dict[str, Any]
+) -> None:
     """
     Upload a JSON file to S3
 
     :param S3UploadConfig config: The configuration required for the upload.
-    :param dict json_data: The json data to be uploaded to S3.
+    :param dict[str, Any] json_data: The json data to be uploaded to S3.
+    :raises Exception: on any error when uploading the file to S3.
     """
-    s3_client = get_s3_client()
     try:
         s3_client.put_object(
             Bucket=config.bucket_name,
@@ -96,6 +100,28 @@ def upload_json_to_s3(config: S3UploadConfig, json_data: dict) -> None:
     except Exception as e:
         _LOGGER.error(f"💥 Failed to upload JSON to S3:{e}]")
         raise
+
+
+def upload_ingest_json_to_s3(corpus_import_id: str, data: dict[str, Any]) -> None:
+    """
+    Upload an ingest JSON file to S3
+
+    :param str corpus_import_id: The import_id of the corpus the ingest data belongs to.
+    :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
+    """
+    ingest_upload_bucket = "my-bucket"
+    s3_client = get_s3_client()
+    s3_client.create_bucket(
+        Bucket=ingest_upload_bucket,
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
+
+    current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
+    config = S3UploadConfig(
+        bucket_name=ingest_upload_bucket,
+        object_name=f"{corpus_import_id}-{current_timestamp}.json",
+    )
+    upload_json_to_s3(s3_client, config, data)
 
 
 # TODO: add more s3 functions like listing and reading files here
