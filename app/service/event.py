@@ -164,11 +164,24 @@ def update(
     if db is None:
         db = db_session.get_db()
 
+    family = family_service.get(existing_event.family_import_id)
+    if family is None:
+        raise ValidationError(
+            f"Could not find family when creating event for {existing_event.family_import_id}"
+        )
+
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
-    if db is None:
-        db = db_session.get_db()
+    # TODO: Remove this wrangling as part of PDCT-1435.
+    event_metadata = {"event_type": [event.event_type_value]}
+
+    metadata_service.validate_metadata(
+        db,
+        family.corpus_import_id,
+        event_metadata,
+        EntitySpecificTaxonomyKeys.EVENT.value,
+    )
 
     try:
         if event_repo.update(db, import_id, event):
