@@ -5,6 +5,7 @@ This layer uses the corpus, collection, family, document and event repos to hand
 import of data and other services for validation etc.
 """
 
+import logging
 from enum import Enum
 from typing import Any, Optional, Type, TypeVar
 
@@ -12,6 +13,7 @@ from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
@@ -32,6 +34,7 @@ from app.model.ingest import (
 )
 
 DOCUMENT_INGEST_LIMIT = 1000
+_LOGGER = logging.getLogger(__name__)
 
 
 class IngestEntityList(str, Enum):
@@ -86,6 +89,7 @@ def save_collections(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for coll in collection_data:
+        _LOGGER.info(f"Importing collection {coll['import_id']}")
         if not _exists_in_db(Collection, coll["import_id"], db):
             dto = IngestCollectionDTO(**coll).to_collection_create_dto()
             import_id = collection_repository.create(db, dto, org_id)
@@ -118,6 +122,7 @@ def save_families(
     org_id = corpus.get_corpus_org_id(corpus_import_id)
 
     for fam in family_data:
+        _LOGGER.info(f"Importing family {fam['import_id']}")
         if not _exists_in_db(Family, fam["import_id"], db):
             dto = IngestFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
@@ -154,6 +159,7 @@ def save_documents(
     saved_documents_counter = 0
 
     for doc in document_data:
+        _LOGGER.info(f"Importing document {doc['import_id']}")
         if (
             not _exists_in_db(FamilyDocument, doc["import_id"], db)
             and saved_documents_counter < DOCUMENT_INGEST_LIMIT
@@ -188,6 +194,7 @@ def save_events(
     event_import_ids = []
 
     for event in event_data:
+        _LOGGER.info(f"Importing event {event['import_id']}")
         if not _exists_in_db(FamilyEvent, event["import_id"], db):
             dto = IngestEventDTO(**event).to_event_create_dto()
             import_id = event_repository.create(db, dto)
@@ -309,6 +316,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     """
     _validate_ingest_data(data)
 
+    _LOGGER.info("Getting DB session")
+
     db = db_session.get_db()
 
     collection_data = data["collections"] if "collections" in data else None
@@ -320,18 +329,27 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
 
     try:
         if collection_data:
+            _LOGGER.info("Saving collections")
             response["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
+            _LOGGER.info("Saving families")
             response["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
+            _LOGGER.info("Saving documents")
             response["documents"] = save_documents(document_data, corpus_import_id, db)
         if event_data:
+            _LOGGER.info("Saving events")
             response["events"] = save_events(event_data, corpus_import_id, db)
 
         return response
+    except SQLAlchemyError as e:
+        _LOGGER.error(e, exc_info=True)
+        db.rollback()
+        raise e
     except Exception as e:
+        _LOGGER.error(e, exc_info=True)
         db.rollback()
         raise e
     finally:
