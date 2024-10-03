@@ -13,4 +13,4 @@ SQLALCHEMY_DATABASE_URI = (
 # This used by db-client and alembic script for migrations
 os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URI
 
-STATEMENT_TIMEOUT = os.getenv("STATEMENT_TIMEOUT", 10000)  # ms
+STATEMENT_TIMEOUT = os.getenv("STATEMENT_TIMEOUT", 60000)  # ms
