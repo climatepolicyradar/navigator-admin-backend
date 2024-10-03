@@ -3,7 +3,7 @@ import logging
 
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status
 
 import app.service.taxonomy as taxonomy
 from app.errors import RepositoryError, ValidationError
@@ -131,7 +131,9 @@ async def get_ingest_template(corpus_type: str) -> Json:
     response_model=Json,
     status_code=status.HTTP_201_CREATED,
 )
-async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
+async def ingest(
+    background_tasks: BackgroundTasks, new_data: UploadFile, corpus_import_id: str
+) -> None:
     """
     Bulk import endpoint.
 
@@ -143,7 +145,7 @@ async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
     try:
         content = await new_data.read()
         data_dict = json.loads(content)
-        return import_data(data_dict, corpus_import_id)
+        background_tasks.add_task(import_data, data_dict, corpus_import_id)
     except ValidationError as e:
         _LOGGER.error(e.message, exc_info=True)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
