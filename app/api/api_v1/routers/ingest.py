@@ -138,10 +138,11 @@ async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
     :param UploadFile new_data: file containing json representation of data to ingest.
     :return Json: json representation of the data to ingest.
     """
+    _LOGGER.info(f"Ingesting for corpus: {corpus_import_id}")
 
-    content = await new_data.read()
-    data_dict = json.loads(content)
     try:
+        content = await new_data.read()
+        data_dict = json.loads(content)
         return import_data(data_dict, corpus_import_id)
     except ValidationError as e:
         _LOGGER.error(e.message, exc_info=True)
