@@ -144,7 +144,7 @@ async def ingest(
     :param UploadFile new_data: file containing json representation of data to ingest.
     :return Json: json representation of the data to ingest.
     """
-    _LOGGER.info(f"Ingesting for corpus: {corpus_import_id}")
+    _LOGGER.warn(f"Ingesting for corpus: {corpus_import_id}")
 
     try:
         content = await new_data.read()

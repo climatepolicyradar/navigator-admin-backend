@@ -35,6 +35,7 @@ from app.model.ingest import (
 
 DOCUMENT_INGEST_LIMIT = 1000
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 
 class IngestEntityList(str, Enum):
@@ -316,7 +317,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     """
     _validate_ingest_data(data)
 
-    _LOGGER.info("Getting DB session")
+    _LOGGER.warn("Getting DB session")
 
     db = db_session.get_db()
 
