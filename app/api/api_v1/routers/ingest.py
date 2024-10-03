@@ -144,18 +144,18 @@ async def ingest(new_data: UploadFile, corpus_import_id: str) -> Json:
     try:
         return import_data(data_dict, corpus_import_id)
     except ValidationError as e:
-        _LOGGER.error(e.message)
+        _LOGGER.error(e.message, exc_info=True)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
-        _LOGGER.error(e.message)
+        _LOGGER.error(e.message, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e.message)
         )
     except HTTPException as e:
-        _LOGGER.error(e)
+        _LOGGER.error(e, exc_info=True)
         raise e
     except Exception as e:
-        _LOGGER.error(e)
+        _LOGGER.error(e, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
         )
