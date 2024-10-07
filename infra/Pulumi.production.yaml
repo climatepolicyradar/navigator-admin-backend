@@ -2,7 +2,7 @@ config:
   admin_backend:apprunner_backend_max_concurrency: "10"
   admin_backend:apprunner_backend_max_instance_count: "5"
   admin_backend:apprunner_backend_min_instance_count: "2"
-  admin_backend:docker_tag: 2.16.0-beta
+  admin_backend:docker_tag: 2.16.2-beta
   admin_backend:ecr_uri:
     secure: AAABADGDJp8NB1PMdF0xypW3Qqi+W0j2nvXCXTrwErXic9HTh6E8asjRIZI3mAEeXOnZB2TrJUpra0/l1nxSoEkiGTrygYmdgVEUEEjtjY+c+EHyWhs/zPpNiXv+VAR2r/hERg==
   admin_backend:rds_address:
