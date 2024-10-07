@@ -11,7 +11,6 @@ from typing import Any, Optional, Type, TypeVar
 
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
-from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -25,7 +24,6 @@ import app.repository.family as family_repository
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.validation as validation
-from app.errors import ValidationError
 from app.model.ingest import (
     IngestCollectionDTO,
     IngestDocumentDTO,
@@ -215,108 +213,8 @@ def save_events(
     return event_import_ids
 
 
-def _collect_import_ids(
-    entity_list_name: IngestEntityList,
-    data: dict[str, Any],
-    import_id_type_name: Optional[str] = None,
-) -> list[str]:
-    """
-    Extracts a list of import_ids (or family_import_ids if specified) for the specified entity list in data.
-
-    :param IngestEntityList entity_list_name: The name of the entity list from which the import_ids are to be extracted.
-    :param dict[str, Any] data: The data structure containing the entity lists used for extraction.
-    :param Optional[str] import_id_type_name: the name of the type of import_id to be extracted or None.
-    :return list[str]: A list of extracted import_ids for the specified entity list.
-    """
-    import_id_key = import_id_type_name or "import_id"
-    import_ids = []
-    if entity_list_name.value in data:
-        for entity in data[entity_list_name.value]:
-            import_ids.append(entity[import_id_key])
-    return import_ids
-
-
-def _match_import_ids(
-    parent_references: list[str], parent_import_ids: set[str]
-) -> None:
-    """
-    Validates that all the references to parent entities exist in the set of parent import_ids passed in
-
-    :param list[str] parent_references: List of import_ids referencing parent entities to be validated.
-    :param set[str] parent_import_ids: Set of parent import_ids to validate against.
-    :raises ValidationError: raised if a parent reference is not found in the parent_import_ids.
-    """
-    for id in parent_references:
-        if id not in parent_import_ids:
-            raise ValidationError(f"No entity with id {id} found")
-
-
-def _validate_collections_exist_for_families(data: dict[str, Any]) -> None:
-    """
-    Validates that collections the families are linked to exist based on import_id links in data.
-
-    :param dict[str, Any] data: The data object containing entities to be validated.
-    """
-    collections = _collect_import_ids(IngestEntityList.Collections, data)
-    collections_set = set(collections)
-
-    family_collection_import_ids = []
-    if "families" in data:
-        for fam in data["families"]:
-            family_collection_import_ids.extend(fam["collections"])
-
-    _match_import_ids(family_collection_import_ids, collections_set)
-
-
-def _validate_families_exist_for_events_and_documents(data: dict[str, Any]) -> None:
-    """
-    Validates that families the documents and events are linked to exist
-    based on import_id links in data.
-
-    :param dict[str, Any] data: The data object containing entities to be validated.
-    """
-    families = _collect_import_ids(IngestEntityList.Families, data)
-    families_set = set(families)
-
-    document_family_import_ids = _collect_import_ids(
-        IngestEntityList.Documents, data, "family_import_id"
-    )
-    event_family_import_ids = _collect_import_ids(
-        IngestEntityList.Events, data, "family_import_id"
-    )
-
-    _match_import_ids(document_family_import_ids, families_set)
-    _match_import_ids(event_family_import_ids, families_set)
-
-
-def validate_entity_relationships(data: dict[str, Any]) -> None:
-    """
-    Validates relationships between entities contained in data.
-    For documents, it validates that the family the document is linked to exists.
-
-    :param dict[str, Any] data: The data object containing entities to be validated.
-    """
-
-    _validate_collections_exist_for_families(data)
-    _validate_families_exist_for_events_and_documents(data)
-
-
-def _validate_ingest_data(data: dict[str, Any]) -> None:
-    """
-    Validates data to be ingested.
-
-    :param dict[str, Any] data: The data object to be validated.
-    :raises HTTPException: raised if data is empty or None.
-    """
-
-    if not data:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-
-    validate_entity_relationships(data)
-
-
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
+def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     """
     Imports data for a given corpus_import_id.
 
@@ -324,9 +222,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
-    :return dict[str, str]: Import ids of the saved entities.
     """
-    _validate_ingest_data(data)
 
     _LOGGER.warn("Getting DB session")
 
@@ -359,14 +255,16 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
             f"Bulk import for corpus: {corpus_import_id} successfully completed"
         )
 
-        return response
+        # save response to S3 as part of PDCT-1345
     except SQLAlchemyError as e:
-        _LOGGER.error(e, exc_info=True)
+        _LOGGER.error(
+            f"Rolling back transaction due to the following error: {e}", exc_info=True
+        )
         db.rollback()
-        raise e
     except Exception as e:
-        _LOGGER.error(e, exc_info=True)
+        _LOGGER.error(
+            f"Rolling back transaction due to the following error: {e}", exc_info=True
+        )
         db.rollback()
-        raise e
     finally:
         db.commit()
