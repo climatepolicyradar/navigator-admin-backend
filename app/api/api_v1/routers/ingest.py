@@ -126,10 +126,6 @@ async def get_ingest_template(corpus_type: str) -> Json:
     }
 
 
-def _test():
-    _LOGGER.info("Test complete")
-
-
 @r.post(
     "/ingest/{corpus_import_id}",
     response_model=Json,
@@ -149,8 +145,12 @@ async def ingest(
     try:
         content = await new_data.read()
         data_dict = json.loads(content)
+
         background_tasks.add_task(import_data, data_dict, corpus_import_id)
-        return {"message": "Request submitted. Check Cloudwatch logs for result."}
+
+        return {
+            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
+        }
     except ValidationError as e:
         _LOGGER.error(e.message, exc_info=True)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)

@@ -330,18 +330,20 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
 
     try:
         if collection_data:
-            _LOGGER.info("Saving collections")
+            _LOGGER.info(f"Saving {len(collection_data)} collections")
             response["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
-            _LOGGER.info("Saving families")
+            _LOGGER.info(f"Saving {len(family_data)} families")
             response["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
-            _LOGGER.info("Saving documents")
+            _LOGGER.info(
+                f"Saving {DOCUMENT_INGEST_LIMIT} out of {len(document_data)} documents"
+            )
             response["documents"] = save_documents(document_data, corpus_import_id, db)
         if event_data:
-            _LOGGER.info("Saving events")
+            _LOGGER.info(f"Saving {len(event_data)} events")
             response["events"] = save_events(event_data, corpus_import_id, db)
 
         return response
