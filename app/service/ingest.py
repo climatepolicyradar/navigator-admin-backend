@@ -12,7 +12,6 @@ from typing import Any, Optional, Type, TypeVar
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from pydantic import ConfigDict, validate_call
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
@@ -224,7 +223,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     :raises ValidationError: raised should the data be invalid.
     """
 
-    _LOGGER.warn("Getting DB session")
+    _LOGGER.info("Getting DB session")
 
     db = db_session.get_db()
 
@@ -256,11 +255,6 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
         )
 
         # save response to S3 as part of PDCT-1345
-    except SQLAlchemyError as e:
-        _LOGGER.error(
-            f"Rolling back transaction due to the following error: {e}", exc_info=True
-        )
-        db.rollback()
     except Exception as e:
         _LOGGER.error(
             f"Rolling back transaction due to the following error: {e}", exc_info=True
