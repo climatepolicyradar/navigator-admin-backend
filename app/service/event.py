@@ -115,7 +115,7 @@ def create(
         user, entity_org_id, family.import_id
     )
 
-    # TODO: Remove this wrangling as part of PDCT-1435.
+    # TODO: Remove the line below as part of PDCT-1435.
     event_metadata = {"event_type": [event.event_type_value]}
 
     metadata_service.validate_metadata(
