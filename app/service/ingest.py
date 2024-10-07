@@ -88,14 +88,17 @@ def save_collections(
 
     collection_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
+    total_collections_saved = 0
 
     for coll in collection_data:
-        _LOGGER.info(f"Importing collection {coll['import_id']}")
         if not _exists_in_db(Collection, coll["import_id"], db):
+            _LOGGER.info(f"Importing collection {coll['import_id']}")
             dto = IngestCollectionDTO(**coll).to_collection_create_dto()
             import_id = collection_repository.create(db, dto, org_id)
             collection_import_ids.append(import_id)
+            total_collections_saved += 1
 
+    _LOGGER.info(f"Saved {total_collections_saved} collections")
     return collection_import_ids
 
 
@@ -121,10 +124,11 @@ def save_families(
 
     family_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
+    total_families_saved = 0
 
     for fam in family_data:
-        _LOGGER.info(f"Importing family {fam['import_id']}")
         if not _exists_in_db(Family, fam["import_id"], db):
+            _LOGGER.info(f"Importing family {fam['import_id']}")
             dto = IngestFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
@@ -133,6 +137,9 @@ def save_families(
                 geo_ids.append(geography.get_id(db, geo))
             import_id = family_repository.create(db, dto, geo_ids, org_id)
             family_import_ids.append(import_id)
+            total_families_saved += 1
+
+    _LOGGER.info(f"Saved {total_families_saved} families")
 
     return family_import_ids
 
@@ -157,19 +164,20 @@ def save_documents(
     validation.validate_documents(document_data, corpus_import_id)
 
     document_import_ids = []
-    saved_documents_counter = 0
+    total_documents_saved = 0
 
     for doc in document_data:
-        _LOGGER.info(f"Importing document {doc['import_id']}")
         if (
             not _exists_in_db(FamilyDocument, doc["import_id"], db)
-            and saved_documents_counter < DOCUMENT_INGEST_LIMIT
+            and total_documents_saved < DOCUMENT_INGEST_LIMIT
         ):
+            _LOGGER.info(f"Importing document {doc['import_id']}")
             dto = IngestDocumentDTO(**doc).to_document_create_dto()
             import_id = document_repository.create(db, dto)
             document_import_ids.append(import_id)
-            saved_documents_counter += 1
+            total_documents_saved += 1
 
+    _LOGGER.info(f"Saved {total_documents_saved} documents")
     return document_import_ids
 
 
@@ -193,14 +201,17 @@ def save_events(
     validation.validate_events(event_data, corpus_import_id)
 
     event_import_ids = []
+    total_events_saved = 0
 
     for event in event_data:
-        _LOGGER.info(f"Importing event {event['import_id']}")
         if not _exists_in_db(FamilyEvent, event["import_id"], db):
+            _LOGGER.info(f"Importing event {event['import_id']}")
             dto = IngestEventDTO(**event).to_event_create_dto()
             import_id = event_repository.create(db, dto)
             event_import_ids.append(import_id)
+            total_events_saved += 0
 
+    _LOGGER.info(f"Saved {total_events_saved} events")
     return event_import_ids
 
 
@@ -330,21 +341,23 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> dict[str, str]:
 
     try:
         if collection_data:
-            _LOGGER.info(f"Saving {len(collection_data)} collections")
+            _LOGGER.info("Saving collections")
             response["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
-            _LOGGER.info(f"Saving {len(family_data)} families")
+            _LOGGER.info("Saving families")
             response["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
-            _LOGGER.info(
-                f"Saving {DOCUMENT_INGEST_LIMIT} out of {len(document_data)} documents"
-            )
+            _LOGGER.info("Saving documents")
             response["documents"] = save_documents(document_data, corpus_import_id, db)
         if event_data:
-            _LOGGER.info(f"Saving {len(event_data)} events")
+            _LOGGER.info("Saving events")
             response["events"] = save_events(event_data, corpus_import_id, db)
+
+        _LOGGER.info(
+            f"Bulk import for corpus: {corpus_import_id} successfully completed"
+        )
 
         return response
     except SQLAlchemyError as e:
