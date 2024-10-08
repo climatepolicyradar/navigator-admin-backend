@@ -3,7 +3,11 @@ import json
 import pytest
 from botocore.exceptions import ClientError
 
-from app.clients.aws.s3bucket import S3UploadConfig, upload_json_to_s3
+from app.clients.aws.s3bucket import (
+    S3UploadConfig,
+    upload_ingest_json_to_s3,
+    upload_json_to_s3,
+)
 
 
 def test_upload_json_to_s3_when_ok(basic_s3_client):
@@ -29,3 +33,20 @@ def test_upload_json_to_s3_when_error(basic_s3_client):
         upload_json_to_s3(basic_s3_client, config, json_data)
 
     assert e.value.response["Error"]["Code"] == "NoSuchBucket"
+
+
+def test_upload_ingest_json_to_s3_success(basic_s3_client):
+    json_data = {"test": "test"}
+    upload_ingest_json_to_s3("1111-1111", "test_corpus_id", json_data)
+
+    find_response = basic_s3_client.list_objects_v2(
+        Bucket="test_bucket", Prefix="1111-1111-test_corpus_id"
+    )
+
+    assert len(find_response["Contents"]) == 1
+
+    saved_file_name = find_response["Contents"][0]["Key"]
+    get_response = basic_s3_client.get_object(Bucket="test_bucket", Key=saved_file_name)
+    body = get_response["Body"].read().decode("utf-8")
+
+    assert json.loads(body) == json_data
