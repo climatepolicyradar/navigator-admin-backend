@@ -4,12 +4,14 @@ Please note:
 Service mocks should only be used for router tests.
 """
 
+import os
 from typing import Dict
 
 import boto3
 import db_client.functions.corpus_helpers as db_client_corpus_helpers
 import db_client.functions.metadata as db_client_metadata
 import pytest
+from botocore.exceptions import ClientError
 from fastapi.testclient import TestClient
 from moto import mock_s3
 
@@ -302,8 +304,16 @@ def test_s3_client(s3_document_bucket_names):
 
 @pytest.fixture
 def basic_s3_client():
+    bucket_name = os.environ["INGEST_JSON_BUCKET"]
     with mock_s3():
         conn = boto3.client("s3", region_name="eu-west-2")
+        try:
+            conn.head_bucket(Bucket=bucket_name)
+        except ClientError:
+            conn.create_bucket(
+                Bucket=bucket_name,
+                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+            )
         yield conn
 
 
