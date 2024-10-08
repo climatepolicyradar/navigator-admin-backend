@@ -67,7 +67,7 @@ def test_ingest_when_ok(
         assert False, f"import_data in ingest service raised an exception: {e}"
 
 
-def test_import_data_when_data_invalid(caplog):
+def test_import_data_when_data_invalid(caplog, basic_s3_client):
     test_data = {
         "collections": [
             {
@@ -85,7 +85,9 @@ def test_import_data_when_data_invalid(caplog):
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-def test_ingest_when_db_error(caplog, corpus_repo_mock, collection_repo_mock):
+def test_ingest_when_db_error(
+    caplog, basic_s3_client, corpus_repo_mock, collection_repo_mock
+):
     collection_repo_mock.throw_repository_error = True
 
     test_data = {

@@ -23,7 +23,7 @@ import app.repository.family as family_repository
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.validation as validation
-
+from app.clients.aws.s3bucket import upload_ingest_json_to_s3
 from app.model.ingest import (
     IngestCollectionDTO,
     IngestDocumentDTO,
@@ -223,6 +223,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
+    upload_ingest_json_to_s3(corpus_import_id, data)
 
     _LOGGER.info("Getting DB session")
 

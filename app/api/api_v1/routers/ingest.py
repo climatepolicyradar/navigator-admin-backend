@@ -7,7 +7,6 @@ from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status
 
-from app.service.ingest import import_data
 import app.service.taxonomy as taxonomy
 from app.errors import ValidationError
 from app.model.general import Json
@@ -17,6 +16,7 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
+from app.service.ingest import import_data
 
 ingest_router = r = APIRouter()
 
