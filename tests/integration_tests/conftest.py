@@ -272,7 +272,7 @@ def non_admin_user_header_token() -> Dict[str, str]:
 
 @pytest.fixture
 def basic_s3_client():
-    bucket_name = os.environ["INGEST_JSON_BUCKET"]
+    bucket_name = "test_bucket"
     with mock_s3():
         conn = boto3.client("s3", region_name="eu-west-2")
         try:

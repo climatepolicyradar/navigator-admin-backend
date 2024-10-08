@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -109,7 +108,7 @@ def test_ingest_when_db_error(
 
 
 def test_json_saved_to_s3_on_ingest(basic_s3_client):
-    bucket_name = os.environ["INGEST_JSON_BUCKET"]
+    bucket_name = "test_bucket"
     json_data = {"key": "value"}
 
     ingest_service.import_data({"key": "value"}, "test")
