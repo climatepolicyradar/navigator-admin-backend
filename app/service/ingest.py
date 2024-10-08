@@ -207,7 +207,7 @@ def save_events(
             dto = IngestEventDTO(**event).to_event_create_dto()
             import_id = event_repository.create(db, dto)
             event_import_ids.append(import_id)
-            total_events_saved += 0
+            total_events_saved += 1
 
     _LOGGER.info(f"Saved {total_events_saved} events")
     return event_import_ids

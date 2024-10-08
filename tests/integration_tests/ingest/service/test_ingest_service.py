@@ -8,7 +8,9 @@ from app.service.ingest import import_data
 from tests.integration_tests.setup_db import setup_db
 
 
-def test_import_data_rollback(caplog, data_db: Session, rollback_collection_repo):
+def test_import_data_rollback(
+    caplog, data_db: Session, rollback_collection_repo, basic_s3_client
+):
     setup_db(data_db)
 
     with caplog.at_level(logging.ERROR):
@@ -34,7 +36,7 @@ def test_import_data_rollback(caplog, data_db: Session, rollback_collection_repo
     assert actual_collection is None
 
 
-def test_ingest_idempotency(caplog, data_db: Session):
+def test_ingest_idempotency(caplog, data_db: Session, basic_s3_client):
     family_import_id = "test.new.family.0"
     event_import_id = "test.new.event.0"
     collection_import_id = "test.new.collection.0"
@@ -106,7 +108,9 @@ def test_ingest_idempotency(caplog, data_db: Session):
     )
 
 
-def test_ingest_when_corpus_import_id_invalid(caplog, data_db: Session):
+def test_ingest_when_corpus_import_id_invalid(
+    caplog, data_db: Session, basic_s3_client
+):
     invalid_corpus = "test"
 
     with caplog.at_level(logging.ERROR):
@@ -127,8 +131,7 @@ def test_ingest_when_corpus_import_id_invalid(caplog, data_db: Session):
 
 
 def test_ingest_events_when_event_type_invalid(
-    caplog,
-    data_db: Session,
+    caplog, data_db: Session, basic_s3_client
 ):
     with caplog.at_level(logging.ERROR):
         import_data(

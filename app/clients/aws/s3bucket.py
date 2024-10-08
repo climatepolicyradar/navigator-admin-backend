@@ -112,10 +112,6 @@ def upload_ingest_json_to_s3(corpus_import_id: str, data: dict[str, Any]) -> Non
     """
     ingest_upload_bucket = os.environ["INGEST_JSON_BUCKET"]
     s3_client = get_s3_client()
-    s3_client.create_bucket(
-        Bucket=ingest_upload_bucket,
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-    )
 
     current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
     config = S3UploadConfig(
