@@ -19,6 +19,7 @@ def test_ingest_when_ok(
     event_repo_mock,
     validation_service_mock,
 ):
+    bucket_name = "test_bucket"
     test_data = {
         "collections": [
             {
@@ -60,8 +61,32 @@ def test_ingest_when_ok(
         ],
     }
 
+    expected_ingest_result = {
+        "collections": ["test.new.collection.0"],
+        "families": ["test.new.family.0"],
+        "documents": ["test.new.document.0"],
+        "events": ["test.new.event.0"],
+    }
+
     try:
-        ingest_service.import_data(test_data, "test")
+        with patch(
+            "app.service.ingest.uuid4", return_value="1111-1111"
+        ) as mock_uuid_generator:
+            ingest_service.import_data(test_data, "test_corpus_id")
+
+            response = basic_s3_client.list_objects_v2(
+                Bucket=bucket_name, Prefix="1111-1111-result-test_corpus_id"
+            )
+
+            mock_uuid_generator.assert_called_once()
+            assert "Contents" in response
+            objects = response["Contents"]
+            assert len(objects) == 1
+
+            key = objects[0]["Key"]
+            response = basic_s3_client.get_object(Bucket=bucket_name, Key=key)
+            body = response["Body"].read().decode("utf-8")
+            assert expected_ingest_result == json.loads(body)
     except Exception as e:
         assert False, f"import_data in ingest service raised an exception: {e}"
 
@@ -107,13 +132,20 @@ def test_ingest_when_db_error(
     )
 
 
-def test_request_and_response_json_saved_to_s3_on_ingest(basic_s3_client):
+def test_request_json_saved_to_s3_on_ingest(basic_s3_client):
     bucket_name = "test_bucket"
     json_data = {"key": "value"}
 
-    ingest_service.import_data({"key": "value"}, "test")
+    with patch(
+        "app.service.ingest.uuid4", return_value="1111-1111"
+    ) as mock_uuid_generator:
+        ingest_service.import_data({"key": "value"}, "test_corpus_id")
 
-    response = basic_s3_client.list_objects_v2(Bucket=bucket_name)
+    response = basic_s3_client.list_objects_v2(
+        Bucket=bucket_name, Prefix="1111-1111-request-test_corpus_id"
+    )
+
+    mock_uuid_generator.assert_called_once()
     assert "Contents" in response
     objects = response["Contents"]
     assert len(objects) == 1

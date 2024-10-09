@@ -8,6 +8,7 @@ import of data and other services for validation etc.
 import logging
 from enum import Enum
 from typing import Any, Optional, Type, TypeVar
+from uuid import uuid4
 
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
@@ -223,7 +224,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
-    upload_ingest_json_to_s3("", corpus_import_id, data)
+    ingest_uuid = uuid4()
+    upload_ingest_json_to_s3(f"{ingest_uuid}-request", corpus_import_id, data)
 
     _LOGGER.info("Getting DB session")
 
@@ -256,7 +258,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
             f"Bulk import for corpus: {corpus_import_id} successfully completed"
         )
 
-        # save response to S3 as part of PDCT-1345
+        upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, response)
+
     except Exception as e:
         _LOGGER.error(
             f"Rolling back transaction due to the following error: {e}", exc_info=True
