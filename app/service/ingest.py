@@ -236,29 +236,29 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     document_data = data["documents"] if "documents" in data else None
     event_data = data["events"] if "events" in data else None
 
-    response = {}
+    result = {}
 
     try:
         if collection_data:
             _LOGGER.info("Saving collections")
-            response["collections"] = save_collections(
+            result["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
             _LOGGER.info("Saving families")
-            response["families"] = save_families(family_data, corpus_import_id, db)
+            result["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
             _LOGGER.info("Saving documents")
-            response["documents"] = save_documents(document_data, corpus_import_id, db)
+            result["documents"] = save_documents(document_data, corpus_import_id, db)
         if event_data:
             _LOGGER.info("Saving events")
-            response["events"] = save_events(event_data, corpus_import_id, db)
+            result["events"] = save_events(event_data, corpus_import_id, db)
 
         _LOGGER.info(
             f"Bulk import for corpus: {corpus_import_id} successfully completed"
         )
 
-        upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, response)
+        upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, result)
 
     except Exception as e:
         _LOGGER.error(
