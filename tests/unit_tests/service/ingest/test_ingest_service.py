@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,6 +10,7 @@ from app.errors import ValidationError
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
     basic_s3_client,
     corpus_repo_mock,
@@ -91,6 +93,7 @@ def test_ingest_when_ok(
         assert False, f"import_data in ingest service raised an exception: {e}"
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_import_data_when_data_invalid(caplog, basic_s3_client):
     test_data = {
         "collections": [
@@ -109,6 +112,7 @@ def test_import_data_when_data_invalid(caplog, basic_s3_client):
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_ingest_when_db_error(
     caplog, basic_s3_client, corpus_repo_mock, collection_repo_mock
 ):
@@ -132,6 +136,7 @@ def test_ingest_when_db_error(
     )
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_request_json_saved_to_s3_on_ingest(basic_s3_client):
     bucket_name = "test_bucket"
     json_data = {"key": "value"}

@@ -1,4 +1,7 @@
+import glob
 import json
+import os
+from unittest.mock import patch
 
 import pytest
 from botocore.exceptions import ClientError
@@ -37,6 +40,7 @@ def test_upload_json_to_s3_when_error(basic_s3_client):
     assert e.value.response["Error"]["Code"] == "NoSuchBucket"
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_upload_ingest_json_to_s3_success(basic_s3_client):
     json_data = {"test": "test"}
     upload_ingest_json_to_s3("1111-1111", "test_corpus_id", json_data)
@@ -52,3 +56,14 @@ def test_upload_ingest_json_to_s3_success(basic_s3_client):
     body = get_response["Body"].read().decode("utf-8")
 
     assert json.loads(body) == json_data
+
+
+def test_save_ingest_json_locally_when_in_local_development(basic_s3_client):
+    json_data = {"test": "test"}
+
+    upload_ingest_json_to_s3("1111-1111", "test_corpus_id", json_data)
+
+    matching_files = glob.glob("1111-1111-test_corpus_id*")
+    assert len(matching_files) == 1, "🧩 Expected one matching file."
+
+    os.remove(matching_files[0])

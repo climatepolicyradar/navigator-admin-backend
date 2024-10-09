@@ -114,12 +114,19 @@ def upload_ingest_json_to_s3(
     :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
     """
     ingest_upload_bucket = os.environ["INGEST_JSON_BUCKET"]
+    current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
+    filename = f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json"
+
+    if ingest_upload_bucket == "skip":
+        with open(filename, "w") as f:
+            json.dump(data, f, indent=4)
+        return
+
     s3_client = get_s3_client()
 
-    current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
     context = S3UploadContext(
         bucket_name=ingest_upload_bucket,
-        object_name=f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json",
+        object_name=filename,
     )
     upload_json_to_s3(s3_client, context, data)
 
