@@ -9,8 +9,12 @@ import json
 import os
 from unittest.mock import Mock, patch
 
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+
+from app.api.api_v1.routers.ingest import validate_entity_relationships
+from app.errors import ValidationError
 
 
 def test_ingest_when_not_authenticated(client: TestClient):
@@ -47,38 +51,8 @@ def test_ingest_data_when_ok(
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
-        "collections": ["test.new.collection.0", "test.new.collection.1"],
-        "families": ["test.new.family.0", "test.new.family.1"],
-        "documents": ["test.new.document.0", "test.new.document.1"],
+        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
     }
-
-
-def test_ingest_when_data_invalid(
-    client: TestClient, user_header_token, corpus_service_mock
-):
-
-    invalid_import_id = "invalid"
-    test_data = json.dumps(
-        {
-            "collections": [
-                {
-                    "import_id": invalid_import_id,
-                    "title": "Test title",
-                    "description": "Test description",
-                },
-            ],
-        }
-    ).encode("utf-8")
-    test_data_file = io.BytesIO(test_data)
-
-    response = client.post(
-        "/api/v1/ingest/test",
-        files={"new_data": test_data_file},
-        headers=user_header_token,
-    )
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json().get("detail") == "The import id invalid is invalid!"
 
 
 def test_ingest_when_no_data(
@@ -97,27 +71,57 @@ def test_ingest_when_no_data(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-def test_ingest_data_when_db_error(
-    client: TestClient,
-    user_header_token,
-    corpus_repo_mock,
-    collection_repo_mock,
-):
-    collection_repo_mock.throw_repository_error = True
+def test_ingest_documents_when_no_family(client: TestClient, user_header_token):
+    fam_import_id = "test.new.family.0"
+    test_data = json.dumps(
+        {
+            "documents": [
+                {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
+            ]
+        }
+    ).encode("utf-8")
+    test_data_file = io.BytesIO(test_data)
 
     response = client.post(
         "/api/v1/ingest/test",
-        files={
-            "new_data": open(
-                os.path.join(
-                    "tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"
-                ),
-                "rb",
-            )
-        },
+        files={"new_data": test_data_file},
         headers=user_header_token,
     )
 
-    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-    assert response.json().get("detail") == "bad collection repo"
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json().get("detail") == f"No entity with id {fam_import_id} found"
+
+
+def test_validate_entity_relationships_when_no_family_matching_document():
+    fam_import_id = "test.new.family.0"
+    test_data = {
+        "documents": [
+            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
+        ]
+    }
+
+    with pytest.raises(ValidationError) as e:
+        validate_entity_relationships(test_data)
+    assert f"No entity with id {fam_import_id} found" == e.value.message
+
+
+def test_validate_entity_relationships_when_no_family_matching_event():
+    fam_import_id = "test.new.family.0"
+    test_data = {
+        "events": [{"import_id": "test.new.event.0", "family_import_id": fam_import_id}]
+    }
+
+    with pytest.raises(ValidationError) as e:
+        validate_entity_relationships(test_data)
+    assert f"No entity with id {fam_import_id} found" == e.value.message
+
+
+def test_validate_entity_relationships_when_no_collection_matching_family():
+    coll_import_id = "test.new.collection.0"
+    test_data = {
+        "families": [{"import_id": "test.new.event.0", "collections": [coll_import_id]}]
+    }
+
+    with pytest.raises(ValidationError) as e:
+        validate_entity_relationships(test_data)
+    assert f"No entity with id {coll_import_id} found" == e.value.message
