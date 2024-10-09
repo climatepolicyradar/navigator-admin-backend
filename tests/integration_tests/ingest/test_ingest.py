@@ -8,6 +8,7 @@ from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
 from fastapi import status
 from fastapi.testclient import TestClient
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
@@ -183,9 +184,24 @@ def test_ingest_idempotency(
         }
 
     assert (
+        "Created"
+        == data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "test.new.document.999")
+        .one_or_none()
+        .document_status
+    )
+
+    assert (
         not data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == "test.new.document.1000")
         .one_or_none()
+    )
+
+    # simulating pipeline ingest
+    data_db.execute(
+        update(FamilyDocument)
+        .where(FamilyDocument.import_id == "test.new.document.999")
+        .values(document_status="Published")
     )
 
     with caplog.at_level(logging.ERROR):
@@ -200,12 +216,21 @@ def test_ingest_idempotency(
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
 
+    # checking that subsequent bulk import does not change the status
     assert (
-        "test.new.document.1000"
+        "Published"
+        == data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "test.new.document.999")
+        .one_or_none()
+        .document_status
+    )
+
+    assert (
+        "Created"
         == data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == "test.new.document.1000")
         .one_or_none()
-        .import_id
+        .document_status
     )
 
 
