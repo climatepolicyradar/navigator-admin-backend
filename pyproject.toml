@@ -32,7 +32,7 @@ urllib3 = "^1.26.17"
 db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.8.17" }
 
 [tool.poetry.dev-dependencies]
-pre-commit = "^2.17.0"
+pre-commit = "^4.0.1"
 python-dotenv = "^0.19.2"
 pytest = "^8.3.2"
 pytest-dotenv = "^0.5.2"
