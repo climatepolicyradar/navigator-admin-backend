@@ -107,7 +107,7 @@ def test_ingest_when_db_error(
     )
 
 
-def test_json_saved_to_s3_on_ingest(basic_s3_client):
+def test_request_and_response_json_saved_to_s3_on_ingest(basic_s3_client):
     bucket_name = "test_bucket"
     json_data = {"key": "value"}
 

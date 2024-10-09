@@ -223,7 +223,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
-    upload_ingest_json_to_s3(corpus_import_id, data)
+    upload_ingest_json_to_s3("", corpus_import_id, data)
 
     _LOGGER.info("Getting DB session")
 
