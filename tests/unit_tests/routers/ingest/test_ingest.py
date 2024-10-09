@@ -47,7 +47,7 @@ def test_ingest_data_when_ok(client: TestClient, user_header_token):
 
     background_task_mock.assert_called_once()
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_202_ACCEPTED
     assert response.json() == {
         "message": "Bulk import request accepted. Check Cloudwatch logs for result."
     }
