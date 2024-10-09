@@ -1,4 +1,3 @@
-import glob
 import json
 import os
 from unittest.mock import patch
@@ -11,6 +10,7 @@ from app.clients.aws.s3bucket import (
     upload_ingest_json_to_s3,
     upload_json_to_s3,
 )
+from tests.helpers.utils import cleanup_local_files
 
 
 def test_upload_json_to_s3_when_ok(basic_s3_client):
@@ -58,12 +58,14 @@ def test_upload_ingest_json_to_s3_success(basic_s3_client):
     assert json.loads(body) == json_data
 
 
-def test_save_ingest_json_locally_when_in_local_development(basic_s3_client):
+def test_do_not_save_ingest_json_to_s3_when_in_local_development(basic_s3_client):
     json_data = {"test": "test"}
 
     upload_ingest_json_to_s3("1111-1111", "test_corpus_id", json_data)
 
-    matching_files = glob.glob("1111-1111-test_corpus_id*")
-    assert len(matching_files) == 1, "🧩 Expected one matching file."
+    find_response = basic_s3_client.list_objects_v2(
+        Bucket="test_bucket", Prefix="1111-1111-test_corpus_id"
+    )
 
-    os.remove(matching_files[0])
+    assert "Contents" not in find_response
+    cleanup_local_files("1111-1111-test_corpus_id*")
