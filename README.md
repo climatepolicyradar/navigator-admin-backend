@@ -21,3 +21,9 @@ See [the linear project](https://linear.app/climate-policy-radar/project/admin-i
 
 If you are new to the repository, please ensure you read the [getting starting guide](GETTING_STARTED.md)
 and the [design guide](DESIGN.md).
+
+## Testing
+
+Currently the integration tests around the ingest endpoint use the AWS S3 mock
+as we do not have our own implementation.
+Ticket to fix that: [PDCT-1570](https://linear.app/climate-policy-radar/issue/PDCT-1570/add-aws-s3-docker-image-for-integration-tests)

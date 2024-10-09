@@ -15,7 +15,7 @@ from app.errors import RepositoryError
 _LOGGER = logging.getLogger(__name__)
 
 
-class S3UploadConfig(BaseModel):
+class S3UploadContext(BaseModel):
     bucket_name: str
     object_name: str
 
@@ -79,24 +79,24 @@ def get_s3_url(region: str, bucket: str, key: str) -> str:
 
 
 def upload_json_to_s3(
-    s3_client: AWSClient, config: S3UploadConfig, json_data: dict[str, Any]
+    s3_client: AWSClient, context: S3UploadContext, json_data: dict[str, Any]
 ) -> None:
     """
     Upload a JSON file to S3
 
-    :param S3UploadConfig config: The configuration required for the upload.
+    :param S3UploadContext context: The context of the upload.
     :param dict[str, Any] json_data: The json data to be uploaded to S3.
     :raises Exception: on any error when uploading the file to S3.
     """
     try:
         s3_client.put_object(
-            Bucket=config.bucket_name,
-            Key=config.object_name,
+            Bucket=context.bucket_name,
+            Key=context.object_name,
             Body=json.dumps(json_data),
             ContentType="application/json",
         )
         _LOGGER.info(
-            f"🎉 Successfully uploaded JSON to S3: {config.bucket_name}/{config.object_name}"
+            f"🎉 Successfully uploaded JSON to S3: {context.bucket_name}/{context.object_name}"
         )
     except Exception as e:
         _LOGGER.error(f"💥 Failed to upload JSON to S3:{e}]")
@@ -117,11 +117,11 @@ def upload_ingest_json_to_s3(
     s3_client = get_s3_client()
 
     current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
-    config = S3UploadConfig(
+    context = S3UploadContext(
         bucket_name=ingest_upload_bucket,
         object_name=f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json",
     )
-    upload_json_to_s3(s3_client, config, data)
+    upload_json_to_s3(s3_client, context, data)
 
 
 # TODO: add more s3 functions like listing and reading files here
