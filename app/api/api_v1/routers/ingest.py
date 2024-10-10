@@ -240,7 +240,7 @@ def _validate_ingest_data(data: dict[str, Any]) -> None:
 @r.post(
     "/ingest/{corpus_import_id}",
     response_model=Json,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_202_ACCEPTED,
 )
 async def ingest(
     new_data: UploadFile, corpus_import_id: str, background_tasks: BackgroundTasks

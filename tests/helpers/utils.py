@@ -1,3 +1,5 @@
+import glob
+import os
 from typing import Optional, Union
 
 
@@ -24,3 +26,13 @@ def remove_trigger_cols_from_result(
         return {k: v for k, v in data.items() if k not in ("created", "last_modified")}
 
     return None
+
+
+def cleanup_local_files(file: str):
+    """Remove all files in the specified directory."""
+    files = glob.glob(file)
+    for f in files:
+        try:
+            os.remove(f)
+        except Exception as e:
+            print(f"Error deleting file {f}: {e}")

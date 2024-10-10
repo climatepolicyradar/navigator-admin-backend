@@ -7,7 +7,7 @@ This uses service mocks and ensures the endpoint calls into each service.
 import io
 import json
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import status
@@ -24,39 +24,41 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-def test_ingest_data_when_ok(
-    client: TestClient,
-    user_header_token,
-    collection_repo_mock,
-    geography_repo_mock,
-    corpus_repo_mock,
-    family_repo_mock,
-    document_repo_mock,
-    db_client_metadata_mock,
-):
+def test_ingest_data_when_ok(client: TestClient, user_header_token):
+    corpus_import_id = "test"
 
-    response = client.post(
-        "/api/v1/ingest/test",
-        files={
-            "new_data": open(
-                os.path.join(
-                    "tests", "unit_tests", "routers", "ingest", "test_bulk_data.json"
-                ),
-                "rb",
-            )
-        },
-        headers=user_header_token,
-    )
+    with patch("fastapi.BackgroundTasks.add_task") as background_task_mock:
+        response = client.post(
+            f"/api/v1/ingest/{corpus_import_id}",
+            files={
+                "new_data": open(
+                    os.path.join(
+                        "tests",
+                        "unit_tests",
+                        "routers",
+                        "ingest",
+                        "test_bulk_data.json",
+                    ),
+                    "rb",
+                )
+            },
+            headers=user_header_token,
+        )
 
-    assert response.status_code == status.HTTP_201_CREATED
+    background_task_mock.assert_called_once()
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
     assert response.json() == {
         "message": "Bulk import request accepted. Check Cloudwatch logs for result."
     }
 
 
 def test_ingest_when_no_data(
-    client: TestClient, user_header_token, collection_repo_mock, corpus_service_mock
+    client: TestClient,
+    user_header_token,
+    collection_repo_mock,
+    corpus_service_mock,
+    basic_s3_client,
 ):
     test_data = json.dumps({}).encode("utf-8")
     test_data_file = io.BytesIO(test_data)
