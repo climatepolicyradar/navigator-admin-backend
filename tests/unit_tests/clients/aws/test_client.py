@@ -42,7 +42,6 @@ def test_upload_json_to_s3_when_error(basic_s3_client):
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_upload_ingest_json_to_s3_success(basic_s3_client):
-    print(">>>>>>>>>>>>>>>>>>>", os.getenv("BULK_IMPORT_BUCKET", "Nothing"))
     json_data = {"test": "test"}
     upload_ingest_json_to_s3("1111-1111", "test_corpus_id", json_data)
 
