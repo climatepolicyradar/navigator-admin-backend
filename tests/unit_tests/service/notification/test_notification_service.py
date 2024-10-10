@@ -36,6 +36,7 @@ def test_send_notification_error(caplog):
     assert f"Error sending notification caused by: {exception_message}" in caplog.text
 
 
+@patch.dict(os.environ, {"SLACK_WEBHOOK_URL": "skip"})
 def test_do_not_send_notification_when_in_local_development(caplog):
     notification = "Hello World!"
 
