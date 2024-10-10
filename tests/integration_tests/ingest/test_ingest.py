@@ -2,6 +2,7 @@ import io
 import json
 import logging
 import os
+from unittest.mock import patch
 
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
     data_db: Session, client: TestClient, user_header_token, basic_s3_client
 ):
@@ -84,6 +86,7 @@ def test_ingest_when_ok(
         assert ev.family_import_id in expected_family_import_ids
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_import_data_rollback(
     caplog,
     data_db: Session,
@@ -122,6 +125,7 @@ def test_import_data_rollback(
     assert actual_collection is None
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_ingest_idempotency(
     caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
 ):
@@ -234,6 +238,7 @@ def test_ingest_idempotency(
     )
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_ingest_when_corpus_import_id_invalid(
     caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
 ):
@@ -261,6 +266,7 @@ def test_ingest_when_corpus_import_id_invalid(
     assert f"No organisation associated with corpus {invalid_corpus}" in caplog.text
 
 
+@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
 def test_ingest_events_when_event_type_invalid(
     caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
 ):

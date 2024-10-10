@@ -1,12 +1,12 @@
 import logging
+import os
 from unittest.mock import patch
 
 from app.service.notification import send_notification
 
 
-def test_send_notification_success(caplog, monkeypatch):
-    monkeypatch.setenv("SLACK_WEBHOOK_URL", "test")
-
+@patch.dict(os.environ, {"SLACK_WEBHOOK_URL": "test"})
+def test_send_notification_success(caplog):
     notification = "Hello World!"
 
     with (
@@ -19,8 +19,8 @@ def test_send_notification_success(caplog, monkeypatch):
     assert notification in caplog.text
 
 
-def test_send_notification_error(caplog, monkeypatch):
-    monkeypatch.setenv("SLACK_WEBHOOK_URL", "test")
+@patch.dict(os.environ, {"SLACK_WEBHOOK_URL": "test"})
+def test_send_notification_error(caplog):
 
     exception_message = "Test error"
 

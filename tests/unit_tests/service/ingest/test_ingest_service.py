@@ -71,9 +71,14 @@ def test_ingest_when_ok(
     }
 
     try:
-        with patch(
-            "app.service.ingest.uuid4", return_value="1111-1111"
-        ) as mock_uuid_generator:
+        with (
+            patch(
+                "app.service.ingest.uuid4", return_value="1111-1111"
+            ) as mock_uuid_generator,
+            patch(
+                "app.service.ingest.notification_service.send_notification"
+            ) as mock_notification_service,
+        ):
             ingest_service.import_data(test_data, "test_corpus_id")
 
             response = basic_s3_client.list_objects_v2(
@@ -81,7 +86,11 @@ def test_ingest_when_ok(
             )
 
             mock_uuid_generator.assert_called_once()
-            assert "Contents" in response
+            assert 2 == mock_notification_service.call_count
+            mock_notification_service.assert_called_with(
+                "🎉 Bulk import for corpus: test_corpus_id successfully completed."
+            )
+
             objects = response["Contents"]
             assert len(objects) == 1
 
@@ -128,8 +137,18 @@ def test_ingest_when_db_error(
         ]
     }
 
-    with caplog.at_level(logging.ERROR):
+    with (
+        caplog.at_level(logging.ERROR),
+        patch(
+            "app.service.ingest.notification_service.send_notification"
+        ) as mock_notification_service,
+    ):
         ingest_service.import_data(test_data, "test")
+
+    assert 2 == mock_notification_service.call_count
+    mock_notification_service.assert_called_with(
+        "💥 Bulk import for corpus: test has failed."
+    )
     assert (
         "Rolling back transaction due to the following error: bad collection repo"
         in caplog.text
