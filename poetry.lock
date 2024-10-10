@@ -575,7 +575,7 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "db-client"
-version = "3.8.15"
+version = "3.8.18"
 description = "All things to do with the datamodel and its storage. Including alembic migrations and datamodel code."
 optional = false
 python-versions = "^3.9"
@@ -595,8 +595,8 @@ SQLAlchemy-Utils = "^0.38.2"
 [package.source]
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
-reference = "v3.8.15"
-resolved_reference = "f8497007e9b9ce6e8703b970bd4f33d11f8df3e7"
+reference = "v3.8.18"
+resolved_reference = "b221b4d7a23a111b8b0ce2a19329f2d3a73b0e7c"
 
 [[package]]
 name = "dill"
@@ -3029,13 +3029,22 @@ cffi = ">=1.0"
 
 [[package]]
 name = "xmltodict"
+<<<<<<< HEAD
 version = "0.14.1"
+=======
+version = "0.14.0"
+>>>>>>> main
 description = "Makes working with XML feel like you are working with JSON"
 optional = false
 python-versions = ">=3.6"
 files = [
+<<<<<<< HEAD
     {file = "xmltodict-0.14.1-py2.py3-none-any.whl", hash = "sha256:3ef4a7b71c08f19047fcbea572e1d7f4207ab269da1565b5d40e9823d3894e63"},
     {file = "xmltodict-0.14.1.tar.gz", hash = "sha256:338c8431e4fc554517651972d62f06958718f6262b04316917008e8fd677a6b0"},
+=======
+    {file = "xmltodict-0.14.0-py2.py3-none-any.whl", hash = "sha256:6dd20b8de8d0eb84d175ec706cc17b53df236615b0980de33537736319e5ee85"},
+    {file = "xmltodict-0.14.0.tar.gz", hash = "sha256:8b39b25b564fd466be566c9e8a869cc4b5083c2fec7f98665f47bf0853f6cc77"},
+>>>>>>> main
 ]
 
 [[package]]
@@ -3059,5 +3068,10 @@ type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.0"
+<<<<<<< HEAD
 python-versions = "^3.10"
 content-hash = "115bf025186a1a5495ab3ae4a4276f92c46defb1eff95a42cedda945e5bf0391"
+=======
+python-versions = "^3.9"
+content-hash = "2e261a48d27dc0ed25db78c0778446f59359948cf76a588ab8e04879e0e6a697"
+>>>>>>> main

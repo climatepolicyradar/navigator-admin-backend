@@ -1,10 +1,23 @@
+import json
+import logging
+import os
 import re
+from datetime import datetime
+from typing import Any
 from urllib.parse import quote_plus, urlsplit
 
 from botocore.exceptions import ClientError
+from pydantic import BaseModel
 
-from app.clients.aws.client import AWSClient
+from app.clients.aws.client import AWSClient, get_s3_client
 from app.errors import RepositoryError
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class S3UploadContext(BaseModel):
+    bucket_name: str
+    object_name: str
 
 
 def _encode_characters_in_path(s3_path: str) -> str:
@@ -63,6 +76,59 @@ def get_s3_url(region: str, bucket: str, key: str) -> str:
     :return str: the s3 url
     """
     return f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
+
+
+def upload_json_to_s3(
+    s3_client: AWSClient, context: S3UploadContext, json_data: dict[str, Any]
+) -> None:
+    """
+    Upload a JSON file to S3
+
+    :param S3UploadContext context: The context of the upload.
+    :param dict[str, Any] json_data: The json data to be uploaded to S3.
+    :raises Exception: on any error when uploading the file to S3.
+    """
+    try:
+        s3_client.put_object(
+            Bucket=context.bucket_name,
+            Key=context.object_name,
+            Body=json.dumps(json_data),
+            ContentType="application/json",
+        )
+        _LOGGER.info(
+            f"🎉 Successfully uploaded JSON to S3: {context.bucket_name}/{context.object_name}"
+        )
+    except Exception as e:
+        _LOGGER.error(f"💥 Failed to upload JSON to S3:{e}]")
+        raise
+
+
+def upload_ingest_json_to_s3(
+    ingest_id: str, corpus_import_id: str, data: dict[str, Any]
+) -> None:
+    """
+    Upload an ingest JSON file to S3
+
+    :param str ingest_id: The uuid of the ingest action.
+    :param str corpus_import_id: The import_id of the corpus the ingest data belongs to.
+    :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
+    """
+    ingest_upload_bucket = os.environ["INGEST_JSON_BUCKET"]
+    current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
+    filename = f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json"
+
+    if ingest_upload_bucket == "skip":
+        with open(filename, "w") as f:
+            json.dump(data, f, indent=4)
+        return
+
+    s3_client = get_s3_client()
+
+    context = S3UploadContext(
+        bucket_name=ingest_upload_bucket,
+        object_name=filename,
+    )
+    upload_json_to_s3(s3_client, context, data)
 
 
 # TODO: add more s3 functions like listing and reading files here
