@@ -10,7 +10,7 @@ from app.errors import ValidationError
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
     basic_s3_client,
     corpus_repo_mock,
@@ -71,9 +71,14 @@ def test_ingest_when_ok(
     }
 
     try:
-        with patch(
-            "app.service.ingest.uuid4", return_value="1111-1111"
-        ) as mock_uuid_generator:
+        with (
+            patch(
+                "app.service.ingest.uuid4", return_value="1111-1111"
+            ) as mock_uuid_generator,
+            patch(
+                "app.service.ingest.notification_service.send_notification"
+            ) as mock_notification_service,
+        ):
             ingest_service.import_data(test_data, "test_corpus_id")
 
             response = basic_s3_client.list_objects_v2(
@@ -81,7 +86,11 @@ def test_ingest_when_ok(
             )
 
             mock_uuid_generator.assert_called_once()
-            assert "Contents" in response
+            assert 2 == mock_notification_service.call_count
+            mock_notification_service.assert_called_with(
+                "🎉 Bulk import for corpus: test_corpus_id successfully completed."
+            )
+
             objects = response["Contents"]
             assert len(objects) == 1
 
@@ -93,7 +102,7 @@ def test_ingest_when_ok(
         assert False, f"import_data in ingest service raised an exception: {e}"
 
 
-@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_import_data_when_data_invalid(caplog, basic_s3_client):
     test_data = {
         "collections": [
@@ -112,7 +121,7 @@ def test_import_data_when_data_invalid(caplog, basic_s3_client):
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_db_error(
     caplog, basic_s3_client, corpus_repo_mock, collection_repo_mock
 ):
@@ -128,15 +137,25 @@ def test_ingest_when_db_error(
         ]
     }
 
-    with caplog.at_level(logging.ERROR):
+    with (
+        caplog.at_level(logging.ERROR),
+        patch(
+            "app.service.ingest.notification_service.send_notification"
+        ) as mock_notification_service,
+    ):
         ingest_service.import_data(test_data, "test")
+
+    assert 2 == mock_notification_service.call_count
+    mock_notification_service.assert_called_with(
+        "💥 Bulk import for corpus: test has failed."
+    )
     assert (
         "Rolling back transaction due to the following error: bad collection repo"
         in caplog.text
     )
 
 
-@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_request_json_saved_to_s3_on_ingest(basic_s3_client):
     bucket_name = "test_bucket"
     json_data = {"key": "value"}
