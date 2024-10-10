@@ -222,6 +222,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
+    # start_message = f"Bulk import for corpus: {corpus_import_id} has started."
 
     _LOGGER.info("Getting DB session")
 
@@ -250,10 +251,6 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
             _LOGGER.info("Saving events")
             response["events"] = save_events(event_data, corpus_import_id, db)
 
-        _LOGGER.info(
-            f"Bulk import for corpus: {corpus_import_id} successfully completed"
-        )
-
         # save response to S3 as part of PDCT-1345
     except Exception as e:
         _LOGGER.error(
@@ -262,3 +259,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
         db.rollback()
     finally:
         db.commit()
+        # success_message = (
+        #     f"Bulk import for corpus: {corpus_import_id} successfully completed."
+        # )
+        # _LOGGER.info(success_message)
+        # slack_message(success_message)
