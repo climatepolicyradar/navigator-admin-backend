@@ -113,6 +113,7 @@ def upload_ingest_json_to_s3(
     :param str corpus_import_id: The import_id of the corpus the ingest data belongs to.
     :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
     """
+    _LOGGER.info(os.getenv("BULK_IMPORT_BUCKET", "Not there"))
     ingest_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
     current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
     filename = f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json"
