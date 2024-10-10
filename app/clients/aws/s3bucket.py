@@ -116,11 +116,13 @@ def upload_ingest_json_to_s3(
     _LOGGER.info(os.getenv("BULK_IMPORT_BUCKET", "Not there"))
     ingest_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
     current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
+
     filename = f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json"
 
     if ingest_upload_bucket == "skip":
-        with open(filename, "w") as f:
-            json.dump(data, f, indent=4)
+        os.makedirs("bulk_import_results", exist_ok=True)
+        with open(f"bulk_import_results/{filename}", "w") as file:
+            json.dump(data, file, indent=4)
         return
 
     s3_client = get_s3_client()
