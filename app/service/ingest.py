@@ -23,6 +23,7 @@ import app.repository.event as event_repository
 import app.repository.family as family_repository
 import app.service.corpus as corpus
 import app.service.geography as geography
+import app.service.notification as notification_service
 import app.service.validation as validation
 from app.clients.aws.s3bucket import upload_ingest_json_to_s3
 from app.model.ingest import (
@@ -224,6 +225,10 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
+    notification_service.send_notification(
+        f"🚀 Bulk import for corpus: {corpus_import_id} has started."
+    )
+
     ingest_uuid = uuid4()
     upload_ingest_json_to_s3(f"{ingest_uuid}-request", corpus_import_id, data)
 
@@ -254,16 +259,18 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
             _LOGGER.info("Saving events")
             result["events"] = save_events(event_data, corpus_import_id, db)
 
-        _LOGGER.info(
-            f"Bulk import for corpus: {corpus_import_id} successfully completed"
-        )
-
         upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, result)
 
+        notification_service.send_notification(
+            f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed."
+        )
     except Exception as e:
         _LOGGER.error(
             f"Rolling back transaction due to the following error: {e}", exc_info=True
         )
         db.rollback()
+        notification_service.send_notification(
+            f"💥 Bulk import for corpus: {corpus_import_id} has failed."
+        )
     finally:
         db.commit()

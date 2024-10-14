@@ -40,7 +40,7 @@ def test_upload_json_to_s3_when_error(basic_s3_client):
     assert e.value.response["Error"]["Code"] == "NoSuchBucket"
 
 
-@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "test_bucket"})
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_upload_ingest_json_to_s3_success(basic_s3_client):
     json_data = {"test": "test"}
     upload_ingest_json_to_s3("1111-1111", "test_corpus_id", json_data)
@@ -58,7 +58,7 @@ def test_upload_ingest_json_to_s3_success(basic_s3_client):
     assert json.loads(body) == json_data
 
 
-@patch.dict(os.environ, {"INGEST_JSON_BUCKET": "skip"})
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "skip"})
 def test_do_not_save_ingest_json_to_s3_when_in_local_development(basic_s3_client):
     json_data = {"test": "test"}
 
@@ -69,4 +69,4 @@ def test_do_not_save_ingest_json_to_s3_when_in_local_development(basic_s3_client
     )
 
     assert "Contents" not in find_response
-    cleanup_local_files("1111-1111-test_corpus_id*")
+    cleanup_local_files("bulk_import_results/1111-1111-test_corpus_id*")
