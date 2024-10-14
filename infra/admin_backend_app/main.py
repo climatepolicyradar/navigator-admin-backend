@@ -130,6 +130,8 @@ def _create_backend_environment() -> dict[str, str]:
     rds_address = CONFIG.require("rds_address")
     rds_database = CONFIG.require("rds_database")
     secret_key = CONFIG.require("secret_key")
+    bulk_import_bucket = CONFIG.require("bulk_import_bucket")
+    slack_webhook_url = CONFIG.require("slack_webhook_url")
 
     environment: dict[str, str] = {
         "ADMIN_POSTGRES_USER": rds_username,
@@ -137,6 +139,8 @@ def _create_backend_environment() -> dict[str, str]:
         "ADMIN_POSTGRES_HOST": rds_address,
         "ADMIN_POSTGRES_DATABASE": rds_database,
         "SECRET_KEY": secret_key,
+        "BULK_IMPORT_BUCKET": bulk_import_bucket,
+        "SLACK_WEBHOOK_URL": slack_webhook_url,
     }
 
     return environment

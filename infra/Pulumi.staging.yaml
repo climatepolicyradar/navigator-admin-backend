@@ -1,7 +1,7 @@
 config:
-  admin_backend:BULK_IMPORT_BUCKET:
+  admin_backend:bulk_import_bucket:
     secure: AAABACSGUs327WYnFemIJ2/mWs5G91qC40akg6j/n/+n/YRedtLYNzJRVw2uj+gUMFP7kq7T
-  admin_backend:SLACK_WEBHOOK_URL:
+  admin_backend:slack_webhook_url:
     secure: AAABAHAcHjcSLOSl+DjV1V5k3q7z/oXhT1sBUHLTrBIy2JPNmoslEYX/sqUrcj5A9+hkkyS8ae25gwRUuHHMHyPpkdmVxJChtyOgTwZyCCAn3XTyfbC4sZmWqh9SZS/767kgEiIOriro0lyitSKxTZw=
   admin_backend:apprunner_backend_max_concurrency: "10"
   admin_backend:apprunner_backend_max_instance_count: "5"
