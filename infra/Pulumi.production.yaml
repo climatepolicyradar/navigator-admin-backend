@@ -2,7 +2,9 @@ config:
   admin_backend:apprunner_backend_max_concurrency: "10"
   admin_backend:apprunner_backend_max_instance_count: "5"
   admin_backend:apprunner_backend_min_instance_count: "2"
-  admin_backend:docker_tag: 2.16.3-beta
+  admin_backend:bulk_import_bucket:
+    secure: AAABABXH0sWOg9cQVYQHjLfnO4MFTPcXXm8B4kZwqZugZdMt0cL9VUdLif8K1+ysL8i6NrXYYM+j
+  admin_backend:docker_tag: 2.17.0-beta
   admin_backend:ecr_uri:
     secure: AAABADGDJp8NB1PMdF0xypW3Qqi+W0j2nvXCXTrwErXic9HTh6E8asjRIZI3mAEeXOnZB2TrJUpra0/l1nxSoEkiGTrygYmdgVEUEEjtjY+c+EHyWhs/zPpNiXv+VAR2r/hERg==
   admin_backend:rds_address:
@@ -15,6 +17,8 @@ config:
     secure: AAABACkh3HYtHyETH8Y80kYCO3UwGxKGHX/oHIRe+QG27jrDRyPx1O74UEBvmuA=
   admin_backend:secret_key:
     secure: AAABAJ4tlIq+2Xgl9ZgyUhsA/7EB1zY2zI/kaxEaPIl0SdwS56NFzJ2Z2BAkVm1cqE3yxKiuE2jfkQm6pK1d/Dcz2G0=
+  admin_backend:slack_webhook_url:
+    secure: AAABAMgq3YN6V0Ra+wFelw9uTskI8A0MlaNJRB7S1is4m/oDNWSQuBjJHJiisx5BjVzqdqJTWnWi4rP3KRK1NX3C9HClF5IvV9rfz+ixrWX7UZ4VHAfWYgPY9CpWPlwRmrXUphLgj8TYsCTCGhFCo24=
   admin_backend:validation_account_id:
     secure: AAABAA4bYO+O5RBLUdfRz8uOT9Fs+/sNcvElOWp3C7ThITE0o5GfGwVCyRw=
   admin_backend:vpc_private_subnet_1_id:
