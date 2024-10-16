@@ -5,17 +5,19 @@ import pulumi_aws as aws
 from util.naming import DEFAULT_TAGS, NAME_PREFIX
 
 CONFIG = pulumi.config.Config()
-# TODO: we'll probably eventually needs some S3 access
-# _S3_ACCESS_POLICY = {
-#     "Version": "2012-10-17",
-#     "Statement": [
-#         {
-#             "Action": ["s3:PutObject"],
-#             "Resource": f"arn:aws:s3:::{CONFIG.require('pipeline_s3_bucket')}/*",
-#             "Effect": "Allow",
-#         },
-#     ],
-# }
+_S3_ACCESS_POLICY = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": ["s3:*"],
+            "Resource": [
+                f"arn:aws:s3:::{CONFIG.require('bulk_import_bucket')}",
+                f"arn:aws:s3:::{CONFIG.require('bulk_import_bucket')}/*",
+            ],
+            "Effect": "Allow",
+        },
+    ],
+}
 
 _ECR_ACCESS_POLICY = {
     "Version": "2012-10-17",
@@ -56,16 +58,15 @@ def _get_apprunner_instance_role() -> aws.iam.Role:
         tags=DEFAULT_TAGS,
     )
 
-    # TODO: Add some s3 access when needed
-    # s3_access_policy = aws.iam.Policy(
-    #     f"{NAME_PREFIX}-apprunner-s3-access-policy",
-    #     policy=json.dumps(_S3_ACCESS_POLICY),
-    # )
-    # aws.iam.RolePolicyAttachment(
-    #     f"{NAME_PREFIX}-apprunner-role-policy-attach-s3-access-policy",
-    #     role=apprunner_instance_role.name,
-    #     policy_arn=s3_access_policy.arn,
-    # )
+    s3_access_policy = aws.iam.Policy(
+        f"{NAME_PREFIX}-apprunner-s3-access-policy",
+        policy=json.dumps(_S3_ACCESS_POLICY),
+    )
+    aws.iam.RolePolicyAttachment(
+        f"{NAME_PREFIX}-apprunner-role-policy-attach-s3-access-policy",
+        role=apprunner_instance_role.name,
+        policy_arn=s3_access_policy.arn,
+    )
 
     return apprunner_instance_role
 
@@ -104,25 +105,6 @@ def _get_apprunner_access_role() -> aws.iam.Role:
     return apprunner_access_role
 
 
-def _create_backend_vpc_connector() -> aws.apprunner.VpcConnector:
-    # Create a VPC connector to allow AppRunner instances to access private services
-    vpc_connector_tags = dict(DEFAULT_TAGS)
-    vpc_connector_tags["Name"] = f"{NAME_PREFIX}-vpc-connector"
-    vpc_connector = aws.apprunner.VpcConnector(
-        f"{NAME_PREFIX}-vpc-connector",
-        vpc_connector_name=vpc_connector_tags["Name"],
-        security_groups=[CONFIG.require("vpc_security_group_admin_backend")],
-        subnets=[
-            CONFIG.require("vpc_private_subnet_1_id"),
-            CONFIG.require("vpc_private_subnet_2_id"),
-            CONFIG.require("vpc_private_subnet_3_id"),
-        ],
-        tags=vpc_connector_tags,
-    )
-
-    return vpc_connector
-
-
 def _create_backend_environment() -> dict[str, str]:
     # Create the environment config required for the backend service
     rds_username = CONFIG.require("rds_username")
@@ -141,6 +123,7 @@ def _create_backend_environment() -> dict[str, str]:
         "SECRET_KEY": secret_key,
         "BULK_IMPORT_BUCKET": bulk_import_bucket,
         "SLACK_WEBHOOK_URL": slack_webhook_url,
+        "AWS_REGION": "eu-west-1",
     }
 
     return environment
@@ -148,7 +131,6 @@ def _create_backend_environment() -> dict[str, str]:
 
 def _create_apprunner_config() -> aws.apprunner.ServiceSourceConfigurationArgs:
     # Create the main config for the backend AppRunner service
-    account_id = aws.get_caller_identity().account_id
     image_identifier = f"{CONFIG.require('ecr_uri')}:{CONFIG.require('docker_tag')}"
     env = _create_backend_environment()
 
@@ -172,6 +154,25 @@ def _create_apprunner_config() -> aws.apprunner.ServiceSourceConfigurationArgs:
             access_role_arn=_get_apprunner_access_role().arn,
         ),
     )
+
+
+def _create_backend_vpc_connector() -> aws.apprunner.VpcConnector:
+    # Create a VPC connector to allow AppRunner instances to access private services
+    vpc_connector_tags = dict(DEFAULT_TAGS)
+    vpc_connector_tags["Name"] = f"{NAME_PREFIX}-vpc-connector"
+    vpc_connector = aws.apprunner.VpcConnector(
+        f"{NAME_PREFIX}-vpc-connector",
+        vpc_connector_name=vpc_connector_tags["Name"],
+        security_groups=[CONFIG.require("vpc_security_group_admin_backend")],
+        subnets=[
+            CONFIG.require("vpc_private_subnet_1_id"),
+            CONFIG.require("vpc_private_subnet_2_id"),
+            CONFIG.require("vpc_private_subnet_3_id"),
+        ],
+        tags=vpc_connector_tags,
+    )
+
+    return vpc_connector
 
 
 def _create_backend_auto_scaling_config() -> (
