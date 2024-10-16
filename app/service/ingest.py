@@ -9,7 +9,6 @@ import logging
 from enum import Enum
 from typing import Any, Optional, Type, TypeVar
 
-qsq
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from pydantic import ConfigDict, validate_call
