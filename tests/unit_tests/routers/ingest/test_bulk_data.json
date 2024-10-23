@@ -54,5 +54,21 @@
       "title": "",
       "user_language_name": ""
     }
+  ],
+  "events": [
+    {
+      "import_id": "test.new.event.0",
+      "family_import_id": "test.new.family.0",
+      "event_title": "Test",
+      "date": "2000-01-01T00:00:00.000Z",
+      "event_type_value": "Amended"
+    },
+    {
+      "import_id": "test.new.event.1",
+      "family_import_id": "test.new.family.1",
+      "event_title": "Test",
+      "date": "2000-01-01T00:00:00.000Z",
+      "event_type_value": "Amended"
+    }
   ]
 }

@@ -1,5 +1,6 @@
+import json
 import logging
-from datetime import datetime
+import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,7 +10,9 @@ from app.errors import ValidationError
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
+    basic_s3_client,
     corpus_repo_mock,
     geography_repo_mock,
     collection_repo_mock,
@@ -18,6 +21,7 @@ def test_ingest_when_ok(
     event_repo_mock,
     validation_service_mock,
 ):
+    bucket_name = "test_bucket"
     test_data = {
         "collections": [
             {
@@ -53,19 +57,53 @@ def test_ingest_when_ok(
                 "import_id": "test.new.event.0",
                 "family_import_id": "test.new.family.0",
                 "event_title": "Test",
-                "date": datetime.now(),
+                "date": "2000-01-01T00:00:00.000Z",
                 "event_type_value": "Amended",
             }
         ],
     }
 
+    expected_ingest_result = {
+        "collections": ["test.new.collection.0"],
+        "families": ["test.new.family.0"],
+        "documents": ["test.new.document.0"],
+        "events": ["test.new.event.0"],
+    }
+
     try:
-        ingest_service.import_data(test_data, "test")
+        with (
+            patch(
+                "app.service.ingest.uuid4", return_value="1111-1111"
+            ) as mock_uuid_generator,
+            patch(
+                "app.service.ingest.notification_service.send_notification"
+            ) as mock_notification_service,
+        ):
+            ingest_service.import_data(test_data, "test_corpus_id")
+
+            response = basic_s3_client.list_objects_v2(
+                Bucket=bucket_name, Prefix="1111-1111-result-test_corpus_id"
+            )
+
+            mock_uuid_generator.assert_called_once()
+            assert 2 == mock_notification_service.call_count
+            mock_notification_service.assert_called_with(
+                "🎉 Bulk import for corpus: test_corpus_id successfully completed."
+            )
+
+            objects = response["Contents"]
+            assert len(objects) == 1
+
+            key = objects[0]["Key"]
+            response = basic_s3_client.get_object(Bucket=bucket_name, Key=key)
+            body = response["Body"].read().decode("utf-8")
+            assert expected_ingest_result == json.loads(body)
     except Exception as e:
         assert False, f"import_data in ingest service raised an exception: {e}"
 
 
-def test_import_data_when_data_invalid(caplog):
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_import_data_when_data_invalid(caplog, basic_s3_client):
     test_data = {
         "collections": [
             {
@@ -83,7 +121,10 @@ def test_import_data_when_data_invalid(caplog):
 
 
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-def test_ingest_when_db_error(caplog, corpus_repo_mock, collection_repo_mock):
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_ingest_when_db_error(
+    caplog, basic_s3_client, corpus_repo_mock, collection_repo_mock
+):
     collection_repo_mock.throw_repository_error = True
 
     test_data = {
@@ -96,12 +137,47 @@ def test_ingest_when_db_error(caplog, corpus_repo_mock, collection_repo_mock):
         ]
     }
 
-    with caplog.at_level(logging.ERROR):
+    with (
+        caplog.at_level(logging.ERROR),
+        patch(
+            "app.service.ingest.notification_service.send_notification"
+        ) as mock_notification_service,
+    ):
         ingest_service.import_data(test_data, "test")
+
+    assert 2 == mock_notification_service.call_count
+    mock_notification_service.assert_called_with(
+        "💥 Bulk import for corpus: test has failed."
+    )
     assert (
         "Rolling back transaction due to the following error: bad collection repo"
         in caplog.text
     )
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_request_json_saved_to_s3_on_ingest(basic_s3_client):
+    bucket_name = "test_bucket"
+    json_data = {"key": "value"}
+
+    with patch(
+        "app.service.ingest.uuid4", return_value="1111-1111"
+    ) as mock_uuid_generator:
+        ingest_service.import_data({"key": "value"}, "test_corpus_id")
+
+    response = basic_s3_client.list_objects_v2(
+        Bucket=bucket_name, Prefix="1111-1111-request-test_corpus_id"
+    )
+
+    mock_uuid_generator.assert_called_once()
+    assert "Contents" in response
+    objects = response["Contents"]
+    assert len(objects) == 1
+
+    key = objects[0]["Key"]
+    response = basic_s3_client.get_object(Bucket=bucket_name, Key=key)
+    body = response["Body"].read().decode("utf-8")
+    assert json.loads(body) == json_data
 
 
 def test_save_families_when_corpus_invalid(corpus_repo_mock, validation_service_mock):

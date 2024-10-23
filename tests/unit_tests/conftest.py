@@ -6,9 +6,11 @@ Service mocks should only be used for router tests.
 
 from typing import Dict
 
+import boto3
 import db_client.functions.corpus_helpers as db_client_corpus_helpers
 import db_client.functions.metadata as db_client_metadata
 import pytest
+from botocore.exceptions import ClientError
 from fastapi.testclient import TestClient
 from moto import mock_s3
 
@@ -20,6 +22,7 @@ import app.service.corpus as corpus_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
+import app.service.ingest as ingest_service
 import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
 import app.service.validation as validation_service
@@ -56,6 +59,7 @@ from tests.mocks.services.corpus_service import mock_corpus_service
 from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
+from tests.mocks.services.ingest_service import mock_ingest_service
 from tests.mocks.services.validation_service import mock_validation_service
 
 ORG_ID = 1
@@ -216,6 +220,13 @@ def corpus_service_mock(monkeypatch, mocker):
 
 
 @pytest.fixture
+def ingest_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_ingest_service(ingest_service, monkeypatch, mocker)
+    yield ingest_service
+
+
+@pytest.fixture
 def validation_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_validation_service(validation_service, monkeypatch, mocker)
@@ -288,6 +299,21 @@ def test_s3_client(s3_document_bucket_names):
         )
 
         yield s3_client
+
+
+@pytest.fixture
+def basic_s3_client():
+    bucket_name = "test_bucket"
+    with mock_s3():
+        conn = boto3.client("s3", region_name="eu-west-2")
+        try:
+            conn.head_bucket(Bucket=bucket_name)
+        except ClientError:
+            conn.create_bucket(
+                Bucket=bucket_name,
+                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+            )
+        yield conn
 
 
 # -- now UserContexts

@@ -8,6 +8,7 @@ import of data and other services for validation etc.
 import logging
 from enum import Enum
 from typing import Any, Optional, Type, TypeVar
+from uuid import uuid4
 
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
@@ -22,7 +23,9 @@ import app.repository.event as event_repository
 import app.repository.family as family_repository
 import app.service.corpus as corpus
 import app.service.geography as geography
+import app.service.notification as notification_service
 import app.service.validation as validation
+from app.clients.aws.s3bucket import upload_ingest_json_to_s3
 from app.model.ingest import (
     IngestCollectionDTO,
     IngestDocumentDTO,
@@ -206,7 +209,7 @@ def save_events(
             dto = IngestEventDTO(**event).to_event_create_dto()
             import_id = event_repository.create(db, dto)
             event_import_ids.append(import_id)
-            total_events_saved += 0
+            total_events_saved += 1
 
     _LOGGER.info(f"Saved {total_events_saved} events")
     return event_import_ids
@@ -222,6 +225,12 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
+    notification_service.send_notification(
+        f"🚀 Bulk import for corpus: {corpus_import_id} has started."
+    )
+
+    ingest_uuid = uuid4()
+    upload_ingest_json_to_s3(f"{ingest_uuid}-request", corpus_import_id, data)
 
     _LOGGER.info("Getting DB session")
 
@@ -232,33 +241,36 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     document_data = data["documents"] if "documents" in data else None
     event_data = data["events"] if "events" in data else None
 
-    response = {}
+    result = {}
 
     try:
         if collection_data:
             _LOGGER.info("Saving collections")
-            response["collections"] = save_collections(
+            result["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
             _LOGGER.info("Saving families")
-            response["families"] = save_families(family_data, corpus_import_id, db)
+            result["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
             _LOGGER.info("Saving documents")
-            response["documents"] = save_documents(document_data, corpus_import_id, db)
+            result["documents"] = save_documents(document_data, corpus_import_id, db)
         if event_data:
             _LOGGER.info("Saving events")
-            response["events"] = save_events(event_data, corpus_import_id, db)
+            result["events"] = save_events(event_data, corpus_import_id, db)
 
-        _LOGGER.info(
-            f"Bulk import for corpus: {corpus_import_id} successfully completed"
+        upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, result)
+
+        notification_service.send_notification(
+            f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed."
         )
-
-        # save response to S3 as part of PDCT-1345
     except Exception as e:
         _LOGGER.error(
             f"Rolling back transaction due to the following error: {e}", exc_info=True
         )
         db.rollback()
+        notification_service.send_notification(
+            f"💥 Bulk import for corpus: {corpus_import_id} has failed."
+        )
     finally:
         db.commit()
