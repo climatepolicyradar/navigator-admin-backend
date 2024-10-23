@@ -1,6 +1,5 @@
-from typing import Any, Optional
+from typing import Any
 
-from db_client.functions.corpus_helpers import TaxonomyData, get_taxonomy_from_corpus
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 
 import app.clients.db.session as db_session
@@ -94,38 +93,35 @@ def validate_documents(documents: list[dict[str, Any]], corpus_import_id: str) -
         validate_document(doc, corpus_import_id)
 
 
-def validate_event(event: dict[str, Any], taxonomy: Optional[TaxonomyData]) -> None:
+def validate_event(event: dict[str, Any], corpus_import_id: str) -> None:
     """
     Validates an event.
 
     :param dict[str, Any] event: The event object to be validated.
-    :param Optional[TaxonomyData] taxonomy: The taxonomy to be used to validate the type of the event object.
+    :param str corpus_import_id: The corpus_import_id to be used for
+        validating the event object.
     :raises ValidationError: raised should the data be invalid.
     """
     validate_import_id(event["import_id"])
     validate_import_id(event["family_import_id"])
-    allowed_event_types = taxonomy["event_type"]["allowed_values"] if taxonomy else None
-    if not allowed_event_types:
-        raise ValidationError(
-            f"No allowed event types found for event {event['import_id']}"
-        )
-    if (
-        isinstance(allowed_event_types, list)
-        and event["event_type_value"] not in allowed_event_types
-    ):
-        raise ValidationError(f"Event type ['{event['event_type_value']}'] is invalid!")
+
+    db = db_session.get_db()
+    metadata.validate_metadata(
+        db,
+        corpus_import_id,
+        event["event_type_value"],
+        EntitySpecificTaxonomyKeys.EVENT.value,
+    )
 
 
 def validate_events(events: list[dict[str, Any]], corpus_import_id: str) -> None:
     """
     Validates a list of events.
 
-    :param list[dict[str, Any]] events: The list of event objects to be validated.
-    :param str corpus_import_id: The corpus_import_id to be used for validating the event objects.
+    :param list[dict[str, Any]] events: The list of event objects to be
+        validated.
+    :param str corpus_import_id: The corpus_import_id to be used for
+        validating the event objects.
     """
-    db = db_session.get_db()
-
-    event_taxonomy = get_taxonomy_from_corpus(db, corpus_import_id)
-
     for ev in events:
-        validate_event(ev, event_taxonomy)
+        validate_event(ev, corpus_import_id)
