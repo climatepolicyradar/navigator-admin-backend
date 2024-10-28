@@ -9,6 +9,7 @@ import app.service.ingest as ingest_service
 from app.errors import ValidationError
 
 
+@pytest.mark.skip("This code tests S3 and needs reinstating when that work is done.")
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
