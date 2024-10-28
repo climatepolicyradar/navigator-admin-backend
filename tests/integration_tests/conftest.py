@@ -73,7 +73,7 @@ def do_cached_migrations(test_db_url: str):
 
 
 @pytest.fixture(scope="function")
-def slow_db(monkeypatch):
+def data_db(monkeypatch):
     """Create a fresh test database for each test."""
 
     test_db_url = SQLALCHEMY_DATABASE_URI  # Use the same db - cannot parrallelize tests
@@ -105,12 +105,6 @@ def slow_db(monkeypatch):
             connection.close()
         # Drop the test database
         drop_database(test_db_url)
-
-
-@pytest.fixture(scope="function")
-def data_db(slow_db):
-
-    yield slow_db
 
 
 @pytest.fixture
