@@ -6,11 +6,6 @@ import botocore.client
 
 from app.model.aws_config import AWSConfig
 
-_AWS_REGION = os.getenv("AWS_REGION", "eu-west-2")
-_AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
-_AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
-_SIGNATURE_VERSION = "s3v4"
-
 AWSClient = Any
 
 
@@ -27,6 +22,10 @@ def _get_client_from_config(config: AWSConfig) -> AWSClient:
 
 def get_s3_client() -> AWSClient:
     """Get an AWS S3 client"""
+    _AWS_REGION = os.getenv("AWS_REGION", "eu-west-2")
+    _AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
+    _AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+    _SIGNATURE_VERSION = "s3v4"
     config = AWSConfig(
         service_name="s3",
         aws_access_key_id=_AWS_ACCESS_KEY_ID,

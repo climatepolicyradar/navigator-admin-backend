@@ -1,6 +1,6 @@
-import os
-import uuid
-from typing import Dict, Generator
+import subprocess
+import tempfile
+from typing import Dict
 
 import boto3
 import pytest
@@ -9,7 +9,6 @@ from db_client import run_migrations
 from fastapi.testclient import TestClient
 from moto import mock_s3
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Connection
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
@@ -40,29 +39,51 @@ CCLW_ORG_ID = 1
 UNFCCC_ORG_ID = 2
 SUPER_ORG_ID = 50
 
-
-def get_test_db_url() -> str:
-    return SQLALCHEMY_DATABASE_URI + f"_test_{uuid.uuid4()}"
+migration_file = None
 
 
-@pytest.fixture(scope="function")
-def slow_db(monkeypatch):
-    """Create a fresh test database for each test."""
+def _create_engine_run_migrations(test_db_url: str):
+    test_engine = create_engine(test_db_url)
+    run_migrations(test_engine)
+    return test_engine
 
-    test_db_url = get_test_db_url()
+
+def do_cached_migrations(test_db_url: str):
+
+    global migration_file  # Note this is scoped to the module, so it will not get recreated.
 
     # Create the test database
     if database_exists(test_db_url):
         drop_database(test_db_url)
     create_database(test_db_url)
 
+    test_engine = None
+
+    if not migration_file:
+        test_engine = _create_engine_run_migrations(test_db_url)
+        migration_file = tempfile.NamedTemporaryFile().name
+        result = subprocess.run(["pg_dump", "-f", migration_file])
+        assert result.returncode == 0
+    else:
+        result = subprocess.run(["psql", "-f", migration_file])
+        assert result.returncode == 0
+        test_engine = create_engine(test_db_url)
+
+    return test_engine
+
+
+@pytest.fixture(scope="function")
+def data_db(monkeypatch):
+    """Create a fresh test database for each test."""
+
+    test_db_url = SQLALCHEMY_DATABASE_URI  # Use the same db - cannot parrallelize tests
+
+    test_engine = do_cached_migrations(test_db_url)
     test_session = None
     connection = None
     try:
-        test_engine = create_engine(test_db_url)
-        connection = test_engine.connect()
 
-        run_migrations(test_engine)
+        connection = test_engine.connect()
         test_session_maker = sessionmaker(
             autocommit=False,
             autoflush=False,
@@ -84,58 +105,6 @@ def slow_db(monkeypatch):
             connection.close()
         # Drop the test database
         drop_database(test_db_url)
-
-
-@pytest.fixture(scope="session")
-def data_db_connection() -> Generator[Connection, None, None]:
-    test_db_url = get_test_db_url()
-
-    if database_exists(test_db_url):
-        drop_database(test_db_url)
-    create_database(test_db_url)
-
-    saved_db_url = os.environ["DATABASE_URL"]
-    os.environ["DATABASE_URL"] = test_db_url
-
-    test_engine = create_engine(test_db_url)
-
-    run_migrations(test_engine)
-    connection = test_engine.connect()
-
-    yield connection
-    connection.close()
-
-    os.environ["DATABASE_URL"] = saved_db_url
-    drop_database(test_db_url)
-
-
-@pytest.fixture(scope="function")
-def data_db(slow_db):
-    yield slow_db
-
-
-# @pytest.fixture(scope="function")
-# def data_db(data_db_connection, monkeypatch):
-
-#     outer = data_db_connection.begin_nested()
-#     SessionLocal = sessionmaker(
-#         autocommit=False, autoflush=False, bind=data_db_connection
-#     )
-#     session = SessionLocal()
-
-#     def get_test_db():
-#         return session
-
-#     monkeypatch.setattr(db_session, "get_db", get_test_db)
-#     yield session
-#     if not outer.is_active:
-#         print("Outer transaction already completed.")
-#         #raise RuntimeError("Outer transaction already completed.")
-#     else:
-#         outer.rollback()
-#     n_cols = data_db_connection.execute("select count(*) from collection")
-#     if n_cols.scalar() != 0:
-#         raise RuntimeError("Database not cleaned up properly")
 
 
 @pytest.fixture
