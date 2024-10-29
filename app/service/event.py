@@ -1,6 +1,10 @@
 import logging
 from typing import Optional, Union, cast
 
+from db_client.functions.corpus_helpers import (
+    get_entity_specific_taxonomy,
+    get_taxonomy_from_corpus,
+)
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
@@ -115,9 +119,9 @@ def create(
         user, entity_org_id, family.import_id
     )
 
-    # TODO: Remove the line below as part of PDCT-1435.
-    event_metadata = {"event_type": [event.event_type_value]}
-
+    event_metadata = create_event_metadata_object(
+        db, family.corpus_import_id, event.event_type_value
+    )
     metadata_service.validate_metadata(
         db,
         family.corpus_import_id,
@@ -126,7 +130,7 @@ def create(
     )
 
     try:
-        import_id = event_repo.create(db, event)
+        import_id = event_repo.create(db, event, event_metadata)
         if len(import_id) == 0:
             db.rollback()
         return import_id
@@ -173,9 +177,9 @@ def update(
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
-    # TODO: Remove this wrangling as part of PDCT-1435.
-    event_metadata = {"event_type": [event.event_type_value]}
-
+    event_metadata = create_event_metadata_object(
+        db, family.corpus_import_id, event.event_type_value
+    )
     metadata_service.validate_metadata(
         db,
         family.corpus_import_id,
@@ -244,3 +248,57 @@ def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int
         raise ValidationError(msg)
 
     return org if isinstance(org, int) else cast(int, org.id)
+
+
+def get_datetime_event_name_for_corpus(db: Session, corpus_import_id: str) -> list[str]:
+    """Get datetime_event_name from taxonomy.
+
+    :param Session db: The DB session to connect to.
+    :param str corpus_id: The corpus import ID we want to get the
+        datetime_event_name for.
+    :raises ValidationError: raised if the datetime_event_name is not in
+        the _event taxonomy or if has more than one allowed value.
+    """
+    tax = get_taxonomy_from_corpus(db, corpus_import_id)
+    event_schema = get_entity_specific_taxonomy(
+        tax,
+        EntitySpecificTaxonomyKeys.EVENT.value,
+    )
+
+    if (
+        "datetime_event_name" not in event_schema
+        or "allowed_values" not in cast(dict, event_schema["datetime_event_name"])
+        or len(
+            cast(
+                list, cast(dict, event_schema["datetime_event_name"])["allowed_values"]
+            )
+        )
+        > 1
+    ):
+        raise ValidationError("Bad taxonomy in database")
+
+    datetime_event_name = cast(dict, event_schema["datetime_event_name"])
+    datetime_event_name = datetime_event_name["allowed_values"]
+    return datetime_event_name
+
+
+def create_event_metadata_object(
+    db: Session, corpus_import_id: str, event_type_value: str
+) -> dict[str, list[str]]:
+    """Create event metadata object.
+
+    NOTE: This should be removed once properly implemented as part of
+    PDCT-1622.
+
+    :param Session db: The DB session to connect to.
+    :param str corpus_id: The corpus import ID for the current event.
+    :param str event_type_value: The event type of the current event.
+    :return dict[str, list[str]]: the event metadata object.
+    """
+    datetime_event_name = get_datetime_event_name_for_corpus(db, corpus_import_id)
+    return {
+        "event_type": [
+            event_type_value
+        ],  # TODO: Remove this wrangling as part of PDCT-1622.
+        "datetime_event_name": datetime_event_name,
+    }
