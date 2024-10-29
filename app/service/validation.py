@@ -9,6 +9,7 @@ import app.service.corpus as corpus
 import app.service.metadata as metadata
 from app.errors import ValidationError
 from app.service.collection import validate_import_id
+from app.service.event import create_event_metadata_object
 
 
 def validate_collection(collection: dict[str, Any]) -> None:
@@ -106,10 +107,13 @@ def validate_event(event: dict[str, Any], corpus_import_id: str) -> None:
     validate_import_id(event["family_import_id"])
 
     db = db_session.get_db()
+    event_metadata = create_event_metadata_object(
+        db, corpus_import_id, event["event_type_value"]
+    )
     metadata.validate_metadata(
         db,
         corpus_import_id,
-        event["event_type_value"],
+        event_metadata,
         EntitySpecificTaxonomyKeys.EVENT.value,
     )
 
