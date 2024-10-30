@@ -30,6 +30,7 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
+from app.repository.helpers import generate_slug
 
 DOCUMENT_INGEST_LIMIT = 1000
 _LOGGER = logging.getLogger(__name__)
@@ -162,6 +163,7 @@ def save_documents(
     validation.validate_documents(document_data, corpus_import_id)
 
     document_import_ids = []
+    document_slugs = set()
     total_documents_saved = 0
 
     for doc in document_data:
@@ -171,7 +173,9 @@ def save_documents(
         ):
             _LOGGER.info(f"Importing document {doc['import_id']}")
             dto = IngestDocumentDTO(**doc).to_document_create_dto()
-            import_id = document_repository.create(db, dto)
+            slug = generate_slug(db=db, title=dto.title, created_slugs=document_slugs)
+            import_id = document_repository.create(db, dto, slug)
+            document_slugs.add(slug)
             document_import_ids.append(import_id)
             total_documents_saved += 1
 

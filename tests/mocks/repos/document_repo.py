@@ -55,7 +55,7 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
             raise exc.NoResultFound()
         return create_document_read_dto("a.b.c.d")
 
-    def mock_create(_, data: DocumentCreateDTO) -> str:
+    def mock_create(_, data: DocumentCreateDTO, slug: Optional[str] = "") -> str:
         maybe_throw()
         if document_repo.return_empty:
             raise exc.NoResultFound()

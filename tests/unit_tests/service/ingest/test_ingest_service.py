@@ -203,6 +203,7 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     assert "Error" == e.value.message
 
 
+@patch("app.service.ingest.generate_slug", Mock(return_value="test-slug_1234"))
 @patch("app.service.ingest._exists_in_db", Mock(return_value=False))
 def test_do_not_save_documents_over_ingest_limit(
     validation_service_mock, document_repo_mock, monkeypatch
