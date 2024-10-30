@@ -569,7 +569,7 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "db-client"
-version = "3.8.21"
+version = "3.8.22"
 description = "All things to do with the datamodel and its storage. Including alembic migrations and datamodel code."
 optional = false
 python-versions = "^3.9"
@@ -589,8 +589,8 @@ SQLAlchemy-Utils = "^0.38.2"
 [package.source]
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
-reference = "v3.8.21"
-resolved_reference = "f3d47fd379dbac51ef0d6db5b1654429b386d583"
+reference = "v3.8.22"
+resolved_reference = "92b71b8f39eb578287a03cd657853244c0bc0e1b"
 
 [[package]]
 name = "dill"
@@ -3063,4 +3063,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a653fc4856d8e2141c96aefff7f4b8d55805113bea007953aed659e895910add"
+content-hash = "411d13e2290a5dcde19bb5ebe23111dfb0555f99c1ec3ead75b192b148dc2b95"
