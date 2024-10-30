@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 
 def generate_unique_slug(
-    existing_slugs: set[str], title: str, attempts: int = 100, suffix_length: int = 4
+    existing_slugs: set[str], title: str, attempts: int = 100, suffix_length: int = 6
 ) -> str:
     """
     Generates a slug that doesn't already exist.
@@ -20,7 +20,7 @@ def generate_unique_slug(
     :param str title: The title or name of the object you wish to slugify.
     :param int attempts: The number of attempt to generate a unique slug before
     failing, defaults to 100.
-    :param int suffix_length: The suffix to produce uniqueness, defaults to 4.
+    :param int suffix_length: The suffix to produce uniqueness, defaults to 6.
     :raises RuntimeError: If we cannot produce a unique slug.
     :return str: The slug generated.
     """

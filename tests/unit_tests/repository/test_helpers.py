@@ -11,7 +11,7 @@ def test_successfully_generates_a_slug_with_a_four_digit_suffix():
     generated_slug = generate_unique_slug(set(), title)
 
     expected_slugified_title = "test-title_"
-    expected_suffix_length = 4
+    expected_suffix_length = 6
 
     assert expected_slugified_title in generated_slug
     assert len(expected_slugified_title) + expected_suffix_length == len(generated_slug)

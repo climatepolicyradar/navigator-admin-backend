@@ -244,7 +244,9 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
 ):
     """
     This test ensures that given multiple documents with the same title a unique slug
-    is generated for each.
+    is generated for each and thus the documents can be saved to the DB at the end
+    of bulk import. However, the current length of the suffix added to the slug
+    to ensure uniqueness (6), means that the likelihood of a collision is extremely low.
     """
     family_import_id = "test.new.family.0"
     test_data = {
