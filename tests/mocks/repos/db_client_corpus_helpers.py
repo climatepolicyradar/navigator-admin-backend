@@ -5,7 +5,6 @@ from pytest import MonkeyPatch
 
 
 def mock_corpus_helpers_db_client(taxonomy_service, monkeypatch: MonkeyPatch, mocker):
-
     def mock_get_taxonomy_by_corpus_type_name(_, __) -> Optional[TaxonomyData]:
         metadata = {
             "allow_blanks": False,
@@ -18,6 +17,7 @@ def mock_corpus_helpers_db_client(taxonomy_service, monkeypatch: MonkeyPatch, mo
                 "test": metadata,
                 "event_type": {"test": metadata},
                 "_document": {"test": metadata},
+                "_event": {"test": metadata},
             },
         )
 

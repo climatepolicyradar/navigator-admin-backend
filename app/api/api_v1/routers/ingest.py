@@ -84,6 +84,7 @@ def _get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> di
     elif metadata_type == CountedEntity.Family:
         metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
         metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
+        metadata.pop("event_type")  # TODO: Remove as part of PDCT-1622
     return metadata
 
 
