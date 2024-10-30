@@ -230,6 +230,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     notification_service.send_notification(
         f"🚀 Bulk import for corpus: {corpus_import_id} has started."
     )
+    end_message = ""
 
     # ingest_uuid = uuid4()
     # upload_ingest_json_to_s3(f"{ingest_uuid}-request", corpus_import_id, data)
@@ -263,16 +264,15 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
 
         # upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, result)
 
-        notification_service.send_notification(
+        end_message = (
             f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed."
         )
+        db.commit()
     except Exception as e:
         _LOGGER.error(
             f"Rolling back transaction due to the following error: {e}", exc_info=True
         )
         db.rollback()
-        notification_service.send_notification(
-            f"💥 Bulk import for corpus: {corpus_import_id} has failed."
-        )
+        end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
     finally:
-        db.commit()
+        notification_service.send_notification(end_message)
