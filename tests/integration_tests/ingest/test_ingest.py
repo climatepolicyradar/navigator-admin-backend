@@ -239,6 +239,67 @@ def test_ingest_idempotency(
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_generates_unique_slugs_for_documents_with_identical_titles(
+    caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
+):
+    """
+    This test ensures that given multiple documents with the same title a unique slug
+    is generated for each and thus the documents can be saved to the DB at the end
+    of bulk import. However, the current length of the suffix added to the slug
+    to ensure uniqueness (6), means that the likelihood of a collision is extremely low.
+    """
+    family_import_id = "test.new.family.0"
+    test_data = {
+        "collections": [],
+        "families": [
+            {
+                "import_id": family_import_id,
+                "title": "Test",
+                "summary": "Test",
+                "geographies": ["South Asia"],
+                "category": "UNFCCC",
+                "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
+                "collections": [],
+            }
+        ],
+        "documents": [
+            {
+                "import_id": f"test.new.document.{i}",
+                "family_import_id": family_import_id,
+                "metadata": {"role": ["MAIN"], "type": ["Law"]},
+                "variant_name": "Original Language",
+                "title": "Project Document",
+                "user_language_name": "",
+            }
+            for i in range(1000)
+        ],
+        "events": [],
+    }
+    test_json = json.dumps(test_data).encode("utf-8")
+    test_data_file = io.BytesIO(test_json)
+
+    with caplog.at_level(logging.ERROR):
+        first_response = client.post(
+            "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+            files={"new_data": test_data_file},
+            headers=user_header_token,
+        )
+
+        assert first_response.status_code == status.HTTP_202_ACCEPTED
+        assert first_response.json() == {
+            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
+        }
+
+    assert (
+        "Created"
+        == data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "test.new.document.999")
+        .one_or_none()
+        .document_status
+    )
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_corpus_import_id_invalid(
     caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
 ):
