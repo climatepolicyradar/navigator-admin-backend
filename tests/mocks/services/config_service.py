@@ -17,7 +17,7 @@ def mock_config_service(config_service, monkeypatch: MonkeyPatch, mocker):
             geographies=[],
             corpora=[],
             languages={},
-            document=DocumentConfig(roles=[], types=[], variants=[]),
+            document=DocumentConfig(variants=[]),
         )
 
     monkeypatch.setattr(config_service, "get", mock_get_config)

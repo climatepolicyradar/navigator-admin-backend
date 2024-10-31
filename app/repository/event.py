@@ -1,5 +1,6 @@
 """Operations on the repository for the Family entity."""
 
+import copy
 import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
@@ -67,7 +68,13 @@ def _event_to_dto(family_event_meta: FamilyEventTuple) -> EventReadDTO:
     )
 
 
-def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
+def _dto_to_event_dict(dto: EventCreateDTO, event_metadata) -> dict:
+    """Convert our DTO object into a dict with the required field names.
+
+    :param EventCreateDTO event: The values for the new event.
+    :param dict[str, list[str]] event_metadata: The event metadata.
+    :return dict[str, Any]: A mapping of the event create DTO.
+    """
     return {
         "import_id": dto.import_id if dto.import_id else None,
         "family_import_id": dto.family_import_id,
@@ -76,11 +83,18 @@ def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
         "title": dto.event_title,
         "event_type_name": dto.event_type_value,
         "status": EventStatus.OK,
+        "valid_metadata": event_metadata,  # TODO: Fix as part of PDCT-1622
     }
 
 
-def _event_from_dto(dto: EventCreateDTO):
-    family_event = FamilyEvent(**_dto_to_event_dict(dto))
+def _event_from_dto(dto: EventCreateDTO, event_metadata) -> FamilyEvent:
+    """Create a FamilyEvent object from the event create DTO.
+
+    :param EventCreateDTO event: The values for the new event.
+    :param dict[str, list[str]] event_metadata: The event metadata.
+    :return FamilyEvent
+    """
+    family_event = FamilyEvent(**_dto_to_event_dict(dto, event_metadata))
     return family_event
 
 
@@ -158,17 +172,20 @@ def search(
     return [_event_to_dto(f) for f in found]
 
 
-def create(db: Session, event: EventCreateDTO) -> str:
+def create(
+    db: Session, event: EventCreateDTO, event_metadata: dict[str, list[str]]
+) -> str:
     """
     Creates a new family event.
 
     :param db Session: The database connection.
     :param EventCreateDTO event: The values for the new event.
+    :param dict[str, list[str]] event_metadata: The event metadata.
     :return str: The import id of the newly created family event.
     """
 
     try:
-        new_family_event = _event_from_dto(event)
+        new_family_event = _event_from_dto(event, event_metadata)
 
         family_import_id = new_family_event.family_import_id
 
@@ -199,7 +216,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
 
     :param db Session: the database connection
     :param str import_id: The event import id to change.
-    :param EventDTO event: The new values
+    :param EventWriteDTO event: The new values
     :return bool: True if new values were set otherwise false.
     """
     new_values = event.model_dump()
@@ -212,6 +229,12 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
         _LOGGER.error(f"Unable to find event for update {import_id}")
         return False
 
+    metadata = original_fe.valid_metadata
+    if isinstance(metadata, dict):
+        metadata = copy.deepcopy(metadata)
+        if "event_type" in metadata:
+            metadata["event_type"] = new_values["event_type_value"]
+
     result = db.execute(
         db_update(FamilyEvent)
         .where(FamilyEvent.import_id == original_fe.import_id)
@@ -219,6 +242,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
             title=new_values["event_title"],
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
+            valid_metadata=metadata,
         )
     )
 

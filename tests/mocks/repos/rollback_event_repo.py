@@ -11,8 +11,10 @@ def mock_rollback_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     actual_update = event_repo.update
     actual_delete = event_repo.delete
 
-    def mock_create_event(db, data: EventCreateDTO) -> Optional[EventReadDTO]:
-        actual_create(db, data)
+    def mock_create_event(
+        db, data: EventCreateDTO, meta: dict[str, list[str]]
+    ) -> Optional[EventReadDTO]:
+        actual_create(db, data, meta)
         raise NoResultFound()
 
     def mock_update_event(db, import_id: str, data: EventWriteDTO) -> EventReadDTO:

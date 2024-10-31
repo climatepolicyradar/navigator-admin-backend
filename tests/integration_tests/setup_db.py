@@ -560,6 +560,10 @@ def _setup_event_data(
             event_type_name=data["event_type_value"],
             family_import_id=data["family_import_id"],
             status=data["event_status"],
+            valid_metadata={
+                "event_type": [data["event_type_value"]],
+                "datetime_event_name": ["Passed/Approved"],  # TODO: Fix in PDCT-1622
+            },
         )
         test_db.add(fe)
         test_db.flush()

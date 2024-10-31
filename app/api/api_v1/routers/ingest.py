@@ -43,9 +43,13 @@ def _get_event_template(corpus_type: str) -> dict:
     """
     event_schema = IngestEventDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
-    event_template["event_type_value"] = _get_metadata_template(
-        corpus_type, CountedEntity.Event
-    )
+
+    event_meta = _get_metadata_template(corpus_type, CountedEntity.Event)
+
+    # TODO: Replace with event_template["metadata"] in PDCT-1622
+    if "event_type" not in event_meta:
+        raise ValidationError("Bad taxonomy in database")
+    event_template["event_type_value"] = event_meta["event_type"]
 
     return event_template
 
@@ -84,6 +88,7 @@ def _get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> di
     elif metadata_type == CountedEntity.Family:
         metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
         metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
+        metadata.pop("event_type")  # TODO: Remove as part of PDCT-1622
     return metadata
 
 
@@ -120,12 +125,16 @@ async def get_ingest_template(corpus_type: str) -> Json:
 
     _LOGGER.info(f"Creating template for corpus type: {corpus_type}")
 
-    return {
-        "collections": [_get_collection_template()],
-        "families": [_get_family_template(corpus_type)],
-        "documents": [_get_document_template(corpus_type)],
-        "events": [_get_event_template(corpus_type)],
-    }
+    try:
+        return {
+            "collections": [_get_collection_template()],
+            "families": [_get_family_template(corpus_type)],
+            "documents": [_get_document_template(corpus_type)],
+            "events": [_get_event_template(corpus_type)],
+        }
+    except ValidationError as e:
+        _LOGGER.error(e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
 
 class IngestEntityList(str, Enum):

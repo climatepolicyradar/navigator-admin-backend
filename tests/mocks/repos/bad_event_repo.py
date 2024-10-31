@@ -16,7 +16,9 @@ def mock_bad_event_repo(repo, monkeypatch: MonkeyPatch, mocker):
     def mock_search(_, q: str, org_id: Optional[int]) -> list[EventReadDTO]:
         raise RepositoryError("Bad Repo")
 
-    def mock_create(_, data: EventCreateDTO) -> Optional[EventReadDTO]:
+    def mock_create(
+        _, data: EventCreateDTO, meta: dict[str, list[str]]
+    ) -> Optional[EventReadDTO]:
         raise RepositoryError("Bad Repo")
 
     def mock_update(_, import_id, data: EventReadDTO) -> Optional[EventReadDTO]:
@@ -51,7 +53,6 @@ def mock_bad_event_repo(repo, monkeypatch: MonkeyPatch, mocker):
 
 
 def mock_event_count_none(repo, monkeypatch: MonkeyPatch, mocker):
-
     def mock_get_count(_, org_id: Optional[int]) -> Optional[int]:
         return None
 

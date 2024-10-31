@@ -50,7 +50,7 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
             return [create_event_read_dto("search1")]
         return []
 
-    def mock_create(_, data: EventCreateDTO) -> str:
+    def mock_create(_, data: EventCreateDTO, meta: dict[str, list[str]]) -> str:
         maybe_throw()
         if event_repo.return_empty:
             raise exc.NoResultFound()
