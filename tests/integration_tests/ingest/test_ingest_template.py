@@ -90,6 +90,36 @@ def test_get_template_unfcc(
                         "Updated",
                     ],
                 },
+                "metadata": {
+                    "datetime_event_name": {
+                        "allow_any": False,
+                        "allow_blanks": False,
+                        "allowed_values": ["Passed/Approved"],
+                    },
+                    "event_type": {
+                        "allow_any": False,
+                        "allow_blanks": True,
+                        "allowed_values": [
+                            "Amended",
+                            "Appealed",
+                            "Closed",
+                            "Declaration Of Climate Emergency",
+                            "Dismissed",
+                            "Entered Into Force",
+                            "Filing",
+                            "Granted",
+                            "Implementation Details",
+                            "International Agreement",
+                            "Net Zero Pledge",
+                            "Other",
+                            "Passed/Approved",
+                            "Repealed/Replaced",
+                            "Set",
+                            "Settled",
+                            "Updated",
+                        ],
+                    },
+                },
             }
         ],
         "documents": [
