@@ -19,7 +19,6 @@ from tests.integration_tests.setup_db import setup_db
 def test_ingest_when_ok(
     data_db: Session, client: TestClient, user_header_token, basic_s3_client
 ):
-
     response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
         files={
@@ -292,4 +291,7 @@ def test_ingest_events_when_event_type_invalid(
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
 
-    assert "Event type ['Invalid'] is invalid!" in caplog.text
+    assert (
+        "Metadata validation failed: Invalid value '['Invalid']' for metadata key 'event_type'"
+        in caplog.text
+    )
