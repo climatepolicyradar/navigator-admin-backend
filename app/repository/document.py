@@ -386,13 +386,16 @@ def _is_language_equal(
     return False
 
 
-def create(db: Session, document: DocumentCreateDTO) -> str:
+def create(
+    db: Session, document: DocumentCreateDTO, slug_name: Optional[str] = None
+) -> str:
     """
     Creates a new document.
 
     :param db Session: the database connection
     :param DocumentDTO document: the values for the new document
     :param int org_id: a validated organisation id
+    :param Optional[str] slug_name: a unique document slug or None
     :return str: The import id
     """
     try:
@@ -433,7 +436,7 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
         db.add(
             Slug(
                 family_document_import_id=family_doc.import_id,
-                name=generate_slug(db, document.title),
+                name=slug_name if slug_name else generate_slug(db, document.title),
             )
         )
     except Exception as e:
