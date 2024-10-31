@@ -43,9 +43,10 @@ def _get_event_template(corpus_type: str) -> dict:
     """
     event_schema = IngestEventDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
+
     event_template["event_type_value"] = _get_metadata_template(
         corpus_type, CountedEntity.Event
-    )
+    )["event_type"]
 
     return event_template
 
