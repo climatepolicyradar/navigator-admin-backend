@@ -250,7 +250,7 @@ def get_org_from_id(db: Session, import_id: str, is_create: bool = False) -> int
     return org if isinstance(org, int) else cast(int, org.id)
 
 
-def get_datetime_event_name_for_corpus(db: Session, corpus_import_id: str) -> list[str]:
+def get_datetime_event_name_for_corpus(db: Session, corpus_import_id: str) -> str:
     """Get datetime_event_name from taxonomy.
 
     :param Session db: The DB session to connect to.
@@ -258,6 +258,8 @@ def get_datetime_event_name_for_corpus(db: Session, corpus_import_id: str) -> li
         datetime_event_name for.
     :raises ValidationError: raised if the datetime_event_name is not in
         the _event taxonomy or if has more than one allowed value.
+    :return str: The name of the event type that determines the family
+        publication time (specific to the corpus).
     """
     tax = get_taxonomy_from_corpus(db, corpus_import_id)
     event_schema = get_entity_specific_taxonomy(
@@ -279,11 +281,14 @@ def get_datetime_event_name_for_corpus(db: Session, corpus_import_id: str) -> li
 
     datetime_event_name = cast(dict, event_schema["datetime_event_name"])
     datetime_event_name = datetime_event_name["allowed_values"]
-    return datetime_event_name
+    return datetime_event_name[0]
 
 
 def create_event_metadata_object(
-    db: Session, corpus_import_id: str, event_type_value: str
+    db: Session,
+    corpus_import_id: str,
+    event_type_value: str,
+    datetime_event_name: Optional[str] = None,
 ) -> dict[str, list[str]]:
     """Create event metadata object.
 
@@ -295,10 +300,11 @@ def create_event_metadata_object(
     :param str event_type_value: The event type of the current event.
     :return dict[str, list[str]]: the event metadata object.
     """
-    datetime_event_name = get_datetime_event_name_for_corpus(db, corpus_import_id)
+    if datetime_event_name is None:
+        datetime_event_name = get_datetime_event_name_for_corpus(db, corpus_import_id)
     return {
         "event_type": [
             event_type_value
         ],  # TODO: Remove this wrangling as part of PDCT-1622.
-        "datetime_event_name": datetime_event_name,
+        "datetime_event_name": [datetime_event_name],
     }

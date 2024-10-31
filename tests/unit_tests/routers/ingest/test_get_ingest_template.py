@@ -18,7 +18,6 @@ def test_ingest_template_when_not_authenticated(client: TestClient):
 def test_ingest_template_when_ok(
     client: TestClient, user_header_token, db_client_corpus_helpers_mock
 ):
-
     response = client.get(
         "/api/v1/ingest/template/test_corpus_type",
         headers=user_header_token,
@@ -77,11 +76,9 @@ def test_ingest_template_when_ok(
                     "type": "string",
                 },
                 "event_type_value": {
-                    "test": {
-                        "allow_any": False,
-                        "allow_blanks": False,
-                        "allowed_values": [],
-                    },
+                    "allow_any": False,
+                    "allow_blanks": False,
+                    "allowed_values": [],
                 },
             }
         ],

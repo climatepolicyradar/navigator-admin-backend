@@ -30,7 +30,10 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
-from app.service.event import create_event_metadata_object
+from app.service.event import (
+    create_event_metadata_object,
+    get_datetime_event_name_for_corpus,
+)
 
 DOCUMENT_INGEST_LIMIT = 1000
 _LOGGER = logging.getLogger(__name__)
@@ -198,6 +201,7 @@ def save_events(
         db = db_session.get_db()
 
     validation.validate_events(event_data, corpus_import_id)
+    datetime_event_name = get_datetime_event_name_for_corpus(db, corpus_import_id)
 
     event_import_ids = []
     total_events_saved = 0
@@ -207,7 +211,7 @@ def save_events(
             _LOGGER.info(f"Importing event {event['import_id']}")
             dto = IngestEventDTO(**event).to_event_create_dto()
             event_metadata = create_event_metadata_object(
-                db, corpus_import_id, event["event_type_value"]
+                db, corpus_import_id, event["event_type_value"], datetime_event_name
             )
             import_id = event_repository.create(db, dto, event_metadata)
             event_import_ids.append(import_id)
