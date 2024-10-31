@@ -30,11 +30,11 @@ from app.model.ingest import (
     IngestEventDTO,
     IngestFamilyDTO,
 )
+from app.repository.helpers import generate_slug
 from app.service.event import (
     create_event_metadata_object,
     get_datetime_event_name_for_corpus,
 )
-from app.repository.helpers import generate_slug
 
 DOCUMENT_INGEST_LIMIT = 1000
 _LOGGER = logging.getLogger(__name__)
