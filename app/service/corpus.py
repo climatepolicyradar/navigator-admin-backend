@@ -1,7 +1,6 @@
 import logging
-from typing import Mapping, Optional, Sequence, Union
+from typing import Optional, Union
 
-from db_client.functions.corpus_helpers import TaxonomyData, TaxonomyDataEntry
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -56,33 +55,6 @@ def validate(db: Session, corpus_import_id: str) -> bool:
     msg = f"Corpus '{corpus_import_id}' not found"
     _LOGGER.error(msg)
     raise ValidationError(msg)
-
-
-def get_taxonomy_from_corpus(
-    db: Session, corpus_id: str, _entity_key: Optional[str] = None
-) -> Union[
-    Mapping[str, Union[bool, str, Sequence[str], TaxonomyDataEntry]], TaxonomyData
-]:
-    """Get the organisation ID a corpus belongs to.
-    :param Session db: The DB session to connect to.
-    :param str corpus_id: The corpus import ID we want to get the org
-        for.
-    :return Optional[int]: Return the organisation ID the given corpus
-        belongs to or None.
-    """
-    tax = corpus_repo.get_taxonomy_from_corpus(db, corpus_id)
-    if tax is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
-    if _entity_key is not None:
-        if _entity_key not in tax.keys():
-            raise ValidationError(
-                f"Cannot find {_entity_key} taxonomy data in database"
-            )
-        tax = tax[_entity_key]
-    return tax
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

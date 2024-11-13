@@ -9,7 +9,6 @@ from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
-from app.model.config import TaxonomyData
 from app.model.corpus import CorpusReadDTO, CorpusWriteDTO
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,22 +74,6 @@ def verify_corpus_exists(db: Session, corpus_id: str) -> bool:
     """
     corpora = [corpus[0] for corpus in db.query(Corpus.import_id).distinct().all()]
     return bool(corpus_id in corpora)
-
-
-def get_taxonomy_from_corpus(db: Session, corpus_id: str) -> Optional[TaxonomyData]:
-    """Get the taxonomy of a corpus.
-
-    :param Session db: The DB session to connect to.
-    :param str corpus_id: The corpus import ID we want to get the taxonomy
-        for.
-    :return Optional[str]: Return the taxonomy of the given corpus or None.
-    """
-    return (
-        db.query(CorpusType.valid_metadata)
-        .join(Corpus, Corpus.corpus_type_name == CorpusType.name)
-        .filter(Corpus.import_id == corpus_id)
-        .scalar()
-    )
 
 
 def all(db: Session, org_id: Optional[int]) -> list[CorpusReadDTO]:
