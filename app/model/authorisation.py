@@ -63,8 +63,8 @@ AUTH_TABLE: AuthMap = {
     },
     # Ingest
     AuthEndpoint.INGEST: {
-        AuthOperation.CREATE: AuthAccess.ADMIN,
-        AuthOperation.READ: AuthAccess.ADMIN,
+        AuthOperation.CREATE: AuthAccess.USER,
+        AuthOperation.READ: AuthAccess.USER,
     },
     # Corpus
     AuthEndpoint.CORPUS: {
