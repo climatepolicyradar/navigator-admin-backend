@@ -375,17 +375,17 @@ def test_ingest_events_when_event_type_invalid(
 
 
 def test_ingest_when_not_authorised(client: TestClient, data_db: Session):
-    response = client.get(
+    response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_ingest_non_super(client: TestClient, user_header_token):
-    response = client.get(
+    response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a INGEST"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to CREATE an INGEST"
