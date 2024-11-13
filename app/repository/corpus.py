@@ -12,9 +12,6 @@ from app.errors import RepositoryError
 from app.model.config import TaxonomyData
 from app.model.corpus import CorpusReadDTO, CorpusWriteDTO
 
-from db_client.models.organisation import Corpus
-from sqlalchemy.orm import Session
-
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -1,24 +1,7 @@
 import enum
 from typing import Mapping
 
-
-class AuthOperation(str, enum.Enum):
-    """An operation that can be authorized"""
-
-    CREATE = "CREATE"
-    READ = "READ"
-    UPDATE = "UPDATE"
-    DELETE = "DELETE"
-
-
-HTTP_MAP_TO_OPERATION = {
-    "POST": AuthOperation.CREATE,
-    "GET": AuthOperation.READ,
-    "HEAD": AuthOperation.READ,
-    "PUT": AuthOperation.UPDATE,
-    "PATCH": AuthOperation.UPDATE,
-    "DELETE": AuthOperation.DELETE,
-}
+from db_client.models.organisation.authorisation import AuthAccess, AuthOperation
 
 
 class AuthEndpoint(str, enum.Enum):
@@ -36,14 +19,6 @@ class AuthEndpoint(str, enum.Enum):
     ANALYTICS = "ANALYTICS"
     EVENT = "EVENTS"
     INGEST = "INGEST"
-
-
-class AuthAccess(str, enum.Enum):
-    """The level of access needed"""
-
-    USER = "USER"
-    ADMIN = "ADMIN"
-    SUPER = "SUPER"
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]

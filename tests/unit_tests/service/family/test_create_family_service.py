@@ -26,7 +26,7 @@ def test_create(
     assert family is not None
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
@@ -53,7 +53,7 @@ def test_create_repo_fails(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -79,7 +79,7 @@ def test_create_raises_when_category_invalid(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 0
+    assert corpus_repo_mock.validate.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -105,7 +105,7 @@ def test_create_raises_when_missing_metadata(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -134,7 +134,7 @@ def test_create_raises_when_missing_taxonomy(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -163,7 +163,7 @@ def test_create_raises_when_collection_org_different_to_usr_org(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -189,7 +189,7 @@ def test_create_raises_when_corpus_missing(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -216,7 +216,7 @@ def test_create_when_no_org_associated_with_entity(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -242,7 +242,7 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
     assert e.value.message == expected_msg
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
@@ -265,7 +265,7 @@ def test_create_success_when_corpus_org_different_to_usr_org_super(
     assert family is not None
 
     assert geography_repo_mock.get_id_from_value.call_count == 1
-    assert corpus_repo_mock.verify_corpus_exists.call_count == 1
+    assert corpus_repo_mock.validate.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0

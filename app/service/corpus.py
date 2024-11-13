@@ -1,7 +1,7 @@
 import logging
 from typing import Mapping, Optional, Sequence, Union
-from typing import Optional
 
+from db_client.functions.corpus_helpers import TaxonomyData, TaxonomyDataEntry
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 import app.repository.corpus as corpus_repo
 from app.errors import RepositoryError, ValidationError
-from app.model.config import TaxonomyData
 from app.model.corpus import CorpusReadDTO, CorpusWriteDTO
 from app.model.user import UserContext
 from app.service import app_user, id
@@ -61,7 +60,9 @@ def verify(db: Session, corpus_import_id: str) -> bool:
 
 def get_taxonomy_from_corpus(
     db: Session, corpus_id: str, _entity_key: Optional[str] = None
-) -> Union[Mapping[str, Union[bool, str, Sequence[str]]], TaxonomyData]:
+) -> Union[
+    Mapping[str, Union[bool, str, Sequence[str], TaxonomyDataEntry]], TaxonomyData
+]:
     """Get the organisation ID a corpus belongs to.
     :param Session db: The DB session to connect to.
     :param str corpus_id: The corpus import ID we want to get the org
@@ -176,10 +177,7 @@ def update(
     if original_corpus is None:
         return None
 
-    # if corpus.variant_name == "":
-    #     raise ValidationError("Variant name is empty")
-
-    entity_org_id = get_corpus_org_id(db, import_id)
+    entity_org_id: int = get_corpus_org_id(import_id, db)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
     try:
