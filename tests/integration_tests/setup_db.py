@@ -400,6 +400,22 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     )
     _add_app_user(
         test_db,
+        "non-admin-super@cpr.org",
+        "Super",
+        cclw.id,
+        hashed_pass="$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+        is_super=True,
+    )
+    _add_app_user(
+        test_db,
+        "admin@cpr.org",
+        "Admin",
+        cclw.id,
+        hashed_pass="$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+        is_admin=True,
+    )
+    _add_app_user(
+        test_db,
         "super@cpr.org",
         "Super",
         cclw.id,
