@@ -1,10 +1,3 @@
-bootstrap:
-	-pyenv deactivate
-	pyenv virtualenv 3.10 admin-backend
-	pyenv activate admin-backend
-	pip3 install poetry
-	poetry install
-
 install_trunk:
 	$(eval trunk_installed=$(shell trunk --version > /dev/null 2>&1 ; echo $$? ))
 ifneq (${trunk_installed},0)
@@ -16,8 +9,25 @@ uninstall_trunk:
 	sudo rm -if `which trunk`
 	rm -ifr ${HOME}/.cache/trunk
 
-git_hooks: install_trunk
-	trunk actions run configure-pyright-with-pyenv
+create_env:
+	# Copy .env
+	cp .env.example .env
+
+configure_pyright:
+	trunk actions run configure-pyright
+
+setup_with_pyenv: install_trunk create_env ## Sets up a local dev environment using Pyenv
+	$(eval venv_name=$(shell  grep 'venv =' pyproject.toml | cut -d '"' -f 2 ))
+	if [ -n "$(venv_name)" ] && ! pyenv versions --bare | grep -q "^$(venv_name)$$"; then \
+		$(eval python_version=$(shell grep 'python =' pyproject.toml | cut -d '"' -f 2 | sed 's/^\^//')) \
+		$(eval pyenv_version=$(shell pyenv versions --bare | grep$(python_version) )) \
+		pyenv virtualenv $(pyenv_version) $(venv_name); \
+	fi
+	@eval "$$(pyenv init -)" && \
+	pyenv activate $(venv_name) && \
+	poetry install
+
+	make configure_pyright
 	
 check:
 	trunk fmt
