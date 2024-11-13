@@ -70,4 +70,13 @@ def is_authorised(user: UserContext, entity: AuthEndpoint, op: AuthOperation) ->
     if _has_access(required_access, _get_user_access(user)):
         return
 
-    raise AuthorisationError(f"User {user.email} is not authorised to {op} a {entity}")
+    raise AuthorisationError(
+        f"User {user.email} is not authorised to {op} {_get_article(entity)} {entity}"
+    )
+
+
+def _get_article(word) -> str:
+    vowels = ["a", "e", "i", "o", "u", "y"]
+    if word[0] in vowels:
+        return "an"
+    return "a"
