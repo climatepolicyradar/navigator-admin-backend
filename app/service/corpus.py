@@ -36,7 +36,7 @@ def get_corpus_org_id(corpus_import_id: str, db: Optional[Session] = None) -> in
     return org_id
 
 
-def verify(db: Session, corpus_import_id: str) -> bool:
+def validate(db: Session, corpus_import_id: str) -> bool:
     """Validate whether a corpus with the given ID exists in the DB.
 
     :param Session db: The DB session to connect to.

@@ -195,7 +195,7 @@ def create(
     category.validate(family.category)
 
     # Get the organisation from the user's email
-    corpus.verify(db, family.corpus_import_id)
+    corpus.validate(db, family.corpus_import_id)
     entity_org_id: int = corpus.get_corpus_org_id(family.corpus_import_id, db)
 
     # Validate collection ids.
