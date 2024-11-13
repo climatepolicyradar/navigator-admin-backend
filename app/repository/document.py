@@ -17,6 +17,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocumentLanguage,
 )
 from db_client.models.organisation import Organisation
+from db_client.models.organisation.corpus import CorpusType
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import AnyHttpUrl
 from sqlalchemy import Column, and_
@@ -36,7 +37,9 @@ from app.repository.helpers import generate_import_id, generate_slug
 _LOGGER = logging.getLogger(__name__)
 
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
-ReadObj = Tuple[FamilyDocument, PhysicalDocument, Organisation, Language, Language]
+ReadObj = Tuple[
+    FamilyDocument, PhysicalDocument, CorpusType, Organisation, Language, Language
+]
 
 
 def _get_query(db: Session) -> Query:
@@ -49,7 +52,14 @@ def _get_query(db: Session) -> Query:
     pdl_user = aliased(PhysicalDocumentLanguage)
 
     return (
-        db.query(FamilyDocument, PhysicalDocument, Organisation, lang_user, lang_model)
+        db.query(
+            FamilyDocument,
+            PhysicalDocument,
+            CorpusType,
+            Organisation,
+            lang_user,
+            lang_model,
+        )
         .filter(FamilyDocument.family_import_id == Family.import_id)
         .join(Family, FamilyDocument.family_import_id == Family.import_id)
         .join(
@@ -59,6 +69,7 @@ def _get_query(db: Session) -> Query:
         )
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+        .join(CorpusType, Corpus.corpus_type_name == CorpusType.name)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
         .join(
             pdl_user,
@@ -91,11 +102,11 @@ def _get_query(db: Session) -> Query:
 
 def _dto_to_family_document_dict(dto: DocumentCreateDTO) -> dict:
     return {
+        "import_id": dto.import_id if dto.import_id else None,
         "family_import_id": dto.family_import_id,
         "physical_document_id": 0,
         "variant_name": dto.variant_name,
-        "document_type": dto.type,
-        "document_role": dto.role,
+        "valid_metadata": dto.metadata,
     }
 
 
@@ -121,18 +132,17 @@ def _document_tuple_from_create_dto(
 
 
 def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
-    fdoc, pdoc, org, lang_user, lang_model = doc_query_return
-
+    fdoc, pdoc, corpus_type, org, lang_user, lang_model = doc_query_return
     return DocumentReadDTO(
         import_id=str(fdoc.import_id),
         family_import_id=str(fdoc.family_import_id),
+        corpus_type=str(corpus_type.name),
         variant_name=str(fdoc.variant_name) if fdoc.variant_name is not None else None,
         status=cast(DocumentStatus, fdoc.document_status),
-        role=str(fdoc.document_role) if fdoc.document_role is not None else None,
-        type=str(fdoc.document_type) if fdoc.document_type is not None else None,
         created=cast(datetime, fdoc.created),
         last_modified=cast(datetime, fdoc.last_modified),
         slug=str(fdoc.slugs[0].name if len(fdoc.slugs) > 0 else ""),
+        metadata=cast(dict, fdoc.valid_metadata),
         physical_id=cast(int, pdoc.id),
         title=str(pdoc.title),
         md5_sum=str(pdoc.md5_sum) if pdoc.md5_sum is not None else None,
@@ -184,13 +194,13 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[DocumentReadDTO]:
     """
     Gets a list of documents from the repository searching the title.
 
     :param db Session: the database connection
-    :param dict query_params: Any search terms to filter on specified
+    :param dict search_params: Any search terms to filter on specified
         fields (title by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
@@ -199,8 +209,8 @@ def search(
     :return list[DocumentResponse]: A list of matching documents.
     """
     search = []
-    if "q" in query_params.keys():
-        term = f"%{escape_like(query_params['q'])}%"
+    if "q" in search_params.keys():
+        term = f"%{escape_like(search_params['q'])}%"
         search.append(PhysicalDocument.title.ilike(term))
 
     condition = and_(*search) if len(search) > 1 else search[0]
@@ -210,7 +220,7 @@ def search(
             query = query.filter(Organisation.id == org_id)
         result = (
             query.order_by(desc(FamilyDocument.last_modified))
-            .limit(query_params["max_results"])
+            .limit(search_params["max_results"])
             .all()
         )
     except OperationalError as e:
@@ -277,8 +287,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         .where(FamilyDocument.import_id == original_fd.import_id)
         .values(
             variant_name=new_values["variant_name"],
-            document_role=new_values["role"],
-            document_type=new_values["type"],
+            valid_metadata=new_values["metadata"],
         ),
     ]
 
@@ -377,13 +386,16 @@ def _is_language_equal(
     return False
 
 
-def create(db: Session, document: DocumentCreateDTO) -> str:
+def create(
+    db: Session, document: DocumentCreateDTO, slug_name: Optional[str] = None
+) -> str:
     """
     Creates a new document.
 
     :param db Session: the database connection
     :param DocumentDTO document: the values for the new document
     :param int org_id: a validated organisation id
+    :param Optional[str] slug_name: a unique document slug or None
     :return str: The import id
     """
     try:
@@ -395,18 +407,20 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
         # Update the FamilyDocument with the new PhysicalDocument id
         family_doc.physical_document_id = phys_doc.id
 
-        # Generate the import_id for the new document
-        org = family_repo.get_organisation(db, cast(str, family_doc.family_import_id))
-        if org is None:
-            raise ValidationError(
-                f"Cannot find counter to generate id for {family_doc.family_import_id}"
+        if not family_doc.import_id:
+            org = family_repo.get_organisation(
+                db, cast(str, family_doc.family_import_id)
             )
+            if org is None:
+                raise ValidationError(
+                    f"Cannot find counter to generate id for {family_doc.family_import_id}"
+                )
+            org_name = cast(str, org.name)
 
-        org_name = cast(str, org.name)
-
-        family_doc.import_id = cast(
-            Column, generate_import_id(db, CountedEntity.Document, org_name)
-        )
+            # Generate the import_id for the new document
+            family_doc.import_id = cast(
+                Column, generate_import_id(db, CountedEntity.Document, org_name)
+            )
 
         # Add the new document and its language link
         db.add(family_doc)
@@ -422,7 +436,7 @@ def create(db: Session, document: DocumentCreateDTO) -> str:
         db.add(
             Slug(
                 family_document_import_id=family_doc.import_id,
-                name=generate_slug(db, document.title),
+                name=slug_name if slug_name else generate_slug(db, document.title),
             )
         )
     except Exception as e:
@@ -486,5 +500,5 @@ def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
     result = _get_query(db).filter(FamilyDocument.import_id == import_id).one_or_none()
     if result is None:
         return None
-    _, _, org, _, _ = result
+    _, _, _, org, _, _ = result
     return org.id

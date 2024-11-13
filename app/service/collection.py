@@ -64,7 +64,7 @@ def all(user: UserContext) -> list[CollectionReadDTO]:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
-    query_params: dict[str, Union[str, int]], user: UserContext
+    search_params: dict[str, Union[str, int]], user: UserContext
 ) -> list[CollectionReadDTO]:
     """
     Searches for the search term against collections on specified fields.
@@ -73,7 +73,7 @@ def search(
     descriptions of all the collections are searched for the given term
     only.
 
-    :param dict query_params: Search patterns to match against specified
+    :param dict search_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
     :param UserContext user: The current user context.
     :return list[CollectionReadDTO]: The list of collections matching
@@ -81,7 +81,7 @@ def search(
     """
     with db_session.get_db() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
-        return collection_repo.search(db, query_params, org_id)
+        return collection_repo.search(db, search_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -161,7 +161,7 @@ def update(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
     collection: CollectionCreateDTO,
-    user: UserContext,
+    org_id: int,
     db: Optional[Session] = None,
 ) -> str:
     """
@@ -177,7 +177,10 @@ def create(
         db = db_session.get_db()
 
     try:
-        import_id = collection_repo.create(db, collection, user.org_id)
+        if collection.import_id:
+            validate_import_id(collection.import_id)
+
+        import_id = collection_repo.create(db, collection, org_id)
         if len(import_id) == 0:
             db.rollback()
         return import_id

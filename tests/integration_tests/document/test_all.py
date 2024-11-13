@@ -4,8 +4,6 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 
-# --- GET ALL
-
 
 def test_get_all_documents_super(
     client: TestClient, data_db: Session, superuser_header_token

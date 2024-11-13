@@ -16,9 +16,10 @@ def mock_corpus_service(corpus_service, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return corpus_service.valid
 
-    def mock_get_corpus_org_id():
+    def mock_get_corpus_org_id(_):
         if corpus_service.org_mismatch:
             raise AuthorisationError("Org mismatch")
+        return 1
 
     monkeypatch.setattr(corpus_service, "validate", mock_validate)
     mocker.spy(corpus_service, "validate")

@@ -11,6 +11,7 @@ from db_client.models.dfce.family import (
     FamilyCorpus,
     FamilyDocument,
     FamilyEvent,
+    FamilyGeography,
     Geography,
     Slug,
 )
@@ -20,7 +21,7 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.organisation import Corpus
+from db_client.models.organisation import Corpus, CorpusType
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
 
@@ -39,7 +40,6 @@ EXPECTED_FAMILIES = [
             "keyword": [],
             "framework": [],
             "instrument": [],
-            "event_type": [],
         },
         "organisation": "CCLW",
         "corpus_import_id": "CCLW.corpus.i00000001.n0000",
@@ -66,7 +66,6 @@ EXPECTED_FAMILIES = [
             "keyword": [],
             "framework": [],
             "instrument": [],
-            "event_type": [],
         },
         "organisation": "CCLW",
         "corpus_import_id": "CCLW.corpus.i00000001.n0000",
@@ -138,10 +137,10 @@ EXPECTED_DOCUMENTS = [
     {
         "import_id": "D.0.0.1",
         "family_import_id": "A.0.0.3",
+        "corpus_type": "Intl. agreements",
         "variant_name": "Original Language",
         "status": "Created",
-        "role": "MAIN",
-        "type": "Law",
+        "metadata": {"role": ["MAIN"], "type": ["Law"]},
         "slug": "",
         "title": "big title1",
         "md5_sum": "sum1",
@@ -154,10 +153,10 @@ EXPECTED_DOCUMENTS = [
     {
         "import_id": "D.0.0.2",
         "family_import_id": "A.0.0.3",
+        "corpus_type": "Intl. agreements",
         "variant_name": "Original Language",
         "status": "Created",
-        "role": "MAIN",
-        "type": "Law",
+        "metadata": {"role": ["MAIN"], "type": ["Law"]},
         "slug": "",
         "title": "title2",
         "md5_sum": "sum2",
@@ -170,10 +169,10 @@ EXPECTED_DOCUMENTS = [
     {
         "import_id": "D.0.0.3",
         "family_import_id": "A.0.0.2",
+        "corpus_type": "Laws and Policies",
         "variant_name": "Original Language",
         "status": "Created",
-        "role": "MAIN",
-        "type": "Law",
+        "metadata": {"role": ["MAIN"], "type": ["Law"]},
         "slug": "",
         "title": "title3",
         "md5_sum": "sum3",
@@ -345,6 +344,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         name="Another org",
         description="because we will have more than one org",
         organisation_type="test",
+        display_name="Another org",
     )
     test_db.add(another_org)
     test_db.flush()
@@ -410,6 +410,35 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     return cast(int, cclw.id), cast(int, another_org.id)
 
 
+def setup_corpus(test_db: Session) -> None:
+    org_id = _setup_organisation(test_db)
+    test_db.add(
+        Corpus(
+            import_id="1",
+            title="Test Title",
+            description="Test Description",
+            corpus_text="Test Text",
+            corpus_image_url="Test Image Url",
+            organisation_id=org_id,
+            corpus_type_name="Test Corpus",
+        )
+    )
+
+    test_db.add(
+        CorpusType(
+            name="Test Corpus",
+            description="Test Description",
+            valid_metadata={
+                "test": {
+                    "allow_any": "true",
+                    "allow_blanks": "false",
+                    "allowed_values": [],
+                }
+            },
+        )
+    )
+
+
 def _setup_collection_data(
     test_db: Session,
     configure_empty: bool = False,
@@ -468,9 +497,11 @@ def _setup_family_data(
                 import_id=data["import_id"],
                 title=data["title"],
                 description=data["summary"],
-                geography_id=geo_id,
                 family_category=data["category"],
             )
+        )
+        test_db.add(
+            FamilyGeography(family_import_id=data["import_id"], geography_id=geo_id)
         )
 
         corpus = (
@@ -537,8 +568,7 @@ def _setup_document_data(test_db: Session, configure_empty: bool = False) -> Non
                 import_id=data["import_id"],
                 variant_name=data["variant_name"],
                 document_status=data["status"],
-                document_type=data["type"],
-                document_role=data["role"],
+                valid_metadata=data["metadata"],
             )
             test_db.add(fd)
             test_db.flush()
@@ -578,6 +608,10 @@ def _setup_event_data(
             event_type_name=data["event_type_value"],
             family_import_id=data["family_import_id"],
             status=data["event_status"],
+            valid_metadata={
+                "event_type": [data["event_type_value"]],
+                "datetime_event_name": ["Passed/Approved"],  # TODO: Fix in PDCT-1622
+            },
         )
         test_db.add(fe)
         test_db.flush()

@@ -35,6 +35,7 @@ class EventCreateDTO(BaseModel):
     generated.
     """
 
+    import_id: Optional[str] = None
     # From FamilyEvent
     event_title: str
     date: datetime

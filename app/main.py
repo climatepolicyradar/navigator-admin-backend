@@ -23,6 +23,7 @@ from app.api.api_v1.routers import (
     document_router,
     event_router,
     families_router,
+    ingest_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
@@ -92,6 +93,13 @@ app.include_router(
     event_router,
     prefix="/api/v1",
     tags=["events"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    ingest_router,
+    prefix="/api/v1",
+    tags=["ingest"],
     dependencies=[Depends(check_user_auth)],
 )
 

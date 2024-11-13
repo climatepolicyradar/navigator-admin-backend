@@ -1,7 +1,13 @@
 from typing import Optional
 
 from db_client.models.dfce.collection import CollectionFamily
-from db_client.models.dfce.family import Family, FamilyCorpus, Slug
+from db_client.models.dfce.family import (
+    Family,
+    FamilyCorpus,
+    FamilyGeography,
+    Geography,
+    Slug,
+)
 from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.organisation.corpus import Corpus
 from fastapi import status
@@ -32,6 +38,13 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
     assert actual_family.title == "Title"
     assert actual_family.description == "test test test"
 
+    actual_geo = (
+        data_db.query(Geography)
+        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
+        .filter(FamilyGeography.family_import_id == expected_import_id)
+        .one()
+    )
+    assert actual_geo.value == "CHN"
     metadata = (
         data_db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == expected_import_id)
@@ -45,7 +58,6 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
         "keyword": [],
         "framework": [],
         "instrument": [],
-        "event_type": [],
     }
 
     db_collection: Optional[list[CollectionFamily]] = (
@@ -213,7 +225,7 @@ def test_create_family_when_invalid_metadata_cclw(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
-    key_text = "{'topic', 'hazard', 'sector', 'keyword', 'framework', 'instrument', 'event_type'}"
+    key_text = "{'topic', 'hazard', 'sector', 'keyword', 'framework', 'instrument'}"
 
     expected_message = "Metadata validation failed: "
     expected_missing_message = f"Missing metadata keys: {key_text}"
@@ -243,7 +255,7 @@ def test_create_family_when_invalid_metadata_unfccc(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
-    key_text = "{'author_type', 'author', 'event_type'}"
+    key_text = "{'author_type', 'author'}"
 
     expected_message = "Metadata validation failed: "
     expected_missing_message = f"Missing metadata keys: {key_text}"
@@ -261,11 +273,7 @@ def test_create_family_when_org_mismatch(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={
-            "author": "CPR",
-            "author_type": ["Party"],
-            "event_type": [],
-        },
+        metadata={"author": "CPR", "author_type": ["Party"]},
         corpus_import_id="UNFCCC.corpus.i00000001.n0000",
     )
     response = client.post(

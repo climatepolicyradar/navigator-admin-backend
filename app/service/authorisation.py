@@ -1,14 +1,15 @@
 import logging
 
-from db_client.models.organisation.authorisation import (
-    AUTH_TABLE,
-    HTTP_MAP_TO_OPERATION,
-    AuthAccess,
-    AuthEndpoint,
-    AuthOperation,
-)
-
 from app.errors import AuthorisationError
+from db_client.models.organisation.authorisation  import (
+    AuthOperation,
+    AuthAccess,
+    HTTP_MAP_TO_OPERATION
+)
+from app.model.authorisation import (
+    AuthEndpoint,
+    AUTH_TABLE
+)
 from app.model.user import UserContext
 
 _LOGGER = logging.getLogger(__name__)

@@ -40,7 +40,7 @@ def test_update_family(client: TestClient, data_db: Session, user_header_token):
     )
     assert db_family.title == "apple"
     assert db_family.description == "just a test"
-    assert db_family.geography_id == USA_GEO_ID
+    assert USA_GEO_ID in [g.id for g in db_family.geographies]
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
@@ -88,7 +88,7 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
         data_db.query(Geography).filter(Geography.display_value == "South Asia").one()
     )
 
-    assert db_family.geography_id == expected_geo.id
+    assert expected_geo.id in [g.id for g in db_family.geographies]
     assert db_family.family_category == "UNFCCC"
     db_slug = (
         data_db.query(Slug)
@@ -141,7 +141,7 @@ def test_update_family_remove_collections(
     expected_geo = (
         data_db.query(Geography).filter(Geography.display_value == "Other").one()
     )
-    assert db_family.geography_id == expected_geo.id
+    assert expected_geo.id in [g.id for g in db_family.geographies]
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
@@ -189,7 +189,7 @@ def test_update_family_append_collections(
     expected_geo = (
         data_db.query(Geography).filter(Geography.display_value == "Other").one()
     )
-    assert db_family.geography_id == expected_geo.id
+    assert expected_geo.id in [g.id for g in db_family.geographies]
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
@@ -234,7 +234,7 @@ def test_update_family_collections_to_one_that_does_not_exist(
     expected_geo = (
         data_db.query(Geography).filter(Geography.display_value == "Other").one()
     )
-    assert db_family.geography_id == expected_geo.id
+    assert expected_geo.id in [g.id for g in db_family.geographies]
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
@@ -280,7 +280,7 @@ def test_update_fails_family_when_user_org_different_to_family_org(
     assert db_family.family_category == "UNFCCC"
 
     geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
-    assert db_family.geography_id == geo_id
+    assert geo_id in [g.id for g in db_family.geographies]
 
 
 def test_update_family_succeeds_when_user_org_different_to_family_org_super(
@@ -312,7 +312,7 @@ def test_update_family_succeeds_when_user_org_different_to_family_org_super(
     )
     assert db_family.title == "apple"
     assert db_family.description == "just a test"
-    assert db_family.geography_id == USA_GEO_ID
+    assert USA_GEO_ID in [g.id for g in db_family.geographies]
     assert db_family.family_category == "UNFCCC"
     db_slug = data_db.query(Slug).filter(Slug.family_import_id == "A.0.0.1").all()
     assert len(db_slug) == 1
@@ -356,7 +356,7 @@ def test_update_family_when_collection_org_different_to_family_org(
     assert db_family.family_category == "UNFCCC"
 
     geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
-    assert db_family.geography_id == geo_id
+    assert geo_id in [g.id for g in db_family.geographies]
 
 
 def test_update_family_when_not_authenticated(client: TestClient, data_db: Session):
@@ -397,7 +397,7 @@ def test_update_family_idempotent_when_ok(
     assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
 
     geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
-    assert db_family.geography_id == geo_id
+    assert geo_id in [g.id for g in db_family.geographies]
 
 
 def test_update_family_rollback(
@@ -436,7 +436,6 @@ def test_update_family_rollback(
         "keyword": [],
         "framework": [],
         "instrument": [],
-        "event_type": [],
     }
     assert rollback_family_repo.update.call_count == 1
 
@@ -513,7 +512,6 @@ def test_update_family_metadata_if_changed(
         "keyword": [],
         "framework": [],
         "instrument": [],
-        "event_type": [],
     }
 
     expected_meta = {
@@ -523,7 +521,6 @@ def test_update_family_metadata_if_changed(
         "keyword": [],
         "framework": [],
         "instrument": [],
-        "event_type": [],
     }
     family_data["metadata"] = expected_meta
     response = client.put(

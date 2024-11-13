@@ -1,18 +1,12 @@
 from typing import Mapping, Sequence, Union
 
+from db_client.functions.corpus_helpers import TaxonomyData
 from pydantic import BaseModel
-
-TaxonomyDataEntry = Mapping[str, Union[bool, str, Sequence[str]]]
-TaxonomyData = Mapping[
-    str, Mapping[str, Union[TaxonomyDataEntry, bool, str, Sequence[str]]]
-]
 
 
 class DocumentConfig(BaseModel):
     """Everything you need to know about documents."""
 
-    roles: Sequence[str]
-    types: Sequence[str]
     variants: Sequence[str]
 
 

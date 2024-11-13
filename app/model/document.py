@@ -4,6 +4,8 @@ from typing import Optional
 from db_client.models.dfce import DocumentStatus
 from pydantic import AnyHttpUrl, BaseModel
 
+from app.model.general import Json
+
 
 class DocumentReadDTO(BaseModel):
     """Representation of a Document."""
@@ -11,13 +13,13 @@ class DocumentReadDTO(BaseModel):
     # From FamilyDocument
     import_id: str
     family_import_id: str
+    corpus_type: str
     variant_name: Optional[str]
     status: DocumentStatus
-    role: Optional[str]
-    type: Optional[str]
     slug: str
     created: datetime
     last_modified: datetime
+    metadata: Json
     # From PhysicalDocument
     physical_id: int
     title: str
@@ -34,8 +36,8 @@ class DocumentWriteDTO(BaseModel):
 
     # From FamilyDocument
     variant_name: Optional[str]
-    role: Optional[str]
-    type: Optional[str]
+    metadata: Json
+
     title: str
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str]
@@ -44,11 +46,11 @@ class DocumentWriteDTO(BaseModel):
 class DocumentCreateDTO(BaseModel):
     """Representation of a Document."""
 
+    import_id: Optional[str] = None
     # From FamilyDocument
     family_import_id: str
     variant_name: Optional[str] = None
-    role: str
-    type: Optional[str] = None
+    metadata: Json
 
     # From PhysicalDocument
     title: str

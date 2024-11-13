@@ -28,9 +28,6 @@ def expected_analytics_summary(
     )
 
 
-# --- GET SUMMARY
-
-
 def test_summary_superuser(
     collection_repo_mock,
     document_repo_mock,

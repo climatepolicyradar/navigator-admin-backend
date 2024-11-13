@@ -46,7 +46,15 @@ async def check_user_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    payload = await request.json() if len(await request.body()) > 0 else False
+    try:
+        if request.headers.get("content-type") == "application/json":
+            payload = await request.json()
+        else:
+            payload = False
+    except Exception as e:
+        _LOGGER.warning(f"⚠️ Failed to read request body: {e}")
+        payload = False
+
     _LOGGER.info(
         f"AUDIT: {user.email} is performing {operation} on {entity}",
         extra={

@@ -26,6 +26,7 @@ EXPECTED_CCLW_TAXONOMY = {
     "instrument",
     "event_type",
     "_document",
+    "_event",
 }
 EXPECTED_CCLW_TOPICS = 4
 EXPECTED_CCLW_HAZARDS = 81
@@ -34,7 +35,13 @@ EXPECTED_CCLW_KEYWORDS = 219
 EXPECTED_CCLW_FRAMEWORKS = 3
 EXPECTED_CCLW_INSTRUMENTS = 25
 
-EXPECTED_UNFCCC_TAXONOMY = {"author", "author_type", "event_type", "_document"}
+EXPECTED_UNFCCC_TAXONOMY = {
+    "author",
+    "author_type",
+    "event_type",
+    "_document",
+    "_event",
+}
 
 
 def test_get_config_has_expected_shape(
@@ -62,7 +69,7 @@ def test_get_config_has_expected_shape(
     assert len(data["languages"]) == EXPECTED_LANGUAGES
 
     assert isinstance(data["document"], dict)
-    assert set(data["document"].keys()) == set(["roles", "types", "variants"])
+    assert set(data["document"].keys()) == set(["variants"])
 
 
 def test_get_config_has_correct_number_corpora_super(
@@ -246,8 +253,8 @@ def test_config_documents(client: TestClient, data_db: Session, user_header_toke
     # Now sanity check the data
     #
     # Documents..
-    assert "AMENDMENT" in data["document"]["roles"]
-    assert "Action Plan" in data["document"]["types"]
+    assert "roles" not in data["document"].keys()
+    assert "types" not in data["document"].keys()
     assert "Translation" in data["document"]["variants"]
 
 

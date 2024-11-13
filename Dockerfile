@@ -1,7 +1,13 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 WORKDIR /usr/src
 ENV PYTHONPATH=/usr/src
+
+# Install PostgreSQL client tools
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
 
 # Requirements
 RUN pip install --no-cache-dir poetry==1.7.1

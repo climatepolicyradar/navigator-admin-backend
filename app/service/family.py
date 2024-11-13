@@ -7,7 +7,6 @@ This file hands off to the family repo, adding the dependency of the db (future)
 import logging
 from typing import Optional, Union
 
-from db_client.functions import metadata
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -16,7 +15,7 @@ import app.clients.db.session as db_session
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.model.user import UserContext
-from app.repository import corpus_repo, family_repo
+from app.repository import family_repo
 from app.service import (
     app_user,
     category,
@@ -24,6 +23,7 @@ from app.service import (
     corpus,
     geography,
     id,
+    metadata,
     organisation,
 )
 
@@ -64,7 +64,7 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
-    query_params: dict[str, Union[str, int]], user: UserContext
+    search_params: dict[str, Union[str, int]], user: UserContext
 ) -> list[FamilyReadDTO]:
     """
     Searches for the search term against families on specified fields.
@@ -73,7 +73,7 @@ def search(
     descriptions of all the Families are searched for the given term
     only.
 
-    :param dict query_params: Search patterns to match against specified
+    :param dict search_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
     :param UserContext user: The current user context.
     :return list[FamilyDTO]: The list of families matching the given
@@ -81,7 +81,7 @@ def search(
     """
     with db_session.get_db() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
-        return family_repo.search(db, query_params, org_id)
+        return family_repo.search(db, search_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -130,27 +130,13 @@ def update(
     geo_id = geography.get_id(db, family_dto.geography)
 
     # Validate family belongs to same org as current user.
-    entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
+    entity_org_id: int = corpus.get_corpus_org_id(family.corpus_import_id, db)
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.corpus_import_id
     )
 
-    # Get the taxonomy from the family's corpus.
-    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
-    if taxonomy is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
     # Validate metadata.
-    results = metadata.validate_metadata(
-        metadata.build_valid_taxonomy(taxonomy), family_dto.metadata
-    )
-
-    if len(results) > 0:
-        msg = f"Metadata validation failed: {results}"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
+    metadata.validate_metadata(db, family.corpus_import_id, family_dto.metadata)
 
     # Validate that the collections we want to update are from the same organisation as
     # the current user and are in a valid format.
@@ -197,15 +183,20 @@ def create(
     if db is None:
         db = db_session.get_db()
 
-    # Validate geography
-    geo_id = geography.get_id(db, family.geography)
+    # Validate geographies
+    geo_ids = []
+    if isinstance(family.geography, str):
+        geo_ids.append(geography.get_id(db, family.geography))
+    elif isinstance(family.geography, list):
+        for geo_id in family.geography:
+            geo_ids.append(geography.get_id(db, geo_id))
 
     # Validate category
     category.validate(family.category)
 
     # Get the organisation from the user's email
     corpus.verify(db, family.corpus_import_id)
-    entity_org_id: int = corpus.get_corpus_org_id(db, family.corpus_import_id)
+    entity_org_id: int = corpus.get_corpus_org_id(family.corpus_import_id, db)
 
     # Validate collection ids.
     collections = set(family.collections)
@@ -228,25 +219,11 @@ def create(
         user, entity_org_id, family.corpus_import_id
     )
 
-    # Get the taxonomy from the family's corpus.
-    taxonomy = corpus_repo.get_taxonomy_from_corpus(db, family.corpus_import_id)
-    if taxonomy is None:
-        msg = "Could not get taxonomy from corpus"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
-
     # Validate metadata.
-    results = metadata.validate_metadata(
-        metadata.build_valid_taxonomy(taxonomy), family.metadata
-    )
-
-    if len(results) > 0:
-        msg = f"Metadata validation failed: {','.join(results)}"
-        _LOGGER.error(msg)
-        raise ValidationError(msg)
+    metadata.validate_metadata(db, family.corpus_import_id, family.metadata)
 
     try:
-        import_id = family_repo.create(db, family, geo_id, entity_org_id)
+        import_id = family_repo.create(db, family, geo_ids, entity_org_id)
         if len(import_id) == 0:
             db.rollback()
         return import_id

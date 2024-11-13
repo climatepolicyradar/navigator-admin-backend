@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Tuple, Union, cast
 
+from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from pydantic import ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -10,6 +11,7 @@ import app.repository.document as document_repo
 import app.repository.document_file as file_repo
 import app.repository.family as family_repo
 import app.service.family as family_service
+import app.service.metadata as metadata_service
 from app.clients.aws.client import get_s3_client
 from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
@@ -60,7 +62,7 @@ def all(user: UserContext) -> list[DocumentReadDTO]:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
-    query_params: dict[str, Union[str, int]], user: UserContext
+    search_params: dict[str, Union[str, int]], user: UserContext
 ) -> list[DocumentReadDTO]:
     """
     Searches for the search term against documents on specified fields.
@@ -68,7 +70,7 @@ def search(
     Where 'q' is used instead of an explicit field name, only the titles
     of all the documents are searched for the given term.
 
-    :param dict query_params: Search patterns to match against specified
+    :param dict search_params: Search patterns to match against specified
         fields, given as key value pairs in a dictionary.
     :param UserContext user: The current user context.
     :return list[DocumentReadDTO]: The list of documents matching the
@@ -76,7 +78,7 @@ def search(
     """
     with db_session.get_db() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
-        return document_repo.search(db, query_params, org_id)
+        return document_repo.search(db, search_params, org_id)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -124,6 +126,18 @@ def update(
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
+    family = family_service.get(doc.family_import_id)
+    if family is None:
+        raise ValidationError(f"Could not find family for {doc.family_import_id}")
+
+    # Validate metadata.
+    metadata_service.validate_metadata(
+        db,
+        family.corpus_import_id,
+        document.metadata,
+        EntitySpecificTaxonomyKeys.DOCUMENT.value,
+    )
+
     try:
         if document_repo.update(db, import_id, document):
             db.commit()
@@ -167,6 +181,14 @@ def create(
     entity_org_id = get_org_from_id(db, family.import_id, is_create=True)
     app_user.raise_if_unauthorised_to_make_changes(
         user, entity_org_id, family.import_id
+    )
+
+    # Validate metadata.
+    metadata_service.validate_metadata(
+        db,
+        family.corpus_import_id,
+        document.metadata,
+        EntitySpecificTaxonomyKeys.DOCUMENT.value,
     )
 
     try:

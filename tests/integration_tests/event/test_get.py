@@ -5,8 +5,6 @@ from sqlalchemy.orm import Session
 from tests.helpers.utils import remove_trigger_cols_from_result
 from tests.integration_tests.setup_db import EXPECTED_EVENTS, setup_db
 
-# --- GET
-
 
 def test_get_event(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)

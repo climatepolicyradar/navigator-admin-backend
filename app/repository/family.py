@@ -11,6 +11,7 @@ from db_client.models.dfce.family import (
     FamilyCorpus,
     FamilyDocument,
     FamilyEvent,
+    FamilyGeography,
     FamilyStatus,
     Slug,
 )
@@ -21,7 +22,7 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, func, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -33,29 +34,38 @@ from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Corpus, Organisation]
+FamilyGeoMetaOrg = Tuple[Family, str, FamilyMetadata, Corpus, Organisation]
 
 
 def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
+    geo_subquery = (
+        db.query(
+            func.min(Geography.value).label("value"),
+            FamilyGeography.family_import_id,
+        )
+        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
+        .filter(FamilyGeography.family_import_id == Family.import_id)
+        .group_by(Geography.value, FamilyGeography.family_import_id)
+    ).subquery("geo_subquery")
+
     return (
-        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
-        .join(Geography, Family.geography_id == Geography.id)
+        db.query(Family, geo_subquery.c.value, FamilyMetadata, Corpus, Organisation)  # type: ignore
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
+        .filter(geo_subquery.c.family_import_id == Family.import_id)  # type: ignore
     )
 
 
 def _family_to_dto(
     db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
 ) -> FamilyReadDTO:
-    fam, geo, meta, corpus, org = fam_geo_meta_corp_org
+    fam, geo_value, meta, corpus, org = fam_geo_meta_corp_org
 
-    geo_value = cast(str, geo.value)
     metadata = cast(dict, meta.value)
     org = cast(str, org.name)
     return FamilyReadDTO(
@@ -101,10 +111,18 @@ def _update_intention(
     ]
     update_collections = set(original_collections) != set(family.collections)
     update_title = cast(str, original_family.title) != family.title
+    # TODO: PDCT-1406: Properly implement multi-geography support
+    update_geo = (
+        db.query(FamilyGeography)
+        .filter(FamilyGeography.family_import_id == import_id)
+        .one()
+        .geography_id
+        != geo_id
+    )
     update_basics = (
         update_title
+        or update_geo
         or original_family.description != family.summary
-        or original_family.geography_id != geo_id
         or original_family.family_category != family.category
     )
     existing_metadata = (
@@ -155,13 +173,13 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
 
     :param db Session: the database connection
-    :param dict query_params: Any search terms to filter on specified
+    :param dict search_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
@@ -171,28 +189,28 @@ def search(
         terms.
     """
     search = []
-    if "q" in query_params.keys():
-        term = f"%{escape_like(query_params['q'])}%"
+    if "q" in search_params.keys():
+        term = f"%{escape_like(search_params['q'])}%"
         search.append(or_(Family.title.ilike(term), Family.description.ilike(term)))
     else:
-        if "title" in query_params.keys():
-            term = f"%{escape_like(query_params['title'])}%"
+        if "title" in search_params.keys():
+            term = f"%{escape_like(search_params['title'])}%"
             search.append(Family.title.ilike(term))
 
-        if "summary" in query_params.keys():
-            term = f"%{escape_like(query_params['summary'])}%"
+        if "summary" in search_params.keys():
+            term = f"%{escape_like(search_params['summary'])}%"
             search.append(Family.description.ilike(term))
 
-    if "geography" in query_params.keys():
-        term = cast(str, query_params["geography"])
+    if "geography" in search_params.keys():
+        term = cast(str, search_params["geography"])
         search.append(
             or_(
                 Geography.display_value == term.title(), Geography.value == term.upper()
             )
         )
 
-    if "status" in query_params.keys():
-        term = cast(str, query_params["status"])
+    if "status" in search_params.keys():
+        term = cast(str, search_params["status"])
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
@@ -202,7 +220,7 @@ def search(
             query = query.filter(Organisation.id == org_id)
         found = (
             query.order_by(desc(Family.last_modified))
-            .limit(query_params["max_results"])
+            .limit(search_params["max_results"])
             .all()
         )
     except OperationalError as e:
@@ -247,17 +265,26 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
 
     # Update basic fields
     if update_basics:
+        updates = 0
         result = db.execute(
             db_update(Family)
             .where(Family.import_id == import_id)
             .values(
                 title=new_values["title"],
                 description=new_values["summary"],
-                geography_id=geo_id,
                 family_category=new_values["category"],
             )
         )
-        if result.rowcount == 0:  # type: ignore
+        updates = result.rowcount  # type: ignore
+        # TODO: PDCT-1406: Properly implement multi-geography support
+        result = db.execute(
+            db_update(FamilyGeography)
+            .where(FamilyGeography.family_import_id == import_id)
+            .values(geography_id=geo_id)
+        )
+
+        updates += result.rowcount  # type: ignore
+        if updates == 0:  # type: ignore
             msg = "Could not update family fields: {family}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
@@ -328,7 +355,9 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
     return True
 
 
-def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> str:
+def create(
+    db: Session, family: FamilyCreateDTO, geo_ids: list[int], org_id: int
+) -> str:
     """
     Creates a new family.
 
@@ -339,15 +368,21 @@ def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> st
     :return str: The ID of the created family.
     """
     try:
-        import_id = cast(Column, generate_import_id(db, CountedEntity.Family, org_id))
+        import_id = family.import_id or cast(
+            Column,
+            generate_import_id(db, CountedEntity.Family, org_id),
+        )
         new_family = Family(
             import_id=import_id,
             title=family.title,
             description=family.summary,
-            geography_id=geo_id,
             family_category=family.category,
         )
         db.add(new_family)
+
+        # TODO: PDCT-1406: Properly implement multi-geography support
+        for geo_id in geo_ids:
+            db.add(FamilyGeography(family_import_id=import_id, geography_id=geo_id))
 
         # Add corpus - family link.
         db.add(
@@ -406,6 +441,7 @@ def hard_delete(db: Session, import_id: str):
         db_delete(FamilyCorpus).where(FamilyCorpus.family_import_id == import_id),
         db_delete(Slug).where(Slug.family_import_id == import_id),
         db_delete(FamilyMetadata).where(FamilyMetadata.family_import_id == import_id),
+        db_delete(FamilyGeography).where(FamilyGeography.family_import_id == import_id),
         db_delete(Family).where(Family.import_id == import_id),
     ]
 

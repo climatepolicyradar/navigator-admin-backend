@@ -1,5 +1,6 @@
 """Operations on the repository for the Family entity."""
 
+import copy
 import logging
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
@@ -67,19 +68,33 @@ def _event_to_dto(family_event_meta: FamilyEventTuple) -> EventReadDTO:
     )
 
 
-def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
+def _dto_to_event_dict(dto: EventCreateDTO, event_metadata) -> dict:
+    """Convert our DTO object into a dict with the required field names.
+
+    :param EventCreateDTO event: The values for the new event.
+    :param dict[str, list[str]] event_metadata: The event metadata.
+    :return dict[str, Any]: A mapping of the event create DTO.
+    """
     return {
+        "import_id": dto.import_id if dto.import_id else None,
         "family_import_id": dto.family_import_id,
         "family_document_import_id": dto.family_document_import_id,
         "date": dto.date,
         "title": dto.event_title,
         "event_type_name": dto.event_type_value,
         "status": EventStatus.OK,
+        "valid_metadata": event_metadata,  # TODO: Fix as part of PDCT-1622
     }
 
 
-def _event_from_dto(dto: EventCreateDTO):
-    family_event = FamilyEvent(**_dto_to_event_dict(dto))
+def _event_from_dto(dto: EventCreateDTO, event_metadata) -> FamilyEvent:
+    """Create a FamilyEvent object from the event create DTO.
+
+    :param EventCreateDTO event: The values for the new event.
+    :param dict[str, list[str]] event_metadata: The event metadata.
+    :return FamilyEvent
+    """
+    family_event = FamilyEvent(**_dto_to_event_dict(dto, event_metadata))
     return family_event
 
 
@@ -122,13 +137,13 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[EventReadDTO]:
     """
     Get family events matching a search term on the event title or type.
 
     :param db Session: The database connection.
-    :param dict query_params: Any search terms to filter on specified
+    :param dict search_params: Any search terms to filter on specified
         fields (title & event type name by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
@@ -137,8 +152,8 @@ def search(
     :return list[EventReadDTO]: A list of matching family events.
     """
     search = []
-    if "q" in query_params.keys():
-        term = f"%{escape_like(query_params['q'])}%"
+    if "q" in search_params.keys():
+        term = f"%{escape_like(search_params['q'])}%"
         search.append(
             or_(FamilyEvent.title.ilike(term), FamilyEvent.event_type_name.ilike(term))
         )
@@ -148,7 +163,7 @@ def search(
         query = _get_query(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
-        found = query.limit(query_params["max_results"]).all()
+        found = query.limit(search_params["max_results"]).all()
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -157,31 +172,35 @@ def search(
     return [_event_to_dto(f) for f in found]
 
 
-def create(db: Session, event: EventCreateDTO) -> str:
+def create(
+    db: Session, event: EventCreateDTO, event_metadata: dict[str, list[str]]
+) -> str:
     """
     Creates a new family event.
 
     :param db Session: The database connection.
     :param EventCreateDTO event: The values for the new event.
+    :param dict[str, list[str]] event_metadata: The event metadata.
     :return str: The import id of the newly created family event.
     """
 
     try:
-        new_family_event = _event_from_dto(event)
+        new_family_event = _event_from_dto(event, event_metadata)
 
         family_import_id = new_family_event.family_import_id
 
-        # Generate the import_id for the new event
-        org = family_repo.get_organisation(db, cast(str, family_import_id))
-        if org is None:
-            raise ValidationError(
-                f"Cannot find counter to generate id for {family_import_id}"
-            )
+        if not new_family_event.import_id:
+            org = family_repo.get_organisation(db, cast(str, family_import_id))
+            if org is None:
+                raise ValidationError(
+                    f"Cannot find counter to generate id for {family_import_id}"
+                )
+            org_name = cast(str, org.name)
 
-        org_name = cast(str, org.name)
-        new_family_event.import_id = cast(
-            Column, generate_import_id(db, CountedEntity.Event, org_name)
-        )
+            # Generate the import_id for the new event
+            new_family_event.import_id = cast(
+                Column, generate_import_id(db, CountedEntity.Event, org_name)
+            )
 
         db.add(new_family_event)
     except Exception:
@@ -197,7 +216,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
 
     :param db Session: the database connection
     :param str import_id: The event import id to change.
-    :param EventDTO event: The new values
+    :param EventWriteDTO event: The new values
     :return bool: True if new values were set otherwise false.
     """
     new_values = event.model_dump()
@@ -210,6 +229,12 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
         _LOGGER.error(f"Unable to find event for update {import_id}")
         return False
 
+    metadata = original_fe.valid_metadata
+    if isinstance(metadata, dict):
+        metadata = copy.deepcopy(metadata)
+        if "event_type" in metadata:
+            metadata["event_type"] = new_values["event_type_value"]
+
     result = db.execute(
         db_update(FamilyEvent)
         .where(FamilyEvent.import_id == original_fe.import_id)
@@ -217,6 +242,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
             title=new_values["event_title"],
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
+            valid_metadata=metadata,
         )
     )
 

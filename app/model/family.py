@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
@@ -52,14 +52,15 @@ class FamilyCreateDTO(BaseModel):
     A JSON representation of a family for creating.
 
     Note:
-     - import_id is auto generated
+     - import_id is auto generated if not supplied
      - slug is auto generated
      - organisation comes from the user's organisation
     """
 
+    import_id: Optional[str] = None
     title: str
     summary: str
-    geography: str
+    geography: Union[str, list[str]]
     category: str
     metadata: Json
     collections: list[str]

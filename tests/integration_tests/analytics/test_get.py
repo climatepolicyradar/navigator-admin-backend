@@ -8,8 +8,6 @@ from tests.integration_tests.setup_db import (
     setup_db,
 )
 
-# --- GET ALL
-
 
 def test_get_all_analytics(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
@@ -26,9 +24,6 @@ def test_get_all_analytics_when_not_authenticated(client: TestClient, data_db: S
         "/api/v1/analytics",
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-# --- GET SUMMARY
 
 
 def test_get_analytics_summary_super(

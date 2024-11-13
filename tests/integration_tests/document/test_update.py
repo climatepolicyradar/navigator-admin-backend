@@ -1,4 +1,4 @@
-from typing import Tuple, cast
+from typing import Tuple
 
 from db_client.models.dfce.family import FamilyDocument, Slug
 from db_client.models.document.physical_document import (
@@ -9,10 +9,8 @@ from db_client.models.document.physical_document import (
 )
 from fastapi import status
 from fastapi.testclient import TestClient
-from pydantic import AnyHttpUrl
 from sqlalchemy.orm import Session
 
-from app.model.document import DocumentWriteDTO
 from tests.helpers.document import create_document_write_dto
 from tests.integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 
@@ -41,12 +39,10 @@ def test_update_document_super(
     client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
-    new_document = DocumentWriteDTO(
-        variant_name="Translation",
-        role="SUMMARY",
-        type="Annex",
+    new_document = create_document_write_dto(
         title="Updated Title",
-        source_url=cast(AnyHttpUrl, "http://update_source"),
+        variant_name="Translation",
+        metadata={"role": ["SUMMARY"], "type": ["Annex"]},
         user_language_name="Ghotuo",
     )
     response = client.put(
@@ -58,8 +54,7 @@ def test_update_document_super(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
-    assert data["type"] == "Annex"
+    assert data["metadata"] == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
@@ -68,8 +63,7 @@ def test_update_document_super(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
-    assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -95,12 +89,10 @@ def test_update_document_super(
 
 def test_update_document_cclw(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
-    new_document = DocumentWriteDTO(
-        variant_name="Translation",
-        role="SUMMARY",
-        type="Annex",
+    new_document = create_document_write_dto(
         title="Updated Title",
-        source_url=cast(AnyHttpUrl, "http://update_source"),
+        variant_name="Translation",
+        metadata={"role": ["SUMMARY"], "type": ["Annex"]},
         user_language_name="Ghotuo",
     )
     response = client.put(
@@ -112,8 +104,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     data = response.json()
     assert data["import_id"] == "D.0.0.3"
     assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
-    assert data["type"] == "Annex"
+    assert data["metadata"] == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
@@ -122,8 +113,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     fd, pd = _get_doc_tuple(data_db, "D.0.0.3")
     assert fd.import_id == "D.0.0.3"
     assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
-    assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -151,12 +141,10 @@ def test_update_document_unfccc(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
-    new_document = DocumentWriteDTO(
-        variant_name="Translation",
-        role="SUMMARY",
-        type="Annex",
+    new_document = create_document_write_dto(
         title="Updated Title",
-        source_url=cast(AnyHttpUrl, "http://update_source"),
+        variant_name="Translation",
+        metadata={"role": ["SUMMARY"], "type": ["Annex"]},
         user_language_name="Ghotuo",
     )
     response = client.put(
@@ -168,8 +156,7 @@ def test_update_document_unfccc(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Translation"
-    assert data["role"] == "SUMMARY"
-    assert data["type"] == "Annex"
+    assert data["metadata"] == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
     assert data["slug"].startswith("updated-title")
@@ -178,8 +165,7 @@ def test_update_document_unfccc(
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Translation"
-    assert fd.document_role == "SUMMARY"
-    assert fd.document_type == "Annex"
+    assert fd.valid_metadata == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert pd.title == "Updated Title"
     assert pd.source_url == "http://update_source/"
 
@@ -209,13 +195,11 @@ def test_update_document_no_source_url(
     setup_db(data_db)
 
     # Keep all values apart from the Source URL the same.
-    new_document = DocumentWriteDTO(
-        variant_name="Original Language",
-        role="MAIN",
-        type="Law",
+    new_document = create_document_write_dto(
         title="big title1",
+        variant_name="Original Language",
+        metadata={"role": ["MAIN"], "type": ["Law"]},
         source_url=None,
-        user_language_name="English",
     )
 
     response = client.put(
@@ -227,16 +211,14 @@ def test_update_document_no_source_url(
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
     assert data["variant_name"] == "Original Language"
-    assert data["role"] == "MAIN"
-    assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == new_document.source_url
+    assert data["metadata"] == {"role": ["MAIN"], "type": ["Law"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
-    assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"], "type": ["Law"]}
     assert pd.title == "big title1"
     assert pd.source_url == new_document.source_url
 
@@ -252,18 +234,131 @@ def test_update_document_no_source_url(
     assert data["user_language_name"] == lang.name
 
 
+def test_update_document_raises_when_metadata_invalid(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+
+    # Keep all values apart from the metadata the same.
+    new_document = create_document_write_dto(
+        title="big title1",
+        variant_name="Original Language",
+        metadata={"color": ["pink"]},
+        source_url="http://source1/",
+    )
+
+    response = client.put(
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "{'role', 'type'}"
+
+    expected_message = "Metadata validation failed: "
+    expected_missing_message = f"Missing metadata keys: {key_text}"
+    expected_extra_message = (
+        f"Extra metadata keys: {list(new_document.metadata.keys())}"
+    )
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message) + len(
+        expected_missing_message
+    ) + len(expected_extra_message) + len(",")
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name == "Original Language"
+    assert fd.valid_metadata == {"role": ["MAIN"], "type": ["Law"]}
+    assert pd.title == "big title1"
+    assert pd.source_url == "http://source1/"
+
+
+def test_update_document_raises_when_metadata_required_field_blank(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+
+    # Keep all values apart from the metadata the same.
+    new_document = create_document_write_dto(
+        title="big title1",
+        variant_name="Original Language",
+        metadata={"role": [], "type": ["Law"]},
+        source_url="http://source1/",
+    )
+
+    response = client.put(
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    key_text = "'role'"
+    expected_message = (
+        f"Metadata validation failed: Blank value for metadata key {key_text}"
+    )
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message)
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name == "Original Language"
+    assert fd.valid_metadata == {"role": ["MAIN"], "type": ["Law"]}
+    assert pd.title == "big title1"
+    assert pd.source_url == "http://source1/"
+
+
+def test_update_document_raises_when_metadata_required_field_none(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+
+    # Keep all values apart from the metadata the same.
+    new_document = create_document_write_dto(
+        title="big title1",
+        variant_name="Original Language",
+        metadata={"role": None, "type": None},
+        source_url="http://source1/",
+    )
+
+    response = client.put(
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+
+    expected_message = (
+        "Metadata validation failed: "
+        "Invalid value 'None' for metadata key 'role' expected list.,"
+        "Invalid value 'None' for metadata key 'type' expected list."
+    )
+    assert data["detail"].startswith(expected_message)
+    assert len(data["detail"]) == len(expected_message)
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
+    assert fd.import_id == "D.0.0.1"
+    assert fd.variant_name == "Original Language"
+    assert fd.valid_metadata == {"role": ["MAIN"], "type": ["Law"]}
+    assert pd.title == "big title1"
+    assert pd.source_url == "http://source1/"
+
+
 def test_update_document_remove_variant(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
 
     # Keep all values apart from the variant the same.
-    new_document = DocumentWriteDTO(
-        variant_name=None,
-        role="MAIN",
-        type="Law",
+    new_document = create_document_write_dto(
         title="title2",
-        source_url=cast(AnyHttpUrl, "http://update_source"),
+        variant_name=None,
+        metadata={"role": ["MAIN"], "type": ["Law"]},
+        source_url="http://source2/",
         user_language_name=None,
     )
     response = client.put(
@@ -275,16 +370,12 @@ def test_update_document_remove_variant(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] is None
-    assert data["role"] == "MAIN"
-    assert data["type"] == "Law"
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name is None
-    assert fd.document_role == "MAIN"
-    assert fd.document_type == "Law"
     assert pd.title == "title2"
     assert pd.source_url == "http://update_source/"
 
@@ -305,12 +396,11 @@ def test_update_document_remove_user_language(
     setup_db(data_db)
 
     # Keep all values apart from the language the same as in setup_db.py.
-    new_document = DocumentWriteDTO(
-        variant_name="Original Language",
-        role="MAIN",
-        type="Law",
+    new_document = create_document_write_dto(
         title="big title1",
-        source_url=cast(AnyHttpUrl, "http://update_source"),
+        variant_name="Original Language",
+        metadata={"role": ["MAIN"], "type": ["Law"]},
+        source_url="http://source1/",
         user_language_name=None,
     )
     response = client.put(
@@ -322,16 +412,14 @@ def test_update_document_remove_user_language(
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
     assert data["variant_name"] == "Original Language"
-    assert data["role"] == "MAIN"
-    assert data["type"] == "Law"
     assert data["title"] == "big title1"
     assert data["source_url"] == "http://update_source/"
+    assert data["metadata"] == {"role": ["MAIN"], "type": ["Law"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.1")
     assert fd.import_id == "D.0.0.1"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
-    assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"], "type": ["Law"]}
     assert pd.title == "big title1"
 
     # Check the user language in the db
@@ -361,19 +449,16 @@ def test_update_document_idempotent(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
-    doc = EXPECTED_DOCUMENTS[0]
-    document = {
-        "variant_name": doc["variant_name"],
-        "role": doc["role"],
-        "type": doc["type"],
-        "title": doc["title"],
-        "source_url": doc["source_url"],
-        "user_language_name": doc["user_language_name"],
-    }
-
+    new_document = create_document_write_dto(
+        title="big title1",
+        variant_name="Original Language",
+        metadata={"role": ["MAIN"], "type": ["Law"]},
+        source_url="http://source1/",
+        user_language_name="English",
+    )
     response = client.put(
-        f"/api/v1/documents/{doc['import_id']}",
-        json=document,
+        "/api/v1/documents/D.0.0.1",
+        json=new_document.model_dump(mode="json"),
         headers=non_cclw_user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
@@ -447,12 +532,10 @@ def test_update_document_blank_variant(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
-    new_document = DocumentWriteDTO(
+    new_document = create_document_write_dto(
+        title="title2",
         variant_name="",
-        role="SUMMARY",
-        type="Annex",
-        title="Updated Title",
-        source_url=cast(AnyHttpUrl, "http://update_source"),
+        metadata={"role": ["SUMMARY"], "type": ["Annex"]},
         user_language_name="Ghotuo",
     )
     response = client.put(
@@ -469,12 +552,10 @@ def test_update_document_idempotent_user_language(
     client: TestClient, data_db: Session, non_cclw_user_header_token
 ):
     setup_db(data_db)
-    new_document = DocumentWriteDTO(
-        variant_name="Original Language",
-        role="MAIN",
-        type="Law",
+    new_document = create_document_write_dto(
         title="title2",
-        source_url=cast(AnyHttpUrl, "http://update_source"),
+        variant_name="Original Language",
+        metadata={"role": ["MAIN"], "type": ["Law"]},
         user_language_name=None,
     )
     response = client.put(
@@ -486,16 +567,14 @@ def test_update_document_idempotent_user_language(
     data = response.json()
     assert data["import_id"] == "D.0.0.2"
     assert data["variant_name"] == "Original Language"
-    assert data["role"] == "MAIN"
-    assert data["type"] == "Law"
     assert data["title"] == "title2"
     assert data["source_url"] == "http://update_source/"
+    assert data["metadata"] == {"role": ["MAIN"], "type": ["Law"]}
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
     assert fd.import_id == "D.0.0.2"
     assert fd.variant_name == "Original Language"
-    assert fd.document_role == "MAIN"
-    assert fd.document_type == "Law"
+    assert fd.valid_metadata == {"role": ["MAIN"], "type": ["Law"]}
     assert pd.title == "title2"
     assert pd.source_url == "http://update_source/"
 

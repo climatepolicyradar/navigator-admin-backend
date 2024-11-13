@@ -43,7 +43,7 @@ def _collection_org_from_dto(
 ) -> Tuple[Collection, CollectionOrganisation]:
     return (
         Collection(
-            import_id="",
+            import_id=dto.import_id if dto.import_id else None,
             title=dto.title,
             description=dto.description,
         ),
@@ -138,13 +138,13 @@ def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
 
 
 def search(
-    db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
 ) -> list[CollectionReadDTO]:
     """
     Gets a list of collections from the repo searching given fields.
 
     :param db Session: the database connection
-    :param dict query_params: Any search terms to filter on specified
+    :param dict search_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
     :raises HTTPException: If a DB error occurs a 503 is returned.
@@ -153,8 +153,8 @@ def search(
     :return list[CollectionResponse]: A list of matching collections.
     """
     search = []
-    if "q" in query_params.keys():
-        term = f"%{escape_like(query_params['q'])}%"
+    if "q" in search_params.keys():
+        term = f"%{escape_like(search_params['q'])}%"
         search.append(
             or_(Collection.title.ilike(term), Collection.description.ilike(term))
         )
@@ -166,7 +166,7 @@ def search(
             query = query.filter(Organisation.id == org_id)
         found = (
             query.order_by(desc(Collection.last_modified))
-            .limit(query_params["max_results"])
+            .limit(search_params["max_results"])
             .all()
         )
     except OperationalError as e:
@@ -219,15 +219,18 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
     :param db Session: the database connection
     :param CollectionDTO collection: the values for the new collection
     :param int org_id: a validated organisation id
-    :return bool: True if new collection was created otherwise false.
+    :raises RepositoryError: If a collection could not be created
+    :return str: import id of new collection
     """
     try:
         new_collection, collection_organisation = _collection_org_from_dto(
             collection, org_id
         )
-        new_collection.import_id = cast(
-            Column, generate_import_id(db, CountedEntity.Collection, org_id)
-        )
+
+        if not new_collection.import_id:
+            new_collection.import_id = cast(
+                Column, generate_import_id(db, CountedEntity.Collection, org_id)
+            )
         db.add(new_collection)
 
         collection_organisation.collection_import_id = new_collection.import_id

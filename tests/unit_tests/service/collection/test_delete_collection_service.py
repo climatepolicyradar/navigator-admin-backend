@@ -3,8 +3,6 @@ import pytest
 import app.service.collection as collection_service
 from app.errors import ValidationError
 
-# --- DELETE
-
 
 def test_delete(collection_repo_mock):
     ok = collection_service.delete("a.b.c.d")

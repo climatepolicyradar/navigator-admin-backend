@@ -28,7 +28,7 @@ class FamilyRepo(Protocol):
 
     @staticmethod
     def search(
-        db: Session, query_params: dict[str, Union[str, int]], org_id: Optional[int]
+        db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
     ) -> list[FamilyReadDTO]:
         """Searches the families"""
         ...
@@ -41,7 +41,9 @@ class FamilyRepo(Protocol):
         ...
 
     @staticmethod
-    def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> str:
+    def create(
+        db: Session, family: FamilyCreateDTO, geo_ids: list[int], org_id: int
+    ) -> str:
         """Creates a family"""
         ...
 

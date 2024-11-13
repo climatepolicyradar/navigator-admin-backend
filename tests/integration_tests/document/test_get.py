@@ -4,8 +4,6 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import EXPECTED_DOCUMENTS, setup_db
 
-# --- GET
-
 
 def test_get_document(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)

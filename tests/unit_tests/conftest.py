@@ -6,7 +6,11 @@ Service mocks should only be used for router tests.
 
 from typing import Dict
 
+import boto3
+import db_client.functions.corpus_helpers as db_client_corpus_helpers
+import db_client.functions.metadata as db_client_metadata
 import pytest
+from botocore.exceptions import ClientError
 from fastapi.testclient import TestClient
 from moto import mock_s3
 
@@ -18,7 +22,10 @@ import app.service.corpus as corpus_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
+import app.service.ingest as ingest_service
+import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
+import app.service.validation as validation_service
 from app.clients.aws.client import get_s3_client
 from app.main import app
 from app.model.user import UserContext
@@ -31,7 +38,6 @@ from app.repository import (
     event_repo,
     family_repo,
     geography_repo,
-    metadata_repo,
     organisation_repo,
 )
 from tests.mocks.repos import create_mock_family_repo
@@ -39,10 +45,11 @@ from tests.mocks.repos.app_user_repo import mock_app_user_repo
 from tests.mocks.repos.collection_repo import mock_collection_repo
 from tests.mocks.repos.config_repo import mock_config_repo
 from tests.mocks.repos.corpus_repo import mock_corpus_repo
+from tests.mocks.repos.db_client_corpus_helpers import mock_corpus_helpers_db_client
+from tests.mocks.repos.db_client_metadata import mock_metadata_db_client
 from tests.mocks.repos.document_repo import mock_document_repo
 from tests.mocks.repos.event_repo import mock_event_repo
 from tests.mocks.repos.geography_repo import mock_geography_repo
-from tests.mocks.repos.metadata_repo import mock_metadata_repo
 from tests.mocks.repos.organisation_repo import mock_organisation_repo
 from tests.mocks.services.analytics_service import mock_analytics_service
 from tests.mocks.services.app_user_service import mock_app_user_service
@@ -52,6 +59,8 @@ from tests.mocks.services.corpus_service import mock_corpus_service
 from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
+from tests.mocks.services.ingest_service import mock_ingest_service
+from tests.mocks.services.validation_service import mock_validation_service
 
 ORG_ID = 1
 
@@ -64,13 +73,6 @@ def client():
 
 
 # ----- Mock repos
-
-
-@pytest.fixture
-def metadata_repo_mock(monkeypatch, mocker):
-    """Mocks the service for a single test."""
-    mock_metadata_repo(metadata_repo, monkeypatch, mocker)
-    yield metadata_repo
 
 
 @pytest.fixture
@@ -144,6 +146,20 @@ def corpus_repo_mock(monkeypatch, mocker):
     yield corpus_repo
 
 
+@pytest.fixture
+def db_client_metadata_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_metadata_db_client(db_client_metadata, monkeypatch, mocker)
+    yield db_client_metadata
+
+
+@pytest.fixture
+def db_client_corpus_helpers_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_corpus_helpers_db_client(taxonomy_service, monkeypatch, mocker)
+    yield db_client_corpus_helpers
+
+
 # ----- Mock services
 
 
@@ -201,6 +217,20 @@ def corpus_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_corpus_service(corpus_service, monkeypatch, mocker)
     yield corpus_service
+
+
+@pytest.fixture
+def ingest_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_ingest_service(ingest_service, monkeypatch, mocker)
+    yield ingest_service
+
+
+@pytest.fixture
+def validation_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_validation_service(validation_service, monkeypatch, mocker)
+    yield validation_service
 
 
 # ----- User tokens
@@ -269,6 +299,21 @@ def test_s3_client(s3_document_bucket_names):
         )
 
         yield s3_client
+
+
+@pytest.fixture
+def basic_s3_client():
+    bucket_name = "test_bucket"
+    with mock_s3():
+        conn = boto3.client("s3", region_name="eu-west-2")
+        try:
+            conn.head_bucket(Bucket=bucket_name)
+        except ClientError:
+            conn.create_bucket(
+                Bucket=bucket_name,
+                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+            )
+        yield conn
 
 
 # -- now UserContexts
