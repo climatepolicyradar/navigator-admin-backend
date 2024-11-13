@@ -19,6 +19,7 @@ class AuthEndpoint(str, enum.Enum):
     ANALYTICS = "ANALYTICS"
     EVENT = "EVENTS"
     INGEST = "INGEST"
+    CORPUS = "CORPORA"
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
@@ -64,5 +65,11 @@ AUTH_TABLE: AuthMap = {
     AuthEndpoint.INGEST: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
+    },
+    # Corpus
+    AuthEndpoint.CORPUS: {
+        AuthOperation.CREATE: AuthAccess.ADMIN,
+        AuthOperation.READ: AuthAccess.ADMIN,
+        AuthOperation.UPDATE: AuthAccess.ADMIN,
     },
 }
