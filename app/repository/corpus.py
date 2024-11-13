@@ -48,6 +48,7 @@ def _corpus_to_dto(
         corpus_type_description=cast(str, corpus_type.description),
         organisation_id=cast(int, org.id),
         organisation_name=cast(str, org.name),
+        # TODO add created and last modified timestamps?
     )
 
 

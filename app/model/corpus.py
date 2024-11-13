@@ -20,8 +20,7 @@ class CorpusReadDTO(BaseModel):
     corpus_type_description: str
     metadata: Json
 
-    # created: datetime
-    # last_modified: datetime
+    # TODO: Add create and last modified timestamps.
 
 
 class CorpusWriteDTO(BaseModel):
