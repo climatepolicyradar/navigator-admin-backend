@@ -17,7 +17,7 @@ from tests.integration_tests.setup_db import setup_db
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
-    data_db: Session, client: TestClient, user_header_token, basic_s3_client
+    data_db: Session, client: TestClient, admin_user_header_token, basic_s3_client
 ):
     response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
@@ -29,7 +29,7 @@ def test_ingest_when_ok(
                 "rb",
             )
         },
-        headers=user_header_token,
+        headers=admin_user_header_token,
     )
 
     expected_collection_import_ids = ["test.new.collection.0", "test.new.collection.1"]
@@ -90,7 +90,7 @@ def test_import_data_rollback(
     caplog,
     data_db: Session,
     client: TestClient,
-    user_header_token,
+    admin_user_header_token,
     rollback_collection_repo,
     basic_s3_client,
 ):
@@ -107,7 +107,7 @@ def test_import_data_rollback(
                     "rb",
                 )
             },
-            headers=user_header_token,
+            headers=admin_user_header_token,
         )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -126,7 +126,11 @@ def test_import_data_rollback(
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_idempotency(
-    caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
+    caplog,
+    data_db: Session,
+    client: TestClient,
+    admin_user_header_token,
+    basic_s3_client,
 ):
     family_import_id = "test.new.family.0"
     event_import_id = "test.new.event.0"
@@ -178,7 +182,7 @@ def test_ingest_idempotency(
         first_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
             files={"new_data": test_data_file},
-            headers=user_header_token,
+            headers=admin_user_header_token,
         )
 
         assert first_response.status_code == status.HTTP_202_ACCEPTED
@@ -211,7 +215,7 @@ def test_ingest_idempotency(
         second_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
             files={"new_data": test_json},
-            headers=user_header_token,
+            headers=admin_user_header_token,
         )
 
         assert second_response.status_code == status.HTTP_202_ACCEPTED
@@ -239,7 +243,11 @@ def test_ingest_idempotency(
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_generates_unique_slugs_for_documents_with_identical_titles(
-    caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
+    caplog,
+    data_db: Session,
+    client: TestClient,
+    admin_user_header_token,
+    basic_s3_client,
 ):
     """
     This test ensures that given multiple documents with the same title a unique slug
@@ -281,7 +289,7 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
         first_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
             files={"new_data": test_data_file},
-            headers=user_header_token,
+            headers=admin_user_header_token,
         )
 
         assert first_response.status_code == status.HTTP_202_ACCEPTED
@@ -300,7 +308,11 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_corpus_import_id_invalid(
-    caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
+    caplog,
+    data_db: Session,
+    client: TestClient,
+    admin_user_header_token,
+    basic_s3_client,
 ):
     invalid_corpus = "test"
 
@@ -315,7 +327,7 @@ def test_ingest_when_corpus_import_id_invalid(
                     "rb",
                 )
             },
-            headers=user_header_token,
+            headers=admin_user_header_token,
         )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -328,7 +340,11 @@ def test_ingest_when_corpus_import_id_invalid(
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_events_when_event_type_invalid(
-    caplog, data_db: Session, client: TestClient, user_header_token, basic_s3_client
+    caplog,
+    data_db: Session,
+    client: TestClient,
+    admin_user_header_token,
+    basic_s3_client,
 ):
     with caplog.at_level(logging.ERROR):
         response = client.post(
@@ -344,7 +360,7 @@ def test_ingest_events_when_event_type_invalid(
                     "rb",
                 )
             },
-            headers=user_header_token,
+            headers=admin_user_header_token,
         )
 
         assert response.status_code == status.HTTP_202_ACCEPTED

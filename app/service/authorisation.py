@@ -1,12 +1,16 @@
-from app.errors import AuthorisationError
-from app.model.authorisation import (
-    AUTH_TABLE,
+import logging
+
+from db_client.models.organisation.authorisation import (
     HTTP_MAP_TO_OPERATION,
     AuthAccess,
-    AuthEndpoint,
     AuthOperation,
 )
+
+from app.errors import AuthorisationError
+from app.model.authorisation import AUTH_TABLE, AuthEndpoint
 from app.model.user import UserContext
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def http_method_to_operation(method: str) -> AuthOperation:
