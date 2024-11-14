@@ -13,8 +13,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.api_v1.routers.ingest import validate_entity_relationships
 from app.errors import ValidationError
+from app.service.ingest import validate_entity_relationships
 
 
 def test_ingest_when_not_authenticated(client: TestClient):
