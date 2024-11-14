@@ -17,7 +17,7 @@ from tests.integration_tests.setup_db import setup_db
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
-    data_db: Session, client: TestClient, admin_user_header_token, basic_s3_client
+    data_db: Session, client: TestClient, superuser_header_token, basic_s3_client
 ):
     response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
@@ -29,7 +29,7 @@ def test_ingest_when_ok(
                 "rb",
             )
         },
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
 
     expected_collection_import_ids = ["test.new.collection.0", "test.new.collection.1"]
@@ -90,7 +90,7 @@ def test_import_data_rollback(
     caplog,
     data_db: Session,
     client: TestClient,
-    admin_user_header_token,
+    superuser_header_token,
     rollback_collection_repo,
     basic_s3_client,
 ):
@@ -107,7 +107,7 @@ def test_import_data_rollback(
                     "rb",
                 )
             },
-            headers=admin_user_header_token,
+            headers=superuser_header_token,
         )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -129,7 +129,7 @@ def test_ingest_idempotency(
     caplog,
     data_db: Session,
     client: TestClient,
-    admin_user_header_token,
+    superuser_header_token,
     basic_s3_client,
 ):
     family_import_id = "test.new.family.0"
@@ -182,7 +182,7 @@ def test_ingest_idempotency(
         first_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
             files={"new_data": test_data_file},
-            headers=admin_user_header_token,
+            headers=superuser_header_token,
         )
 
         assert first_response.status_code == status.HTTP_202_ACCEPTED
@@ -215,7 +215,7 @@ def test_ingest_idempotency(
         second_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
             files={"new_data": test_json},
-            headers=admin_user_header_token,
+            headers=superuser_header_token,
         )
 
         assert second_response.status_code == status.HTTP_202_ACCEPTED
@@ -246,7 +246,7 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
     caplog,
     data_db: Session,
     client: TestClient,
-    admin_user_header_token,
+    superuser_header_token,
     basic_s3_client,
 ):
     """
@@ -289,7 +289,7 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
         first_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
             files={"new_data": test_data_file},
-            headers=admin_user_header_token,
+            headers=superuser_header_token,
         )
 
         assert first_response.status_code == status.HTTP_202_ACCEPTED
@@ -311,7 +311,7 @@ def test_ingest_when_corpus_import_id_invalid(
     caplog,
     data_db: Session,
     client: TestClient,
-    admin_user_header_token,
+    superuser_header_token,
     basic_s3_client,
 ):
     invalid_corpus = "test"
@@ -327,7 +327,7 @@ def test_ingest_when_corpus_import_id_invalid(
                     "rb",
                 )
             },
-            headers=admin_user_header_token,
+            headers=superuser_header_token,
         )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -343,7 +343,7 @@ def test_ingest_events_when_event_type_invalid(
     caplog,
     data_db: Session,
     client: TestClient,
-    admin_user_header_token,
+    superuser_header_token,
     basic_s3_client,
 ):
     with caplog.at_level(logging.ERROR):
@@ -360,7 +360,7 @@ def test_ingest_events_when_event_type_invalid(
                     "rb",
                 )
             },
-            headers=admin_user_header_token,
+            headers=superuser_header_token,
         )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -372,3 +372,34 @@ def test_ingest_events_when_event_type_invalid(
         "Metadata validation failed: Invalid value '['Invalid']' for metadata key 'event_type'"
         in caplog.text
     )
+
+
+def test_ingest_when_not_authorised(client: TestClient, data_db: Session):
+    response = client.post(
+        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_ingest_admin_non_super(
+    client: TestClient, data_db: Session, admin_user_header_token
+):
+    response = client.post(
+        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        headers=admin_user_header_token,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert data["detail"] == "User admin@cpr.org is not authorised to CREATE an INGEST"
+
+
+def test_ingest_non_super_non_admin(
+    client: TestClient, data_db: Session, user_header_token
+):
+    response = client.post(
+        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert data["detail"] == "User cclw@cpr.org is not authorised to CREATE an INGEST"
