@@ -18,8 +18,8 @@ from app.service.ingest import (
     get_event_template,
     get_family_template,
     import_data,
-    validate_ingest_data,
 )
+from app.service.validation import validate_ingest_data
 
 ingest_router = r = APIRouter()
 
