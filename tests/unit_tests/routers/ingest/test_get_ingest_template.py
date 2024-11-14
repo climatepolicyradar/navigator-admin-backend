@@ -15,12 +15,30 @@ def test_ingest_template_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+def test_ingest_template_when_non_admin_non_super(
+    client: TestClient, user_header_token
+):
+    response = client.get(
+        "/api/v1/ingest/template/test_corpus_type", headers=user_header_token
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_ingest_template_when_admin_non_super(
+    client: TestClient, admin_user_header_token
+):
+    response = client.get(
+        "/api/v1/ingest/template/test_corpus_type", headers=admin_user_header_token
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_ingest_template_when_ok(
-    client: TestClient, user_header_token, db_client_corpus_helpers_mock
+    client: TestClient, superuser_header_token, db_client_corpus_helpers_mock
 ):
     response = client.get(
         "/api/v1/ingest/template/test_corpus_type",
-        headers=user_header_token,
+        headers=superuser_header_token,
     )
 
     assert response.status_code == status.HTTP_200_OK

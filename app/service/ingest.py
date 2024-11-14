@@ -12,6 +12,9 @@ from uuid import uuid4
 
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
+from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
+from db_client.models.organisation.counters import CountedEntity
+from fastapi import HTTPException, status
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
@@ -24,8 +27,10 @@ import app.repository.family as family_repository
 import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.notification as notification_service
+import app.service.taxonomy as taxonomy
 import app.service.validation as validation
 from app.clients.aws.s3bucket import upload_ingest_json_to_s3
+from app.errors import ValidationError
 from app.model.ingest import (
     IngestCollectionDTO,
     IngestDocumentDTO,
@@ -70,6 +75,93 @@ def _exists_in_db(entity: Type[T], import_id: str, db: Session) -> bool:
     """
     entity_exists = db.query(entity).filter(entity.import_id == import_id).one_or_none()
     return entity_exists is not None
+
+
+def get_collection_template() -> dict:
+    """
+    Gets a collection template.
+
+    :return dict: The collection template.
+    """
+    collection_schema = IngestCollectionDTO.model_json_schema(mode="serialization")
+    collection_template = collection_schema["properties"]
+
+    return collection_template
+
+
+def get_event_template(corpus_type: str) -> dict:
+    """
+    Gets an event template.
+
+    :return dict: The event template.
+    """
+    event_schema = IngestEventDTO.model_json_schema(mode="serialization")
+    event_template = event_schema["properties"]
+
+    event_meta = get_metadata_template(corpus_type, CountedEntity.Event)
+
+    # TODO: Replace with event_template["metadata"] in PDCT-1622
+    if "event_type" not in event_meta:
+        raise ValidationError("Bad taxonomy in database")
+    event_template["event_type_value"] = event_meta["event_type"]
+
+    return event_template
+
+
+def get_document_template(corpus_type: str) -> dict:
+    """
+    Gets a document template for a given corpus type.
+
+    :param str corpus_type: The corpus_type to use to get the document template.
+    :return dict: The document template.
+    """
+    document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
+    document_template = document_schema["properties"]
+    document_template["metadata"] = get_metadata_template(
+        corpus_type, CountedEntity.Document
+    )
+
+    return document_template
+
+
+def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dict:
+    """
+    Gets a metadata template for a given corpus type and entity.
+
+    :param str corpus_type: The corpus_type to use to get the metadata template.
+    :param str metadata_type: The metadata_type to use to get the metadata template.
+    :return dict: The metadata template.
+    """
+    metadata = taxonomy.get(corpus_type)
+    if not metadata:
+        return {}
+    if metadata_type == CountedEntity.Document:
+        return metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
+    elif metadata_type == CountedEntity.Event:
+        return metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
+    elif metadata_type == CountedEntity.Family:
+        metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
+        metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
+        metadata.pop("event_type")  # TODO: Remove as part of PDCT-1622
+    return metadata
+
+
+def get_family_template(corpus_type: str) -> dict:
+    """
+    Gets a family template for a given corpus type.
+
+    :param str corpus_type: The corpus_type to use to get the family template.
+    :return dict: The family template.
+    """
+    family_schema = IngestFamilyDTO.model_json_schema(mode="serialization")
+    family_template = family_schema["properties"]
+
+    del family_template["corpus_import_id"]
+
+    family_metadata = get_metadata_template(corpus_type, CountedEntity.Family)
+    family_template["metadata"] = family_metadata
+
+    return family_template
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -286,3 +378,103 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
         end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
     finally:
         notification_service.send_notification(end_message)
+
+
+def _collect_import_ids(
+    entity_list_name: IngestEntityList,
+    data: dict[str, Any],
+    import_id_type_name: Optional[str] = None,
+) -> list[str]:
+    """
+    Extracts a list of import_ids (or family_import_ids if specified) for the specified entity list in data.
+
+    :param IngestEntityList entity_list_name: The name of the entity list from which the import_ids are to be extracted.
+    :param dict[str, Any] data: The data structure containing the entity lists used for extraction.
+    :param Optional[str] import_id_type_name: the name of the type of import_id to be extracted or None.
+    :return list[str]: A list of extracted import_ids for the specified entity list.
+    """
+    import_id_key = import_id_type_name or "import_id"
+    import_ids = []
+    if entity_list_name.value in data:
+        for entity in data[entity_list_name.value]:
+            import_ids.append(entity[import_id_key])
+    return import_ids
+
+
+def _match_import_ids(
+    parent_references: list[str], parent_import_ids: set[str]
+) -> None:
+    """
+    Validates that all the references to parent entities exist in the set of parent import_ids passed in
+
+    :param list[str] parent_references: List of import_ids referencing parent entities to be validated.
+    :param set[str] parent_import_ids: Set of parent import_ids to validate against.
+    :raises ValidationError: raised if a parent reference is not found in the parent_import_ids.
+    """
+    for id in parent_references:
+        if id not in parent_import_ids:
+            raise ValidationError(f"No entity with id {id} found")
+
+
+def _validate_collections_exist_for_families(data: dict[str, Any]) -> None:
+    """
+    Validates that collections the families are linked to exist based on import_id links in data.
+
+    :param dict[str, Any] data: The data object containing entities to be validated.
+    """
+    collections = _collect_import_ids(IngestEntityList.Collections, data)
+    collections_set = set(collections)
+
+    family_collection_import_ids = []
+    if "families" in data:
+        for fam in data["families"]:
+            family_collection_import_ids.extend(fam["collections"])
+
+    _match_import_ids(family_collection_import_ids, collections_set)
+
+
+def _validate_families_exist_for_events_and_documents(data: dict[str, Any]) -> None:
+    """
+    Validates that families the documents and events are linked to exist
+    based on import_id links in data.
+
+    :param dict[str, Any] data: The data object containing entities to be validated.
+    """
+    families = _collect_import_ids(IngestEntityList.Families, data)
+    families_set = set(families)
+
+    document_family_import_ids = _collect_import_ids(
+        IngestEntityList.Documents, data, "family_import_id"
+    )
+    event_family_import_ids = _collect_import_ids(
+        IngestEntityList.Events, data, "family_import_id"
+    )
+
+    _match_import_ids(document_family_import_ids, families_set)
+    _match_import_ids(event_family_import_ids, families_set)
+
+
+def validate_entity_relationships(data: dict[str, Any]) -> None:
+    """
+    Validates relationships between entities contained in data.
+    For documents, it validates that the family the document is linked to exists.
+
+    :param dict[str, Any] data: The data object containing entities to be validated.
+    """
+
+    _validate_collections_exist_for_families(data)
+    _validate_families_exist_for_events_and_documents(data)
+
+
+def validate_ingest_data(data: dict[str, Any]) -> None:
+    """
+    Validates data to be ingested.
+
+    :param dict[str, Any] data: The data object to be validated.
+    :raises HTTPException: raised if data is empty or None.
+    """
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+
+    validate_entity_relationships(data)

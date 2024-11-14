@@ -3,11 +3,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 
-def test_get_template_unfcc(
-    data_db: Session, client: TestClient, non_cclw_user_header_token
+def test_get_template_unfccc(
+    data_db: Session, client: TestClient, superuser_header_token
 ):
     response = client.get(
-        "/api/v1/ingest/template/Intl. agreements", headers=non_cclw_user_header_token
+        "/api/v1/ingest/template/Intl. agreements", headers=superuser_header_token
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -218,3 +218,34 @@ def test_get_template_unfcc(
             }
         ],
     }
+
+
+def test_get_template_when_not_authorised(client: TestClient, data_db: Session):
+    response = client.get(
+        "/api/v1/ingest/template/Intl. agreements",
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_get_template_admin_non_super(
+    data_db: Session, client: TestClient, admin_user_header_token
+):
+    response = client.get(
+        "/api/v1/ingest/template/Intl. agreements",
+        headers=admin_user_header_token,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert data["detail"] == "User admin@cpr.org is not authorised to READ an INGEST"
+
+
+def test_get_template_non_admin_non_super(
+    data_db: Session, client: TestClient, user_header_token
+):
+    response = client.get(
+        "/api/v1/ingest/template/Intl. agreements",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert data["detail"] == "User cclw@cpr.org is not authorised to READ an INGEST"

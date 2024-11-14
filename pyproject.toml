@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "admin_backend"
-version = "2.17.8"
+version = "2.17.9"
 description = ""
 authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
 packages = [{ include = "app" }, { include = "tests" }]
@@ -42,7 +42,7 @@ pytest-mock = "^3.7.0"
 black = "^24.4.2"
 pyright = "1.1.374"
 pytest-asyncio = "^0.24.0"
-ruff = "^0.6.3"
+ruff = "^0.7.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
