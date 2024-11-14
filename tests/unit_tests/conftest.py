@@ -252,20 +252,27 @@ def non_admin_superuser_header_token() -> Dict[str, str]:
 
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("cclw@cpr.org", ORG_ID, False, {"is_admin": True})
+    a_token = token_service.encode("cclw@cpr.org", ORG_ID, False, {"is_admin": False})
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+@pytest.fixture
+def admin_user_header_token() -> Dict[str, str]:
+    a_token = token_service.encode("admin@cpr.org", ORG_ID, False, {"is_admin": True})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def non_cclw_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("unfccc@cpr.org", ORG_ID, False, {"is_admin": True})
+    a_token = token_service.encode("unfccc@cpr.org", ORG_ID, False, {"is_admin": False})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
-def non_admin_user_header_token() -> Dict[str, str]:
+def invalid_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("non-admin@cpr.org", ORG_ID, False, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
