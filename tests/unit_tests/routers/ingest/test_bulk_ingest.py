@@ -24,7 +24,17 @@ def test_ingest_when_not_authenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_data_when_ok(client: TestClient, user_header_token):
+def test_ingest_when_non_admin_non_super(client: TestClient, user_header_token):
+    response = client.post("/api/v1/ingest/test", headers=user_header_token)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_ingest_when_admin_non_super(client: TestClient, admin_user_header_token):
+    response = client.post("/api/v1/ingest/test", headers=admin_user_header_token)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_ingest_data_when_ok(client: TestClient, superuser_header_token):
     corpus_import_id = "test"
 
     with patch("fastapi.BackgroundTasks.add_task") as background_task_mock:
@@ -42,7 +52,7 @@ def test_ingest_data_when_ok(client: TestClient, user_header_token):
                     "rb",
                 )
             },
-            headers=user_header_token,
+            headers=superuser_header_token,
         )
 
     background_task_mock.assert_called_once()
@@ -55,7 +65,7 @@ def test_ingest_data_when_ok(client: TestClient, user_header_token):
 
 def test_ingest_when_no_data(
     client: TestClient,
-    user_header_token,
+    superuser_header_token,
     collection_repo_mock,
     corpus_service_mock,
     basic_s3_client,
@@ -65,7 +75,7 @@ def test_ingest_when_no_data(
     response = client.post(
         "/api/v1/ingest/test",
         files={"new_data": test_data_file},
-        headers=user_header_token,
+        headers=superuser_header_token,
     )
 
     assert collection_repo_mock.create.call_count == 0
@@ -73,7 +83,7 @@ def test_ingest_when_no_data(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_ingest_documents_when_no_family(client: TestClient, user_header_token):
+def test_ingest_documents_when_no_family(client: TestClient, superuser_header_token):
     fam_import_id = "test.new.family.0"
     test_data = json.dumps(
         {
@@ -87,7 +97,7 @@ def test_ingest_documents_when_no_family(client: TestClient, user_header_token):
     response = client.post(
         "/api/v1/ingest/test",
         files={"new_data": test_data_file},
-        headers=user_header_token,
+        headers=superuser_header_token,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
