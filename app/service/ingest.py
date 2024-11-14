@@ -8,6 +8,7 @@ import of data and other services for validation etc.
 import logging
 from enum import Enum
 from typing import Any, Optional, Type, TypeVar
+from uuid import uuid4
 
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
@@ -24,6 +25,7 @@ import app.service.corpus as corpus
 import app.service.geography as geography
 import app.service.notification as notification_service
 import app.service.validation as validation
+from app.clients.aws.s3bucket import upload_ingest_json_to_s3
 from app.model.ingest import (
     IngestCollectionDTO,
     IngestDocumentDTO,
@@ -240,8 +242,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     )
     end_message = ""
 
-    # ingest_uuid = uuid4()
-    # upload_ingest_json_to_s3(f"{ingest_uuid}-request", corpus_import_id, data)
+    ingest_uuid = uuid4()
+    upload_ingest_json_to_s3(f"{ingest_uuid}-request", corpus_import_id, data)
 
     _LOGGER.info("Getting DB session")
 
@@ -270,7 +272,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
             _LOGGER.info("Saving events")
             result["events"] = save_events(event_data, corpus_import_id, db)
 
-        # upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, result)
+        upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, result)
 
         end_message = (
             f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed."
