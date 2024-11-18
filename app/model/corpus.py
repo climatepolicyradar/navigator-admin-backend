@@ -33,7 +33,6 @@ class CorpusWriteDTO(BaseModel):
 
     # TODO: Do we allow updates to the corpus type? Maybe just the
     # description.
-    # corpus_type_name: str
     # corpus_type_description: str
 
 
