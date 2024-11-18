@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.corpus as corpus_repo
+import app.repository.organisation as org_repo
 from app.errors import RepositoryError, ValidationError
-from app.model.corpus import CorpusReadDTO, CorpusWriteDTO
+from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
 from app.model.user import UserContext
 from app.service import app_user, id
 
@@ -149,9 +150,6 @@ def update(
     if original_corpus is None:
         return None
 
-    entity_org_id: int = get_corpus_org_id(import_id, db)
-    app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
-
     try:
         if corpus_repo.update(db, import_id, corpus):
             db.commit()
@@ -161,3 +159,41 @@ def update(
         db.rollback()
         raise e
     return get(import_id)
+
+
+@db_session.with_database()
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def create(
+    corpus: CorpusCreateDTO,
+    user: UserContext,
+    db: Optional[Session] = None,
+) -> str:
+    """Create a new Corpus from the values passed.
+
+    :param CorpusCreateDTO corpus: The values for the new Family.
+    :param UserContext user: The current user context.
+    :raises RepositoryError: raised on a database error
+    :raises ValidationError: raised should the import_id be invalid.
+    :return str: The new created Corpus or None if unsuccessful.
+    """
+    if db is None:
+        db = db_session.get_db()
+
+    # Check the corpus type name exists in the database already.
+    if not corpus_repo.is_corpus_type_name_valid(db, corpus.corpus_type_name):
+        raise ValidationError("Invalid corpus type name")
+
+    # Check that the organisation ID exists in the database.
+    if org_repo.get_name_from_id(db, corpus.organisation_id) is None:
+        raise ValidationError("Invalid organisation")
+
+    try:
+        import_id = corpus_repo.create(db, corpus)
+        if len(import_id) == 0:
+            db.rollback()
+        return import_id
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.commit()
