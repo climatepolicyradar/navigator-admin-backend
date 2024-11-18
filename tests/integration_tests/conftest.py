@@ -16,11 +16,18 @@ import app.clients.db.session as db_session
 import app.service.token as token_service
 from app.config import SQLALCHEMY_DATABASE_URI
 from app.main import app
-from app.repository import collection_repo, document_repo, event_repo, family_repo
+from app.repository import (
+    collection_repo,
+    corpus_repo,
+    document_repo,
+    event_repo,
+    family_repo,
+)
 from tests.mocks.repos.bad_collection_repo import (
     mock_bad_collection_repo,
     mock_collection_count_none,
 )
+from tests.mocks.repos.bad_corpus_repo import mock_bad_corpus_repo
 from tests.mocks.repos.bad_document_repo import (
     mock_bad_document_repo,
     mock_document_count_none,
@@ -31,6 +38,7 @@ from tests.mocks.repos.bad_family_repo import (
     mock_family_count_none,
 )
 from tests.mocks.repos.rollback_collection_repo import mock_rollback_collection_repo
+from tests.mocks.repos.rollback_corpus_repo import mock_rollback_corpus_repo
 from tests.mocks.repos.rollback_document_repo import mock_rollback_document_repo
 from tests.mocks.repos.rollback_event_repo import mock_rollback_event_repo
 from tests.mocks.repos.rollback_family_repo import mock_rollback_family_repo
@@ -143,6 +151,13 @@ def bad_event_repo(monkeypatch, mocker):
 
 
 @pytest.fixture
+def bad_corpus_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_bad_corpus_repo(corpus_repo, monkeypatch, mocker)
+    yield corpus_repo
+
+
+@pytest.fixture
 def collection_count_none(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_collection_count_none(collection_repo, monkeypatch, mocker)
@@ -196,6 +211,13 @@ def rollback_event_repo(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_rollback_event_repo(event_repo, monkeypatch, mocker)
     yield event_repo
+
+
+@pytest.fixture
+def rollback_corpus_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_rollback_corpus_repo(corpus_repo, monkeypatch, mocker)
+    yield corpus_repo
 
 
 @pytest.fixture

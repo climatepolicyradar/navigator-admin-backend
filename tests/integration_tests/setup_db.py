@@ -21,8 +21,9 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.organisation import Corpus, CorpusType
+from db_client.models.organisation import Corpus, EntityCounter
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 EXPECTED_FAMILIES = [
@@ -302,6 +303,8 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     _setup_event_data(test_db)
     test_db.commit()
 
+    setup_corpus(test_db)
+
 
 def _add_app_user(
     test_db: Session,
@@ -427,32 +430,15 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
 
 
 def setup_corpus(test_db: Session) -> None:
-    org_id = _setup_organisation(test_db)
-    test_db.add(
-        Corpus(
-            import_id="1",
-            title="Test Title",
-            description="Test Description",
-            corpus_text="Test Text",
-            corpus_image_url="Test Image Url",
-            organisation_id=org_id,
-            corpus_type_name="Test Corpus",
+    test_db.execute(
+        update(EntityCounter).values(
+            counter=1,
         )
     )
+    test_db.commit()
 
-    test_db.add(
-        CorpusType(
-            name="Test Corpus",
-            description="Test Description",
-            valid_metadata={
-                "test": {
-                    "allow_any": "true",
-                    "allow_blanks": "false",
-                    "allowed_values": [],
-                }
-            },
-        )
-    )
+    for item in test_db.query(EntityCounter.counter).all():
+        assert item[0] == 1
 
 
 def _setup_collection_data(

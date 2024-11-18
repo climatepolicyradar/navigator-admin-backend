@@ -20,7 +20,7 @@ def test_create_collection(client: TestClient, data_db: Session, user_header_tok
     )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
-    assert data == "CCLW.collection.i00000001.n0000"
+    assert data == "CCLW.collection.i00000002.n0000"
     actual_collection = (
         data_db.query(Collection).filter(Collection.import_id == data).one()
     )
