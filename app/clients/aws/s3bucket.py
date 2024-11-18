@@ -90,14 +90,14 @@ def upload_json_to_s3(
     :param dict[str, Any] json_data: The json data to be uploaded to S3.
     :raises Exception: on any error when uploading the file to S3.
     """
+    _LOGGER.info(f"Uploading {context.object_name} to: {context.bucket_name}")
     try:
-        response = s3_client.put_object(
+        s3_client.put_object(
             Bucket=context.bucket_name,
             Key=context.object_name,
             Body=json.dumps(json_data),
             ContentType="application/json",
         )
-        _LOGGER.debug(f"Response from S3 client: {response}")
         _LOGGER.info(
             f"🎉 Successfully uploaded JSON to S3: {context.bucket_name}/{context.object_name}"
         )
@@ -116,7 +116,6 @@ def upload_ingest_json_to_s3(
     :param str corpus_import_id: The import_id of the corpus the ingest data belongs to.
     :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
     """
-    _LOGGER.info(f"Uploading file to: {os.getenv('BULK_IMPORT_BUCKET')}")
     ingest_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
     current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
 
@@ -128,7 +127,7 @@ def upload_ingest_json_to_s3(
             json.dump(data, file, indent=4)
         return
 
-    s3_client = boto3.client("s3", region_name="eu-west-2")
+    s3_client = boto3.client("s3")
 
     context = S3UploadContext(
         bucket_name=ingest_upload_bucket,
