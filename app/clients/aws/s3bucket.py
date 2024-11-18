@@ -6,10 +6,11 @@ from datetime import datetime
 from typing import Any
 from urllib.parse import quote_plus, urlsplit
 
+import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel
 
-from app.clients.aws.client import AWSClient, get_s3_client
+from app.clients.aws.client import AWSClient
 from app.errors import RepositoryError
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ def upload_ingest_json_to_s3(
             json.dump(data, file, indent=4)
         return
 
-    s3_client = get_s3_client()
+    s3_client = boto3.client("s3", region_name="eu-west-2")
 
     context = S3UploadContext(
         bucket_name=ingest_upload_bucket,
