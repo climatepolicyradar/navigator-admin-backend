@@ -8,13 +8,14 @@ def create_corpus_write_dto(
     description: str = "description",
     corpus_text: Optional[str] = "corpus_text",
     image_url: Optional[str] = "some-picture.png",
+    corpus_type_description: str = "some description",
 ) -> CorpusWriteDTO:
     return CorpusWriteDTO(
         title=title,
         description=description,
         corpus_text=corpus_text,
         corpus_image_url=image_url,
-        corpus_type_description="some description",
+        corpus_type_description=corpus_type_description,
     )
 
 

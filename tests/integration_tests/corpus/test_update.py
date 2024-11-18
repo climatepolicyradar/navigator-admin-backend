@@ -124,7 +124,7 @@ def test_update_corpus_allows_none_corpus_text(
     assert data["organisation_id"] == 1
     assert data["organisation_name"] == "CCLW"
     assert data["corpus_type_name"] == old_ct.name
-    assert data["corpus_type_description"] == old_ct.description
+    assert data["corpus_type_description"] == "some description"
     assert isinstance(data["metadata"], dict)
     assert data["metadata"] == old_ct.valid_metadata
 
@@ -196,6 +196,7 @@ def test_update_corpus_idempotent(
         description=old_corpus.description,
         corpus_text=old_corpus.corpus_text,
         image_url=old_corpus.corpus_image_url,
+        corpus_type_description="Laws and policies",
     )
     old_corpus = cast(Corpus, old_corpus)
     response = client.put(
