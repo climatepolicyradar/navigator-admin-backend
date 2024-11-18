@@ -66,10 +66,10 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.CREATE: AuthAccess.SUPER,
         AuthOperation.READ: AuthAccess.SUPER,
     },
-    # Corpus - TODO does this need to be super?
+    # Corpus
     AuthEndpoint.CORPUS: {
-        AuthOperation.CREATE: AuthAccess.ADMIN,
-        AuthOperation.READ: AuthAccess.ADMIN,
-        AuthOperation.UPDATE: AuthAccess.ADMIN,
+        AuthOperation.CREATE: AuthAccess.SUPER,
+        AuthOperation.READ: AuthAccess.SUPER,
+        AuthOperation.UPDATE: AuthAccess.SUPER,
     },
 }

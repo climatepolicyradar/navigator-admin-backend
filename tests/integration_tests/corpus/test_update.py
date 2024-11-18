@@ -9,8 +9,7 @@ from tests.helpers.corpus import create_corpus_write_dto
 from tests.integration_tests.setup_db import setup_db
 
 
-# TODO: Parameterise based on the admin_user_header_token and superuser fixtures.
-def test_update_corpus(client: TestClient, data_db: Session, admin_user_header_token):
+def test_update_corpus(client: TestClient, data_db: Session, superuser_header_token):
     setup_db(data_db)
     old_ct = (
         data_db.query(CorpusType).filter(CorpusType.name == "Laws and Policies").one()
@@ -19,7 +18,7 @@ def test_update_corpus(client: TestClient, data_db: Session, admin_user_header_t
     response = client.put(
         "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -55,9 +54,8 @@ def test_update_corpus(client: TestClient, data_db: Session, admin_user_header_t
     assert ct.valid_metadata == old_ct.valid_metadata
 
 
-# TODO: Parameterise based on the admin_user_header_token and superuser fixtures.
 def test_update_corpus_allows_none_corpus_image_url(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     old_ct = (
@@ -67,7 +65,7 @@ def test_update_corpus_allows_none_corpus_image_url(
     response = client.put(
         "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -103,9 +101,8 @@ def test_update_corpus_allows_none_corpus_image_url(
     assert ct.valid_metadata == old_ct.valid_metadata
 
 
-# TODO: Parameterise based on the admin_user_header_token and superuser fixtures.
 def test_update_corpus_allows_none_corpus_text(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     old_ct = (
@@ -115,7 +112,7 @@ def test_update_corpus_allows_none_corpus_text(
     response = client.put(
         "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -171,8 +168,20 @@ def test_update_corpus_non_super_non_admin(client: TestClient, user_header_token
     assert data["detail"] == "User cclw@cpr.org is not authorised to UPDATE a CORPORA"
 
 
+def test_update_corpus_non_super_admin(client: TestClient, admin_user_header_token):
+    new_corpus = create_corpus_write_dto()
+    response = client.put(
+        "/api/v1/corpora/C.0.0.2",
+        json=new_corpus.model_dump(),
+        headers=admin_user_header_token,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert data["detail"] == "User admin@cpr.org is not authorised to UPDATE a CORPORA"
+
+
 def test_update_corpus_idempotent(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     old_corpus, old_ct = (
@@ -192,7 +201,7 @@ def test_update_corpus_idempotent(
     response = client.put(
         "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
 
@@ -223,14 +232,14 @@ def test_update_corpus_idempotent(
 
 
 def test_update_corpus_rollback_when_db_error(
-    client: TestClient, data_db: Session, rollback_corpus_repo, admin_user_header_token
+    client: TestClient, data_db: Session, rollback_corpus_repo, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_write_dto(title="Updated Title")
     response = client.put(
         "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
@@ -245,14 +254,14 @@ def test_update_corpus_rollback_when_db_error(
 
 
 def test_update_corpus_when_not_found(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_write_dto(title="Updated Title")
     response = client.put(
         "/api/v1/corpora/C.0.0.22",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()

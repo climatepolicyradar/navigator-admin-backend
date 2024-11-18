@@ -7,14 +7,13 @@ from tests.helpers.corpus import create_corpus_create_dto
 from tests.integration_tests.setup_db import setup_db
 
 
-# TODO: Parameterise based on the admin_user_header_token and superuser fixtures.
-def test_create_corpus(client: TestClient, data_db: Session, admin_user_header_token):
+def test_create_corpus(client: TestClient, data_db: Session, superuser_header_token):
     setup_db(data_db)
     new_corpus = create_corpus_create_dto("Laws and Policies")
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -38,16 +37,15 @@ def test_create_corpus(client: TestClient, data_db: Session, admin_user_header_t
     assert ct > 1
 
 
-# TODO: Parameterise based on the admin_user_header_token and superuser fixtures.
 def test_create_corpus_allows_none_corpus_text(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_create_dto("Laws and Policies", corpus_text=None)
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -71,16 +69,15 @@ def test_create_corpus_allows_none_corpus_text(
     assert ct > 1
 
 
-# TODO: Parameterise based on the admin_user_header_token and superuser fixtures.
 def test_create_corpus_allows_none_corpus_image_url(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_create_dto("Laws and Policies", image_url=None)
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -105,7 +102,7 @@ def test_create_corpus_allows_none_corpus_image_url(
 
 
 def test_create_corpus_when_corpus_type_not_exist(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_create_dto(
@@ -114,7 +111,7 @@ def test_create_corpus_when_corpus_type_not_exist(
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -130,14 +127,14 @@ def test_create_corpus_when_corpus_type_not_exist(
 
 
 def test_create_corpus_when_org_id_not_exist(
-    client: TestClient, data_db: Session, admin_user_header_token
+    client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_create_dto("Laws and Policies", org_id=100)
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -170,15 +167,25 @@ def test_create_corpus_non_admin_non_super(client: TestClient, user_header_token
     assert data["detail"] == "User cclw@cpr.org is not authorised to CREATE a CORPORA"
 
 
+def test_create_corpus_admin_non_super(client: TestClient, admin_user_header_token):
+    new_corpus = create_corpus_create_dto("some-corpus-type")
+    response = client.post(
+        "/api/v1/corpora", json=new_corpus.model_dump(), headers=admin_user_header_token
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    data = response.json()
+    assert data["detail"] == "User admin@cpr.org is not authorised to CREATE a CORPORA"
+
+
 def test_create_corpus_rollback(
-    client: TestClient, data_db: Session, rollback_corpus_repo, admin_user_header_token
+    client: TestClient, data_db: Session, rollback_corpus_repo, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_create_dto("Laws and Policies")
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     actual_corpus = (
@@ -189,14 +196,14 @@ def test_create_corpus_rollback(
 
 
 def test_create_corpus_when_db_error(
-    client: TestClient, data_db: Session, bad_corpus_repo, admin_user_header_token
+    client: TestClient, data_db: Session, bad_corpus_repo, superuser_header_token
 ):
     setup_db(data_db)
     new_corpus = create_corpus_create_dto("Laws and Policies")
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
-        headers=admin_user_header_token,
+        headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
