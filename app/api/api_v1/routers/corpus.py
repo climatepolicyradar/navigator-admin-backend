@@ -8,7 +8,7 @@ from app.api.api_v1.query_params import (
     validate_query_params,
 )
 from app.errors import AuthorisationError, RepositoryError, ValidationError
-from app.model.corpus import CorpusReadDTO, CorpusWriteDTO
+from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
 from app.service import corpus as corpus_service
 
 corpora_router = r = APIRouter()
@@ -139,3 +139,27 @@ async def update_corpus(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return corpus
+
+
+@r.post("/corpora", response_model=str, status_code=status.HTTP_201_CREATED)
+async def create_corpus(request: Request, new_corpus: CorpusCreateDTO) -> str:
+    """Create a specific corpus given the import id.
+
+    :param Request request: Request object.
+    :param CorpusCreateDTO new_corpus: New corpus data object.
+    :raises HTTPException: If there is an error raised during validation
+        or during adding the corpus to the db.
+    :return str: returns the import id of the newly created corpus.
+    """
+    try:
+        corpus_id = corpus_service.create(new_corpus, request.state.user)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
+    return corpus_id

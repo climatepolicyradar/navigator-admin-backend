@@ -68,8 +68,8 @@ AUTH_TABLE: AuthMap = {
     },
     # Corpus
     AuthEndpoint.CORPUS: {
-        AuthOperation.CREATE: AuthAccess.ADMIN,
-        AuthOperation.READ: AuthAccess.ADMIN,
-        AuthOperation.UPDATE: AuthAccess.ADMIN,
+        AuthOperation.CREATE: AuthAccess.SUPER,
+        AuthOperation.READ: AuthAccess.SUPER,
+        AuthOperation.UPDATE: AuthAccess.SUPER,
     },
 }

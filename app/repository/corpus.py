@@ -2,6 +2,7 @@ import logging
 from typing import Optional, Union, cast
 
 from db_client.models.organisation import Corpus, CorpusType, Organisation
+from db_client.models.organisation.counters import CountedEntity
 from sqlalchemy import and_, asc, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
@@ -9,7 +10,8 @@ from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
-from app.model.corpus import CorpusReadDTO, CorpusWriteDTO
+from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
+from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +66,19 @@ def get_corpus_org_id(db: Session, corpus_id: str) -> Optional[int]:
     return db.query(Corpus.organisation_id).filter_by(import_id=corpus_id).scalar()
 
 
+def is_corpus_type_name_valid(db: Session, corpus_type_name: str) -> bool:
+    """Check whether a corpus type name exists in the DB.
+
+    :param Session db: The DB session to connect to.
+    :param str corpus_type_name: The corpus type name we want to search
+        for.
+    :return bool: Whether the given corpus type exists in the db.
+    """
+    return bool(
+        db.query(CorpusType.name).filter_by(name=corpus_type_name).scalar() is not None
+    )
+
+
 def verify_corpus_exists(db: Session, corpus_id: str) -> bool:
     """Validate whether a corpus with the given ID exists in the DB.
 
@@ -72,6 +87,7 @@ def verify_corpus_exists(db: Session, corpus_id: str) -> bool:
     :return bool: Return whether or not the corpus exists in the DB.
     """
     corpora = [corpus[0] for corpus in db.query(Corpus.import_id).distinct().all()]
+    print(corpora)
     return bool(corpus_id in corpora)
 
 
@@ -189,7 +205,6 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
         return False
 
     # Check what has changed.
-    ct_name_has_changed = original_corpus_type.name != new_values["corpus_type_name"]
     ct_description_has_changed = (
         original_corpus_type.name != new_values["corpus_type_description"]
     )
@@ -202,7 +217,6 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
 
     if not any(
         [
-            ct_name_has_changed,
             ct_description_has_changed,
             title_has_changed,
             description_has_changed,
@@ -216,12 +230,11 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
     commands = []
 
     # Update logic to only perform update if not idempotent.
-    if ct_name_has_changed or ct_description_has_changed:
+    if ct_description_has_changed:
         commands.append(
             db_update(CorpusType)
             .where(CorpusType.name == original_corpus_type.name)
             .values(
-                name=new_values["corpus_type_name"],
                 description=new_values["corpus_type_description"],
             )
         )
@@ -258,3 +271,30 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
         raise RepositoryError(msg)
 
     return True
+
+
+def create(db: Session, corpus: CorpusCreateDTO) -> str:
+    """Create a new corpus.
+
+    :param db Session: the database connection
+    :param CorpusCreateDTO corpus: the values for the new corpus
+    :return str: The ID of the created corpus.
+    """
+    try:
+        import_id = generate_import_id(db, CountedEntity.Corpus, corpus.organisation_id)
+        new_corpus = Corpus(
+            import_id=import_id,
+            title=corpus.title,
+            description=corpus.description or "TBD",
+            corpus_text=corpus.corpus_text,
+            corpus_image_url=corpus.corpus_image_url,
+            organisation_id=corpus.organisation_id,
+            corpus_type_name=corpus.corpus_type_name,
+        )
+        db.add(new_corpus)
+        db.flush()
+    except Exception as e:
+        _LOGGER.exception("Error trying to create Corpus")
+        raise RepositoryError(e)
+
+    return cast(str, new_corpus.import_id)
