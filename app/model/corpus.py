@@ -31,9 +31,7 @@ class CorpusWriteDTO(BaseModel):
     corpus_text: Optional[str]
     corpus_image_url: Optional[str]
 
-    # TODO: Do we allow updates to the corpus type? Maybe just the
-    # description.
-    # corpus_type_description: str
+    corpus_type_description: str
 
 
 class CorpusCreateDTO(BaseModel):

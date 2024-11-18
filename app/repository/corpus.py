@@ -205,10 +205,9 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
         return False
 
     # Check what has changed.
-    # ct_name_has_changed = original_corpus_type.name != new_values["corpus_type_name"]
-    # ct_description_has_changed = (
-    #     original_corpus_type.name != new_values["corpus_type_description"]
-    # )
+    ct_description_has_changed = (
+        original_corpus_type.name != new_values["corpus_type_description"]
+    )
     title_has_changed = original_corpus.title != new_values["title"]
     description_has_changed = original_corpus.description != new_values["description"]
     corpus_text_has_changed = original_corpus.corpus_text != new_values["corpus_text"]
@@ -218,8 +217,7 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
 
     if not any(
         [
-            # ct_name_has_changed,
-            # ct_description_has_changed,
+            ct_description_has_changed,
             title_has_changed,
             description_has_changed,
             corpus_text_has_changed,
@@ -231,16 +229,15 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
 
     commands = []
 
-    # # Update logic to only perform update if not idempotent.
-    # if ct_name_has_changed or ct_description_has_changed:
-    #     commands.append(
-    #         db_update(CorpusType)
-    #         .where(CorpusType.name == original_corpus_type.name)
-    #         .values(
-    #             name=new_values["corpus_type_name"],
-    #             description=new_values["corpus_type_description"],
-    #         )
-    #     )
+    # Update logic to only perform update if not idempotent.
+    if ct_description_has_changed:
+        commands.append(
+            db_update(CorpusType)
+            .where(CorpusType.name == original_corpus_type.name)
+            .values(
+                description=new_values["corpus_type_description"],
+            )
+        )
 
     if any(
         [
