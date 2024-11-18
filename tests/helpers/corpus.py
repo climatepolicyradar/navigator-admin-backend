@@ -2,19 +2,6 @@ from typing import Optional
 
 from app.model.corpus import CorpusCreateDTO, CorpusWriteDTO
 
-# def create_corpus_read_dto(
-#     import_id: str, title: str = "title", description="description"
-# ) -> CorpusReadDTO:
-#     return CorpusReadDTO(
-#         import_id=import_id,
-#         title=title,
-#         description=description,
-#         families=[],
-#         organisation="CCLW",
-#         created=datetime.now(),
-#         last_modified=datetime.now(),
-#     )
-
 
 def create_corpus_write_dto(
     title: str = "title",
@@ -27,6 +14,7 @@ def create_corpus_write_dto(
         description=description,
         corpus_text=corpus_text,
         corpus_image_url=image_url,
+        corpus_type_description="some description",
     )
 
 

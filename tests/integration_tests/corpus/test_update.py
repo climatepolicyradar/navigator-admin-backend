@@ -29,7 +29,7 @@ def test_update_corpus(client: TestClient, data_db: Session, superuser_header_to
     assert data["organisation_id"] == 1
     assert data["organisation_name"] == "CCLW"
     assert data["corpus_type_name"] == old_ct.name
-    assert data["corpus_type_description"] == old_ct.description
+    assert data["corpus_type_description"] == "some description"
     assert isinstance(data["metadata"], dict)
     assert data["metadata"] == old_ct.valid_metadata
 
@@ -50,7 +50,7 @@ def test_update_corpus(client: TestClient, data_db: Session, superuser_header_to
         data_db.query(CorpusType).filter(CorpusType.name == "Laws and Policies").one()
     )
     assert ct.name == old_ct.name
-    assert ct.description == old_ct.description
+    assert ct.description == "some description"
     assert ct.valid_metadata == old_ct.valid_metadata
 
 
@@ -76,7 +76,7 @@ def test_update_corpus_allows_none_corpus_image_url(
     assert data["organisation_id"] == 1
     assert data["organisation_name"] == "CCLW"
     assert data["corpus_type_name"] == old_ct.name
-    assert data["corpus_type_description"] == old_ct.description
+    assert data["corpus_type_description"] == "some description"
     assert isinstance(data["metadata"], dict)
     assert data["metadata"] == old_ct.valid_metadata
 
@@ -97,7 +97,7 @@ def test_update_corpus_allows_none_corpus_image_url(
         data_db.query(CorpusType).filter(CorpusType.name == "Laws and Policies").one()
     )
     assert ct.name == old_ct.name
-    assert ct.description == old_ct.description
+    assert ct.description == "some description"
     assert ct.valid_metadata == old_ct.valid_metadata
 
 
@@ -145,7 +145,7 @@ def test_update_corpus_allows_none_corpus_text(
         data_db.query(CorpusType).filter(CorpusType.name == "Laws and Policies").one()
     )
     assert ct.name == old_ct.name
-    assert ct.description == old_ct.description
+    assert ct.description == "some description"
     assert ct.valid_metadata == old_ct.valid_metadata
 
 
