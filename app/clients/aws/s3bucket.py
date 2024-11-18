@@ -14,6 +14,7 @@ from app.clients.aws.client import AWSClient
 from app.errors import RepositoryError
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 
 class S3UploadContext(BaseModel):
@@ -90,12 +91,13 @@ def upload_json_to_s3(
     :raises Exception: on any error when uploading the file to S3.
     """
     try:
-        s3_client.put_object(
+        response = s3_client.put_object(
             Bucket=context.bucket_name,
             Key=context.object_name,
             Body=json.dumps(json_data),
             ContentType="application/json",
         )
+        _LOGGER.debug(f"Response from S3 client: {response}")
         _LOGGER.info(
             f"🎉 Successfully uploaded JSON to S3: {context.bucket_name}/{context.object_name}"
         )
@@ -114,7 +116,7 @@ def upload_ingest_json_to_s3(
     :param str corpus_import_id: The import_id of the corpus the ingest data belongs to.
     :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
     """
-    _LOGGER.info(os.getenv("BULK_IMPORT_BUCKET", "Not there"))
+    _LOGGER.info(f"Uploading file to: {os.getenv('BULK_IMPORT_BUCKET')}")
     ingest_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
     current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
 
