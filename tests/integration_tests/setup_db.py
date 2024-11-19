@@ -21,8 +21,9 @@ from db_client.models.document.physical_document import (
     PhysicalDocument,
     PhysicalDocumentLanguage,
 )
-from db_client.models.organisation import Corpus, CorpusType
+from db_client.models.organisation import Corpus, EntityCounter
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 EXPECTED_FAMILIES = [
@@ -230,6 +231,54 @@ EXPECTED_ANALYTICS_SUMMARY = {
     "n_events": EXPECTED_NUM_EVENTS,
 }
 
+EXPECTED_NUM_CORPORA = 2
+EXPECTED_CCLW_CORPUS = {
+    "import_id": "CCLW.corpus.i00000001.n0000",
+    "title": "CCLW national policies",
+    "description": "CCLW national policies",
+    "corpus_text": (
+        "\n        <p>\n          The summary of this document was written by "
+        'researchers at the <a href="http://lse.ac.uk/grantham" target="_blank"> '
+        "Grantham Research Institute </a> . \n          If you want to use this summary"
+        ', please check <a href="'
+        'https://www.lse.ac.uk/granthaminstitute/cclw-terms-and-conditions" target='
+        '"_blank"> terms of use </a> for citation and licensing of third party data.'
+        "\n        </p>\n"
+    ),
+    "corpus_image_url": "corpora/CCLW.corpus.i00000001.n0000/logo.png",
+    "organisation_name": "CCLW",
+    "corpus_type_name": "Laws and Policies",
+    "corpus_type_description": "Laws and policies",
+}
+EXPECTED_UNFCCC_CORPUS = {
+    "import_id": "UNFCCC.corpus.i00000001.n0000",
+    "title": "UNFCCC Submissions",
+    "description": "UNFCCC Submissions",
+    "corpus_text": (
+        "\n        <p>\n          This document was downloaded from "
+        'the <a href="https://unfccc.int/" target="_blank"> UNFCCC website </a> . '
+        '\n          Please check <a href="https://unfccc.int/this-site/terms-of-use'
+        '" target="_blank"> terms of use </a> for citation and licensing of third '
+        "party data.\n        </p>\n"
+    ),
+    "corpus_image_url": None,
+    "organisation_name": "UNFCCC",
+    "corpus_type_name": "Intl. agreements",
+    "corpus_type_description": "Intl. agreements",
+}
+EXPECTED_CORPORA_KEYS = [
+    "import_id",
+    "title",
+    "description",
+    "corpus_text",
+    "corpus_image_url",
+    "organisation_id",
+    "organisation_name",
+    "corpus_type_name",
+    "corpus_type_description",
+    "metadata",
+]
+
 
 def setup_db(test_db: Session, configure_empty: bool = False):
     setup_test_data(test_db, configure_empty)
@@ -253,6 +302,8 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     assert test_db.query(FamilyEvent).count() == 0
     _setup_event_data(test_db)
     test_db.commit()
+
+    setup_corpus(test_db)
 
 
 def _add_app_user(
@@ -308,7 +359,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         "CCLWTestUser",
         cclw.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
-        is_admin=True,
+        is_admin=False,
     )
     _add_app_user(
         test_db,
@@ -316,7 +367,7 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
         "UNFCCCTestUser",
         unfccc.id,
         "$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
-        is_admin=True,
+        is_admin=False,
     )
     _add_app_user(
         test_db,
@@ -352,6 +403,22 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
     )
     _add_app_user(
         test_db,
+        "non-admin-super@cpr.org",
+        "Super",
+        cclw.id,
+        hashed_pass="$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+        is_super=True,
+    )
+    _add_app_user(
+        test_db,
+        "admin@cpr.org",
+        "Admin",
+        cclw.id,
+        hashed_pass="$2b$12$XXMr7xoEY2fzNiMR3hq.PeJBUUchJyiTfJP.Rt2eq9hsPzt9SXzFC",
+        is_admin=True,
+    )
+    _add_app_user(
+        test_db,
         "super@cpr.org",
         "Super",
         cclw.id,
@@ -363,32 +430,15 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
 
 
 def setup_corpus(test_db: Session) -> None:
-    org_id = _setup_organisation(test_db)
-    test_db.add(
-        Corpus(
-            import_id="1",
-            title="Test Title",
-            description="Test Description",
-            corpus_text="Test Text",
-            corpus_image_url="Test Image Url",
-            organisation_id=org_id,
-            corpus_type_name="Test Corpus",
+    test_db.execute(
+        update(EntityCounter).values(
+            counter=1,
         )
     )
+    test_db.commit()
 
-    test_db.add(
-        CorpusType(
-            name="Test Corpus",
-            description="Test Description",
-            valid_metadata={
-                "test": {
-                    "allow_any": "true",
-                    "allow_blanks": "false",
-                    "allowed_values": [],
-                }
-            },
-        )
-    )
+    for item in test_db.query(EntityCounter.counter).all():
+        assert item[0] == 1
 
 
 def _setup_collection_data(
@@ -560,6 +610,10 @@ def _setup_event_data(
             event_type_name=data["event_type_value"],
             family_import_id=data["family_import_id"],
             status=data["event_status"],
+            valid_metadata={
+                "event_type": [data["event_type_value"]],
+                "datetime_event_name": ["Passed/Approved"],  # TODO: Fix in PDCT-1622
+            },
         )
         test_db.add(fe)
         test_db.flush()

@@ -1,12 +1,16 @@
-from app.errors import AuthorisationError
-from app.model.authorisation import (
-    AUTH_TABLE,
+import logging
+
+from db_client.models.organisation.authorisation import (
     HTTP_MAP_TO_OPERATION,
     AuthAccess,
-    AuthEndpoint,
     AuthOperation,
 )
+
+from app.errors import AuthorisationError
+from app.model.authorisation import AUTH_TABLE, AuthEndpoint
 from app.model.user import UserContext
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def http_method_to_operation(method: str) -> AuthOperation:
@@ -66,4 +70,13 @@ def is_authorised(user: UserContext, entity: AuthEndpoint, op: AuthOperation) ->
     if _has_access(required_access, _get_user_access(user)):
         return
 
-    raise AuthorisationError(f"User {user.email} is not authorised to {op} a {entity}")
+    raise AuthorisationError(
+        f"User {user.email} is not authorised to {op} {_get_article(entity.value)} {entity}"
+    )
+
+
+def _get_article(word: str) -> str:
+    vowels = ["a", "e", "i", "o", "u", "y"]
+    if word.lower()[0] in vowels:
+        return "an"
+    return "a"

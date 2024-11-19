@@ -57,7 +57,9 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
 
 def create(db: Session, family: FamilyCreateDTO, geo_id: int, org_id: int) -> str:
     _maybe_throw()
-    return "" if family_repo.return_empty else "created"
+    if family_repo.return_empty:
+        return ""
+    return family.import_id if family.import_id else "created"
 
 
 def delete(db: Session, import_id: str) -> bool:

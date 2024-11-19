@@ -1,18 +1,51 @@
-from datetime import datetime
+import json
+import logging
+import os
+from unittest.mock import Mock, patch
 
 import pytest
 
 import app.service.ingest as ingest_service
-from app.errors import RepositoryError, ValidationError
+from app.errors import ValidationError
 
 
-def test_ingest_when_ok(
+@patch("app.service.ingest.uuid4", Mock(return_value="1111-1111"))
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+def test_input_json_and_result_saved_to_s3_on_bulk_import(
+    basic_s3_client, validation_service_mock, corpus_repo_mock, collection_repo_mock
+):
+    bucket_name = "test_bucket"
+    json_data = {
+        "collections": [
+            {
+                "import_id": "test.new.collection.0",
+                "title": "Test title",
+                "description": "Test description",
+            }
+        ]
+    }
+
+    ingest_service.import_data(json_data, "test_corpus_id")
+
+    bulk_import_input_json = basic_s3_client.list_objects_v2(
+        Bucket=bucket_name, Prefix="1111-1111-result-test_corpus_id"
+    )
+    objects = bulk_import_input_json["Contents"]
+    assert len(objects) == 1
+
+    key = objects[0]["Key"]
+    bulk_import_result = basic_s3_client.get_object(Bucket=bucket_name, Key=key)
+    body = bulk_import_result["Body"].read().decode("utf-8")
+    assert {"collections": ["test.new.collection.0"]} == json.loads(body)
+
+
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_slack_notification_sent_on_success(
+    basic_s3_client,
     corpus_repo_mock,
-    geography_repo_mock,
     collection_repo_mock,
-    family_repo_mock,
-    document_repo_mock,
-    event_repo_mock,
     validation_service_mock,
 ):
     test_data = {
@@ -21,51 +54,27 @@ def test_ingest_when_ok(
                 "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
-            },
-        ],
-        "families": [
-            {
-                "import_id": "test.new.family.0",
-                "title": "Test",
-                "summary": "Test",
-                "geographies": ["Test"],
-                "category": "UNFCCC",
-                "metadata": {"color": ["blue"], "size": [""]},
-                "collections": ["test.new.collection.0"],
-            },
-        ],
-        "documents": [
-            {
-                "import_id": "test.new.document.0",
-                "family_import_id": "test.new.family.0",
-                "variant_name": "Original Language",
-                "metadata": {"color": ["blue"]},
-                "title": "",
-                "source_url": None,
-                "user_language_name": "",
-            }
-        ],
-        "events": [
-            {
-                "import_id": "test.new.event.0",
-                "family_import_id": "test.new.family.0",
-                "event_title": "Test",
-                "date": datetime.now(),
-                "event_type_value": "Amended",
             }
         ],
     }
 
-    assert {
-        "collections": ["test.new.collection.0"],
-        "families": ["created"],
-        "documents": ["test.new.doc.0"],
-        "events": ["test.new.event.0"],
-    } == ingest_service.import_data(test_data, "test")
+    with (
+        patch(
+            "app.service.ingest.notification_service.send_notification"
+        ) as mock_notification_service,
+    ):
+        ingest_service.import_data(test_data, "test_corpus_id")
+
+        assert 2 == mock_notification_service.call_count
+        mock_notification_service.assert_called_with(
+            "🎉 Bulk import for corpus: test_corpus_id successfully completed."
+        )
 
 
-def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
-    collection_repo_mock.throw_repository_error = True
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_mock):
+    corpus_repo_mock.error = True
 
     test_data = {
         "collections": [
@@ -77,9 +86,40 @@ def test_ingest_when_db_error(corpus_repo_mock, collection_repo_mock):
         ]
     }
 
-    with pytest.raises(RepositoryError) as e:
+    with (
+        caplog.at_level(logging.ERROR),
+        patch(
+            "app.service.ingest.notification_service.send_notification"
+        ) as mock_notification_service,
+    ):
         ingest_service.import_data(test_data, "test")
-    assert "bad collection repo" == e.value.message
+
+    assert 2 == mock_notification_service.call_count
+    mock_notification_service.assert_called_with(
+        "💥 Bulk import for corpus: test has failed."
+    )
+    assert (
+        "Rolling back transaction due to the following error: No organisation associated with corpus test"
+        in caplog.text
+    )
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_import_data_when_data_invalid(caplog, basic_s3_client):
+    test_data = {
+        "collections": [
+            {
+                "import_id": "invalid",
+                "title": "Test title",
+                "description": "Test description",
+            }
+        ]
+    }
+
+    with caplog.at_level(logging.ERROR):
+        ingest_service.import_data(test_data, "test")
+
+    assert "The import id invalid is invalid!" in caplog.text
 
 
 def test_save_families_when_corpus_invalid(corpus_repo_mock, validation_service_mock):
@@ -101,31 +141,6 @@ def test_save_families_when_data_invalid(corpus_repo_mock, validation_service_mo
     assert "Error" == e.value.message
 
 
-# TODO: Uncomment when implementing feature/pdct-1402-validate-collection-exists-before-creating-family
-# def test_ingest_families_when_collection_ids_do_not_exist(
-#     corpus_repo_mock, geography_repo_mock, collection_repo_mock
-# ):
-#     collection_repo_mock.missing = True
-
-#     test_data = {
-#         "families": [
-#             {
-#                 "import_id": "test.new.family.0",
-#                 "title": "Test",
-#                 "summary": "Test",
-#                 "geography": "Test",
-#                 "category": "UNFCCC",
-#                 "metadata": {},
-#                 "collections": ["id.does.not.exist"],
-#             },
-#         ],
-#     }
-#     with pytest.raises(ValidationError) as e:
-#         ingest_service.import_data(test_data, "test")
-#     expected_msg = "One or more of the collections to update does not exist"
-#     assert e.value.message == expected_msg
-
-
 def test_save_documents_when_data_invalid(validation_service_mock):
     validation_service_mock.throw_validation_error = True
 
@@ -136,47 +151,42 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     assert "Error" == e.value.message
 
 
-def test_validate_entity_relationships_when_no_family_matching_document():
-    fam_import_id = "test.new.family.0"
-    test_data = {
-        "documents": [
-            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
-        ]
-    }
+@patch("app.service.ingest.generate_slug", Mock(return_value="test-slug_1234"))
+@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+def test_do_not_save_documents_over_ingest_limit(
+    validation_service_mock, document_repo_mock, monkeypatch
+):
+    monkeypatch.setattr(ingest_service, "DOCUMENT_INGEST_LIMIT", 1)
 
-    with pytest.raises(ValidationError) as e:
-        ingest_service.validate_entity_relationships(test_data)
-    assert f"No family with id {fam_import_id} found for document" == e.value.message
+    test_data = [
+        {
+            "import_id": "test.new.document.0",
+            "family_import_id": "test.new.family.0",
+            "variant_name": "Original Language",
+            "metadata": {"color": ["blue"]},
+            "title": "",
+            "source_url": None,
+            "user_language_name": "",
+        },
+        {
+            "import_id": "test.new.document.1",
+            "family_import_id": "test.new.family.1",
+            "variant_name": "Original Language",
+            "metadata": {"color": ["blue"]},
+            "title": "",
+            "source_url": None,
+            "user_language_name": "",
+        },
+    ]
 
-
-def test_validate_entity_relationships_when_no_family_matching_event():
-    fam_import_id = "test.new.family.0"
-    test_data = {
-        "events": [{"import_id": "test.new.event.0", "family_import_id": fam_import_id}]
-    }
-
-    with pytest.raises(ValidationError) as e:
-        ingest_service.validate_entity_relationships(test_data)
-    assert f"No family with id {fam_import_id} found for event" == e.value.message
-
-
-def test_save_documents_when_no_family():
-    fam_import_id = "test.new.family.0"
-    test_data = {
-        "documents": [
-            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
-        ]
-    }
-
-    with pytest.raises(ValidationError) as e:
-        ingest_service.import_data(test_data, "test")
-    assert f"No family with id {fam_import_id} found for document" == e.value.message
+    saved_documents = ingest_service.save_documents(test_data, "test")
+    assert ["test.new.document.0"] == saved_documents
 
 
 def test_save_events_when_data_invalid(validation_service_mock):
     validation_service_mock.throw_validation_error = True
 
-    test_data = [{"import_id": "imvalid"}]
+    test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
         ingest_service.save_events(test_data, "test")

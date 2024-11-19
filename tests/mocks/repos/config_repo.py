@@ -20,7 +20,7 @@ def mock_config_repo(config_repo, monkeypatch: MonkeyPatch, mocker):
             geographies=[],
             corpora=[],
             languages={},
-            document=DocumentConfig(roles=[], types=[], variants=[]),
+            document=DocumentConfig(variants=[]),
         )
 
     monkeypatch.setattr(config_repo, "get", mock_get)

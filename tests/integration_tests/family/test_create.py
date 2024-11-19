@@ -29,7 +29,7 @@ def test_create_family(client: TestClient, data_db: Session, user_header_token):
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_201_CREATED
-    expected_import_id = "CCLW.family.i00000001.n0000"
+    expected_import_id = "CCLW.family.i00000002.n0000"
     assert response.json() == expected_import_id
     actual_family = (
         data_db.query(Family).filter(Family.import_id == expected_import_id).one()
