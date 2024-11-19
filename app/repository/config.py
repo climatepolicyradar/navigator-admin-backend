@@ -90,18 +90,7 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
     corpora = get_corpora(db, user)
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 
-    corpus_types = list(
-        set(
-            [
-                {
-                    "name": corpus.corpus_type,
-                    "description": corpus.corpus_type_description,
-                    "taxonomy": corpus.taxonomy,
-                }
-                for corpus in corpora
-            ]
-        )
-    )
+    corpus_types = get_unique_corpus_types(corpora)
 
     # Now Document config
     doc_config = DocumentConfig(
@@ -118,3 +107,27 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
         languages=languages,
         document=doc_config,
     )
+
+
+def get_unique_corpus_types(corpora):
+    """Generate a list of unique corpus type dictionaries.
+
+    :param List[Corpus] corpora: List of corpus items.
+    :return List[Dict[str, Any]]: List of unique corpus type
+        dictionaries.
+    """
+    seen = set()
+    unique_corpus_types = []
+    for c in corpora:
+        # Create a tuple of name and description for uniqueness check
+        unique_key = (c.corpus_type, c.corpus_type_description)
+        if unique_key not in seen:
+            seen.add(unique_key)
+            unique_corpus_types.append(
+                {
+                    "name": c.corpus_type,
+                    "description": c.corpus_type_description,
+                    "taxonomy": c.taxonomy,
+                }
+            )
+    return unique_corpus_types
