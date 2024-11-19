@@ -90,6 +90,19 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
     corpora = get_corpora(db, user)
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 
+    corpus_types = list(
+        set(
+            [
+                {
+                    "name": corpus.corpus_type,
+                    "description": corpus.corpus_type_description,
+                    "taxonomy": corpus.taxonomy,
+                }
+                for corpus in corpora
+            ]
+        )
+    )
+
     # Now Document config
     doc_config = DocumentConfig(
         variants=[
@@ -101,6 +114,7 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
     return ConfigReadDTO(
         geographies=geographies,
         corpora=corpora,
+        corpus_types=corpus_types,
         languages=languages,
         document=doc_config,
     )

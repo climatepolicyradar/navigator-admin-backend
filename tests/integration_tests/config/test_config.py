@@ -4,7 +4,13 @@ from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
 
-EXPECTED_CONFIG_KEYS = {"geographies", "corpora", "languages", "document"}
+EXPECTED_CONFIG_KEYS = {
+    "geographies",
+    "corpora",
+    "corpus_types",
+    "languages",
+    "document",
+}
 EXPECTED_CORPORA_CONFIG_KEYS = {
     "corpus_import_id",
     "title",
