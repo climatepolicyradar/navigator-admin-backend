@@ -116,14 +116,18 @@ def get_unique_corpus_types(corpora):
     :return List[Dict[str, Any]]: List of unique corpus type
         dictionaries.
     """
-    corpus_types = [
-        {
-            "name": c.corpus_type,
-            "description": c.corpus_type_description,
-        }
-        for c in corpora
-    ]
-    # Use frozenset to create a unique set of dictionaries
-    unique_corpus_types = {frozenset(ct.items()) for ct in corpus_types}
-    corpus_types = [dict(t) for t in unique_corpus_types]
-    return corpus_types
+    seen = set()
+    unique_corpus_types = []
+    for c in corpora:
+        # Create a tuple of name and description for uniqueness check
+        unique_key = (c.corpus_type, c.corpus_type_description)
+        if unique_key not in seen:
+            seen.add(unique_key)
+            unique_corpus_types.append(
+                {
+                    "name": c.corpus_type,
+                    "description": c.corpus_type_description,
+                    "taxonomy": c.taxonomy,
+                }
+            )
+    return unique_corpus_types
