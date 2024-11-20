@@ -5,27 +5,56 @@ from unittest.mock import patch
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from tests.helpers.ingest import bulk_import_json_builder
+from tests.helpers.ingest import (
+    build_json_file,
+    custom_collection,
+    custom_document,
+    custom_event,
+    custom_family,
+    default_collection,
+    default_document,
+    default_event,
+)
 
 
 def create_input_json_with_two_of_each_entity():
-    with_collection, with_family, with_document, with_event, build = (
-        bulk_import_json_builder()
+    return build_json_file(
+        {
+            "collections": [
+                default_collection,
+                custom_collection({"import_id": "test.new.collection.1"}),
+            ],
+            "families": [
+                custom_family({"metadata": {"color": ["blue"], "size": []}}),
+                custom_family(
+                    {
+                        "import_id": "test.new.family.1",
+                        "collections": ["test.new.collection.1"],
+                        "metadata": {"color": ["blue"], "size": []},
+                    }
+                ),
+            ],
+            "documents": [
+                custom_document({"metadata": {"color": ["pink"], "size": []}}),
+                custom_document(
+                    {
+                        "import_id": "test.new.document.1",
+                        "family_import_id": "test.new.family.1",
+                        "metadata": {"color": ["pink"], "size": []},
+                    }
+                ),
+            ],
+            "events": [
+                default_event,
+                custom_event(
+                    {
+                        "import_id": "test.new.event.1",
+                        "family_import_id": "test.new.family.1",
+                    }
+                ),
+            ],
+        }
     )
-    with_collection()
-    with_collection(import_id="test.new.collection.1")
-    with_family(metadata={"color": ["blue"], "size": []})
-    with_family(import_id="test.new.family.1", metadata={"color": ["blue"], "size": []})
-    with_document(metadata={"color": ["pink"], "size": []})
-    with_document(
-        import_id="test.new.document.1",
-        family_import_id="test.new.family.1",
-        metadata={"color": ["pink"], "size": []},
-    )
-    with_event()
-    with_event(import_id="test.new.event.1", family_import_id="test.new.family.1")
-    input_json = build()
-    return input_json
 
 
 def test_ingest_when_not_authenticated(client: TestClient):
@@ -83,9 +112,7 @@ def test_ingest_when_no_data(
 
 
 def test_ingest_documents_when_no_family(client: TestClient, superuser_header_token):
-    __, __, with_document, __, build = bulk_import_json_builder()
-    with_document()
-    json_input = build()
+    json_input = build_json_file({"documents": [default_document]})
 
     response = client.post(
         "/api/v1/ingest/test",

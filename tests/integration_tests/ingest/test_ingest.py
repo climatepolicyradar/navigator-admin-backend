@@ -10,24 +10,56 @@ from fastapi.testclient import TestClient
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from tests.helpers.ingest import bulk_import_json_builder
+from tests.helpers.ingest import (
+    build_json_file,
+    custom_collection,
+    custom_document,
+    custom_event,
+    custom_family,
+    default_collection,
+    default_document,
+    default_event,
+    default_family,
+)
 from tests.integration_tests.setup_db import setup_db
 
 
 def create_input_json_with_two_of_each_entity():
-    with_collection, with_family, with_document, with_event, build = (
-        bulk_import_json_builder()
+    return build_json_file(
+        {
+            "collections": [
+                default_collection,
+                custom_collection({"import_id": "test.new.collection.1"}),
+            ],
+            "families": [
+                default_family,
+                custom_family(
+                    {
+                        "import_id": "test.new.family.1",
+                        "collections": ["test.new.collection.1"],
+                    }
+                ),
+            ],
+            "documents": [
+                default_document,
+                custom_document(
+                    {
+                        "import_id": "test.new.document.1",
+                        "family_import_id": "test.new.family.1",
+                    }
+                ),
+            ],
+            "events": [
+                default_event,
+                custom_event(
+                    {
+                        "import_id": "test.new.event.1",
+                        "family_import_id": "test.new.family.1",
+                    }
+                ),
+            ],
+        }
     )
-    with_collection()
-    with_collection(import_id="test.new.collection.1")
-    with_family()
-    with_family(import_id="test.new.family.1")
-    with_document()
-    with_document(import_id="test.new.document.1", family_import_id="test.new.family.1")
-    with_event()
-    with_event(import_id="test.new.event.1", family_import_id="test.new.family.1")
-    input_json = build()
-    return input_json
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
@@ -136,15 +168,17 @@ def test_ingest_idempotency(
     superuser_header_token,
     basic_s3_client,
 ):
-    with_collection, with_family, with_document, with_event, build = (
-        bulk_import_json_builder()
+    input_json = build_json_file(
+        {
+            "collections": [default_collection],
+            "families": [default_family],
+            "documents": [
+                custom_document({"import_id": f"test.new.document.{i}"})
+                for i in range(1001)
+            ],
+            "events": [default_event],
+        }
     )
-    with_collection()
-    with_family()
-    for i in range(1001):
-        with_document(import_id=f"test.new.document.{i}")
-    with_event()
-    input_json = build()
 
     with caplog.at_level(logging.ERROR):
         first_response = client.post(
@@ -224,11 +258,15 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
     to ensure uniqueness (6), means that the likelihood of a collision is extremely low.
     """
 
-    __, with_family, with_document, __, build = bulk_import_json_builder()
-    with_family(collections=[])
-    for i in range(1000):
-        with_document(import_id=f"test.new.document.{i}")
-    input_json = build()
+    input_json = build_json_file(
+        {
+            "families": [custom_family({"collections": []})],
+            "documents": [
+                custom_document({"import_id": f"test.new.document.{i}"})
+                for i in range(1000)
+            ],
+        }
+    )
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
@@ -286,11 +324,13 @@ def test_ingest_events_when_event_type_invalid(
     basic_s3_client,
 ):
 
-    __, with_family, with_document, with_event, build = bulk_import_json_builder()
-    with_family(collections=[])
-    with_document()
-    with_event(event_type_value="Invalid")
-    input_json = build()
+    input_json = build_json_file(
+        {
+            "families": [custom_family({"collections": []})],
+            "documents": [default_document],
+            "events": [custom_event({"event_type_value": "Invalid"})],
+        }
+    )
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
