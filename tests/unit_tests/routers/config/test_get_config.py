@@ -9,7 +9,6 @@ def test_get_when_ok(client: TestClient, user_header_token, config_service_mock)
     keys = data.keys()
     assert "geographies" in keys
     assert "corpora" in keys
-    assert "corpus_types" in keys
     assert "languages" in keys
     assert "document" in keys
     assert config_service_mock.get.call_count == 1

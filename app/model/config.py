@@ -27,6 +27,5 @@ class ConfigReadDTO(BaseModel):
 
     geographies: Sequence[dict]
     corpora: Sequence[CorpusData]
-    corpus_types: Sequence[dict]
     languages: Mapping[str, str]
     document: DocumentConfig
