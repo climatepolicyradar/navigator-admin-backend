@@ -16,6 +16,7 @@ def mock_config_service(config_service, monkeypatch: MonkeyPatch, mocker):
         return ConfigReadDTO(
             geographies=[],
             corpora=[],
+            corpus_types=[],
             languages={},
             document=DocumentConfig(variants=[]),
         )
