@@ -53,8 +53,6 @@ def bulk_import_json_builder():
         title: str = "",
         user_language_name: str = "",
     ) -> Callable:
-        """Add a document to the JSON data."""
-
         data.setdefault("documents", []).append(
             {
                 "import_id": import_id,
@@ -74,8 +72,6 @@ def bulk_import_json_builder():
         date: str = "2024-01-01",
         event_type_value: str = "Amended",
     ) -> Callable:
-        """Add a document to the JSON data."""
-
         data.setdefault("events", []).append(
             {
                 "import_id": import_id,

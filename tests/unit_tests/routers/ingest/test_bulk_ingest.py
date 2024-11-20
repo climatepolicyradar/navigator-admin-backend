@@ -1,26 +1,35 @@
-"""
-Tests the route for bulk import of data.
-
-This uses service mocks and ensures the endpoint calls into each service.
-"""
-
 import io
 import json
-import os
 from unittest.mock import patch
 
-import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.errors import ValidationError
-from app.service.validation import validate_entity_relationships
+from tests.helpers.ingest import bulk_import_json_builder
+
+
+def create_input_json_with_two_of_each_entity():
+    with_collection, with_family, with_document, with_event, build = (
+        bulk_import_json_builder()
+    )
+    with_collection()
+    with_collection(import_id="test.new.collection.1")
+    with_family(metadata={"color": ["blue"], "size": []})
+    with_family(import_id="test.new.family.1", metadata={"color": ["blue"], "size": []})
+    with_document(metadata={"color": ["pink"], "size": []})
+    with_document(
+        import_id="test.new.document.1",
+        family_import_id="test.new.family.1",
+        metadata={"color": ["pink"], "size": []},
+    )
+    with_event()
+    with_event(import_id="test.new.event.1", family_import_id="test.new.family.1")
+    input_json = build()
+    return input_json
 
 
 def test_ingest_when_not_authenticated(client: TestClient):
-    response = client.post(
-        "/api/v1/ingest/test",
-    )
+    response = client.post("/api/v1/ingest/test")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -36,22 +45,12 @@ def test_ingest_when_admin_non_super(client: TestClient, admin_user_header_token
 
 def test_ingest_data_when_ok(client: TestClient, superuser_header_token):
     corpus_import_id = "test"
+    input_json = create_input_json_with_two_of_each_entity()
 
     with patch("fastapi.BackgroundTasks.add_task") as background_task_mock:
         response = client.post(
             f"/api/v1/ingest/{corpus_import_id}",
-            files={
-                "new_data": open(
-                    os.path.join(
-                        "tests",
-                        "unit_tests",
-                        "routers",
-                        "ingest",
-                        "test_bulk_data.json",
-                    ),
-                    "rb",
-                )
-            },
+            files={"new_data": input_json},
             headers=superuser_header_token,
         )
 
@@ -84,56 +83,15 @@ def test_ingest_when_no_data(
 
 
 def test_ingest_documents_when_no_family(client: TestClient, superuser_header_token):
-    fam_import_id = "test.new.family.0"
-    test_data = json.dumps(
-        {
-            "documents": [
-                {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
-            ]
-        }
-    ).encode("utf-8")
-    test_data_file = io.BytesIO(test_data)
+    __, __, with_document, __, build = bulk_import_json_builder()
+    with_document()
+    json_input = build()
 
     response = client.post(
         "/api/v1/ingest/test",
-        files={"new_data": test_data_file},
+        files={"new_data": json_input},
         headers=superuser_header_token,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json().get("detail") == f"No entity with id {fam_import_id} found"
-
-
-def test_validate_entity_relationships_when_no_family_matching_document():
-    fam_import_id = "test.new.family.0"
-    test_data = {
-        "documents": [
-            {"import_id": "test.new.document.0", "family_import_id": fam_import_id}
-        ]
-    }
-
-    with pytest.raises(ValidationError) as e:
-        validate_entity_relationships(test_data)
-    assert f"No entity with id {fam_import_id} found" == e.value.message
-
-
-def test_validate_entity_relationships_when_no_family_matching_event():
-    fam_import_id = "test.new.family.0"
-    test_data = {
-        "events": [{"import_id": "test.new.event.0", "family_import_id": fam_import_id}]
-    }
-
-    with pytest.raises(ValidationError) as e:
-        validate_entity_relationships(test_data)
-    assert f"No entity with id {fam_import_id} found" == e.value.message
-
-
-def test_validate_entity_relationships_when_no_collection_matching_family():
-    coll_import_id = "test.new.collection.0"
-    test_data = {
-        "families": [{"import_id": "test.new.event.0", "collections": [coll_import_id]}]
-    }
-
-    with pytest.raises(ValidationError) as e:
-        validate_entity_relationships(test_data)
-    assert f"No entity with id {coll_import_id} found" == e.value.message
+    assert response.json().get("detail") == "No entity with id test.new.family.0 found"

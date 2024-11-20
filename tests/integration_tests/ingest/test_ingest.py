@@ -18,12 +18,14 @@ def create_input_json_with_two_of_each_entity():
     with_collection, with_family, with_document, with_event, build = (
         bulk_import_json_builder()
     )
-    with_collection()(import_id="test.new.collection.1")
-    with_family()(import_id="test.new.family.1")
-    with_document()(
-        import_id="test.new.document.1", family_import_id="test.new.family.1"
-    )
-    with_event()(import_id="test.new.event.1", family_import_id="test.new.family.1")
+    with_collection()
+    with_collection(import_id="test.new.collection.1")
+    with_family()
+    with_family(import_id="test.new.family.1")
+    with_document()
+    with_document(import_id="test.new.document.1", family_import_id="test.new.family.1")
+    with_event()
+    with_event(import_id="test.new.event.1", family_import_id="test.new.family.1")
     input_json = build()
     return input_json
 
