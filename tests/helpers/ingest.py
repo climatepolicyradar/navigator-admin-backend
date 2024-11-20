@@ -1,35 +1,29 @@
 import json
 import logging
 from io import BytesIO
-from typing import Any, Dict, Optional
-
-from pydantic import BaseModel
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
 
-class IngestJSONBuilder(BaseModel):
-    data: Dict[str, Any] = {}
+def bulk_import_json_builder():
+    data = {}
 
     def with_collection(
-        self,
         import_id: str = "test.new.collection.0",
         title: str = "Test title",
         description: str = "Test description",
-    ) -> "IngestJSONBuilder":
-        """Add a collection to the JSON data."""
-
-        self.data.setdefault("collections", []).append(
+    ) -> Callable:
+        data.setdefault("collections", []).append(
             {
                 "import_id": import_id,
                 "title": title,
                 "description": description,
             }
         )
-        return self
+        return with_collection
 
     def with_family(
-        self,
         import_id: str = "test.new.family.0",
         title: str = "Test",
         summary: str = "Test",
@@ -37,10 +31,8 @@ class IngestJSONBuilder(BaseModel):
         category: str = "UNFCCC",
         metadata: dict[str, Any] = {"author_type": ["Non-Party"], "author": ["Test"]},
         collections: list[str] = ["test.new.collection.0"],
-    ) -> "IngestJSONBuilder":
-        """Add a family to the JSON data."""
-
-        self.data.setdefault("families", []).append(
+    ) -> Callable:
+        data.setdefault("families", []).append(
             {
                 "import_id": import_id,
                 "title": title,
@@ -51,20 +43,19 @@ class IngestJSONBuilder(BaseModel):
                 "collections": collections,
             }
         )
-        return self
+        return with_family
 
     def with_document(
-        self,
         import_id: str = "test.new.document.0",
         family_import_id: str = "test.new.family.0",
         metadata: dict[str, Any] = {"role": ["MAIN"], "type": ["Law"]},
         variant_name: Optional[str] = None,
         title: str = "",
         user_language_name: str = "",
-    ) -> "IngestJSONBuilder":
+    ) -> Callable:
         """Add a document to the JSON data."""
 
-        self.data.setdefault("documents", []).append(
+        data.setdefault("documents", []).append(
             {
                 "import_id": import_id,
                 "family_import_id": family_import_id,
@@ -74,19 +65,18 @@ class IngestJSONBuilder(BaseModel):
                 "user_language_name": user_language_name,
             }
         )
-        return self
+        return with_document
 
     def with_event(
-        self,
         import_id: str = "test.new.event.0",
         family_import_id: str = "test.new.family.0",
         event_title: str = "Test",
         date: str = "2024-01-01",
         event_type_value: str = "Amended",
-    ) -> "IngestJSONBuilder":
+    ) -> Callable:
         """Add a document to the JSON data."""
 
-        self.data.setdefault("events", []).append(
+        data.setdefault("events", []).append(
             {
                 "import_id": import_id,
                 "family_import_id": family_import_id,
@@ -95,10 +85,10 @@ class IngestJSONBuilder(BaseModel):
                 "event_type_value": event_type_value,
             }
         )
-        return self
+        return with_event
 
-    def build(self) -> BytesIO:
-        """Build the JSON data and return as BytesIO."""
-
-        json_data = json.dumps(self.data).encode("utf-8")
+    def build() -> BytesIO:
+        json_data = json.dumps(data).encode("utf-8")
         return BytesIO(json_data)
+
+    return with_collection, with_family, with_document, with_event, build
