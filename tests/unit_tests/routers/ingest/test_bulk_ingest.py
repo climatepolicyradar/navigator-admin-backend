@@ -7,13 +7,10 @@ from fastapi.testclient import TestClient
 
 from tests.helpers.ingest import (
     build_json_file,
-    custom_collection,
-    custom_document,
-    custom_event,
-    custom_family,
     default_collection,
     default_document,
     default_event,
+    default_family,
 )
 
 
@@ -22,36 +19,33 @@ def create_input_json_with_two_of_each_entity():
         {
             "collections": [
                 default_collection,
-                custom_collection({"import_id": "test.new.collection.1"}),
+                {**default_collection, "import_id": "test.new.collection.1"},
             ],
             "families": [
-                custom_family({"metadata": {"color": ["blue"], "size": []}}),
-                custom_family(
-                    {
-                        "import_id": "test.new.family.1",
-                        "collections": ["test.new.collection.1"],
-                        "metadata": {"color": ["blue"], "size": []},
-                    }
-                ),
+                {**default_family, "metadata": {"color": ["blue"], "size": []}},
+                {
+                    **default_family,
+                    "import_id": "test.new.family.1",
+                    "collections": ["test.new.collection.1"],
+                    "metadata": {"color": ["blue"], "size": []},
+                },
             ],
             "documents": [
-                custom_document({"metadata": {"color": ["pink"], "size": []}}),
-                custom_document(
-                    {
-                        "import_id": "test.new.document.1",
-                        "family_import_id": "test.new.family.1",
-                        "metadata": {"color": ["pink"], "size": []},
-                    }
-                ),
+                {**default_document, "metadata": {"color": ["pink"], "size": []}},
+                {
+                    **default_document,
+                    "import_id": "test.new.document.1",
+                    "family_import_id": "test.new.family.1",
+                    "metadata": {"color": ["pink"], "size": []},
+                },
             ],
             "events": [
                 default_event,
-                custom_event(
-                    {
-                        "import_id": "test.new.event.1",
-                        "family_import_id": "test.new.family.1",
-                    }
-                ),
+                {
+                    **default_event,
+                    "import_id": "test.new.event.1",
+                    "family_import_id": "test.new.family.1",
+                },
             ],
         }
     )

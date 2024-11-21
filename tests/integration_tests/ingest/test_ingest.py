@@ -12,10 +12,6 @@ from sqlalchemy.orm import Session
 
 from tests.helpers.ingest import (
     build_json_file,
-    custom_collection,
-    custom_document,
-    custom_event,
-    custom_family,
     default_collection,
     default_document,
     default_event,
@@ -29,34 +25,31 @@ def create_input_json_with_two_of_each_entity():
         {
             "collections": [
                 default_collection,
-                custom_collection({"import_id": "test.new.collection.1"}),
+                {**default_collection, "import_id": "test.new.collection.1"},
             ],
             "families": [
                 default_family,
-                custom_family(
-                    {
-                        "import_id": "test.new.family.1",
-                        "collections": ["test.new.collection.1"],
-                    }
-                ),
+                {
+                    **default_family,
+                    "import_id": "test.new.family.1",
+                    "collections": ["test.new.collection.1"],
+                },
             ],
             "documents": [
                 default_document,
-                custom_document(
-                    {
-                        "import_id": "test.new.document.1",
-                        "family_import_id": "test.new.family.1",
-                    }
-                ),
+                {
+                    **default_document,
+                    "import_id": "test.new.document.1",
+                    "family_import_id": "test.new.family.1",
+                },
             ],
             "events": [
                 default_event,
-                custom_event(
-                    {
-                        "import_id": "test.new.event.1",
-                        "family_import_id": "test.new.family.1",
-                    }
-                ),
+                {
+                    **default_event,
+                    "import_id": "test.new.event.1",
+                    "family_import_id": "test.new.family.1",
+                },
             ],
         }
     )
@@ -173,7 +166,7 @@ def test_ingest_idempotency(
             "collections": [default_collection],
             "families": [default_family],
             "documents": [
-                custom_document({"import_id": f"test.new.document.{i}"})
+                {**default_document, "import_id": f"test.new.document.{i}"}
                 for i in range(1001)
             ],
             "events": [default_event],
@@ -260,9 +253,9 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
 
     input_json = build_json_file(
         {
-            "families": [custom_family({"collections": []})],
+            "families": [{**default_family, "collections": []}],
             "documents": [
-                custom_document({"import_id": f"test.new.document.{i}"})
+                {**default_document, "import_id": f"test.new.document.{i}"}
                 for i in range(1000)
             ],
         }
@@ -326,9 +319,9 @@ def test_ingest_events_when_event_type_invalid(
 
     input_json = build_json_file(
         {
-            "families": [custom_family({"collections": []})],
+            "families": [{**default_family, "collections": []}],
             "documents": [default_document],
-            "events": [custom_event({"event_type_value": "Invalid"})],
+            "events": [{**default_event, "event_type_value": "Invalid"}],
         }
     )
 
