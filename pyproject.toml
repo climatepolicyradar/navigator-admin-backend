@@ -54,7 +54,7 @@ env_files = """
     .env.test
     .env
 """
-markers = ["unit"]
+markers = ["unit", "integration"]
 asyncio_mode = "strict"
 
 [tool.pydocstyle]

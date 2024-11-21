@@ -283,3 +283,15 @@ def basic_s3_client():
                 CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
             )
         yield conn
+
+
+# @pytest.fixture
+# def aws_s3_local():
+#     # Setup code
+#     yield
+#     # Teardown code
+
+
+# def pytest_runtest_setup(item):
+#     if "integration" in item.keywords:
+#         item.fixturenames.append("aws_s3_local")

@@ -2,6 +2,7 @@ import logging
 import os
 from unittest.mock import patch
 
+import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
@@ -55,10 +56,8 @@ def create_input_json_with_two_of_each_entity():
     )
 
 
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-def test_ingest_when_ok(
-    data_db: Session, client: TestClient, superuser_header_token, basic_s3_client
-):
+@pytest.mark.integration
+def test_ingest_when_ok(data_db: Session, client: TestClient, superuser_header_token):
     input_json = create_input_json_with_two_of_each_entity()
 
     response = client.post(
