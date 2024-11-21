@@ -1,5 +1,6 @@
 from typing import Optional, Union
 
+from db_client.models.organisation.users import Organisation
 from sqlalchemy.orm import Session
 
 from app.errors import RepositoryError
@@ -75,8 +76,15 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     return 11
 
 
-def get_organisation(db: Session, family_import_id: str) -> Optional[int]:
+def get_organisation(db: Session, family_import_id: str) -> Optional[Organisation]:
     _maybe_throw()
     if family_repo.no_org:
         return None
-    return ALTERNATIVE_ORG_ID if family_repo.alternative_org else STANDARD_ORG_ID
+    org = Organisation(
+        id=ALTERNATIVE_ORG_ID if family_repo.alternative_org else STANDARD_ORG_ID,
+        name="",
+        display_name="",
+        description="",
+        organisation_type="",
+    )
+    return org
