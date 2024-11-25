@@ -265,15 +265,3 @@ def invalid_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("non-admin@cpr.org", CCLW_ORG_ID, False, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
-
-
-@pytest.fixture
-def aws_s3_local():
-    # Setup code
-    yield
-    # Teardown code
-
-
-def pytest_runtest_setup(item):
-    if "integration" in item.keywords:
-        item.fixturenames.append("aws_s3_local")

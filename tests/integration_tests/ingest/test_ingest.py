@@ -1,6 +1,5 @@
 import logging
 
-import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
@@ -53,7 +52,6 @@ def create_input_json_with_two_of_each_entity():
     )
 
 
-@pytest.mark.integration
 def test_ingest_when_ok(data_db: Session, client: TestClient, superuser_header_token):
     input_json = create_input_json_with_two_of_each_entity()
 
