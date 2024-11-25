@@ -2,12 +2,9 @@ import subprocess
 import tempfile
 from typing import Dict
 
-import boto3
 import pytest
-from botocore.exceptions import ClientError
 from db_client import run_migrations
 from fastapi.testclient import TestClient
-from moto import mock_s3
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
@@ -268,21 +265,6 @@ def invalid_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("non-admin@cpr.org", CCLW_ORG_ID, False, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
-
-
-@pytest.fixture
-def basic_s3_client():
-    bucket_name = "test_bucket"
-    with mock_s3():
-        conn = boto3.client("s3", region_name="eu-west-2")
-        try:
-            conn.head_bucket(Bucket=bucket_name)
-        except ClientError:
-            conn.create_bucket(
-                Bucket=bucket_name,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-            )
-        yield conn
 
 
 @pytest.fixture

@@ -19,6 +19,11 @@ Create a `.env` file, you can use the example one running:
 cp .env.example .env
 ```
 
+**NOTE**: When running the app in docker, different values are required for some
+environment variables (as per comments in .env.example). So, if running the app
+or tests without docker, create a separate .env file (e.g. .env.local) with the
+correct values for local development.
+
 This can then be activated in any shell with `pyenv activate admin-backend`.
 
 Also ensure that you have the git commit hooks installed to maintain code
@@ -72,14 +77,15 @@ how the tests run in the Github Actions CI pipeline.
 
 ### Integration Tests
 
-These tests are designed to require a database and therefore will pull and run a
-Postgres container. These can be run locally with
-`pytest -vvv integration_tests` - however this will require that you have spun
-up a local postgres instance (which can be done using `make setup_test_db`).
+These tests are designed to require a database as well as an AWS S3 mock service
+providedvia localstack and therefore will pull and run Postgres and localstack
+containers.
+These can be run locally with `pytest -vvv integration_tests` - however this will
+require that you have spun up a local postgres and localstack instance.
 
-The preferred way it to use `make setup_test_db integration_tests` as this is
-how the tests run in the Github Actions CI pipeline. These commands were split
-so that the output of the integration tests is easier to read.
+The preferred way it to use `make integration_tests` as this is will build and
+start up all the required services and is how the tests run in the Github Actions
+CI pipeline.
 
 ## Deploying
 
