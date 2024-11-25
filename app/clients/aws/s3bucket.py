@@ -121,12 +121,6 @@ def upload_ingest_json_to_s3(
 
     filename = f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json"
 
-    if ingest_upload_bucket == "skip":
-        os.makedirs("bulk_import_results", exist_ok=True)
-        with open(f"bulk_import_results/{filename}", "w") as file:
-            json.dump(data, file, indent=4)
-        return
-
     s3_client = boto3.client("s3")
 
     context = S3UploadContext(
