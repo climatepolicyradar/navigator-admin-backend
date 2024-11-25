@@ -285,13 +285,13 @@ def basic_s3_client():
         yield conn
 
 
-# @pytest.fixture
-# def aws_s3_local():
-#     # Setup code
-#     yield
-#     # Teardown code
+@pytest.fixture
+def aws_s3_local():
+    # Setup code
+    yield
+    # Teardown code
 
 
-# def pytest_runtest_setup(item):
-#     if "integration" in item.keywords:
-#         item.fixturenames.append("aws_s3_local")
+def pytest_runtest_setup(item):
+    if "integration" in item.keywords:
+        item.fixturenames.append("aws_s3_local")

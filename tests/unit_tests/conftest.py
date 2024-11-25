@@ -4,7 +4,9 @@ Please note:
 Service mocks should only be used for router tests.
 """
 
+import os
 from typing import Dict
+from unittest.mock import patch
 
 import boto3
 import db_client.functions.corpus_helpers as db_client_corpus_helpers
@@ -290,37 +292,40 @@ def test_s3_client(s3_document_bucket_names):
     bucket_names = s3_document_bucket_names.values()
     region = "eu-west-2"
 
-    with mock_s3():
-        s3_client = get_s3_client()
-        for bucket in bucket_names:
-            s3_client.create_bucket(
-                Bucket=bucket,
-                CreateBucketConfiguration={"LocationConstraint": region},
+    with patch.dict(os.environ, {"AWS_ENDPOINT_URL": ""}, clear=True):
+        with mock_s3():
+            s3_client = get_s3_client()
+            for bucket in bucket_names:
+                s3_client.create_bucket(
+                    Bucket=bucket,
+                    CreateBucketConfiguration={"LocationConstraint": region},
+                )
+
+            # Test document in queue for action submission
+            s3_client.put_object(
+                Bucket=s3_document_bucket_names["queue"],
+                Key="test_document.pdf",
+                Body=bytes(1024),
             )
 
-        # Test document in queue for action submission
-        s3_client.put_object(
-            Bucket=s3_document_bucket_names["queue"],
-            Key="test_document.pdf",
-            Body=bytes(1024),
-        )
-
-        yield s3_client
+            yield s3_client
 
 
 @pytest.fixture
 def basic_s3_client():
     bucket_name = "test_bucket"
     with mock_s3():
-        conn = boto3.client("s3", region_name="eu-west-2")
-        try:
-            conn.head_bucket(Bucket=bucket_name)
-        except ClientError:
-            conn.create_bucket(
-                Bucket=bucket_name,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-            )
-        yield conn
+        with patch.dict(os.environ, {"AWS_ENDPOINT_URL": ""}, clear=True):
+            conn = boto3.client("s3", region_name="eu-west-2")
+            try:
+                conn.head_bucket(Bucket=bucket_name)
+            except ClientError:
+                conn.create_bucket(
+                    Bucket=bucket_name,
+                    CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+                )
+                conn = boto3.client("s3", region_name="eu-west-2")
+            yield conn
 
 
 # -- now UserContexts
