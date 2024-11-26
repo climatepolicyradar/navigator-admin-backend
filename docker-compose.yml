@@ -6,7 +6,6 @@ services:
       - .env
     ports:
       - 5432:5432
-    hostname: admin_backend_db
     volumes:
       - admin-data:/var/lib/postgresql/data:cached
     healthcheck:
