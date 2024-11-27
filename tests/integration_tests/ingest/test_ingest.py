@@ -1,5 +1,3 @@
-import io
-import json
 import logging
 import os
 from unittest.mock import patch
@@ -12,23 +10,60 @@ from fastapi.testclient import TestClient
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+from tests.helpers.ingest import (
+    build_json_file,
+    default_collection,
+    default_document,
+    default_event,
+    default_family,
+)
 from tests.integration_tests.setup_db import setup_db
+
+
+def create_input_json_with_two_of_each_entity():
+    return build_json_file(
+        {
+            "collections": [
+                default_collection,
+                {**default_collection, "import_id": "test.new.collection.1"},
+            ],
+            "families": [
+                default_family,
+                {
+                    **default_family,
+                    "import_id": "test.new.family.1",
+                    "collections": ["test.new.collection.1"],
+                },
+            ],
+            "documents": [
+                default_document,
+                {
+                    **default_document,
+                    "import_id": "test.new.document.1",
+                    "family_import_id": "test.new.family.1",
+                },
+            ],
+            "events": [
+                default_event,
+                {
+                    **default_event,
+                    "import_id": "test.new.event.1",
+                    "family_import_id": "test.new.family.1",
+                },
+            ],
+        }
+    )
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_ingest_when_ok(
     data_db: Session, client: TestClient, superuser_header_token, basic_s3_client
 ):
+    input_json = create_input_json_with_two_of_each_entity()
+
     response = client.post(
         "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-        files={
-            "new_data": open(
-                os.path.join(
-                    "tests", "integration_tests", "ingest", "test_bulk_data.json"
-                ),
-                "rb",
-            )
-        },
+        files={"new_data": input_json},
         headers=superuser_header_token,
     )
 
@@ -95,18 +130,12 @@ def test_import_data_rollback(
     basic_s3_client,
 ):
     setup_db(data_db)
+    input_json = create_input_json_with_two_of_each_entity()
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={
-                "new_data": open(
-                    os.path.join(
-                        "tests", "integration_tests", "ingest", "test_bulk_data.json"
-                    ),
-                    "rb",
-                )
-            },
+            files={"new_data": input_json},
             headers=superuser_header_token,
         )
 
@@ -132,56 +161,22 @@ def test_ingest_idempotency(
     superuser_header_token,
     basic_s3_client,
 ):
-    family_import_id = "test.new.family.0"
-    event_import_id = "test.new.event.0"
-    collection_import_id = "test.new.collection.0"
-    test_data = {
-        "collections": [
-            {
-                "import_id": collection_import_id,
-                "title": "Test title",
-                "description": "Test description",
-            },
-        ],
-        "families": [
-            {
-                "import_id": family_import_id,
-                "title": "Test",
-                "summary": "Test",
-                "geographies": ["South Asia"],
-                "category": "UNFCCC",
-                "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
-                "collections": [collection_import_id],
-            }
-        ],
-        "documents": [
-            {
-                "import_id": f"test.new.document.{i}",
-                "family_import_id": family_import_id,
-                "metadata": {"role": ["MAIN"], "type": ["Law"]},
-                "variant_name": "Original Language",
-                "title": f"Document{i}",
-                "user_language_name": "",
-            }
-            for i in range(1001)
-        ],
-        "events": [
-            {
-                "import_id": event_import_id,
-                "family_import_id": family_import_id,
-                "event_title": "Test",
-                "date": "2024-01-01",
-                "event_type_value": "Amended",
-            }
-        ],
-    }
-    test_json = json.dumps(test_data).encode("utf-8")
-    test_data_file = io.BytesIO(test_json)
+    input_json = build_json_file(
+        {
+            "collections": [default_collection],
+            "families": [default_family],
+            "documents": [
+                {**default_document, "import_id": f"test.new.document.{i}"}
+                for i in range(1001)
+            ],
+            "events": [default_event],
+        }
+    )
 
     with caplog.at_level(logging.ERROR):
         first_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": test_data_file},
+            files={"new_data": input_json},
             headers=superuser_header_token,
         )
 
@@ -214,7 +209,7 @@ def test_ingest_idempotency(
     with caplog.at_level(logging.ERROR):
         second_response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": test_json},
+            files={"new_data": input_json},
             headers=superuser_header_token,
         )
 
@@ -255,45 +250,26 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
     of bulk import. However, the current length of the suffix added to the slug
     to ensure uniqueness (6), means that the likelihood of a collision is extremely low.
     """
-    family_import_id = "test.new.family.0"
-    test_data = {
-        "collections": [],
-        "families": [
-            {
-                "import_id": family_import_id,
-                "title": "Test",
-                "summary": "Test",
-                "geographies": ["South Asia"],
-                "category": "UNFCCC",
-                "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
-                "collections": [],
-            }
-        ],
-        "documents": [
-            {
-                "import_id": f"test.new.document.{i}",
-                "family_import_id": family_import_id,
-                "metadata": {"role": ["MAIN"], "type": ["Law"]},
-                "variant_name": "Original Language",
-                "title": "Project Document",
-                "user_language_name": "",
-            }
-            for i in range(1000)
-        ],
-        "events": [],
-    }
-    test_json = json.dumps(test_data).encode("utf-8")
-    test_data_file = io.BytesIO(test_json)
+
+    input_json = build_json_file(
+        {
+            "families": [{**default_family, "collections": []}],
+            "documents": [
+                {**default_document, "import_id": f"test.new.document.{i}"}
+                for i in range(1000)
+            ],
+        }
+    )
 
     with caplog.at_level(logging.ERROR):
-        first_response = client.post(
+        response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": test_data_file},
+            files={"new_data": input_json},
             headers=superuser_header_token,
         )
 
-        assert first_response.status_code == status.HTTP_202_ACCEPTED
-        assert first_response.json() == {
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert response.json() == {
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
 
@@ -315,18 +291,12 @@ def test_ingest_when_corpus_import_id_invalid(
     basic_s3_client,
 ):
     invalid_corpus = "test"
+    input_json = create_input_json_with_two_of_each_entity()
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
             f"/api/v1/ingest/{invalid_corpus}",
-            files={
-                "new_data": open(
-                    os.path.join(
-                        "tests", "integration_tests", "ingest", "test_bulk_data.json"
-                    ),
-                    "rb",
-                )
-            },
+            files={"new_data": input_json},
             headers=superuser_header_token,
         )
 
@@ -346,20 +316,19 @@ def test_ingest_events_when_event_type_invalid(
     superuser_header_token,
     basic_s3_client,
 ):
+
+    input_json = build_json_file(
+        {
+            "families": [{**default_family, "collections": []}],
+            "documents": [default_document],
+            "events": [{**default_event, "event_type_value": "Invalid"}],
+        }
+    )
+
     with caplog.at_level(logging.ERROR):
         response = client.post(
             "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={
-                "new_data": open(
-                    os.path.join(
-                        "tests",
-                        "integration_tests",
-                        "ingest",
-                        "test_bulk_data_with_invalid_event_type.json",
-                    ),
-                    "rb",
-                )
-            },
+            files={"new_data": input_json},
             headers=superuser_header_token,
         )
 
