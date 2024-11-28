@@ -17,6 +17,8 @@ services:
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
     image: localstack/localstack:s3-latest
+    env_file:
+      - .env
     ports:
       - 127.0.0.1:4566:4566 # LocalStack Gateway
     environment:
