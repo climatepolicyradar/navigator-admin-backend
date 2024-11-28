@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 import tempfile
@@ -41,6 +42,9 @@ from tests.mocks.repos.rollback_corpus_repo import mock_rollback_corpus_repo
 from tests.mocks.repos.rollback_document_repo import mock_rollback_document_repo
 from tests.mocks.repos.rollback_event_repo import mock_rollback_event_repo
 from tests.mocks.repos.rollback_family_repo import mock_rollback_family_repo
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 CCLW_ORG_ID = 1
 UNFCCC_ORG_ID = 2
@@ -276,11 +280,14 @@ def aws_s3_cleanup():
 
     # Teardown code
     s3 = boto3.client("s3")
-    bucket = os.environ["BULK_IMPORT_BUCKET"]
-    saved_objects = s3.list_objects_v2(Bucket=bucket).get("Contents", None)
-    if saved_objects:
-        for object in saved_objects:
-            s3.delete_object(Bucket=bucket, Key=object["Key"])
+    try:
+        bucket = os.environ["BULK_IMPORT_BUCKET"]
+        saved_objects = s3.list_objects_v2(Bucket=bucket).get("Contents", None)
+        if saved_objects:
+            for object in saved_objects:
+                s3.delete_object(Bucket=bucket, Key=object["Key"])
+    except Exception as e:
+        _LOGGER.debug(e)
 
 
 def pytest_runtest_setup(item):
