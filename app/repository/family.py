@@ -22,7 +22,7 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -34,30 +34,24 @@ from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, str, FamilyMetadata, Corpus, Organisation]
+FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Corpus, Organisation]
 
 
 def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
-    geo_subquery = (
-        db.query(
-            func.min(Geography.value).label("value"),
-            FamilyGeography.family_import_id,
-        )
-        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
-        .filter(FamilyGeography.family_import_id == Family.import_id)
-        .group_by(Geography.value, FamilyGeography.family_import_id)
-    ).subquery("geo_subquery")
-
     return (
-        db.query(Family, geo_subquery.c.value, FamilyMetadata, Corpus, Organisation)  # type: ignore
+        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)  # type: ignore
+        .join(FamilyGeography, FamilyGeography.family_import_id == Family.import_id)
+        .join(
+            Geography,
+            Geography.id == FamilyGeography.geography_id,
+        )
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
-        .filter(geo_subquery.c.family_import_id == Family.import_id)  # type: ignore
     )
 
 
@@ -72,7 +66,7 @@ def _family_to_dto(
         import_id=str(fam.import_id),
         title=str(fam.title),
         summary=str(fam.description),
-        geography=geo_value,
+        geographies=[str(geo_value.display_value)],
         category=str(fam.family_category),
         status=str(fam.family_status),
         metadata=metadata,
@@ -100,7 +94,6 @@ def _update_intention(
     db: Session,
     import_id: str,
     family: FamilyWriteDTO,
-    geo_id: int,
     original_family: Family,
 ):
     original_collections = [
@@ -111,17 +104,17 @@ def _update_intention(
     ]
     update_collections = set(original_collections) != set(family.collections)
     update_title = cast(str, original_family.title) != family.title
-    # TODO: PDCT-1406: Properly implement multi-geography support
-    update_geo = (
-        db.query(FamilyGeography)
-        .filter(FamilyGeography.family_import_id == import_id)
-        .one()
-        .geography_id
-        != geo_id
-    )
+    original_geographies = [
+        geography.collection_import_id
+        for geography in db.query(Geography).filter(
+            original_family.import_id == Geography.family_import_id
+        )
+    ]
+    update_geographies = set(original_geographies) != set(family.geographies)
+
     update_basics = (
         update_title
-        or update_geo
+        or update_geographies
         or original_family.description != family.summary
         or original_family.family_category != family.category
     )
@@ -131,7 +124,13 @@ def _update_intention(
         .one()
     )
     update_metadata = existing_metadata.value != family.metadata
-    return update_title, update_basics, update_metadata, update_collections
+    return (
+        update_title,
+        update_basics,
+        update_metadata,
+        update_collections,
+        update_geographies,
+    )
 
 
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
@@ -201,13 +200,9 @@ def search(
             term = f"%{escape_like(search_params['summary'])}%"
             search.append(Family.description.ilike(term))
 
-    if "geography" in search_params.keys():
-        term = cast(str, search_params["geography"])
-        search.append(
-            or_(
-                Geography.display_value == term.title(), Geography.value == term.upper()
-            )
-        )
+    if "geographies" in search_params.keys():
+        term = cast(str, search_params["geographies"])
+        search.append(Geography.display_value == term.title())
 
     if "status" in search_params.keys():
         term = cast(str, search_params["status"])
@@ -231,7 +226,7 @@ def search(
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
+def update(db: Session, import_id: str, family: FamilyWriteDTO) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -257,7 +252,8 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
         update_basics,
         update_metadata,
         update_collections,
-    ) = _update_intention(db, import_id, family, geo_id, original_family)
+        update_geographies,
+    ) = _update_intention(db, import_id, family, original_family)
 
     # Return if nothing to do
     if not (update_title or update_basics or update_metadata or update_collections):
@@ -276,12 +272,6 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
             )
         )
         updates = result.rowcount  # type: ignore
-        # TODO: PDCT-1406: Properly implement multi-geography support
-        result = db.execute(
-            db_update(FamilyGeography)
-            .where(FamilyGeography.family_import_id == import_id)
-            .values(geography_id=geo_id)
-        )
 
         updates += result.rowcount  # type: ignore
         if updates == 0:  # type: ignore
@@ -315,6 +305,40 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
         )
         db.add(new_slug)
         _LOGGER.info(f"Added a new slug for {import_id} of {new_slug.name}")
+
+    # update geographies if geographies changed
+    if update_geographies:
+        original_geographies = set(
+            [
+                geography.geography_id
+                for geography in db.query(FamilyGeography).filter(
+                    original_family.import_id == FamilyGeography.family_import_id
+                )
+            ]
+        )
+
+        # Remove any collections that were originally associated with the family but
+        # now aren't.
+        geographies_to_remove = set(original_geographies) - set(family.geographies)
+        for geography in geographies_to_remove:
+            result = db.execute(
+                db_delete(Geography).where(FamilyGeography.geography_id == geography)
+            )
+
+            if result.rowcount == 0:  # type: ignore
+                msg = f"Could not remove family {import_id} from collection {geography}"
+                _LOGGER.error(msg)
+                raise RepositoryError(msg)
+
+        # Add any collections that weren't originally associated with the family.
+        geographies_to_add = set(family.geographies) - set(original_geographies)
+        for geography in geographies_to_add:
+            db.flush()
+            new_geography = FamilyGeography(
+                family_import_id=import_id,
+                geography_id=geography,
+            )
+            db.add(new_geography)
 
     # Update collections if collections changed.
     if update_collections:

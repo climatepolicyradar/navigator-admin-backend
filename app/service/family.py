@@ -127,7 +127,7 @@ def update(
         db = db_session.get_db()
 
     # Validate geography
-    geo_id = geography.get_id(db, family_dto.geography)
+    # geo_ids = geography_repo.get_ids_from_values(db, family_dto.geographies)
 
     # Validate family belongs to same org as current user.
     entity_org_id: int = corpus.get_corpus_org_id(family.corpus_import_id, db)
@@ -153,7 +153,7 @@ def update(
         raise ValidationError(msg)
 
     try:
-        if family_repo.update(db, import_id, family_dto, geo_id):
+        if family_repo.update(db, import_id, family_dto):
             db.commit()
         else:
             db.rollback()
@@ -185,10 +185,10 @@ def create(
 
     # Validate geographies
     geo_ids = []
-    if isinstance(family.geography, str):
-        geo_ids.append(geography.get_id(db, family.geography))
-    elif isinstance(family.geography, list):
-        for geo_id in family.geography:
+    if isinstance(family.geographies, str):
+        geo_ids.append(geography.get_id(db, family.geographies))
+    elif isinstance(family.geographies, list):
+        for geo_id in family.geographies:
             geo_ids.append(geography.get_id(db, geo_id))
 
     # Validate category

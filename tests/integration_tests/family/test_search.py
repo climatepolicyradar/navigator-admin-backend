@@ -7,6 +7,25 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
+def test_search_geographies(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/families/?geographies=zimbabwe",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 1
+
+    # expected_ids = set(["A.0.0.2", "A.0.0.3"])
+    # assert ids_found.symmetric_difference(expected_ids) == set([])
+
+
 def test_search_family_super(
     client: TestClient, data_db: Session, superuser_header_token
 ):

@@ -6,3 +6,7 @@ from sqlalchemy.orm import Session
 
 def get_id_from_value(db: Session, geo_string: str) -> Optional[int]:
     return db.query(Geography.id).filter_by(value=geo_string).scalar()
+
+
+def get_ids_from_values(db: Session, geo_strings: list[str]) -> Optional[list[int]]:
+    return db.query(Geography.id).filter(Geography.value.in_(geo_strings)).scalar()

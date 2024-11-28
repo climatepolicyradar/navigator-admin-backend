@@ -92,7 +92,7 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
 
     query_params = set_default_query_params(query_params)
 
-    VALID_PARAMS = ["q", "title", "summary", "geography", "status", "max_results"]
+    VALID_PARAMS = ["q", "title", "summary", "geographies", "status", "max_results"]
     validate_query_params(query_params, VALID_PARAMS)
 
     try:

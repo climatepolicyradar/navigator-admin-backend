@@ -31,7 +31,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.1",
         "title": "apple",
         "summary": "",
-        "geography": "Other",
+        "geographies": ["AFG"],
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {
@@ -57,7 +57,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.2",
         "title": "apple orange banana",
         "summary": "apple",
-        "geography": "Other",
+        "geographies": ["ZWE"],
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {
@@ -83,7 +83,7 @@ EXPECTED_FAMILIES = [
         "import_id": "A.0.0.3",
         "title": "title",
         "summary": "orange peas",
-        "geography": "Other",
+        "geographies": ["AFG"],
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"author": "CPR", "author_type": "Party"},
@@ -490,7 +490,7 @@ def _setup_family_data(
 
         geo_id = (
             test_db.query(Geography.id)
-            .filter(Geography.value == data["geography"])
+            .filter(Geography.value == data["geographies"][0])
             .scalar()
         )
 
