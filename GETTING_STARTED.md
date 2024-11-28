@@ -78,10 +78,10 @@ how the tests run in the Github Actions CI pipeline.
 ### Integration Tests
 
 These tests are designed to require a database as well as an AWS S3 mock service
-providedvia localstack and therefore will pull and run Postgres and localstack
+provided via localstack and therefore will pull and run Postgres and localstack
 containers.
 These can be run locally with `pytest -vvv integration_tests` - however this will
-require that you have spun up a local postgres and localstack instance.
+require that you have spun up local postgres and localstack instances.
 
 The preferred way it to use `make integration_tests` as this is will build and
 start up all the required services and is how the tests run in the Github Actions

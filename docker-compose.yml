@@ -22,7 +22,7 @@ services:
     environment:
       - DEBUG=${DEBUG:-0}
     volumes:
-      - ./init-s3.py:/etc/localstack/init/ready.d/init-s3.py
+      - ./tests/integration_tests/init-s3.py:/etc/localstack/init/ready.d/init-s3.py
 
   navigator-admin-backend:
     build:
