@@ -284,5 +284,5 @@ def aws_s3_cleanup():
 
 
 def pytest_runtest_setup(item):
-    if "integration" in item.keywords:
+    if "s3" in item.keywords:
         item.fixturenames.append("aws_s3_cleanup")

@@ -54,7 +54,7 @@ env_files = """
     .env.test
     .env
 """
-markers = ["unit", "integration"]
+markers = ["unit", "s3"]
 asyncio_mode = "strict"
 
 [tool.pydocstyle]
