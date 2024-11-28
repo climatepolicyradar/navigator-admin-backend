@@ -1,5 +1,6 @@
 import logging
 
+import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
@@ -52,6 +53,7 @@ def create_input_json_with_two_of_each_entity():
     )
 
 
+@pytest.mark.integration
 def test_ingest_when_ok(data_db: Session, client: TestClient, superuser_header_token):
     input_json = create_input_json_with_two_of_each_entity()
 
@@ -114,6 +116,7 @@ def test_ingest_when_ok(data_db: Session, client: TestClient, superuser_header_t
         assert ev.family_import_id in expected_family_import_ids
 
 
+@pytest.mark.integration
 def test_import_data_rollback(
     caplog,
     data_db: Session,
@@ -144,6 +147,7 @@ def test_import_data_rollback(
     assert actual_collection is None
 
 
+@pytest.mark.integration
 def test_ingest_idempotency(
     caplog,
     data_db: Session,
@@ -225,6 +229,7 @@ def test_ingest_idempotency(
     )
 
 
+@pytest.mark.integration
 def test_generates_unique_slugs_for_documents_with_identical_titles(
     caplog,
     data_db: Session,
@@ -269,6 +274,7 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
     )
 
 
+@pytest.mark.integration
 def test_ingest_when_corpus_import_id_invalid(
     caplog,
     data_db: Session,
@@ -293,6 +299,7 @@ def test_ingest_when_corpus_import_id_invalid(
     assert f"No organisation associated with corpus {invalid_corpus}" in caplog.text
 
 
+@pytest.mark.integration
 def test_ingest_events_when_event_type_invalid(
     caplog,
     data_db: Session,

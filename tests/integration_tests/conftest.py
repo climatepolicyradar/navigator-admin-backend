@@ -1,7 +1,9 @@
+import os
 import subprocess
 import tempfile
 from typing import Dict
 
+import boto3
 import pytest
 from db_client import run_migrations
 from fastapi.testclient import TestClient
@@ -265,3 +267,22 @@ def invalid_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode("non-admin@cpr.org", CCLW_ORG_ID, False, {})
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
+
+
+@pytest.fixture
+def aws_s3_cleanup():
+    # No setup code needed
+    yield
+
+    # Teardown code
+    s3 = boto3.client("s3")
+    bucket = os.environ["BULK_IMPORT_BUCKET"]
+    saved_objects = s3.list_objects_v2(Bucket=bucket).get("Contents", None)
+    if saved_objects:
+        for object in saved_objects:
+            s3.delete_object(Bucket=bucket, Key=object["Key"])
+
+
+def pytest_runtest_setup(item):
+    if "integration" in item.keywords:
+        item.fixturenames.append("aws_s3_cleanup")
