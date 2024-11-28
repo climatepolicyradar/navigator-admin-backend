@@ -292,7 +292,15 @@ def test_s3_client(s3_document_bucket_names):
     bucket_names = s3_document_bucket_names.values()
     region = "eu-west-2"
 
-    with patch.dict(os.environ, {"AWS_ENDPOINT_URL": ""}, clear=True):
+    with patch.dict(
+        os.environ,
+        {
+            "AWS_ENDPOINT_URL": "",
+            "AWS_ACCESS_KEY_ID": "test",
+            "AWS_SECRET_ACCESS_KEY": "test",
+        },
+        clear=True,
+    ):
         with mock_s3():
             s3_client = get_s3_client()
             for bucket in bucket_names:
@@ -315,8 +323,19 @@ def test_s3_client(s3_document_bucket_names):
 def basic_s3_client():
     bucket_name = "test_bucket"
     with mock_s3():
-        with patch.dict(os.environ, {"AWS_ENDPOINT_URL": ""}, clear=True):
-            conn = boto3.client("s3", region_name="eu-west-2")
+        with patch.dict(
+            os.environ,
+            {
+                "AWS_ACCESS_KEY_ID": "test",
+                "AWS_SECRET_ACCESS_KEY": "test",
+                "AWS_ENDPOINT_URL": "",
+            },
+            clear=True,
+        ):
+            conn = boto3.client(
+                "s3",
+                region_name="eu-west-2",
+            )
             try:
                 conn.head_bucket(Bucket=bucket_name)
             except ClientError:
