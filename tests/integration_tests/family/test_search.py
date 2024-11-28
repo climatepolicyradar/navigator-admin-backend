@@ -7,6 +7,36 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
+def test_search_geographies(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+
+    # search for where we know there is 2 families with a geopraphy
+    response = client.get(
+        "/api/v1/families/?geography=afghanistan",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 2
+
+    # search for where we know there is 1 families with a geopraphy
+    response = client.get(
+        "/api/v1/families/?geography=zimbabwe",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    ids_found = set([f["import_id"] for f in data])
+    assert len(ids_found) == 1
+
+
 def test_search_family_super(
     client: TestClient, data_db: Session, superuser_header_token
 ):
