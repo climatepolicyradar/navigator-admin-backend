@@ -332,18 +332,11 @@ def basic_s3_client():
             },
             clear=True,
         ):
-            conn = boto3.client(
-                "s3",
-                region_name="eu-west-2",
-            )
+            conn = boto3.client("s3")
             try:
                 conn.head_bucket(Bucket=bucket_name)
             except ClientError:
-                conn.create_bucket(
-                    Bucket=bucket_name,
-                    CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-                )
-                conn = boto3.client("s3", region_name="eu-west-2")
+                conn.create_bucket(Bucket=bucket_name)
             yield conn
 
 
