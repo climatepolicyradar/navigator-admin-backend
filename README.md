@@ -21,3 +21,7 @@ See [the linear project](https://linear.app/climate-policy-radar/project/admin-i
 
 If you are new to the repository, please ensure you read the [getting starting guide](GETTING_STARTED.md)
 and the [design guide](DESIGN.md).
+
+## Bulk Import
+
+For the full procedure on how to do a bulk import of data see this [document](https://github.com/climatepolicyradar/bulk-import/blob/main/STANDARD_BULK_IMPORT_PROCEDURE.md).
