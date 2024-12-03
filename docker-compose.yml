@@ -66,7 +66,11 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     # This is just nice to know as if it fails, it fails quietly
     healthcheck:
-      test: [CMD, wget, -O, "-", http://localhost:80/misc/ping]
+      # there are conflicting trunk errors here. Either
+      # - having `:` in the URL (fails in Github actions)
+      # - redundantly quoting the URL (fails locally)
+      # trunk-ignore(yamllint/quoted-strings)
+      test: [CMD, wget, -O, "-", "http://localhost:80/misc/ping"]
 configs:
   pgpass:
     content: "admin_backend_db:5432:*:${POSTGRES_USER}:${POSTGRES_PASSWORD}"
