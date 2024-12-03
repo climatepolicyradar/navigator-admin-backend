@@ -232,7 +232,7 @@ def test_update_family_collections_to_one_that_does_not_exist(
     assert db_family.description == ""
 
     expected_geo = (
-        data_db.query(Geography).filter(Geography.display_value == "Other").one()
+        data_db.query(Geography).filter(Geography.display_value == "Afghanistan").one()
     )
     assert expected_geo.id in [g.id for g in db_family.geographies]
     assert db_family.family_category == "UNFCCC"
@@ -279,7 +279,11 @@ def test_update_fails_family_when_user_org_different_to_family_org(
     assert db_family.description == "apple"
     assert db_family.family_category == "UNFCCC"
 
-    geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
+    geo_id = (
+        data_db.query(Geography.id)
+        # TODO: PDCT-1406: Properly implement multi-geography support
+        .filter(Geography.value == db_family.geographies[0].value).scalar()
+    )
     assert geo_id in [g.id for g in db_family.geographies]
 
 
@@ -355,7 +359,11 @@ def test_update_family_when_collection_org_different_to_family_org(
     assert db_family.description == ""
     assert db_family.family_category == "UNFCCC"
 
-    geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
+    geo_id = (
+        data_db.query(Geography.id)
+        # TODO: PDCT-1406: Properly implement multi-geography support
+        .filter(Geography.value == db_family.geographies[0].value).scalar()
+    )
     assert geo_id in [g.id for g in db_family.geographies]
 
 
@@ -375,28 +383,32 @@ def test_update_family_idempotent_when_ok(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
-    family = EXPECTED_FAMILIES[1]
+    expected_family = EXPECTED_FAMILIES[1]
     response = client.put(
-        f"/api/v1/families/{family['import_id']}",
-        json=family,
+        f"/api/v1/families/{expected_family['import_id']}",
+        json=expected_family,
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["title"] == EXPECTED_FAMILIES[1]["title"]
-    assert data["summary"] == EXPECTED_FAMILIES[1]["summary"]
-    assert data["geography"] == EXPECTED_FAMILIES[1]["geography"]
-    assert data["category"] == EXPECTED_FAMILIES[1]["category"]
+    assert data["title"] == expected_family["title"]
+    assert data["summary"] == expected_family["summary"]
+    assert data["geography"] == expected_family["geography"]
+    assert data["category"] == expected_family["category"]
     db_family: Family = (
         data_db.query(Family)
-        .filter(Family.import_id == EXPECTED_FAMILIES[1]["import_id"])
+        .filter(Family.import_id == expected_family["import_id"])
         .one()
     )
-    assert db_family.title == EXPECTED_FAMILIES[1]["title"]
-    assert db_family.description == EXPECTED_FAMILIES[1]["summary"]
-    assert db_family.family_category == EXPECTED_FAMILIES[1]["category"]
+    assert db_family.title == expected_family["title"]
+    assert db_family.description == expected_family["summary"]
+    assert db_family.family_category == expected_family["category"]
 
-    geo_id = data_db.query(Geography.id).filter(Geography.value == "Other").scalar()
+    geo_id = (
+        data_db.query(Geography.id)
+        .filter(Geography.value == expected_family["geography"])
+        .scalar()
+    )
     assert geo_id in [g.id for g in db_family.geographies]
 
 
