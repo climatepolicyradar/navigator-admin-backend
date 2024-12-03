@@ -12,29 +12,20 @@ def test_search_geographies(
 ):
     setup_db(data_db)
 
-    # search for where we know there is 2 families with a geopraphy
-    response = client.get(
-        "/api/v1/families/?geography=afghanistan",
-        headers=superuser_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert isinstance(data, list)
+    tests_cases = [
+        ("afghanistan", 2),
+        ("zimbabwe", 1),
+    ]
 
-    ids_found = set([f["import_id"] for f in data])
-    assert len(ids_found) == 2
-
-    # search for where we know there is 1 families with a geopraphy
-    response = client.get(
-        "/api/v1/families/?geography=zimbabwe",
-        headers=superuser_header_token,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert isinstance(data, list)
-
-    ids_found = set([f["import_id"] for f in data])
-    assert len(ids_found) == 1
+    for country, expected_count in tests_cases:
+        response = client.get(
+            f"/api/v1/geographies/?q={country}",
+            headers=superuser_header_token,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == expected_count
 
 
 def test_search_family_super(
