@@ -19,7 +19,7 @@ def test_search_geographies(
 
     for country, expected_count in tests_cases:
         response = client.get(
-            f"/api/v1/geographies/?q={country}",
+            f"/api/v1/families/?geography={country}",
             headers=superuser_header_token,
         )
         assert response.status_code == status.HTTP_200_OK
