@@ -43,6 +43,8 @@ services:
     depends_on:
       admin_backend_db:
         condition: service_healthy
+      localstack:
+        condition: service_started
 
   pgadmin:
     image: dpage/pgadmin4
