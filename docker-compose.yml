@@ -46,5 +46,56 @@ services:
       localstack:
         condition: service_started
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 8000:80
+    # This has to have world & group access denied to work
+    entrypoint: /bin/sh -c "chmod 600 /pgpass; /entrypoint.sh;"
+    configs:
+      - source: servers.json
+        target: /pgadmin4/servers.json
+      - source: pgpass
+        target: /pgpass
+    environment:
+      # This deavctivates the login screen
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    # This is just nice to know as if it fails, it fails quietly
+    healthcheck:
+      # there are conflicting trunk errors here. Either
+      # - having `:` in the URL (fails in Github actions)
+      # - redundantly quoting the URL (fails locally)
+      # trunk-ignore(yamllint/quoted-strings)
+      test: [CMD, wget, -O, "-", "http://localhost:80/misc/ping"]
+configs:
+  pgpass:
+    content: "admin_backend_db:5432:*:${POSTGRES_USER}:${POSTGRES_PASSWORD}"
+  servers.json:
+    content: |
+      {
+        "Servers": {
+          "1": {
+            "Group": "Servers",
+            "Name": "Navigator Admin Backend",
+            "Host": "admin_backend_db",
+            "Port": 5432,
+            "MaintenanceDB": "postgres",
+            "Username": "${POSTGRES_USER}",
+            "Password": "${POSTGRES_PASSWORD}",
+            "SSLMode": "prefer"
+          }
+        }
+      }
+      localstack:
+        condition: service_started
+
 volumes:
-  admin-data:
+  admin-data: {}
+  pgadmin-data: {}
