@@ -10,7 +10,6 @@ from app.clients.aws.s3bucket import (
     upload_ingest_json_to_s3,
     upload_json_to_s3,
 )
-from tests.helpers.utils import cleanup_local_files
 
 
 def test_upload_json_to_s3_when_ok(basic_s3_client):
@@ -56,17 +55,3 @@ def test_upload_ingest_json_to_s3_success(basic_s3_client):
     body = get_response["Body"].read().decode("utf-8")
 
     assert json.loads(body) == json_data
-
-
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "skip"})
-def test_do_not_save_ingest_json_to_s3_when_in_local_development(basic_s3_client):
-    json_data = {"test": "test"}
-
-    upload_ingest_json_to_s3("1111-1111", "test_corpus_id", json_data)
-
-    find_response = basic_s3_client.list_objects_v2(
-        Bucket="test_bucket", Prefix="1111-1111-test_corpus_id"
-    )
-
-    assert "Contents" not in find_response
-    cleanup_local_files("bulk_import_results/1111-1111-test_corpus_id*")

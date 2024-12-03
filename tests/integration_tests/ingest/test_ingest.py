@@ -1,7 +1,6 @@
 import logging
-import os
-from unittest.mock import patch
 
+import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
@@ -17,7 +16,6 @@ from tests.helpers.ingest import (
     default_event,
     default_family,
 )
-from tests.integration_tests.setup_db import setup_db
 
 
 def create_input_json_with_two_of_each_entity():
@@ -55,10 +53,8 @@ def create_input_json_with_two_of_each_entity():
     )
 
 
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-def test_ingest_when_ok(
-    data_db: Session, client: TestClient, superuser_header_token, basic_s3_client
-):
+@pytest.mark.s3
+def test_ingest_when_ok(data_db: Session, client: TestClient, superuser_header_token):
     input_json = create_input_json_with_two_of_each_entity()
 
     response = client.post(
@@ -120,16 +116,14 @@ def test_ingest_when_ok(
         assert ev.family_import_id in expected_family_import_ids
 
 
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@pytest.mark.s3
 def test_import_data_rollback(
     caplog,
     data_db: Session,
     client: TestClient,
     superuser_header_token,
     rollback_collection_repo,
-    basic_s3_client,
 ):
-    setup_db(data_db)
     input_json = create_input_json_with_two_of_each_entity()
 
     with caplog.at_level(logging.ERROR):
@@ -153,13 +147,12 @@ def test_import_data_rollback(
     assert actual_collection is None
 
 
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@pytest.mark.s3
 def test_ingest_idempotency(
     caplog,
     data_db: Session,
     client: TestClient,
     superuser_header_token,
-    basic_s3_client,
 ):
     input_json = build_json_file(
         {
@@ -236,13 +229,12 @@ def test_ingest_idempotency(
     )
 
 
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@pytest.mark.s3
 def test_generates_unique_slugs_for_documents_with_identical_titles(
     caplog,
     data_db: Session,
     client: TestClient,
     superuser_header_token,
-    basic_s3_client,
 ):
     """
     This test ensures that given multiple documents with the same title a unique slug
@@ -282,13 +274,12 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
     )
 
 
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@pytest.mark.s3
 def test_ingest_when_corpus_import_id_invalid(
     caplog,
     data_db: Session,
     client: TestClient,
     superuser_header_token,
-    basic_s3_client,
 ):
     invalid_corpus = "test"
     input_json = create_input_json_with_two_of_each_entity()
@@ -308,13 +299,12 @@ def test_ingest_when_corpus_import_id_invalid(
     assert f"No organisation associated with corpus {invalid_corpus}" in caplog.text
 
 
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@pytest.mark.s3
 def test_ingest_events_when_event_type_invalid(
     caplog,
     data_db: Session,
     client: TestClient,
     superuser_header_token,
-    basic_s3_client,
 ):
 
     input_json = build_json_file(
