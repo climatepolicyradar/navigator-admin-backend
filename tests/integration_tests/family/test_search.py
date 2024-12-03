@@ -7,6 +7,27 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import setup_db
 
 
+def test_search_geographies(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+
+    tests_cases = [
+        ("afghanistan", 2),
+        ("zimbabwe", 1),
+    ]
+
+    for country, expected_count in tests_cases:
+        response = client.get(
+            f"/api/v1/families/?geography={country}",
+            headers=superuser_header_token,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == expected_count
+
+
 def test_search_family_super(
     client: TestClient, data_db: Session, superuser_header_token
 ):
