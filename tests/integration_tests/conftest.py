@@ -1,13 +1,13 @@
+import logging
+import os
 import subprocess
 import tempfile
 from typing import Dict
 
 import boto3
 import pytest
-from botocore.exceptions import ClientError
 from db_client import run_migrations
 from fastapi.testclient import TestClient
-from moto import mock_s3
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
@@ -42,6 +42,9 @@ from tests.mocks.repos.rollback_corpus_repo import mock_rollback_corpus_repo
 from tests.mocks.repos.rollback_document_repo import mock_rollback_document_repo
 from tests.mocks.repos.rollback_event_repo import mock_rollback_event_repo
 from tests.mocks.repos.rollback_family_repo import mock_rollback_family_repo
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 CCLW_ORG_ID = 1
 UNFCCC_ORG_ID = 2
@@ -271,15 +274,22 @@ def invalid_user_header_token() -> Dict[str, str]:
 
 
 @pytest.fixture
-def basic_s3_client():
-    bucket_name = "test_bucket"
-    with mock_s3():
-        conn = boto3.client("s3", region_name="eu-west-2")
-        try:
-            conn.head_bucket(Bucket=bucket_name)
-        except ClientError:
-            conn.create_bucket(
-                Bucket=bucket_name,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-            )
-        yield conn
+def aws_s3_cleanup():
+    # No setup code needed
+    yield
+
+    # Teardown code
+    s3 = boto3.client("s3")
+    try:
+        bucket = os.environ["BULK_IMPORT_BUCKET"]
+        saved_objects = s3.list_objects_v2(Bucket=bucket).get("Contents", None)
+        if saved_objects:
+            for object in saved_objects:
+                s3.delete_object(Bucket=bucket, Key=object["Key"])
+    except Exception as e:
+        _LOGGER.debug(e)
+
+
+def pytest_runtest_setup(item):
+    if "s3" in item.keywords:
+        item.fixturenames.append("aws_s3_cleanup")
