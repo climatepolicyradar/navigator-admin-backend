@@ -43,6 +43,7 @@ services:
     depends_on:
       admin_backend_db:
         condition: service_healthy
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin4
