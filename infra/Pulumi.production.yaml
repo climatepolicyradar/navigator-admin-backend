@@ -29,3 +29,5 @@ config:
   admin_backend:vpc_security_group_admin_backend:
     secure: AAABAL8JPKwI0Y3WZTTVvBZdhA4LvIL/CTK6Kf1AHRqkT2Om9LuYiYnFLXYhdYo0nVkUjQ==
   aws:region: eu-west-1
+environment:
+  - admin_backend/production
