@@ -1,0 +1,9 @@
+FROM postgres:14
+
+WORKDIR /app
+
+# It's unsure where this is generated or used, but if we don't create it we get a constant stream of logs saying
+# `FATAL:  role "navigator" does not exist`
+RUN cat <<EOF > /docker-entrypoint-initdb.d/navigator-role.sql
+CREATE ROLE navigator WITH LOGIN;
+EOF

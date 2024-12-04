@@ -1,0 +1,37 @@
+services:
+  webapp:
+    command: poetry run fastapi dev --port 8888 --host 0.0.0.0
+    build:
+      context: ./
+      dockerfile: Dockerfile.webapp
+    tty: true
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - 8888:8888
+    environment:
+      PYTHONPATH: .
+      ADMIN_POSTGRES_HOST: postgres
+      ADMIN_POSTGRES_USER: navigator_admin
+      ADMIN_POSTGRES_DATABASE: navigator
+      ADMIN_POSTGRES_PASSWORD: password
+      SECRET_KEY: ???
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    environment:
+      POSTGRES_DB: navigator
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: navigator_admin
+    build:
+      context: .
+      dockerfile: ./Dockerfile.postgres
+    volumes:
+      - ./dumps/navigator.sql:/docker-entrypoint-initdb.d/navigator.sql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
