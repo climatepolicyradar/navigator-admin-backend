@@ -5,7 +5,7 @@ from unittest.mock import patch
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from tests.helpers.ingest import (
+from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
     default_document,
@@ -51,29 +51,29 @@ def create_input_json_with_two_of_each_entity():
     )
 
 
-def test_ingest_when_not_authenticated(client: TestClient):
-    response = client.post("/api/v1/ingest/test")
+def test_bulk_import_when_not_authenticated(client: TestClient):
+    response = client.post("/api/v1/bulk-import/test")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_when_non_admin_non_super(client: TestClient, user_header_token):
-    response = client.post("/api/v1/ingest/test", headers=user_header_token)
+def test_bulk_import_when_non_admin_non_super(client: TestClient, user_header_token):
+    response = client.post("/api/v1/bulk-import/test", headers=user_header_token)
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_ingest_when_admin_non_super(client: TestClient, admin_user_header_token):
-    response = client.post("/api/v1/ingest/test", headers=admin_user_header_token)
+def test_bulk_import_when_admin_non_super(client: TestClient, admin_user_header_token):
+    response = client.post("/api/v1/bulk-import/test", headers=admin_user_header_token)
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_ingest_data_when_ok(client: TestClient, superuser_header_token):
+def test_bulk_import_data_when_ok(client: TestClient, superuser_header_token):
     corpus_import_id = "test"
     input_json = create_input_json_with_two_of_each_entity()
 
     with patch("fastapi.BackgroundTasks.add_task") as background_task_mock:
         response = client.post(
-            f"/api/v1/ingest/{corpus_import_id}",
-            files={"new_data": input_json},
+            f"/api/v1/bulk-import/{corpus_import_id}",
+            files={"data": input_json},
             headers=superuser_header_token,
         )
 
@@ -85,7 +85,7 @@ def test_ingest_data_when_ok(client: TestClient, superuser_header_token):
     }
 
 
-def test_ingest_when_no_data(
+def test_bulk_import_when_no_data(
     client: TestClient,
     superuser_header_token,
     collection_repo_mock,
@@ -95,8 +95,8 @@ def test_ingest_when_no_data(
     test_data = json.dumps({}).encode("utf-8")
     test_data_file = io.BytesIO(test_data)
     response = client.post(
-        "/api/v1/ingest/test",
-        files={"new_data": test_data_file},
+        "/api/v1/bulk-import/test",
+        files={"data": test_data_file},
         headers=superuser_header_token,
     )
 
@@ -105,12 +105,14 @@ def test_ingest_when_no_data(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_ingest_documents_when_no_family(client: TestClient, superuser_header_token):
+def test_bulk_import_documents_when_no_family(
+    client: TestClient, superuser_header_token
+):
     json_input = build_json_file({"documents": [default_document]})
 
     response = client.post(
-        "/api/v1/ingest/test",
-        files={"new_data": json_input},
+        "/api/v1/bulk-import/test",
+        files={"data": json_input},
         headers=superuser_header_token,
     )
 

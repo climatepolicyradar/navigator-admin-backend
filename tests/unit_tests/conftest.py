@@ -18,13 +18,13 @@ from moto import mock_s3
 
 import app.service.analytics as analytics_service
 import app.service.app_user as app_user_service
+import app.service.bulk_import as bulk_import_service
 import app.service.collection as collection_service
 import app.service.config as config_service
 import app.service.corpus as corpus_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
-import app.service.ingest as ingest_service
 import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
 import app.service.validation as validation_service
@@ -55,13 +55,13 @@ from tests.mocks.repos.geography_repo import mock_geography_repo
 from tests.mocks.repos.organisation_repo import mock_organisation_repo
 from tests.mocks.services.analytics_service import mock_analytics_service
 from tests.mocks.services.app_user_service import mock_app_user_service
+from tests.mocks.services.bulk_import_service import mock_bulk_import_service
 from tests.mocks.services.collection_service import mock_collection_service
 from tests.mocks.services.config_service import mock_config_service
 from tests.mocks.services.corpus_service import mock_corpus_service
 from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
-from tests.mocks.services.ingest_service import mock_ingest_service
 from tests.mocks.services.validation_service import mock_validation_service
 
 ORG_ID = 1
@@ -222,10 +222,10 @@ def corpus_service_mock(monkeypatch, mocker):
 
 
 @pytest.fixture
-def ingest_service_mock(monkeypatch, mocker):
+def bulk_import_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
-    mock_ingest_service(ingest_service, monkeypatch, mocker)
-    yield ingest_service
+    mock_bulk_import_service(bulk_import_service, monkeypatch, mocker)
+    yield bulk_import_service
 
 
 @pytest.fixture
