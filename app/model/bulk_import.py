@@ -1,13 +1,15 @@
 from datetime import datetime
-from typing import Optional
+from typing import Dict, List, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import AnyHttpUrl, BaseModel, RootModel
 
 from app.model.collection import CollectionCreateDTO
 from app.model.document import DocumentCreateDTO
 from app.model.event import EventCreateDTO
 from app.model.family import FamilyCreateDTO
 from app.model.general import Json
+
+Metadata = RootModel[Dict[str, Union[str, List[str]]]]
 
 
 class BulkImportCollectionDTO(BaseModel):
@@ -38,7 +40,7 @@ class BulkImportFamilyDTO(BaseModel):
     summary: str
     geographies: list[str]
     category: str
-    metadata: Json
+    metadata: Metadata
     collections: list[str]
     corpus_import_id: str
 
@@ -54,7 +56,7 @@ class BulkImportFamilyDTO(BaseModel):
             summary=self.summary,
             geography=self.geographies,
             category=self.category,
-            metadata=self.metadata,
+            metadata=self.metadata.model_dump(),
             collections=self.collections,
             corpus_import_id=corpus_import_id,
         )
