@@ -7,6 +7,7 @@ import pytest
 
 import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
+from tests.helpers.bulk_import import default_document, default_family
 
 
 @patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
@@ -102,6 +103,30 @@ def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_m
         "Rolling back transaction due to the following error: No organisation associated with corpus test"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        {"families": [{**default_family, "metadata": {"key": [1]}}]},
+        {"families": [{**default_family, "metadata": {"key": None}}]},
+        {"families": [{**default_family, "metadata": {"key": 1}}]},
+        {"documents": [{**default_document, "metadata": {"key": 1}}]},
+    ],
+)
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
+def test_import_data_when_metadata_contains_non_string_values(
+    test_data,
+    corpus_repo_mock,
+    validation_service_mock,
+    caplog,
+    basic_s3_client,
+):
+    with caplog.at_level(logging.ERROR):
+        bulk_import_service.import_data(test_data, "test")
+
+    assert "Input should be a valid string" in caplog.text
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
