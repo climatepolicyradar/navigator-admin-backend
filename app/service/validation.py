@@ -14,8 +14,8 @@ from app.service.collection import validate_import_id
 from app.service.event import create_event_metadata_object
 
 
-class IngestEntityList(str, Enum):
-    """Name of the list of entities that can be ingested."""
+class BulkImportEntityList(str, Enum):
+    """Name of the list of entities that can be imported."""
 
     Collections = "collections"
     Families = "families"
@@ -143,14 +143,14 @@ def validate_events(events: list[dict[str, Any]], corpus_import_id: str) -> None
 
 
 def _collect_import_ids(
-    entity_list_name: IngestEntityList,
+    entity_list_name: BulkImportEntityList,
     data: dict[str, Any],
     import_id_type_name: Optional[str] = None,
 ) -> list[str]:
     """
     Extracts a list of import_ids (or family_import_ids if specified) for the specified entity list in data.
 
-    :param IngestEntityList entity_list_name: The name of the entity list from which the import_ids are to be extracted.
+    :param BulkImportEntityList entity_list_name: The name of the entity list from which the import_ids are to be extracted.
     :param dict[str, Any] data: The data structure containing the entity lists used for extraction.
     :param Optional[str] import_id_type_name: the name of the type of import_id to be extracted or None.
     :return list[str]: A list of extracted import_ids for the specified entity list.
@@ -184,7 +184,7 @@ def _validate_collections_exist_for_families(data: dict[str, Any]) -> None:
 
     :param dict[str, Any] data: The data object containing entities to be validated.
     """
-    collections = _collect_import_ids(IngestEntityList.Collections, data)
+    collections = _collect_import_ids(BulkImportEntityList.Collections, data)
     collections_set = set(collections)
 
     family_collection_import_ids = []
@@ -202,14 +202,14 @@ def _validate_families_exist_for_events_and_documents(data: dict[str, Any]) -> N
 
     :param dict[str, Any] data: The data object containing entities to be validated.
     """
-    families = _collect_import_ids(IngestEntityList.Families, data)
+    families = _collect_import_ids(BulkImportEntityList.Families, data)
     families_set = set(families)
 
     document_family_import_ids = _collect_import_ids(
-        IngestEntityList.Documents, data, "family_import_id"
+        BulkImportEntityList.Documents, data, "family_import_id"
     )
     event_family_import_ids = _collect_import_ids(
-        IngestEntityList.Events, data, "family_import_id"
+        BulkImportEntityList.Events, data, "family_import_id"
     )
 
     _match_import_ids(document_family_import_ids, families_set)
@@ -228,9 +228,9 @@ def validate_entity_relationships(data: dict[str, Any]) -> None:
     _validate_families_exist_for_events_and_documents(data)
 
 
-def validate_ingest_data(data: dict[str, Any]) -> None:
+def validate_bulk_import_data(data: dict[str, Any]) -> None:
     """
-    Validates data to be ingested.
+    Validates data to be bulk imported.
 
     :param dict[str, Any] data: The data object to be validated.
     :raises HTTPException: raised if data is empty or None.

@@ -5,11 +5,11 @@ from pytest import MonkeyPatch
 from app.errors import RepositoryError
 
 
-def mock_ingest_service(ingest_service, monkeypatch: MonkeyPatch, mocker):
-    ingest_service.throw_repository_error = False
+def mock_bulk_import_service(bulk_import_service, monkeypatch: MonkeyPatch, mocker):
+    bulk_import_service.throw_repository_error = False
 
     def maybe_throw():
-        if ingest_service.throw_repository_error:
+        if bulk_import_service.throw_repository_error:
             raise RepositoryError("bad repo")
 
     def mock_import_data(
@@ -39,5 +39,5 @@ def mock_ingest_service(ingest_service, monkeypatch: MonkeyPatch, mocker):
 
         return response
 
-    monkeypatch.setattr(ingest_service, "import_data", mock_import_data)
-    mocker.spy(ingest_service, "import_data")
+    monkeypatch.setattr(bulk_import_service, "import_data", mock_import_data)
+    mocker.spy(bulk_import_service, "import_data")

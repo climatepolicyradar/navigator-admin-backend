@@ -12,31 +12,31 @@ from fastapi import (
 
 from app.errors import ValidationError
 from app.model.general import Json
-from app.service.ingest import (
+from app.service.bulk_import import (
     get_collection_template,
     get_document_template,
     get_event_template,
     get_family_template,
     import_data,
 )
-from app.service.validation import validate_ingest_data
+from app.service.validation import validate_bulk_import_data
 
-ingest_router = r = APIRouter()
+bulk_import_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @r.get(
-    "/ingest/template/{corpus_type}",
+    "/bulk-import/template/{corpus_type}",
     response_model=Json,
     status_code=status.HTTP_200_OK,
 )
-async def get_ingest_template(corpus_type: str) -> Json:
+async def get_bulk_import_template(corpus_type: str) -> Json:
     """
-    Data ingest template endpoint.
+    Data bulk import template endpoint.
 
-    :param str corpus_type: type of the corpus of data to ingest.
-    :return Json: json representation of ingest template.
+    :param str corpus_type: type of the corpus of data to import.
+    :return Json: json representation of bulk import template.
     """
 
     _LOGGER.info(f"Creating template for corpus type: {corpus_type}")
@@ -54,30 +54,30 @@ async def get_ingest_template(corpus_type: str) -> Json:
 
 
 @r.post(
-    "/ingest/{corpus_import_id}",
+    "/bulk-import/{corpus_import_id}",
     response_model=Json,
     status_code=status.HTTP_202_ACCEPTED,
 )
-async def ingest(
+async def bulk_import(
     request: Request,
-    new_data: UploadFile,
+    data: UploadFile,
     corpus_import_id: str,
     background_tasks: BackgroundTasks,
 ) -> Json:
     """
     Bulk import endpoint.
 
-    :param UploadFile new_data: file containing json representation of data to ingest.
-    :return Json: json representation of the data to ingest.
+    :param UploadFile new_data: file containing json representation of data to import.
+    :return Json: json representation of the data to import.
     """
     _LOGGER.info(
         f"User {request.state.user} triggered bulk import for corpus: {corpus_import_id}"
     )
 
     try:
-        content = await new_data.read()
+        content = await data.read()
         data_dict = json.loads(content)
-        validate_ingest_data(data_dict)
+        validate_bulk_import_data(data_dict)
 
         background_tasks.add_task(import_data, data_dict, corpus_import_id)
 

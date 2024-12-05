@@ -17,13 +17,13 @@ from fastapi_pagination import add_pagination
 from app.api.api_v1.routers import (
     analytics_router,
     auth_router,
+    bulk_import_router,
     collections_router,
     config_router,
     corpora_router,
     document_router,
     event_router,
     families_router,
-    ingest_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
@@ -97,9 +97,9 @@ app.include_router(
 )
 
 app.include_router(
-    ingest_router,
+    bulk_import_router,
     prefix="/api/v1",
-    tags=["ingest"],
+    tags=["bulk-import"],
     dependencies=[Depends(check_user_auth)],
 )
 
