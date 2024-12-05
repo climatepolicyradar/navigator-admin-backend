@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Optional
 
 from fastapi import (
     APIRouter,
@@ -63,6 +64,7 @@ async def bulk_import(
     data: UploadFile,
     corpus_import_id: str,
     background_tasks: BackgroundTasks,
+    document_limit: Optional[int] = None,
 ) -> Json:
     """
     Bulk import endpoint.
@@ -79,7 +81,9 @@ async def bulk_import(
         data_dict = json.loads(content)
         validate_bulk_import_data(data_dict)
 
-        background_tasks.add_task(import_data, data_dict, corpus_import_id)
+        background_tasks.add_task(
+            import_data, data_dict, corpus_import_id, document_limit
+        )
 
         return {
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."

@@ -41,7 +41,9 @@ from app.service.event import (
     get_datetime_event_name_for_corpus,
 )
 
-DOCUMENT_BULK_IMPORT_LIMIT = 1000
+# Any increase to this number should first be discussed with the Platform Team
+DEFAULT_DOCUMENT_LIMIT = 1000
+
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
@@ -234,6 +236,7 @@ def save_families(
 def save_documents(
     document_data: list[dict[str, Any]],
     corpus_import_id: str,
+    document_limit: int,
     db: Optional[Session] = None,
 ) -> list[str]:
     """
@@ -256,7 +259,7 @@ def save_documents(
     for doc in document_data:
         if (
             not _exists_in_db(FamilyDocument, doc["import_id"], db)
-            and total_documents_saved < DOCUMENT_BULK_IMPORT_LIMIT
+            and total_documents_saved < document_limit
         ):
             _LOGGER.info(f"Importing document {doc['import_id']}")
             dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
@@ -309,7 +312,11 @@ def save_events(
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
+def import_data(
+    data: dict[str, Any],
+    corpus_import_id: str,
+    document_limit: Optional[int] = None,
+) -> None:
     """
     Imports data for a given corpus_import_id.
 
@@ -348,7 +355,12 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
             result["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
             _LOGGER.info("Saving documents")
-            result["documents"] = save_documents(document_data, corpus_import_id, db)
+            result["documents"] = save_documents(
+                document_data,
+                corpus_import_id,
+                document_limit or DEFAULT_DOCUMENT_LIMIT,
+                db,
+            )
         if event_data:
             _LOGGER.info("Saving events")
             result["events"] = save_events(event_data, corpus_import_id, db)
