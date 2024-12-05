@@ -31,4 +31,4 @@ def test_validate_metadata_throws_exception_when_non_string_values_present(test_
 
     with pytest.raises(ValidationError) as e:
         validate_metadata_values_are_strings(test_data)
-    assert "Metadata values should be strings." == e.value.message
+    assert "Metadata values should be strings" == e.value.message

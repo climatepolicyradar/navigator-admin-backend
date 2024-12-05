@@ -239,6 +239,7 @@ def validate_bulk_import_data(data: dict[str, Any]) -> None:
     if not data:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
+    validate_metadata_values_are_strings(data)
     validate_entity_relationships(data)
 
 
@@ -253,7 +254,7 @@ def _validate_values_are_strings(value: Any) -> None:
         for v in value:
             _validate_values_are_strings(v)
     elif not isinstance(value, str):
-        raise ValidationError("Metadata values should be strings.")
+        raise ValidationError("Metadata values should be strings")
 
 
 def validate_metadata_values_are_strings(data: dict[str, Any]) -> None:

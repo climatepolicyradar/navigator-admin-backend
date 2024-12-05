@@ -118,3 +118,20 @@ def test_bulk_import_documents_when_no_family(
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json().get("detail") == "No entity with id test.new.family.0 found"
+
+
+def test_bulk_import_when_metadata_contains_non_string_values(
+    client: TestClient, superuser_header_token
+):
+    json_input = build_json_file(
+        {"families": [{**default_family, "metadata": {"key": [1]}}]}
+    )
+
+    response = client.post(
+        "/api/v1/bulk-import/test",
+        files={"data": json_input},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json().get("detail") == "Metadata values should be strings"
