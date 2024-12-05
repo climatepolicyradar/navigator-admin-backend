@@ -10,8 +10,8 @@ from app.model.family import FamilyCreateDTO
 from app.model.general import Json
 
 
-class IngestCollectionDTO(BaseModel):
-    """Representation of a collection for ingest."""
+class BulkImportCollectionDTO(BaseModel):
+    """Representation of a collection for bulk import."""
 
     import_id: str
     title: str
@@ -19,7 +19,7 @@ class IngestCollectionDTO(BaseModel):
 
     def to_collection_create_dto(self) -> CollectionCreateDTO:
         """
-        Convert IngestCollectionDTO to CollectionCreateDTO.
+        Convert BulkImportCollectionDTO to CollectionCreateDTO.
 
         :return CollectionCreateDTO: Converted CollectionCreateDTO instance.
         """
@@ -30,8 +30,8 @@ class IngestCollectionDTO(BaseModel):
         )
 
 
-class IngestFamilyDTO(BaseModel):
-    """Representation of a family for ingest."""
+class BulkImportFamilyDTO(BaseModel):
+    """Representation of a family for bulk import."""
 
     import_id: str
     title: str
@@ -44,7 +44,7 @@ class IngestFamilyDTO(BaseModel):
 
     def to_family_create_dto(self, corpus_import_id: str) -> FamilyCreateDTO:
         """
-        Convert IngestFamilyDTO to FamilyCreateDTO.
+        Convert BulkImportFamilyDTO to FamilyCreateDTO.
 
         :return FamilyCreateDTO: Converted FamilyCreateDTO instance.
         """
@@ -60,8 +60,8 @@ class IngestFamilyDTO(BaseModel):
         )
 
 
-class IngestEventDTO(BaseModel):
-    """Representation of an event for ingest."""
+class BulkImportEventDTO(BaseModel):
+    """Representation of an event for bulk import."""
 
     import_id: str
     family_import_id: str
@@ -72,7 +72,7 @@ class IngestEventDTO(BaseModel):
 
     def to_event_create_dto(self) -> EventCreateDTO:
         """
-        Convert IngestEventDTO to EventCreateDTO.
+        Convert BulkImportEventDTO to EventCreateDTO.
 
         :return EventCreateDTO: Converted EventCreateDTO instance.
         """
@@ -85,8 +85,8 @@ class IngestEventDTO(BaseModel):
         )
 
 
-class IngestDocumentDTO(BaseModel):
-    """Representation of a document for ingest."""
+class BulkImportDocumentDTO(BaseModel):
+    """Representation of a document for bulk import."""
 
     import_id: str
     family_import_id: str
@@ -98,7 +98,7 @@ class IngestDocumentDTO(BaseModel):
 
     def to_document_create_dto(self) -> DocumentCreateDTO:
         """
-        Convert IngestDocumentDTO to DocumentCreateDTO.
+        Convert BulkImportDocumentDTO to DocumentCreateDTO.
 
         :return DocumentCreateDTO: Converted DocumentCreateDTO instance.
         """

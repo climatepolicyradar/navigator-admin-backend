@@ -106,25 +106,25 @@ def upload_json_to_s3(
         raise
 
 
-def upload_ingest_json_to_s3(
-    ingest_id: str, corpus_import_id: str, data: dict[str, Any]
+def upload_bulk_import_json_to_s3(
+    import_id: str, corpus_import_id: str, data: dict[str, Any]
 ) -> None:
     """
-    Upload an ingest JSON file to S3
+    Upload an bulk import JSON file to S3
 
-    :param str ingest_id: The uuid of the ingest action.
-    :param str corpus_import_id: The import_id of the corpus the ingest data belongs to.
-    :param dict[str, Any] json_data: The ingest json data to be uploaded to S3.
+    :param str import_id: The uuid of the bulk import action.
+    :param str corpus_import_id: The id of the corpus the bulk import data belongs to.
+    :param dict[str, Any] json_data: The bulk import json data to be uploaded to S3.
     """
-    ingest_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
+    bulk_import_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
     current_timestamp = datetime.now().strftime("%m-%d-%YT%H:%M:%S")
 
-    filename = f"{ingest_id}-{corpus_import_id}-{current_timestamp}.json"
+    filename = f"{import_id}-{corpus_import_id}-{current_timestamp}.json"
 
     s3_client = boto3.client("s3")
 
     context = S3UploadContext(
-        bucket_name=ingest_upload_bucket,
+        bucket_name=bulk_import_upload_bucket,
         object_name=filename,
     )
     upload_json_to_s3(s3_client, context, data)

@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from tests.helpers.ingest import (
+from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
     default_document,
@@ -54,12 +54,14 @@ def create_input_json_with_two_of_each_entity():
 
 
 @pytest.mark.s3
-def test_ingest_when_ok(data_db: Session, client: TestClient, superuser_header_token):
+def test_bulk_import_when_ok(
+    data_db: Session, client: TestClient, superuser_header_token
+):
     input_json = create_input_json_with_two_of_each_entity()
 
     response = client.post(
-        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-        files={"new_data": input_json},
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": input_json},
         headers=superuser_header_token,
     )
 
@@ -128,8 +130,8 @@ def test_import_data_rollback(
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
-            "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": input_json},
+            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+            files={"data": input_json},
             headers=superuser_header_token,
         )
 
@@ -148,7 +150,7 @@ def test_import_data_rollback(
 
 
 @pytest.mark.s3
-def test_ingest_idempotency(
+def test_bulk_import_idempotency(
     caplog,
     data_db: Session,
     client: TestClient,
@@ -168,8 +170,8 @@ def test_ingest_idempotency(
 
     with caplog.at_level(logging.ERROR):
         first_response = client.post(
-            "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": input_json},
+            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+            files={"data": input_json},
             headers=superuser_header_token,
         )
 
@@ -201,8 +203,8 @@ def test_ingest_idempotency(
 
     with caplog.at_level(logging.ERROR):
         second_response = client.post(
-            "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": input_json},
+            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+            files={"data": input_json},
             headers=superuser_header_token,
         )
 
@@ -255,8 +257,8 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
-            "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": input_json},
+            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+            files={"data": input_json},
             headers=superuser_header_token,
         )
 
@@ -275,7 +277,7 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
 
 
 @pytest.mark.s3
-def test_ingest_when_corpus_import_id_invalid(
+def test_bulk_import_when_corpus_import_id_invalid(
     caplog,
     data_db: Session,
     client: TestClient,
@@ -286,8 +288,8 @@ def test_ingest_when_corpus_import_id_invalid(
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
-            f"/api/v1/ingest/{invalid_corpus}",
-            files={"new_data": input_json},
+            f"/api/v1/bulk-import/{invalid_corpus}",
+            files={"data": input_json},
             headers=superuser_header_token,
         )
 
@@ -300,7 +302,7 @@ def test_ingest_when_corpus_import_id_invalid(
 
 
 @pytest.mark.s3
-def test_ingest_events_when_event_type_invalid(
+def test_bulk_import_events_when_event_type_invalid(
     caplog,
     data_db: Session,
     client: TestClient,
@@ -317,8 +319,8 @@ def test_ingest_events_when_event_type_invalid(
 
     with caplog.at_level(logging.ERROR):
         response = client.post(
-            "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
-            files={"new_data": input_json},
+            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+            files={"data": input_json},
             headers=superuser_header_token,
         )
 
@@ -333,32 +335,36 @@ def test_ingest_events_when_event_type_invalid(
     )
 
 
-def test_ingest_when_not_authorised(client: TestClient, data_db: Session):
+def test_bulk_import_when_not_authorised(client: TestClient, data_db: Session):
     response = client.post(
-        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_admin_non_super(
+def test_bulk_import_admin_non_super(
     client: TestClient, data_db: Session, admin_user_header_token
 ):
     response = client.post(
-        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
         headers=admin_user_header_token,
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User admin@cpr.org is not authorised to CREATE an INGEST"
+    assert (
+        data["detail"] == "User admin@cpr.org is not authorised to CREATE a BULK-IMPORT"
+    )
 
 
-def test_ingest_non_super_non_admin(
+def test_bulk_import_non_super_non_admin(
     client: TestClient, data_db: Session, user_header_token
 ):
     response = client.post(
-        "/api/v1/ingest/UNFCCC.corpus.i00000001.n0000",
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to CREATE an INGEST"
+    assert (
+        data["detail"] == "User cclw@cpr.org is not authorised to CREATE a BULK-IMPORT"
+    )
