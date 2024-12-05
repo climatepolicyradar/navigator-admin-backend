@@ -240,3 +240,34 @@ def validate_ingest_data(data: dict[str, Any]) -> None:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
     validate_entity_relationships(data)
+
+
+def _validate_values_are_strings(value: Any) -> None:
+    """
+    Recursively validates that all values are strings.
+
+    :param Any value: The value to be validated.
+    :raises ValidationError: raised if any value is not a string.
+    """
+    if isinstance(value, list):
+        for v in value:
+            _validate_values_are_strings(v)
+    elif not isinstance(value, str):
+        raise ValidationError("Metadata values should be strings.")
+
+
+def validate_metadata_values_are_strings(data: dict[str, Any]) -> None:
+    """
+    Validates family and document metadata in the data.
+
+    :param dict[str, Any] data: The data object to be validated.
+    """
+    metadata_values = [
+        value
+        for entity in data.values()
+        if entity is not None
+        for e in entity
+        for value in e.get("metadata", {}).values()
+    ]
+
+    _validate_values_are_strings(metadata_values)
