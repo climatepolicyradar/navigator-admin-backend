@@ -69,7 +69,11 @@ async def bulk_import(
     """
     Bulk import endpoint.
 
-    :param UploadFile new_data: file containing json representation of data to import.
+    :param Request request: The request object containing all request data.
+    :param UploadFile data: File containing json representation of data to import.
+    :param str corpus_import_id: The ID of the corpus to import.
+    :param BackgroundTasks background_tasks: Background tasks to be performed after the request is completed.
+    :param Optional[int] document_limit: The max number of documents to be saved in this session or None.
     :return Json: json representation of the data to import.
     """
     _LOGGER.info(

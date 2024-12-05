@@ -244,6 +244,7 @@ def save_documents(
 
     :param list[dict[str, Any]] document_data: The data to use for creating documents.
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
+    :param int document_limit: The max number of documents to be saved in this session.
     :param Optional[Session] db: The database session to use for saving documents or None.
     :return list[str]: The new import_ids for the saved documents.
     """
@@ -322,6 +323,7 @@ def import_data(
 
     :param dict[str, Any] data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
+    :param Optional[int] document_limit: The max number of documents to be saved in this session or None.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
