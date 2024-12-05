@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
@@ -150,6 +151,53 @@ def test_import_data_rollback(
 
 
 @pytest.mark.s3
+def test_bulk_import_saves_default_number_of_documents_if_no_limit_provided_in_request(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    input_json = build_json_file(
+        {
+            "collections": [default_collection],
+            "families": [default_family],
+            "documents": [
+                {**default_document, "import_id": f"test.new.document.{i}"}
+                for i in range(DEFAULT_DOCUMENT_LIMIT + 1)
+            ],
+            "events": [default_event],
+        }
+    )
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.json() == {
+        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
+    }
+
+    assert (
+        "Created"
+        == data_db.query(FamilyDocument)
+        .filter(
+            FamilyDocument.import_id
+            == f"test.new.document.{DEFAULT_DOCUMENT_LIMIT - 1}"
+        )
+        .one_or_none()
+        .document_status
+    )
+
+    assert (
+        not data_db.query(FamilyDocument)
+        .filter(
+            FamilyDocument.import_id == f"test.new.document.{DEFAULT_DOCUMENT_LIMIT}"
+        )
+        .one_or_none()
+    )
+
+
+@pytest.mark.s3
 def test_bulk_import_idempotency(
     caplog,
     data_db: Session,
@@ -161,8 +209,8 @@ def test_bulk_import_idempotency(
             "collections": [default_collection],
             "families": [default_family],
             "documents": [
-                {**default_document, "import_id": f"test.new.document.{i}"}
-                for i in range(1001)
+                default_document,
+                {**default_document, "import_id": "test.new.document.1"},
             ],
             "events": [default_event],
         }
@@ -172,6 +220,7 @@ def test_bulk_import_idempotency(
         first_response = client.post(
             "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
             files={"data": input_json},
+            params={"document_limit": 1},
             headers=superuser_header_token,
         )
 
@@ -183,21 +232,21 @@ def test_bulk_import_idempotency(
     assert (
         "Created"
         == data_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "test.new.document.999")
+        .filter(FamilyDocument.import_id == "test.new.document.0")
         .one_or_none()
         .document_status
     )
 
     assert (
         not data_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "test.new.document.1000")
+        .filter(FamilyDocument.import_id == "test.new.document.1")
         .one_or_none()
     )
 
     # simulating pipeline ingest
     data_db.execute(
         update(FamilyDocument)
-        .where(FamilyDocument.import_id == "test.new.document.999")
+        .where(FamilyDocument.import_id == "test.new.document.0")
         .values(document_status="Published")
     )
 
@@ -205,6 +254,7 @@ def test_bulk_import_idempotency(
         second_response = client.post(
             "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
             files={"data": input_json},
+            params={"document_limit": 1},
             headers=superuser_header_token,
         )
 
@@ -217,7 +267,7 @@ def test_bulk_import_idempotency(
     assert (
         "Published"
         == data_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "test.new.document.999")
+        .filter(FamilyDocument.import_id == "test.new.document.0")
         .one_or_none()
         .document_status
     )
@@ -225,7 +275,7 @@ def test_bulk_import_idempotency(
     assert (
         "Created"
         == data_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "test.new.document.1000")
+        .filter(FamilyDocument.import_id == "test.new.document.1")
         .one_or_none()
         .document_status
     )
