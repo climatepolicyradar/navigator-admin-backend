@@ -7,7 +7,6 @@ from app.model.collection import CollectionCreateDTO
 from app.model.document import DocumentCreateDTO
 from app.model.event import EventCreateDTO
 from app.model.family import FamilyCreateDTO
-from app.model.general import Json
 
 Metadata = RootModel[Dict[str, Union[str, List[str]]]]
 
@@ -93,7 +92,7 @@ class BulkImportDocumentDTO(BaseModel):
     import_id: str
     family_import_id: str
     variant_name: Optional[str] = None
-    metadata: Json
+    metadata: Metadata
     title: str
     source_url: Optional[AnyHttpUrl] = None
     user_language_name: Optional[str] = None
@@ -109,7 +108,7 @@ class BulkImportDocumentDTO(BaseModel):
             import_id=self.import_id,
             family_import_id=self.family_import_id,
             variant_name=self.variant_name,
-            metadata=self.metadata,
+            metadata=self.metadata.model_dump(),
             title=self.title,
             source_url=self.source_url,
             user_language_name=self.user_language_name,
