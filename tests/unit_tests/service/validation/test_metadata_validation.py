@@ -4,15 +4,19 @@ from app.errors import ValidationError
 from app.service.validation import validate_metadata_values_are_strings
 
 
-def test_validate_metadata_when_ok():
-    test_data = {
-        "entity1": [{"metadata": {"key1": ["value"], "key2": [""]}}],
-        "entity2": [{"other_key": {"key1": ["value"]}}],
-        "entity3": [{}],
-        "entity4": [],
-        "entity5": "",
-        "entity6": None,
-    }
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        {"entity1": [{"metadata": {"key1": ["value"], "key2": [""]}}]},
+        {"entity2": [{"other_key": {"key1": ["value"]}}]},
+        {"entity3": [{}]},
+        {"entity4": []},
+        {"entity5": ""},
+        {"entity6": None},
+        {},
+    ],
+)
+def test_validate_metadata_when_ok(test_data):
 
     validate_metadata_values_are_strings(test_data)
 

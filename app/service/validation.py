@@ -245,10 +245,10 @@ def validate_bulk_import_data(data: dict[str, Any]) -> None:
 
 def _validate_values_are_strings(value: Any) -> None:
     """
-    Recursively validates that all values are strings.
+    Recursively validates that all single values are strings.
 
     :param Any value: The value to be validated.
-    :raises ValidationError: raised if any value is not a string.
+    :raises ValidationError: raised if any single value is not a string.
     """
     if isinstance(value, list):
         for v in value:
@@ -259,7 +259,7 @@ def _validate_values_are_strings(value: Any) -> None:
 
 def validate_metadata_values_are_strings(data: dict[str, Any]) -> None:
     """
-    Validates family and document metadata in the data.
+    Validates any metadata in the data.
 
     :param dict[str, Any] data: The data object to be validated.
     """
