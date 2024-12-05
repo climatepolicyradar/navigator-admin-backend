@@ -1,6 +1,44 @@
 # navigator-admin-backend
 
-Backend for the Admin Pages
+Backend for the Admin webapp
+
+## Getting started
+
+### Global dependencies
+
+These are global tools and libraries that are required to run the backend:
+
+<!-- trunk-ignore(markdownlint/MD013) -->
+<!-- please update this list in the Makefile GLOBAL_DEPENDENCIES if you add others -->
+
+- [trunk](https://docs.trunk.io/cli/install#using-curl)
+- [poetry](https://python-poetry.org/docs/#installation)
+- [awscli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [docker](https://docs.docker.com/desktop/)
+
+### Development
+
+To get started run:
+
+```shell
+    make bootstrap
+```
+
+To get a running version of the API run:
+
+```shell
+    make dev
+```
+
+To run the test suite run:
+
+```shell
+    make test
+```
+
+```shell
+    make test
+```
 
 ## Background
 
