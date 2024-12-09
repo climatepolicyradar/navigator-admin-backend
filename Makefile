@@ -1,72 +1,55 @@
-install_trunk:
-	$(eval trunk_installed=$(shell trunk --version > /dev/null 2>&1 ; echo $$? ))
-ifneq (${trunk_installed},0)
-	$(eval OS_NAME=$(shell uname -s | tr A-Z a-z))
-	curl https://get.trunk.io -fsSL | bash
-endif
+# <!-- please update this list in the Readme "Global dependencies" list if you add others
+GLOBAL_DEPENDENCIES = trunk poetry aws docker
 
-uninstall_trunk:
-	sudo rm -if `which trunk`
-	rm -ifr ${HOME}/.cache/trunk
+# --- Setup --- #
+bootstrap: bootstrap_check_dependencies bootstrap_configure_pyright
 
-create_env:
-	# Copy .env
-	cp .env.example .env
+bootstrap_check_dependencies:
+	@for dep in $(GLOBAL_DEPENDENCIES); do \
+		if ! command -v $${dep} &> /dev/null; then \
+			echo "$${dep} is not installed. See readme for links to instructions."; \
+			exit 1; \
+		fi \
+	done
 
-configure_pyright:
+bootstrap_configure_pyright:
 	trunk actions run configure-pyright
 
-setup_with_pyenv: install_trunk create_env ## Sets up a local dev environment using Pyenv
-	$(eval venv_name=$(shell  grep 'venv =' pyproject.toml | cut -d '"' -f 2 ))
-	if [ -n "$(venv_name)" ] && ! pyenv versions --bare | grep -q "^$(venv_name)$$"; then \
-		$(eval python_version=$(shell grep 'python =' pyproject.toml | cut -d '"' -f 2 | sed 's/^\^//')) \
-		$(eval pyenv_version=$(shell pyenv versions --bare | grep$(python_version) )) \
-		pyenv virtualenv $(pyenv_version) $(venv_name); \
-	fi
-	@eval "$$(pyenv init -)" && \
-	pyenv activate $(venv_name) && \
-	poetry install
 
-	make configure_pyright
-	
-check:
-	trunk fmt
-	trunk check
+# --- Dev ---#
+dev: dev_rds_dump
+	docker-compose -f docker-compose-dev.yml up
 
+dev_rds_dump:
+	[ ! -f ./dumps/navigator.sql ] && aws --profile staging s3 cp s3://cpr-staging-rds/dumps/navigator.sql ./dumps/ || echo 0
+
+# this should only need to be run if there are significant schema changes
+# TODO: make this a little more inteligent
+dev_rds_dump_update:
+	aws --profile staging s3 cp s3://cpr-staging-rds/dumps/navigator.sql ./dumps/navigator.sql
+
+
+# --- Test --- #
+# If you'd like to run more specific, you can run e.g.
+# - `make test TEST=tests/integration_tests`
+# - `make test TEST=tests/unit_tests`
+# - `make test TEST=tests/integration_tests/ingest/test_ingest.py::test_ingest_when_ok`
+#
+# We've left it specifically unprefixed so autocomplete works in the terminal
+override TEST ?=
+test:
+	TEST=$(TEST) docker-compose -f docker-compose-test.yml run --rm webapp
+
+# --- CI --- #
 build:
-	docker build -t navigator-admin-backend .
+	docker build --tag navigator-admin-backend .
 
 build_dev:
 	docker compose build
 
-unit_test: build
-	docker compose run --rm navigator-admin-backend pytest -vvv tests/unit_tests
 
-integration_test: build_dev
-	docker compose run --rm navigator-admin-backend pytest -vvv tests/integration_tests
-
-test: build_dev
-	docker compose run --rm navigator-admin-backend pytest -vvv tests
-
-test_local:
-	poetry run pytest  -vvv tests/integration_tests
-
-run: 
-	docker compose -f docker-compose.yml up -d --remove-orphans
-
-start: build_dev run
-
-start_local: build
-	# - docker stop navigator-admin-backend
-	docker run -p 8888:8888 \
-	--name navigator-admin-backend \
-	--network=navigator-backend_default \
-	-e ADMIN_POSTGRES_HOST=backend_db \
-	-e SECRET_KEY="secret_test_key" \
-	-d navigator-admin-backend
-
-restart: build
-	docker stop navigator-admin-backend && docker rm navigator-admin-backend && make start_local && docker logs -f navigator-admin-backend
-
-show_logs: 
-	- docker compose logs -f
+# --- Clean --- #
+clean:
+	docker-compose -f docker-compose-dev.yml down
+	docker-compose -f docker-compose-test.yml down
+	rm ./dumps/navigator.sql

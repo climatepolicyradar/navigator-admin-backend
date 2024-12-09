@@ -61,10 +61,10 @@ jobs:
         run: make build_dev
 
       - name: Run Unit Tests
-        run: make unit_test
+        run: make test TEST=tests/unit_tests/
 
       - name: Run Integration Tests
-        run: make integration_test
+        run: make test TEST=tests/integration_tests
 
   build:
     if: |

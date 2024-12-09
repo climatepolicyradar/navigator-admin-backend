@@ -176,3 +176,6 @@ plugins
 user_trunk.yaml
 user.yaml
 tmp
+
+# rds dumps
+dumps/
