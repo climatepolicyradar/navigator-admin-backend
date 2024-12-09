@@ -10,8 +10,6 @@ HEALTHCHECK --interval=5s --timeout=3s --retries=30 CMD "pg_isready -U ${POSTGRE
 
 WORKDIR /app
 
-
-
 # It's unsure where this is generated or used, but if we don't create it we get a constant stream of logs saying
 # `FATAL:  role "navigator" does not exist`
 RUN cat <<EOF > /docker-entrypoint-initdb.d/navigator-role.sql
