@@ -1,4 +1,4 @@
-from typing import cast
+from typing import TypedDict, cast
 
 from db_client.models.dfce.collection import (
     Collection,
@@ -26,7 +26,28 @@ from db_client.models.organisation.users import AppUser, Organisation, Organisat
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-EXPECTED_FAMILIES = [
+
+class DBEntry(TypedDict):
+    import_id: str
+    title: str
+    summary: str
+    geography: str
+    category: str
+    status: str
+    metadata: dict
+    organisation: str
+    corpus_import_id: str
+    corpus_title: str
+    corpus_type: str
+    slug: str
+    events: list[str]
+    published_date: str | None
+    last_updated_date: str | None
+    documents: list[str]
+    collections: list[str]
+
+
+EXPECTED_FAMILIES: list[DBEntry] = [
     {
         "import_id": "A.0.0.1",
         "title": "apple",
@@ -280,6 +301,15 @@ EXPECTED_CORPORA_KEYS = [
 ]
 
 
+def add_data(test_db: Session, data: list[DBEntry]):
+    org_id = test_db.query(Organisation).filter(Organisation.name == "CCLW").one().id
+    other_org_id = (
+        test_db.query(Organisation).filter(Organisation.name == "UNFCCC").one().id
+    )
+    _setup_family_data(test_db, org_id, other_org_id, data)
+    test_db.commit()
+
+
 def setup_db(test_db: Session, configure_empty: bool = False):
     setup_test_data(test_db, configure_empty)
 
@@ -480,13 +510,15 @@ def _setup_family_data(
     test_db: Session,
     default_org_id: int,
     other_org_id: int,
+    initial_data: list[DBEntry] = EXPECTED_FAMILIES,
     configure_empty: bool = False,
 ) -> None:
     if configure_empty is True:
         return None
 
-    for index in range(EXPECTED_NUM_FAMILIES):
-        data = EXPECTED_FAMILIES[index]
+    num_families = len(initial_data)
+    for index in range(num_families):
+        data = initial_data[index]
 
         geo_id = (
             test_db.query(Geography.id)
@@ -524,8 +556,8 @@ def _setup_family_data(
         )
 
     # Now add the metadata onto the families
-    for index in range(EXPECTED_NUM_FAMILIES):
-        data = EXPECTED_FAMILIES[index]
+    for index in range(num_families):
+        data = initial_data[index]
         test_db.add(
             FamilyMetadata(
                 family_import_id=data["import_id"],
@@ -534,7 +566,7 @@ def _setup_family_data(
         )
         test_db.add(
             Slug(
-                name=f"Slug{index+1}",
+                name=data["slug"],
                 family_import_id=data["import_id"],
             )
         )

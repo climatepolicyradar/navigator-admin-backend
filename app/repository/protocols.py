@@ -28,7 +28,10 @@ class FamilyRepo(Protocol):
 
     @staticmethod
     def search(
-        db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
+        db: Session,
+        search_params: dict[str, Union[str, int]],
+        org_id: Optional[int],
+        geography: Optional[list[str]],
     ) -> list[FamilyReadDTO]:
         """Searches the families"""
         ...

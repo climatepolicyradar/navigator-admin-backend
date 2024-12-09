@@ -4,28 +4,74 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from tests.integration_tests.setup_db import setup_db
+from tests.integration_tests.setup_db import add_data, setup_db
 
 
 def test_search_geographies(
     client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
+    add_data(
+        data_db,
+        [
+            {
+                "import_id": "A.0.0.4",
+                "title": "title",
+                "summary": "gregarious magazine rub",
+                "geography": "ALB",
+                "category": "UNFCCC",
+                "status": "Created",
+                "metadata": {"author": "CPR", "author_type": "Party"},
+                "organisation": "UNFCCC",
+                "corpus_import_id": "UNFCCC.corpus.i00000001.n0000",
+                "corpus_title": "UNFCCC Submissions",
+                "corpus_type": "Intl. agreements",
+                "slug": "Slug4",
+                "events": ["E.0.0.3"],
+                "published_date": "2018-12-24T04:59:33Z",
+                "last_updated_date": "2018-12-24T04:59:33Z",
+                "documents": ["D.0.0.1", "D.0.0.2"],
+                "collections": ["C.0.0.4"],
+            },
+            {
+                "import_id": "A.0.0.5",
+                "title": "title",
+                "summary": "flour umbrella established",
+                "geography": "ZMB",
+                "category": "UNFCCC",
+                "status": "Created",
+                "metadata": {"author": "CPR", "author_type": "Party"},
+                "organisation": "UNFCCC",
+                "corpus_import_id": "UNFCCC.corpus.i00000001.n0000",
+                "corpus_title": "UNFCCC Submissions",
+                "corpus_type": "Intl. agreements",
+                "slug": "Slug5",
+                "events": ["E.0.0.3"],
+                "published_date": "2018-12-24T04:59:33Z",
+                "last_updated_date": "2018-12-24T04:59:33Z",
+                "documents": ["D.0.0.1", "D.0.0.2"],
+                "collections": ["C.0.0.4"],
+            },
+        ],
+    )
 
     tests_cases = [
-        ("afghanistan", 2),
-        ("zimbabwe", 1),
+        (["afghanistan"], ["A.0.0.1", "A.0.0.3"]),
+        (["zimbabwe"], ["A.0.0.2"]),
+        (["albania", "zambia"], ["A.0.0.4", "A.0.0.5"]),
     ]
 
-    for country, expected_count in tests_cases:
+    for countries, expected_ids in tests_cases:
+        geographies_query = "&".join([f"geography={country}" for country in countries])
         response = client.get(
-            f"/api/v1/families/?geography={country}",
+            f"/api/v1/families/?{geographies_query}",
             headers=superuser_header_token,
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
+        ids = [result["import_id"] for result in data]
         assert isinstance(data, list)
-        assert len(data) == expected_count
+        assert ids == expected_ids
 
 
 def test_search_family_super(
