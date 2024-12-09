@@ -24,7 +24,8 @@ If you have not run the bootstrap previously run:
 
 ### Development
 
-To get a running version of the API on http://localhost:8888 run:
+To get a running version of the API on
+[http://localhost:8888](http://localhost:8888) run:
 
 ```shell
     make dev

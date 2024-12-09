@@ -9,10 +9,12 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl 
 WORKDIR /usr/src
 ENV PYTHONPATH=/usr/src
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    postgresql-client && \
-    rm -rf /var/lib/apt/lists/*
+RUN <<EOF
+apt-get update
+apt-get install -y --no-install-recommends
+postgresql-client
+rm -rf /var/lib/apt/lists/*
+EOF
 
 RUN pip install --no-cache-dir poetry==1.7.1
 COPY poetry.lock pyproject.toml ./
