@@ -1,4 +1,12 @@
+# trunk-ignore-all
 FROM postgres:14
+
+# We do not mind root users as this is a dev container
+# trunk-ignore(trivy/DS002)
+# trunk-ignore(checkov/CKV_DOCKER_8)
+USER root
+
+HEALTHCHECK --interval=5s --timeout=3s --retries=30 CMD "pg_isready -U ${POSTGRES_USER}"
 
 WORKDIR /app
 

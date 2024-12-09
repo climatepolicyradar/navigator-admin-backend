@@ -1,3 +1,4 @@
+name: navigator-admin-backend-dev
 services:
   webapp:
     command: poetry run fastapi dev --port 8888 --host 0.0.0.0
@@ -9,6 +10,8 @@ services:
       - ./app:/usr/src/app
     ports:
       - 8888:8888
+    env_file:
+      - .env
     environment:
       PYTHONPATH: .
       ADMIN_POSTGRES_HOST: postgres

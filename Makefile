@@ -1,4 +1,3 @@
-
 # <!-- please update this list in the Readme "Global dependencies" list if you add others
 GLOBAL_DEPENDENCIES = trunk poetry aws docker
 
@@ -22,7 +21,7 @@ dev: dev_rds_dump
 	docker-compose -f docker-compose-dev.yml up
 
 dev_rds_dump:
-	[ ! -f ./dumps/navigator.sql ] && aws --profile staging s3 cp s3://cpr-staging-rds/dumps/navigator.sql ./dumps/navigator.sql
+	[ ! -f ./dumps/navigator.sql ] && aws --profile staging s3 cp s3://cpr-staging-rds/dumps/navigator.sql ./dumps/ || echo 0
 
 # this should only need to be run if there are significant schema changes
 # TODO: make this a little more inteligent
@@ -39,7 +38,7 @@ dev_rds_dump_update:
 # We've left it specifically unprefixed so autocomplete works in the terminal
 override TEST ?=
 test:
-	TEST=$(TEST) docker-compose -f docker-compose-test.yml up --exit-code-from webapp
+	TEST=$(TEST) docker-compose -f docker-compose-test.yml run --rm webapp
 
 # --- CI --- #
 build:
@@ -51,5 +50,6 @@ build_dev:
 
 # --- Clean --- #
 clean:
-	docker compose down
+	docker-compose -f docker-compose-dev.yml down
+	docker-compose -f docker-compose-test.yml down
 	rm ./dumps/navigator.sql
