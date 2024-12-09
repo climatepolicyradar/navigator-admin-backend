@@ -18,7 +18,7 @@ class AuthEndpoint(str, enum.Enum):
     CONFIG = "CONFIG"
     ANALYTICS = "ANALYTICS"
     EVENT = "EVENTS"
-    INGEST = "INGEST"
+    BULK_IMPORT = "BULK-IMPORT"
     CORPUS = "CORPORA"
 
 
@@ -61,8 +61,8 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.USER,
     },
-    # Ingest
-    AuthEndpoint.INGEST: {
+    # Bulk Import
+    AuthEndpoint.BULK_IMPORT: {
         AuthOperation.CREATE: AuthAccess.SUPER,
         AuthOperation.READ: AuthAccess.SUPER,
     },

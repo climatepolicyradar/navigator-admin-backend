@@ -5,13 +5,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import app.service.ingest as ingest_service
+import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
+from tests.helpers.bulk_import import default_document, default_family
 
 
-@patch("app.service.ingest.uuid4", Mock(return_value="1111-1111"))
+@patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 def test_input_json_and_result_saved_to_s3_on_bulk_import(
     basic_s3_client, validation_service_mock, corpus_repo_mock, collection_repo_mock
 ):
@@ -26,7 +27,7 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
         ]
     }
 
-    ingest_service.import_data(json_data, "test_corpus_id")
+    bulk_import_service.import_data(json_data, "test_corpus_id")
 
     bulk_import_input_json = basic_s3_client.list_objects_v2(
         Bucket=bucket_name, Prefix="1111-1111-result-test_corpus_id"
@@ -40,7 +41,7 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
     assert {"collections": ["test.new.collection.0"]} == json.loads(body)
 
 
-@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_slack_notification_sent_on_success(
     basic_s3_client,
@@ -60,10 +61,10 @@ def test_slack_notification_sent_on_success(
 
     with (
         patch(
-            "app.service.ingest.notification_service.send_notification"
+            "app.service.bulk_import.notification_service.send_notification"
         ) as mock_notification_service,
     ):
-        ingest_service.import_data(test_data, "test_corpus_id")
+        bulk_import_service.import_data(test_data, "test_corpus_id")
 
         assert 2 == mock_notification_service.call_count
         mock_notification_service.assert_called_with(
@@ -71,7 +72,7 @@ def test_slack_notification_sent_on_success(
         )
 
 
-@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
+@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_mock):
     corpus_repo_mock.error = True
@@ -89,10 +90,10 @@ def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_m
     with (
         caplog.at_level(logging.ERROR),
         patch(
-            "app.service.ingest.notification_service.send_notification"
+            "app.service.bulk_import.notification_service.send_notification"
         ) as mock_notification_service,
     ):
-        ingest_service.import_data(test_data, "test")
+        bulk_import_service.import_data(test_data, "test")
 
     assert 2 == mock_notification_service.call_count
     mock_notification_service.assert_called_with(
@@ -102,6 +103,30 @@ def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_m
         "Rolling back transaction due to the following error: No organisation associated with corpus test"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        {"families": [{**default_family, "metadata": {"key": [1]}}]},
+        {"families": [{**default_family, "metadata": {"key": None}}]},
+        {"families": [{**default_family, "metadata": {"key": 1}}]},
+        {"documents": [{**default_document, "metadata": {"key": 1}}]},
+    ],
+)
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
+def test_import_data_when_metadata_contains_non_string_values(
+    test_data,
+    corpus_repo_mock,
+    validation_service_mock,
+    caplog,
+    basic_s3_client,
+):
+    with caplog.at_level(logging.ERROR):
+        bulk_import_service.import_data(test_data, "test")
+
+    assert "Input should be a valid string" in caplog.text
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
@@ -117,7 +142,7 @@ def test_import_data_when_data_invalid(caplog, basic_s3_client):
     }
 
     with caplog.at_level(logging.ERROR):
-        ingest_service.import_data(test_data, "test")
+        bulk_import_service.import_data(test_data, "test")
 
     assert "The import id invalid is invalid!" in caplog.text
 
@@ -128,7 +153,7 @@ def test_save_families_when_corpus_invalid(corpus_repo_mock, validation_service_
     test_data = [{"import_id": "test.new.family.0"}]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_families(test_data, "test")
+        bulk_import_service.save_families(test_data, "test")
     assert "No organisation associated with corpus test" == e.value.message
 
 
@@ -137,7 +162,7 @@ def test_save_families_when_data_invalid(corpus_repo_mock, validation_service_mo
     test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_families(test_data, "test")
+        bulk_import_service.save_families(test_data, "test")
     assert "Error" == e.value.message
 
 
@@ -147,16 +172,16 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_documents(test_data, "test")
+        bulk_import_service.save_documents(test_data, "test")
     assert "Error" == e.value.message
 
 
-@patch("app.service.ingest.generate_slug", Mock(return_value="test-slug_1234"))
-@patch("app.service.ingest._exists_in_db", Mock(return_value=False))
-def test_do_not_save_documents_over_ingest_limit(
+@patch("app.service.bulk_import.generate_slug", Mock(return_value="test-slug_1234"))
+@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
+def test_do_not_save_documents_over_bulk_import_limit(
     validation_service_mock, document_repo_mock, monkeypatch
 ):
-    monkeypatch.setattr(ingest_service, "DOCUMENT_INGEST_LIMIT", 1)
+    monkeypatch.setattr(bulk_import_service, "DOCUMENT_BULK_IMPORT_LIMIT", 1)
 
     test_data = [
         {
@@ -179,7 +204,7 @@ def test_do_not_save_documents_over_ingest_limit(
         },
     ]
 
-    saved_documents = ingest_service.save_documents(test_data, "test")
+    saved_documents = bulk_import_service.save_documents(test_data, "test")
     assert ["test.new.document.0"] == saved_documents
 
 
@@ -189,5 +214,5 @@ def test_save_events_when_data_invalid(validation_service_mock):
     test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
-        ingest_service.save_events(test_data, "test")
+        bulk_import_service.save_events(test_data, "test")
     assert "Error" == e.value.message

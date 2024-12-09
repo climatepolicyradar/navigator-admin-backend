@@ -1,5 +1,5 @@
 """
-Tests the route for retrieving a data ingest template by corpus.
+Tests the route for retrieving a bulk import template by corpus.
 
 This uses service mocks and ensures the endpoint calls into each service.
 """
@@ -8,36 +8,36 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 
-def test_ingest_template_when_not_authenticated(client: TestClient):
+def test_bulk_import_template_when_not_authenticated(client: TestClient):
     response = client.get(
-        "/api/v1/ingest/template/test_corpus_type",
+        "/api/v1/bulk-import/template/test_corpus_type",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_ingest_template_when_non_admin_non_super(
+def test_bulk_import_template_when_non_admin_non_super(
     client: TestClient, user_header_token
 ):
     response = client.get(
-        "/api/v1/ingest/template/test_corpus_type", headers=user_header_token
+        "/api/v1/bulk-import/template/test_corpus_type", headers=user_header_token
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_ingest_template_when_admin_non_super(
+def test_bulk_import_template_when_admin_non_super(
     client: TestClient, admin_user_header_token
 ):
     response = client.get(
-        "/api/v1/ingest/template/test_corpus_type", headers=admin_user_header_token
+        "/api/v1/bulk-import/template/test_corpus_type", headers=admin_user_header_token
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_ingest_template_when_ok(
+def test_bulk_import_template_when_ok(
     client: TestClient, superuser_header_token, db_client_corpus_helpers_mock
 ):
     response = client.get(
-        "/api/v1/ingest/template/test_corpus_type",
+        "/api/v1/bulk-import/template/test_corpus_type",
         headers=superuser_header_token,
     )
 

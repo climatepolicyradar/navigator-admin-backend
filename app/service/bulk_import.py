@@ -1,5 +1,5 @@
 """
-Ingest Service
+Bulk Import Service
 
 This layer uses the corpus, collection, family, document and event repos to handle bulk 
 import of data and other services for validation etc.
@@ -27,13 +27,13 @@ import app.service.geography as geography
 import app.service.notification as notification_service
 import app.service.taxonomy as taxonomy
 import app.service.validation as validation
-from app.clients.aws.s3bucket import upload_ingest_json_to_s3
+from app.clients.aws.s3bucket import upload_bulk_import_json_to_s3
 from app.errors import ValidationError
-from app.model.ingest import (
-    IngestCollectionDTO,
-    IngestDocumentDTO,
-    IngestEventDTO,
-    IngestFamilyDTO,
+from app.model.bulk_import import (
+    BulkImportCollectionDTO,
+    BulkImportDocumentDTO,
+    BulkImportEventDTO,
+    BulkImportFamilyDTO,
 )
 from app.repository.helpers import generate_slug
 from app.service.event import (
@@ -41,7 +41,7 @@ from app.service.event import (
     get_datetime_event_name_for_corpus,
 )
 
-DOCUMENT_INGEST_LIMIT = 1000
+DOCUMENT_BULK_IMPORT_LIMIT = 1000
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
@@ -72,7 +72,7 @@ def get_collection_template() -> dict:
 
     :return dict: The collection template.
     """
-    collection_schema = IngestCollectionDTO.model_json_schema(mode="serialization")
+    collection_schema = BulkImportCollectionDTO.model_json_schema(mode="serialization")
     collection_template = collection_schema["properties"]
 
     return collection_template
@@ -84,7 +84,7 @@ def get_event_template(corpus_type: str) -> dict:
 
     :return dict: The event template.
     """
-    event_schema = IngestEventDTO.model_json_schema(mode="serialization")
+    event_schema = BulkImportEventDTO.model_json_schema(mode="serialization")
     event_template = event_schema["properties"]
 
     event_meta = get_metadata_template(corpus_type, CountedEntity.Event)
@@ -104,7 +104,7 @@ def get_document_template(corpus_type: str) -> dict:
     :param str corpus_type: The corpus_type to use to get the document template.
     :return dict: The document template.
     """
-    document_schema = IngestDocumentDTO.model_json_schema(mode="serialization")
+    document_schema = BulkImportDocumentDTO.model_json_schema(mode="serialization")
     document_template = document_schema["properties"]
     document_template["metadata"] = get_metadata_template(
         corpus_type, CountedEntity.Document
@@ -142,7 +142,7 @@ def get_family_template(corpus_type: str) -> dict:
     :param str corpus_type: The corpus_type to use to get the family template.
     :return dict: The family template.
     """
-    family_schema = IngestFamilyDTO.model_json_schema(mode="serialization")
+    family_schema = BulkImportFamilyDTO.model_json_schema(mode="serialization")
     family_template = family_schema["properties"]
 
     del family_template["corpus_import_id"]
@@ -179,7 +179,7 @@ def save_collections(
     for coll in collection_data:
         if not _exists_in_db(Collection, coll["import_id"], db):
             _LOGGER.info(f"Importing collection {coll['import_id']}")
-            dto = IngestCollectionDTO(**coll).to_collection_create_dto()
+            dto = BulkImportCollectionDTO(**coll).to_collection_create_dto()
             import_id = collection_repository.create(db, dto, org_id)
             collection_import_ids.append(import_id)
             total_collections_saved += 1
@@ -215,7 +215,7 @@ def save_families(
     for fam in family_data:
         if not _exists_in_db(Family, fam["import_id"], db):
             _LOGGER.info(f"Importing family {fam['import_id']}")
-            dto = IngestFamilyDTO(
+            dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
             geo_ids = []
@@ -256,10 +256,10 @@ def save_documents(
     for doc in document_data:
         if (
             not _exists_in_db(FamilyDocument, doc["import_id"], db)
-            and total_documents_saved < DOCUMENT_INGEST_LIMIT
+            and total_documents_saved < DOCUMENT_BULK_IMPORT_LIMIT
         ):
             _LOGGER.info(f"Importing document {doc['import_id']}")
-            dto = IngestDocumentDTO(**doc).to_document_create_dto()
+            dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
             slug = generate_slug(db=db, title=dto.title, created_slugs=document_slugs)
             import_id = document_repository.create(db, dto, slug)
             document_slugs.add(slug)
@@ -296,7 +296,7 @@ def save_events(
     for event in event_data:
         if not _exists_in_db(FamilyEvent, event["import_id"], db):
             _LOGGER.info(f"Importing event {event['import_id']}")
-            dto = IngestEventDTO(**event).to_event_create_dto()
+            dto = BulkImportEventDTO(**event).to_event_create_dto()
             event_metadata = create_event_metadata_object(
                 db, corpus_import_id, event["event_type_value"], datetime_event_name
             )
@@ -323,8 +323,8 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
     )
     end_message = ""
 
-    ingest_uuid = uuid4()
-    upload_ingest_json_to_s3(f"{ingest_uuid}-request", corpus_import_id, data)
+    import_uuid = uuid4()
+    upload_bulk_import_json_to_s3(f"{import_uuid}-request", corpus_import_id, data)
 
     _LOGGER.info("Getting DB session")
 
@@ -353,7 +353,7 @@ def import_data(data: dict[str, Any], corpus_import_id: str) -> None:
             _LOGGER.info("Saving events")
             result["events"] = save_events(event_data, corpus_import_id, db)
 
-        upload_ingest_json_to_s3(f"{ingest_uuid}-result", corpus_import_id, result)
+        upload_bulk_import_json_to_s3(f"{import_uuid}-result", corpus_import_id, result)
 
         end_message = (
             f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed."

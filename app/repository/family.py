@@ -22,7 +22,7 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -34,30 +34,24 @@ from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, str, FamilyMetadata, Corpus, Organisation]
+FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Corpus, Organisation]
 
 
 def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
-    geo_subquery = (
-        db.query(
-            func.min(Geography.value).label("value"),
-            FamilyGeography.family_import_id,
-        )
-        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
-        .filter(FamilyGeography.family_import_id == Family.import_id)
-        .group_by(Geography.value, FamilyGeography.family_import_id)
-    ).subquery("geo_subquery")
-
     return (
-        db.query(Family, geo_subquery.c.value, FamilyMetadata, Corpus, Organisation)  # type: ignore
+        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
+        .join(FamilyGeography, FamilyGeography.family_import_id == Family.import_id)
+        .join(
+            Geography,
+            Geography.id == FamilyGeography.geography_id,
+        )
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
-        .filter(geo_subquery.c.family_import_id == Family.import_id)  # type: ignore
     )
 
 
@@ -65,14 +59,14 @@ def _family_to_dto(
     db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
 ) -> FamilyReadDTO:
     fam, geo_value, meta, corpus, org = fam_geo_meta_corp_org
-
     metadata = cast(dict, meta.value)
     org = cast(str, org.name)
+
     return FamilyReadDTO(
         import_id=str(fam.import_id),
         title=str(fam.title),
         summary=str(fam.description),
-        geography=geo_value,
+        geography=str(geo_value.value),
         category=str(fam.family_category),
         status=str(fam.family_status),
         metadata=metadata,
