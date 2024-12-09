@@ -8,8 +8,9 @@ implemented directly accesses the "repository" layer.
 """
 
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, status
 
 import app.service.family as family_service
 from app.api.api_v1.query_params import (
@@ -74,7 +75,12 @@ async def get_all_families(request: Request) -> list[FamilyReadDTO]:
 
 
 @r.get("/families/", response_model=list[FamilyReadDTO])
-async def search_family(request: Request) -> list[FamilyReadDTO]:
+async def search_family(
+    request: Request,
+    # We have used the built in parsers here for geography specifically
+    # so that we do not have to build our own
+    geography: Annotated[list[str] | None, Query()] = None,
+) -> list[FamilyReadDTO]:
     """
     Searches for families matching URL parameters ("q" by default).
 
@@ -96,7 +102,7 @@ async def search_family(request: Request) -> list[FamilyReadDTO]:
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        families = family_service.search(query_params, request.state.user)
+        families = family_service.search(query_params, request.state.user, geography)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

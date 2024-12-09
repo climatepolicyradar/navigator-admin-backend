@@ -36,7 +36,10 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session,
+    search_params: dict[str, Union[str, int]],
+    org_id: Optional[int],
+    geography: Optional[list[str]],
 ) -> list[FamilyReadDTO]:
     _maybe_throw()
     _maybe_timeout()
