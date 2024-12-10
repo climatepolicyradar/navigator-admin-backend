@@ -172,7 +172,7 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
-        bulk_import_service.save_documents(test_data, "test")
+        bulk_import_service.save_documents(test_data, "test", 1)
     assert "Error" == e.value.message
 
 
@@ -181,8 +181,6 @@ def test_save_documents_when_data_invalid(validation_service_mock):
 def test_do_not_save_documents_over_bulk_import_limit(
     validation_service_mock, document_repo_mock, monkeypatch
 ):
-    monkeypatch.setattr(bulk_import_service, "DOCUMENT_BULK_IMPORT_LIMIT", 1)
-
     test_data = [
         {
             "import_id": "test.new.document.0",
@@ -204,7 +202,7 @@ def test_do_not_save_documents_over_bulk_import_limit(
         },
     ]
 
-    saved_documents = bulk_import_service.save_documents(test_data, "test")
+    saved_documents = bulk_import_service.save_documents(test_data, "test", 1)
     assert ["test.new.document.0"] == saved_documents
 
 
