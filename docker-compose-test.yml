@@ -49,7 +49,7 @@ services:
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
-      timeout: 3s
+      timeout: 30s
       retries: 30
 
   localstack:
