@@ -54,12 +54,6 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Configure test env variables
-        run: cp .env.example .env
-
-      - name: Build docker compose
-        run: make build_dev
-
       - name: Run Unit Tests
         run: make test TEST=tests/unit_tests/
 
