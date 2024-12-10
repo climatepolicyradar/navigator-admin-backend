@@ -1,0 +1,68 @@
+name: navigator-admin-backend-test
+services:
+  webapp:
+    command: poetry run pytest --disable-warnings ${TEST}
+    build:
+      context: ./
+      dockerfile: Dockerfile.webapp
+    tty: true
+    volumes:
+      - ./tests:/usr/src/tests
+    environment:
+      # This is for when people explicitly set the tests they want to run
+      # It is used in the makefile
+      TEST: ${TEST}
+      PYTHONPATH: .
+      ADMIN_POSTGRES_HOST: postgres
+      ADMIN_POSTGRES_USER: navigator_admin
+      ADMIN_POSTGRES_PASSWORD: password
+      ADMIN_POSTGRES_DATABASE: navigator
+      PGUSER: navigator_admin
+      PGPASSWORD: password
+      PGHOST: postgres
+      PGDATABASE: navigator
+      SECRET_KEY: ???
+      # API_HOST: http://navigator-admin-backend:8888
+
+      # Bulk import
+      SLACK_WEBHOOK_URL: skip
+      BULK_IMPORT_BUCKET: bulk-import-bucket
+
+      # localstack
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://localstack:4566
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+
+  postgres:
+    environment:
+      POSTGRES_USER: navigator_admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: navigator
+    build:
+      context: .
+      dockerfile: ./Dockerfile.postgres
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 30s
+      retries: 30
+
+  localstack:
+    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
+    image: localstack/localstack:s3-latest
+    ports:
+      - 4566:4566 # LocalStack Gateway
+    environment:
+      DEBUG: ${DEBUG:-0}
+      # These values are used by the init-s3.py script
+      BULK_IMPORT_BUCKET: bulk-import-bucket
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://localhost:4566
+    volumes:
+      - ./tests/integration_tests/init-s3.py:/etc/localstack/init/ready.d/init-s3.py
