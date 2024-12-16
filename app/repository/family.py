@@ -167,7 +167,10 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 
 
 def search(
-    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session,
+    search_params: dict[str, Union[str, int]],
+    org_id: Optional[int],
+    geography: Optional[list[str]],
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
@@ -195,13 +198,11 @@ def search(
             term = f"%{escape_like(search_params['summary'])}%"
             search.append(Family.description.ilike(term))
 
-    if "geography" in search_params.keys():
-        term = cast(str, search_params["geography"])
-        search.append(
-            or_(
-                Geography.display_value == term.title(), Geography.value == term.upper()
-            )
+    if geography is not None:
+        geography_filter = or_(
+            *[(Geography.display_value == g.title()) for g in geography]
         )
+        search.append(geography_filter)
 
     if "status" in search_params.keys():
         term = cast(str, search_params["status"])
