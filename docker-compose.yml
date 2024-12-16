@@ -1,3 +1,4 @@
+name: navigator-admin-backend
 services:
   admin_backend_db:
     image: postgres:14

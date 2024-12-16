@@ -1,0 +1,17 @@
+# trunk-ignore-all
+FROM postgres:14
+
+# We do not mind root users as this is a dev container
+# trunk-ignore(trivy/DS002)
+# trunk-ignore(checkov/CKV_DOCKER_8)
+USER root
+
+HEALTHCHECK --interval=5s --timeout=30s --retries=30 CMD "pg_isready -U ${POSTGRES_USER}"
+
+WORKDIR /app
+
+# It's unsure where this is generated or used, but if we don't create it we get a constant stream of logs saying
+# `FATAL:  role "navigator" does not exist`
+RUN cat <<EOF > /docker-entrypoint-initdb.d/navigator-role.sql
+CREATE ROLE navigator WITH LOGIN;
+EOF
