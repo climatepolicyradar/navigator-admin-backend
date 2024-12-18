@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce.collection import CollectionFamily
 from db_client.models.dfce.family import (
@@ -226,22 +226,6 @@ def search(
     return [_family_to_dto(db, f) for f in found]
 
 
-def _transform_metadata(metadata: dict[str, Any]) -> dict[str, list[str]]:
-    """Transform metadata values to arrays of strings.
-
-    :param dict metadata: The metadata to transform.
-    :return dict: Transformed metadata with values as arrays of strings.
-    """
-    return {
-        key: (
-            [str(item) for item in value]
-            if isinstance(value, list)
-            else ([str(value)] if value is not None else [])
-        )
-        for key, value in metadata.items()
-    }
-
-
 def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
     """
     Updates a single entry with the new values passed.
@@ -302,17 +286,15 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
 
     # Update if metadata is changed
     if update_metadata:
-        transformed_metadata = _transform_metadata(family.metadata)
-
         md_result = db.execute(
             db_update(FamilyMetadata)
             .where(FamilyMetadata.family_import_id == import_id)
-            .values(value=transformed_metadata)
+            .values(value=family.metadata)
         )
         if md_result.rowcount == 0:  # type: ignore
             msg = (
                 "Could not update the metadata for family: "
-                + f"{import_id} to {transformed_metadata}"
+                + f"{import_id} to {family.metadata}"
             )
             _LOGGER.error(msg)
             raise RepositoryError(msg)
@@ -421,11 +403,10 @@ def create(
     db.flush()
 
     # Add the metadata
-    transformed_metadata = _transform_metadata(family.metadata)
     db.add(
         FamilyMetadata(
             family_import_id=new_family.import_id,
-            value=transformed_metadata,
+            value=family.metadata,
         )
     )
     db.flush()
