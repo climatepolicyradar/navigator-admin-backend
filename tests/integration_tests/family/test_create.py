@@ -215,7 +215,7 @@ def test_create_family_when_invalid_metadata_cclw(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"color": ["pink"], "size": [0]},
+        metadata={"color": ["pink"], "size": ["0"]},
     )
     response = client.post(
         "/api/v1/families",
@@ -244,7 +244,7 @@ def test_create_family_when_invalid_metadata_unfccc(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"color": ["pink"], "size": [0]},
+        metadata={"color": ["pink"], "size": ["0"]},
         corpus_import_id="UNFCCC.corpus.i00000001.n0000",
     )
     response = client.post(
@@ -273,7 +273,7 @@ def test_create_family_when_org_mismatch(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"author": "CPR", "author_type": ["Party"]},
+        metadata={"author": ["CPR"], "author_type": ["Party"]},
         corpus_import_id="UNFCCC.corpus.i00000001.n0000",
     )
     response = client.post(

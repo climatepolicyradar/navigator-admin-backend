@@ -107,7 +107,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "geography": "AFG",
         "category": "UNFCCC",
         "status": "Created",
-        "metadata": {"author": "CPR", "author_type": "Party"},
+        "metadata": {"author": ["CPR"], "author_type": ["Party"]},
         "organisation": "UNFCCC",
         "corpus_import_id": "UNFCCC.corpus.i00000001.n0000",
         "corpus_title": "UNFCCC Submissions",
