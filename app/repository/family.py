@@ -25,7 +25,7 @@ from sqlalchemy import delete as db_delete
 from sqlalchemy import desc, func, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm import Query, Session, lazyload
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
@@ -66,7 +66,7 @@ def _get_query(db: Session) -> Query:
         .subquery()
     )
 
-    return (
+    query = (
         db.query(
             Family,
             geography_subquery.c.geography_ids,
@@ -92,7 +92,15 @@ def _get_query(db: Session) -> Query:
             Corpus.import_id,
             Organisation,
         )
+        .options(
+            # Disable any default eager loading as this was causing multiplicity due to
+            # implicit joins in relationships on the selected models.
+            lazyload("*")
+        )
     )
+    _LOGGER.error(query)
+
+    return query
 
 
 def _family_to_dto(
