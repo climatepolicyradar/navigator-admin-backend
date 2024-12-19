@@ -209,7 +209,7 @@ def test_update_family_raises_when_metadata_invalid(
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
 
-    updated_family = create_family_write_dto(metadata={"invalid": "True"})
+    updated_family = create_family_write_dto(metadata={"invalid": ["True"]})
 
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
@@ -244,7 +244,7 @@ def test_update_family_raises_when_missing_taxonomy(
     assert family is not None  # needed to placate pyright
 
     db_client_metadata_mock.bad_taxonomy = True
-    updated_family = create_family_write_dto(metadata={"invalid": "True"})
+    updated_family = create_family_write_dto(metadata={"invalid": ["True"]})
 
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
