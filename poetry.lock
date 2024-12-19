@@ -170,17 +170,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.35.83"
+version = "1.35.84"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.35.83-py3-none-any.whl", hash = "sha256:a4828d67b12892cb11fe9e6d86f40975a06db470676e61194968e3a32ec4c536"},
-    {file = "boto3-1.35.83.tar.gz", hash = "sha256:df2e0d57241de0f9c31b62e73093c2126e4fd73b87b1897ecf280a1b87a2b825"},
+    {file = "boto3-1.35.84-py3-none-any.whl", hash = "sha256:c94fc8023caf952f8740a48fc400521bba167f883cfa547d985c05fda7223f7a"},
+    {file = "boto3-1.35.84.tar.gz", hash = "sha256:9f9bf72d92f7fdd546b974ffa45fa6715b9af7f5c00463e9d0f6ef9c95efe0c2"},
 ]
 
 [package.dependencies]
-botocore = ">=1.35.83,<1.36.0"
+botocore = ">=1.35.84,<1.36.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -189,13 +189,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.35.83"
+version = "1.35.84"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.35.83-py3-none-any.whl", hash = "sha256:ba363183e4df79fbcfd5f3600fd473bd45a1de03d0d0b5e78abd59f276971d27"},
-    {file = "botocore-1.35.83.tar.gz", hash = "sha256:df5e4384838e50bbafd47e9b5fefb995e83cbb9412e7cd7c0db9555174d91bba"},
+    {file = "botocore-1.35.84-py3-none-any.whl", hash = "sha256:b4dc2ac7f54ba959429e1debbd6c7c2fb2349baa1cd63803f0682f0773dbd077"},
+    {file = "botocore-1.35.84.tar.gz", hash = "sha256:f86754882e04683e2e99a6a23377d0dd7f1fc2b2242844b2381dbe4dcd639301"},
 ]
 
 [package.dependencies]
@@ -589,8 +589,8 @@ SQLAlchemy-Utils = "^0.38.2"
 [package.source]
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
-reference = "2f0331299e544315a8b75f16955196eee72f5084"
-resolved_reference = "2f0331299e544315a8b75f16955196eee72f5084"
+reference = "v3.8.27"
+resolved_reference = "ed4a9213a83d2e4c4ca6429e9b6fac1eb7c5e4f9"
 
 [[package]]
 name = "dill"
@@ -782,13 +782,13 @@ fastapi = ">=0.63.0"
 
 [[package]]
 name = "fastapi-pagination"
-version = "0.12.32"
+version = "0.12.33"
 description = "FastAPI pagination"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "fastapi_pagination-0.12.32-py3-none-any.whl", hash = "sha256:38e7e72abf252cbebbc1beff9081e4929762756c04959c471b2a5866bb7f0aaf"},
-    {file = "fastapi_pagination-0.12.32.tar.gz", hash = "sha256:b808b5b8af493c51d96ae0091b60532b25688cbca1350f39cb72f10d4d69a6ab"},
+    {file = "fastapi_pagination-0.12.33-py3-none-any.whl", hash = "sha256:8d756ef2f80865c1333517bfc0c7a6c8b4a078d223cc1e189f2b148f289e24cf"},
+    {file = "fastapi_pagination-0.12.33.tar.gz", hash = "sha256:2d58ca74a01cc0411261fff5e225ecea0fa6a9a899f26bedaafc76165d4f118c"},
 ]
 
 [package.dependencies]
@@ -796,21 +796,21 @@ pydantic = ">=1.9.1"
 typing-extensions = ">=4.8.0,<5.0.0"
 
 [package.extras]
-all = ["SQLAlchemy (>=1.3.20)", "asyncpg (>=0.24.0)", "beanie (>=1.25.0)", "bunnet (>=1.1.0,<2.0.0)", "databases (>=0.6.0)", "django (<5.0.0)", "mongoengine (>=0.23.1,<0.30.0)", "motor (>=2.5.1,<4.0.0)", "orm (>=0.3.1)", "ormar (>=0.11.2)", "piccolo (>=0.89,<0.122)", "pony (>=0.7.16,<0.8.0)", "scylla-driver (>=3.25.6,<4.0.0)", "sqlakeyset (>=2.0.1680321678,<3.0.0)", "sqlmodel (>=0.0.8,<0.0.15)", "tortoise-orm (>=0.16.18,!=0.21.0,<0.22.0)"]
+all = ["SQLAlchemy (>=1.3.20)", "asyncpg (>=0.24.0)", "beanie (>=1.25.0)", "bunnet (>=1.1.0,<2.0.0)", "databases (>=0.6.0)", "django (<5.0.0)", "mongoengine (>=0.23.1,<0.30.0)", "motor (>=3.6.0,<4.0.0)", "odmantic (>=1.0.2,<2.0.0)", "orm (>=0.3.1)", "piccolo (>=0.89,<1.22)", "pony (>=0.7.16,<0.8.0)", "scylla-driver (>=3.25.6,<4.0.0)", "sqlakeyset (>=2.0.1680321678,<3.0.0)", "sqlmodel (>=0.0.22)", "tortoise-orm (>=0.22.0)"]
 asyncpg = ["SQLAlchemy (>=1.3.20)", "asyncpg (>=0.24.0)"]
 beanie = ["beanie (>=1.25.0)"]
 bunnet = ["bunnet (>=1.1.0,<2.0.0)"]
 databases = ["databases (>=0.6.0)"]
 django = ["databases (>=0.6.0)", "django (<5.0.0)"]
 mongoengine = ["mongoengine (>=0.23.1,<0.30.0)"]
-motor = ["motor (>=2.5.1,<4.0.0)"]
+motor = ["motor (>=3.6.0,<4.0.0)"]
+odmantic = ["odmantic (>=1.0.2,<2.0.0)"]
 orm = ["databases (>=0.6.0)", "orm (>=0.3.1)"]
-ormar = ["ormar (>=0.11.2)"]
-piccolo = ["piccolo (>=0.89,<0.122)"]
+piccolo = ["piccolo (>=0.89,<1.22)"]
 scylla-driver = ["scylla-driver (>=3.25.6,<4.0.0)"]
 sqlalchemy = ["SQLAlchemy (>=1.3.20)", "sqlakeyset (>=2.0.1680321678,<3.0.0)"]
-sqlmodel = ["sqlakeyset (>=2.0.1680321678,<3.0.0)", "sqlmodel (>=0.0.8,<0.0.15)"]
-tortoise = ["tortoise-orm (>=0.16.18,!=0.21.0,<0.22.0)"]
+sqlmodel = ["sqlakeyset (>=2.0.1680321678,<3.0.0)", "sqlmodel (>=0.0.22)"]
+tortoise = ["tortoise-orm (>=0.22.0)"]
 
 [[package]]
 name = "fastjsonschema"
@@ -3243,4 +3243,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "043ecb27cec7904c67f0f3cc847a57d5999887ba60e4fc2ad0f176aa653b53c1"
+content-hash = "e9bc0be7fbf5091a3023f4ff097d0d0e33513638512fdb13a27f870090b294a1"
