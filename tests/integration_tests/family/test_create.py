@@ -215,7 +215,7 @@ def test_create_family_when_invalid_metadata_cclw(
     new_family = create_family_create_dto(
         title="Title",
         summary="test test test",
-        metadata={"color": ["pink"], "size": [0]},
+        metadata={"color": ["pink"], "size": ["0"]},
     )
     response = client.post(
         "/api/v1/families",
