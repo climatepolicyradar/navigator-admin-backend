@@ -22,7 +22,7 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, func, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -41,17 +41,57 @@ def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
+    # return (
+    #     db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
+    #     .join(FamilyGeography, FamilyGeography.family_import_id == Family.import_id)
+    #     .join(
+    #         Geography,
+    #         Geography.id == FamilyGeography.geography_id,
+    #     )
+    #     .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
+    #     .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+    #     .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+    #     .join(Organisation, Corpus.organisation_id == Organisation.id)
+    #     .distinct(Family.import_id)
+    # )
+
+    geography_subquery = (
+        db.query(
+            FamilyGeography.family_import_id,
+            func.array_agg(Geography.id).label("geography_ids"),
+            func.array_agg(Geography.value).label("geography_values"),
+        )
+        .join(Geography, Geography.id == FamilyGeography.geography_id)
+        .group_by(FamilyGeography.family_import_id)
+        .subquery()
+    )
+
     return (
-        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
-        .join(FamilyGeography, FamilyGeography.family_import_id == Family.import_id)
+        db.query(
+            Family,
+            geography_subquery.c.geography_ids,
+            geography_subquery.c.geography_values,
+            FamilyMetadata,
+            Corpus,
+            Organisation,
+        )
         .join(
-            Geography,
-            Geography.id == FamilyGeography.geography_id,
+            geography_subquery,
+            geography_subquery.c.family_import_id == Family.import_id,
         )
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
+        .group_by(
+            Family.import_id,
+            Family.title,
+            geography_subquery.c.geography_ids,  # Include aggregated fields
+            geography_subquery.c.geography_values,
+            FamilyMetadata.family_import_id,
+            Corpus.import_id,
+            Organisation,
+        )
     )
 
 
@@ -62,11 +102,22 @@ def _family_to_dto(
     metadata = cast(dict, meta.value)
     org = cast(str, org.name)
 
+    geographies = [
+        str(g.value)
+        for g in db.query(Geography)
+        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
+        .filter(FamilyGeography.family_import_id == fam.import_id)
+        .all()
+    ]
+
+    # If you want to ensure only one geography is returned, you can handle it here
+
     return FamilyReadDTO(
         import_id=str(fam.import_id),
         title=str(fam.title),
         summary=str(fam.description),
         geography=str(geo_value.value),
+        geographies=geographies,
         category=str(fam.family_category),
         status=str(fam.family_status),
         metadata=metadata,

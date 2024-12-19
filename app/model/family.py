@@ -13,6 +13,7 @@ class FamilyReadDTO(BaseModel):
     title: str
     summary: str
     geography: str
+    geographies: list[str]
     category: str
     status: str
     metadata: Json
