@@ -134,5 +134,5 @@ if __name__ == "__main__":
         app,
         host="0.0.0.0",
         port=8888,
-        log_config=DEFAULT_LOGGING,
+        # log_config=DEFAULT_LOGGING,
     )  # type: ignore
