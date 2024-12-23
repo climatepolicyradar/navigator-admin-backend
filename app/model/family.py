@@ -3,8 +3,6 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
-from app.model.general import Json
-
 
 class FamilyReadDTO(BaseModel):
     """A JSON representation of a family."""
@@ -16,7 +14,7 @@ class FamilyReadDTO(BaseModel):
     geographies: list[str]
     category: str
     status: str
-    metadata: Json
+    metadata: dict[str, list[str]]
     slug: str
     events: list[str]
     published_date: Optional[datetime]
@@ -44,7 +42,7 @@ class FamilyWriteDTO(BaseModel):
     summary: str
     geography: str
     category: str
-    metadata: Json
+    metadata: dict[str, list[str]]
     collections: list[str]
 
 
@@ -63,6 +61,6 @@ class FamilyCreateDTO(BaseModel):
     summary: str
     geography: Union[str, list[str]]
     category: str
-    metadata: Json
+    metadata: dict[str, list[str]]
     collections: list[str]
     corpus_import_id: str
