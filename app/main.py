@@ -8,7 +8,6 @@ AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 from contextlib import asynccontextmanager
 
 import uvicorn
-from db_client import run_migrations
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_health import health
@@ -29,6 +28,7 @@ from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.service.health import is_database_online
+from db_client import run_migrations
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -134,5 +134,5 @@ if __name__ == "__main__":
         app,
         host="0.0.0.0",
         port=8888,
-        # log_config=DEFAULT_LOGGING,
+        log_config=DEFAULT_LOGGING,
     )  # type: ignore
