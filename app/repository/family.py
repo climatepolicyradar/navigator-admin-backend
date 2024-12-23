@@ -22,10 +22,10 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, func, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm import Query, Session, lazyload
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
@@ -34,31 +34,76 @@ from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Corpus, Organisation]
+FamilyGeoMetaOrg = Tuple[
+    Family,
+    list[str],
+    FamilyMetadata,
+    Corpus,
+    Organisation,
+]
 
 
 def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
-    return (
-        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
-        .join(FamilyGeography, FamilyGeography.family_import_id == Family.import_id)
+
+    geography_subquery = (
+        db.query(
+            FamilyGeography.family_import_id,
+            func.array_agg(Geography.value).label("geography_values"),
+        )
+        .join(Geography, Geography.id == FamilyGeography.geography_id)
+        .group_by(FamilyGeography.family_import_id)
+        .subquery()
+    )
+
+    query = (
+        db.query(
+            Family,
+            geography_subquery.c.geography_values,
+            FamilyMetadata,
+            Corpus,
+            Organisation,
+        )
         .join(
-            Geography,
-            Geography.id == FamilyGeography.geography_id,
+            geography_subquery,
+            geography_subquery.c.family_import_id == Family.import_id,
         )
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
+        .group_by(
+            Family.import_id,
+            Family.title,
+            geography_subquery.c.geography_values,
+            FamilyMetadata.family_import_id,
+            Corpus.import_id,
+            Organisation,
+        )
+        .options(
+            # Disable any default eager loading as this was causing multiplicity due to
+            # implicit joins in relationships on the selected models.
+            lazyload("*")
+        )
     )
+    _LOGGER.error(query)
+
+    return query
 
 
 def _family_to_dto(
     db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
 ) -> FamilyReadDTO:
-    fam, geo_value, meta, corpus, org = fam_geo_meta_corp_org
+    (
+        fam,
+        geo_values,
+        meta,
+        corpus,
+        org,
+    ) = fam_geo_meta_corp_org
+
     metadata = cast(dict, meta.value)
     org = cast(str, org.name)
 
@@ -66,7 +111,8 @@ def _family_to_dto(
         import_id=str(fam.import_id),
         title=str(fam.title),
         summary=str(fam.description),
-        geography=str(geo_value.value),
+        geography=str(geo_values[0]),
+        geographies=[str(value) for value in geo_values],
         category=str(fam.family_category),
         status=str(fam.family_status),
         metadata=metadata,
