@@ -48,7 +48,7 @@ def test_get_all_corpora_non_super(
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPORA"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS"
 
 
 def test_get_all_corpora_when_not_authenticated(client: TestClient, data_db: Session):

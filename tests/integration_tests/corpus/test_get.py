@@ -43,7 +43,7 @@ def test_get_corpus_non_super(client: TestClient, data_db: Session, user_header_
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPORA"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS"
 
 
 def test_get_corpus_when_not_authenticated(client: TestClient, data_db: Session):

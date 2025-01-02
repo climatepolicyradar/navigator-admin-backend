@@ -165,7 +165,7 @@ def test_update_corpus_non_super_non_admin(client: TestClient, user_header_token
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to UPDATE a CORPORA"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to UPDATE a CORPUS"
 
 
 def test_update_corpus_non_super_admin(client: TestClient, admin_user_header_token):
@@ -177,7 +177,7 @@ def test_update_corpus_non_super_admin(client: TestClient, admin_user_header_tok
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User admin@cpr.org is not authorised to UPDATE a CORPORA"
+    assert data["detail"] == "User admin@cpr.org is not authorised to UPDATE a CORPUS"
 
 
 def test_update_corpus_idempotent(
