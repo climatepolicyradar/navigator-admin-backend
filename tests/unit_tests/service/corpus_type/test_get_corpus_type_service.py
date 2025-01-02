@@ -11,5 +11,5 @@ def test_get(corpus_type_repo_mock):
 def test_get_returns_none(corpus_type_repo_mock):
     corpus_type_repo_mock.return_empty = True
     result = corpus_type_service.get("some_corpus_type_name")
-    assert result is not None
+    assert result is None
     assert corpus_type_repo_mock.get.call_count == 1
