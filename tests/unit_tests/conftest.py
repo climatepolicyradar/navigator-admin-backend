@@ -153,7 +153,7 @@ def corpus_repo_mock(monkeypatch, mocker):
 
 
 @pytest.fixture
-def corpus_type_repo(monkeypatch, mocker):
+def corpus_type_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_corpus_type_repo(corpus_type_repo, monkeypatch, mocker)
     yield corpus_type_repo
