@@ -9,7 +9,7 @@ from tests.integration_tests.setup_db import (
     setup_db,
 )
 
-EXPECTED_CORPUS_TYPE_KEYS = ["name", "description", "valid_metadata"]
+EXPECTED_CORPUS_TYPE_KEYS = ["name", "description", "metadata"]
 
 
 @pytest.mark.parametrize(
