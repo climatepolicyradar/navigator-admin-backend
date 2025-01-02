@@ -59,7 +59,7 @@ def get(db: Session, corpus_type_name: str) -> Optional[CorpusTypeReadDTO]:
             .filter(CorpusType.name == corpus_type_name)
             .one_or_none()
         )
-        return _corpus_type_to_dto(corpus_type)
+        return _corpus_type_to_dto(corpus_type) if corpus_type is not None else None
 
     except MultipleResultsFound as e:
         _LOGGER.error(e)
