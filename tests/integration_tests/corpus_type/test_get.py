@@ -46,7 +46,7 @@ def test_get_corpus_type_non_super(
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS TYPE"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS_TYPE"
 
 
 def test_get_corpus_type_when_not_authenticated(client: TestClient, data_db: Session):
