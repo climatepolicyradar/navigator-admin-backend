@@ -2,14 +2,23 @@ version: 2
 updates:
   - package-ecosystem: pip
     directory: /
+    groups:
+      all:
+        applies-to: version-updates
+        patterns:
+          - "*"
     schedule:
-      interval: monthly
+      interval: weekly
     ignore:
       - dependency-name: db-client
   - package-ecosystem: github-actions
     directory: /
+    groups:
+      all:
+        applies-to: version-updates
+        patterns:
+          - "*"
     schedule:
-      interval: monthly
+      interval: weekly
     ignore:
       - dependency-name: db-client
-    target-branch: main
