@@ -27,9 +27,7 @@ def test_get_corpus_type(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
 
-    assert set(EXPECTED_CORPUS_TYPE_KEYS).symmetric_difference(set(data.keys())) == set(
-        []
-    )
+    assert set(EXPECTED_CORPUS_TYPE_KEYS) == set(data.keys())
 
     assert data["name"] == expected_corpus_type["corpus_type_name"]
     assert data["description"] == expected_corpus_type["corpus_type_description"]
