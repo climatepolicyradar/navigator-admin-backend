@@ -7,7 +7,7 @@ from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import Session
 
 from app.errors import RepositoryError
-from app.model.corpus_type import CorpusTypeReadDTO
+from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,3 +64,27 @@ def get(db: Session, corpus_type_name: str) -> Optional[CorpusTypeReadDTO]:
     except MultipleResultsFound as e:
         _LOGGER.error(e)
         raise RepositoryError(e)
+
+
+def create(db: Session, corpus_type: CorpusTypeCreateDTO) -> str:
+    """Create a new corpus type.
+
+    :param db Session: The database connection.
+    :param CorpusTypeCreateDTO corpus_type: The values for the new
+        corpus type.
+    :return str: The name of the newly created corpus type.
+    """
+    new_corpus_type = CorpusType(
+        name=corpus_type.name,
+        description=corpus_type.description,
+        valid_metadata=corpus_type.metadata,
+    )
+
+    try:
+        db.add(new_corpus_type)
+        db.commit()
+    except Exception as e:
+        _LOGGER.exception("Error trying to create Corpus Type")
+        raise RepositoryError(e)
+
+    return cast(str, new_corpus_type.name)
