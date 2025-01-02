@@ -67,4 +67,4 @@ def test_get_corpus_type_when_not_found(
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Corpus type with name NonExistentType not found."
+    assert data["detail"] == "Corpus type not found: NonExistentType"

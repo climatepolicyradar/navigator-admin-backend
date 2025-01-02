@@ -36,7 +36,7 @@ def test_get_all_corpus_types(
         == EXPECTED_CCLW_CORPUS["corpus_type_description"]
     )
     assert laws_and_policies_ct["metadata"] is not None
-    assert isinstance(laws_and_policies_ct["valid_metadata"], dict)
+    assert isinstance(laws_and_policies_ct["metadata"], dict)
 
     # Check Intl. Agreements content.
     int_agreements_ct = data[0]
@@ -47,7 +47,7 @@ def test_get_all_corpus_types(
     )
 
     assert int_agreements_ct["metadata"] is not None
-    assert isinstance(int_agreements_ct["valid_metadata"], dict)
+    assert isinstance(int_agreements_ct["metadata"], dict)
 
 
 def test_get_all_corpus_types_non_super(
