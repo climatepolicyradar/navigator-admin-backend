@@ -3,7 +3,7 @@ from typing import Optional, cast
 
 from db_client.models.organisation import CorpusType, Organisation
 from sqlalchemy import asc
-from sqlalchemy.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import Session
 
 from app.errors import RepositoryError
@@ -55,13 +55,11 @@ def get(db: Session, corpus_type_name: str) -> Optional[CorpusTypeReadDTO]:
     """
     try:
         corpus_type = (
-            db.query(CorpusType).filter(CorpusType.name == corpus_type_name).one()
+            db.query(CorpusType)
+            .filter(CorpusType.name == corpus_type_name)
+            .one_or_none()
         )
         return _corpus_type_to_dto(corpus_type)
-
-    except NoResultFound as e:
-        _LOGGER.error(e)
-        return
 
     except MultipleResultsFound as e:
         _LOGGER.error(e)
