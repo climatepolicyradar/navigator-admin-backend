@@ -402,7 +402,7 @@ def test_bulk_import_admin_non_super(
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
-        data["detail"] == "User admin@cpr.org is not authorised to CREATE a BULK-IMPORT"
+        data["detail"] == "User admin@cpr.org is not authorised to CREATE a BULK_IMPORT"
     )
 
 
@@ -416,5 +416,5 @@ def test_bulk_import_non_super_non_admin(
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
-        data["detail"] == "User cclw@cpr.org is not authorised to CREATE a BULK-IMPORT"
+        data["detail"] == "User cclw@cpr.org is not authorised to CREATE a BULK_IMPORT"
     )

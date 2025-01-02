@@ -29,7 +29,7 @@ def test_get_all_corpus_types(
         assert all(key in ["name", "description", "metadata"] for key in item)
 
     # Check Laws and Policies content.
-    laws_and_policies_ct = data[0]
+    laws_and_policies_ct = data[1]
     assert laws_and_policies_ct["name"] == EXPECTED_CCLW_CORPUS["corpus_type_name"]
     assert (
         laws_and_policies_ct["description"]
@@ -39,7 +39,7 @@ def test_get_all_corpus_types(
     assert isinstance(laws_and_policies_ct["valid_metadata"], dict)
 
     # Check Intl. Agreements content.
-    int_agreements_ct = data[1]
+    int_agreements_ct = data[0]
     assert int_agreements_ct["name"] == EXPECTED_UNFCCC_CORPUS["corpus_type_name"]
     assert (
         int_agreements_ct["description"]
