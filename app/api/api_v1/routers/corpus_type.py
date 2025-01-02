@@ -2,8 +2,8 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request, status
 
-from app.errors import RepositoryError, ValidationError
-from app.model.corpus_type import CorpusTypeReadDTO
+from app.errors import AuthorisationError, RepositoryError, ValidationError
+from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 from app.service import corpus_type as corpus_type_service
 
 corpus_types_router = APIRouter()
@@ -56,3 +56,31 @@ async def get_corpus_type(corpus_type_name: str) -> CorpusTypeReadDTO:
             detail=f"Corpus type not found: {corpus_type_name}",
         )
     return corpus_type
+
+
+@corpus_types_router.post(
+    "/corpus-types",
+    response_model=str,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_corpus_type(
+    request: Request, new_corpus_type: CorpusTypeCreateDTO
+) -> str:
+    """Create a new corpus type.
+
+    :param Request request: Request object.
+    :param CorpusTypeCreateDTO new_corpus_type: New corpus type data.
+    :raises HTTPException: If there is an error during creation.
+    :return str: The created corpus type.
+    """
+
+    try:
+        return corpus_type_service.create(new_corpus_type)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )

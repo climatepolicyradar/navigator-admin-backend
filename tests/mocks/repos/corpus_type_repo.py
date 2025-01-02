@@ -1,9 +1,10 @@
 from typing import Optional
 
 from pytest import MonkeyPatch
+from sqlalchemy import exc
 
 from app.errors import RepositoryError
-from app.model.corpus_type import CorpusTypeReadDTO
+from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 
 
 def mock_corpus_type_repo(corpus_type_repo, monkeypatch: MonkeyPatch, mocker):
@@ -35,8 +36,17 @@ def mock_corpus_type_repo(corpus_type_repo, monkeypatch: MonkeyPatch, mocker):
             )
         return None
 
+    def mock_create(_, data: CorpusTypeCreateDTO) -> str:
+        maybe_throw()
+        if corpus_type_repo.return_empty:
+            raise exc.NoResultFound()
+        return data.name if data.name else "test_ct_name"
+
     monkeypatch.setattr(corpus_type_repo, "all", mock_all)
     mocker.spy(corpus_type_repo, "all")
 
     monkeypatch.setattr(corpus_type_repo, "get", mock_get)
     mocker.spy(corpus_type_repo, "get")
+
+    monkeypatch.setattr(corpus_type_repo, "create", mock_create)
+    mocker.spy(corpus_type_repo, "create")
