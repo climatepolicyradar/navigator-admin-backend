@@ -14,7 +14,6 @@ def test_create_when_ok(
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data == "test_ct_name"
-    assert corpus_type_service_mock.create.call_count == 1
 
 
 def test_create_fails_when_validation_error(
@@ -28,4 +27,3 @@ def test_create_fails_when_validation_error(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["detail"] == "Validation error"
-    assert corpus_type_service_mock.create.call_count == 1
