@@ -45,7 +45,7 @@ def all(db: Session, org_id: Optional[int]) -> list[CorpusTypeReadDTO]:
     return [_corpus_type_to_dto(corpus_type) for corpus_type in result]
 
 
-def get(db: Session, corpus_type_name: str) -> CorpusTypeReadDTO:
+def get(db: Session, corpus_type_name: str) -> Optional[CorpusTypeReadDTO]:
     """Get a corpus type from the database given a name.
 
     :param db Session: The database connection.
@@ -59,6 +59,10 @@ def get(db: Session, corpus_type_name: str) -> CorpusTypeReadDTO:
         )
         return _corpus_type_to_dto(corpus_type)
 
-    except (MultipleResultsFound, NoResultFound) as e:
+    except NoResultFound as e:
+        _LOGGER.error(e)
+        return
+
+    except MultipleResultsFound as e:
         _LOGGER.error(e)
         raise RepositoryError(e)

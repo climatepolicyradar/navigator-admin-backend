@@ -27,7 +27,9 @@ def all(user: UserContext) -> list[CorpusTypeReadDTO]:
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def get(corpus_type_name: str, db: Optional[Session] = None) -> CorpusTypeReadDTO:
+def get(
+    corpus_type_name: str, db: Optional[Session] = None
+) -> Optional[CorpusTypeReadDTO]:
     """Retrieve a corpus type by ID.
 
     :param str corpus_type_name: The name of the corpus type to retrieve.
