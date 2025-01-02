@@ -6,7 +6,7 @@ from app.errors import AuthorisationError, RepositoryError
 from app.model.corpus_type import CorpusTypeReadDTO
 
 
-def mock_corpus_service(corpus_type_service, monkeypatch: MonkeyPatch, mocker):
+def mock_corpus_type_service(corpus_type_service, monkeypatch: MonkeyPatch, mocker):
     corpus_type_service.valid = True
     corpus_type_service.org_mismatch = False
     corpus_type_service.throw_repository_error = False
