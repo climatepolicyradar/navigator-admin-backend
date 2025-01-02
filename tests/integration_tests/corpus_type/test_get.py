@@ -42,7 +42,7 @@ def test_get_corpus_type_non_super(
 ):
     setup_db(data_db)
     response = client.get(
-        "/api/v1/corpus-types/SomeCorpusType", headers=user_header_token
+        "/api/v1/corpus-types/Laws and Policies", headers=user_header_token
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
@@ -52,7 +52,7 @@ def test_get_corpus_type_non_super(
 def test_get_corpus_type_when_not_authenticated(client: TestClient, data_db: Session):
     setup_db(data_db)
     response = client.get(
-        "/api/v1/corpus-types/SomeCorpusType",
+        "/api/v1/corpus-types/Laws and Policies",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 

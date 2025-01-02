@@ -24,8 +24,6 @@ async def get_all_corpus_types(request: Request) -> list[CorpusTypeReadDTO]:
     """
     try:
         return corpus_type_service.all(request.state.user)
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
@@ -44,10 +42,17 @@ async def get_corpus_type(corpus_type_name: str) -> CorpusTypeReadDTO:
     :return CorpusTypeReadDTO: The requested corpus type.
     """
     try:
-        return corpus_type_service.get(corpus_type_name)
+        corpus_type = corpus_type_service.get(corpus_type_name)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+
+    if corpus_type is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Corpus not found: {corpus_type_name}",
+        )
+    return corpus_type
