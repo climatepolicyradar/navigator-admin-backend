@@ -26,7 +26,7 @@ def test_create_corpus_type(
 
     assert actual_corpus.name == "test_ct_name"
     assert actual_corpus.description == "test_description"
-    assert actual_corpus.metadata == {
+    assert actual_corpus.valid_metadata == {
         "event_type": ["Passed/Approved"],
         "_event": {
             "event_type": ["Passed/Approved"],
