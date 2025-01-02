@@ -37,7 +37,6 @@ from app.repository import (
     collection_repo,
     config_repo,
     corpus_repo,
-    corpus_type_repo,
     document_repo,
     event_repo,
     family_repo,
@@ -49,7 +48,6 @@ from tests.mocks.repos.app_user_repo import mock_app_user_repo
 from tests.mocks.repos.collection_repo import mock_collection_repo
 from tests.mocks.repos.config_repo import mock_config_repo
 from tests.mocks.repos.corpus_repo import mock_corpus_repo
-from tests.mocks.repos.corpus_type_repo import mock_corpus_type_repo
 from tests.mocks.repos.db_client_corpus_helpers import mock_corpus_helpers_db_client
 from tests.mocks.repos.db_client_metadata import mock_metadata_db_client
 from tests.mocks.repos.document_repo import mock_document_repo
@@ -150,13 +148,6 @@ def corpus_repo_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_corpus_repo(corpus_repo, monkeypatch, mocker)
     yield corpus_repo
-
-
-@pytest.fixture
-def corpus_type_repo_mock(monkeypatch, mocker):
-    """Mocks the repository for a single test."""
-    mock_corpus_type_repo(corpus_type_repo, monkeypatch, mocker)
-    yield corpus_type_repo
 
 
 @pytest.fixture

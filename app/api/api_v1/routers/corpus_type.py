@@ -53,6 +53,6 @@ async def get_corpus_type(corpus_type_name: str) -> CorpusTypeReadDTO:
     if corpus_type is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Corpus not found: {corpus_type_name}",
+            detail=f"Corpus type not found: {corpus_type_name}",
         )
     return corpus_type

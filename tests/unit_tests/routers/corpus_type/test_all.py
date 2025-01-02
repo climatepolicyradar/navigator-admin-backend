@@ -31,5 +31,5 @@ def test_all_when_ok(
     data = response.json()
     assert isinstance(data, list)
     assert len(data) > 0
-    assert data[0]["name"] == "test"
+    assert data[0]["name"] == "test_name_1"
     assert corpus_type_service_mock.all.call_count == 1
