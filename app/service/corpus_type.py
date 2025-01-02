@@ -63,7 +63,7 @@ def create(corpus_type: CorpusTypeCreateDTO, db: Optional[Session] = None) -> st
         any(
             [
                 required_key not in corpus_type.metadata
-                for required_key in ["_event", "_document"]
+                for required_key in ["_event", "_document", "event_type"]
             ]
         )
         or "datetime_event_name" not in corpus_type.metadata["_event"]

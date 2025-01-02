@@ -3,7 +3,7 @@ from typing import Optional
 from pytest import MonkeyPatch
 
 from app.errors import AuthorisationError, RepositoryError
-from app.model.corpus_type import CorpusTypeReadDTO
+from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 
 
 def mock_corpus_type_service(corpus_type_service, monkeypatch: MonkeyPatch, mocker):
@@ -36,8 +36,17 @@ def mock_corpus_type_service(corpus_type_service, monkeypatch: MonkeyPatch, mock
             )
         return None
 
+    def mock_create(data: CorpusTypeCreateDTO) -> str:
+        maybe_throw()
+        if corpus_type_service.missing:
+            raise RepositoryError("missing")
+        return "test_ct_name"
+
     monkeypatch.setattr(corpus_type_service, "all", mock_all)
     mocker.spy(corpus_type_service, "all")
 
     monkeypatch.setattr(corpus_type_service, "get", mock_get)
-    mocker.spy(corpus_type_service, "get")
+    mocker.spy(corpus_type_service, "create")
+
+    monkeypatch.setattr(corpus_type_service, "create", mock_create)
+    mocker.spy(corpus_type_service, "create")
