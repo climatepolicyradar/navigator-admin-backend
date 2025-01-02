@@ -6,12 +6,12 @@ from app.errors import RepositoryError, ValidationError
 from app.model.corpus_type import CorpusTypeReadDTO
 from app.service import corpus_type as corpus_type_service
 
-corpus_type_router = APIRouter()
+corpus_types_router = APIRouter()
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@corpus_type_router.get(
+@corpus_types_router.get(
     "/corpus-types",
     response_model=CorpusTypeReadDTO,
 )
@@ -32,7 +32,7 @@ async def get_all_corpus_types(request: Request) -> list[CorpusTypeReadDTO]:
         )
 
 
-@corpus_type_router.get(
+@corpus_types_router.get(
     "/corpus-types/{corpus_type_name}",
     response_model=CorpusTypeReadDTO,
 )

@@ -2,8 +2,9 @@ import logging
 from typing import Optional, cast
 
 from db_client.models.organisation import CorpusType, Organisation
-from sqlalchemy import Session, asc
+from sqlalchemy import asc
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.orm import Session
 
 from app.errors import RepositoryError
 from app.model.corpus_type import CorpusTypeReadDTO
