@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @corpus_types_router.get(
     "/corpus-types",
-    response_model=CorpusTypeReadDTO,
+    response_model=list[CorpusTypeReadDTO],
 )
 async def get_all_corpus_types(request: Request) -> list[CorpusTypeReadDTO]:
     """Retrieve all corpus types.
