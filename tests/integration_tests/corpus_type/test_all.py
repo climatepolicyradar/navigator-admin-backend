@@ -26,7 +26,7 @@ def test_get_all_corpus_types(
     assert len(data) == EXPECTED_NUM_CORPORA
     for item in data:
         assert isinstance(item, dict)
-        assert all(key in ["name", "description", "valid_metadata"] for key in item)
+        assert all(key in ["name", "description", "metadata"] for key in item)
 
     # Check Laws and Policies content.
     laws_and_policies_ct = data[0]
@@ -35,7 +35,7 @@ def test_get_all_corpus_types(
         laws_and_policies_ct["description"]
         == EXPECTED_CCLW_CORPUS["corpus_type_description"]
     )
-    assert laws_and_policies_ct["valid_metadata"] is not None
+    assert laws_and_policies_ct["metadata"] is not None
     assert isinstance(laws_and_policies_ct["valid_metadata"], dict)
 
     # Check Intl. Agreements content.
@@ -46,7 +46,7 @@ def test_get_all_corpus_types(
         == EXPECTED_UNFCCC_CORPUS["corpus_type_description"]
     )
 
-    assert int_agreements_ct["valid_metadata"] is not None
+    assert int_agreements_ct["metadata"] is not None
     assert isinstance(int_agreements_ct["valid_metadata"], dict)
 
 
@@ -60,7 +60,7 @@ def test_get_all_corpus_types_non_super(
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS TYPE"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS_TYPE"
 
 
 def test_get_all_corpus_types_when_not_authenticated(

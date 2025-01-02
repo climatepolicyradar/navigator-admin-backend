@@ -33,8 +33,8 @@ def test_get_corpus_type(
 
     assert data["name"] == expected_corpus_type["corpus_type_name"]
     assert data["description"] == expected_corpus_type["corpus_type_description"]
-    assert data["valid_metadata"] is not None
-    assert isinstance(data["valid_metadata"], dict)
+    assert data["metadata"] is not None
+    assert isinstance(data["metadata"], dict)
 
 
 def test_get_corpus_type_non_super(
