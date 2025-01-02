@@ -21,6 +21,7 @@ from app.api.api_v1.routers import (
     collections_router,
     config_router,
     corpora_router,
+    corpus_types_router,
     document_router,
     event_router,
     families_router,
@@ -111,6 +112,14 @@ app.include_router(
     tags=["corpora"],
     dependencies=[Depends(check_user_auth)],
 )
+
+app.include_router(
+    corpus_types_router,
+    prefix="/api/v1",
+    tags=["corpus-types"],
+    dependencies=[Depends(check_user_auth)],
+)
+
 # Add CORS middleware to allow cross origin requests from any port
 app.add_middleware(
     CORSMiddleware,

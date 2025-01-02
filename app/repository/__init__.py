@@ -3,6 +3,7 @@ import app.repository.app_user as app_user_repo
 import app.repository.collection as collection_repo
 import app.repository.config as config_repo
 import app.repository.corpus as corpus_repo
+import app.repository.corpus_type as corpus_type_repo
 import app.repository.document as document_repo
 import app.repository.event as event_repo
 import app.repository.family as family_repo  # type: ignore
@@ -18,6 +19,7 @@ __all__ = (
     "collection_repo",
     "config_repo",
     "corpus_repo",
+    "corpus_type_repo",
     "document_repo",
     "event_repo",
     "family_repo",

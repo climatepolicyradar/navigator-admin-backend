@@ -22,6 +22,7 @@ import app.service.bulk_import as bulk_import_service
 import app.service.collection as collection_service
 import app.service.config as config_service
 import app.service.corpus as corpus_service
+import app.service.corpus_type as corpus_type_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
@@ -36,6 +37,7 @@ from app.repository import (
     collection_repo,
     config_repo,
     corpus_repo,
+    corpus_type_repo,
     document_repo,
     event_repo,
     family_repo,
@@ -47,6 +49,7 @@ from tests.mocks.repos.app_user_repo import mock_app_user_repo
 from tests.mocks.repos.collection_repo import mock_collection_repo
 from tests.mocks.repos.config_repo import mock_config_repo
 from tests.mocks.repos.corpus_repo import mock_corpus_repo
+from tests.mocks.repos.corpus_type_repo import mock_corpus_type_repo
 from tests.mocks.repos.db_client_corpus_helpers import mock_corpus_helpers_db_client
 from tests.mocks.repos.db_client_metadata import mock_metadata_db_client
 from tests.mocks.repos.document_repo import mock_document_repo
@@ -59,6 +62,7 @@ from tests.mocks.services.bulk_import_service import mock_bulk_import_service
 from tests.mocks.services.collection_service import mock_collection_service
 from tests.mocks.services.config_service import mock_config_service
 from tests.mocks.services.corpus_service import mock_corpus_service
+from tests.mocks.services.corpus_type_service import mock_corpus_type_service
 from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
@@ -149,6 +153,13 @@ def corpus_repo_mock(monkeypatch, mocker):
 
 
 @pytest.fixture
+def corpus_type_repo_mock(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_corpus_type_repo(corpus_type_repo, monkeypatch, mocker)
+    yield corpus_type_repo
+
+
+@pytest.fixture
 def db_client_metadata_mock(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_metadata_db_client(db_client_metadata, monkeypatch, mocker)
@@ -219,6 +230,13 @@ def corpus_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_corpus_service(corpus_service, monkeypatch, mocker)
     yield corpus_service
+
+
+@pytest.fixture
+def corpus_type_service_mock(monkeypatch, mocker):
+    """Mocks the service for a single test."""
+    mock_corpus_type_service(corpus_type_service, monkeypatch, mocker)
+    yield corpus_type_service
 
 
 @pytest.fixture

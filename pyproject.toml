@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "admin_backend"
-version = "2.17.24"
+version = "2.17.25"
 description = ""
 authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
 packages = [{ include = "app" }, { include = "tests" }]
@@ -51,7 +51,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-addopts = "-p no:cacheprovider"
+addopts = "--import-mode=importlib"
 env_files = """
     .env.test
     .env
