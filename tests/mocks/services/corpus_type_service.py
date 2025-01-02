@@ -2,14 +2,13 @@ from typing import Optional
 
 from pytest import MonkeyPatch
 
-from app.errors import AuthorisationError, RepositoryError
+from app.errors import RepositoryError
 from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 
 
 def mock_corpus_type_service(corpus_type_service, monkeypatch: MonkeyPatch, mocker):
     corpus_type_service.valid = True
     corpus_type_service.missing = False
-    corpus_type_service.org_mismatch = False
     corpus_type_service.throw_repository_error = False
 
     def maybe_throw():
@@ -27,8 +26,6 @@ def mock_corpus_type_service(corpus_type_service, monkeypatch: MonkeyPatch, mock
 
     def mock_get(name: str) -> Optional[CorpusTypeReadDTO]:
         maybe_throw()
-        if corpus_type_service.org_mismatch:
-            raise AuthorisationError("Org mismatch")
 
         if not corpus_type_service.missing:
             return CorpusTypeReadDTO(
