@@ -41,6 +41,7 @@ class FamilyWriteDTO(BaseModel):
     title: str
     summary: str
     geography: str
+    geographies: list[str]
     category: str
     metadata: dict[str, list[str]]
     collections: list[str]
