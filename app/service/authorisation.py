@@ -71,7 +71,7 @@ def is_authorised(user: UserContext, entity: AuthEndpoint, op: AuthOperation) ->
         return
 
     raise AuthorisationError(
-        f"User {user.email} is not authorised to {op} {_get_article(entity.value)} {entity}"
+        f"User {user.email} is not authorised to {op} {_get_article(entity.value)} {entity.name}"
     )
 
 

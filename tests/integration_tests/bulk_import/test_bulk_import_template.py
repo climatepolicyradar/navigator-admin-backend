@@ -237,7 +237,7 @@ def test_get_template_admin_non_super(
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
-        data["detail"] == "User admin@cpr.org is not authorised to READ a BULK-IMPORT"
+        data["detail"] == "User admin@cpr.org is not authorised to READ a BULK_IMPORT"
     )
 
 
@@ -250,4 +250,4 @@ def test_get_template_non_admin_non_super(
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a BULK-IMPORT"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a BULK_IMPORT"

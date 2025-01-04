@@ -20,6 +20,7 @@ class AuthEndpoint(str, enum.Enum):
     EVENT = "EVENTS"
     BULK_IMPORT = "BULK-IMPORT"
     CORPUS = "CORPORA"
+    CORPUS_TYPE = "CORPUS-TYPES"
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
@@ -71,5 +72,9 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.CREATE: AuthAccess.SUPER,
         AuthOperation.READ: AuthAccess.SUPER,
         AuthOperation.UPDATE: AuthAccess.SUPER,
+    },
+    # Corpus Type
+    AuthEndpoint.CORPUS_TYPE: {
+        AuthOperation.READ: AuthAccess.SUPER,
     },
 }

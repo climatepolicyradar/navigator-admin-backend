@@ -164,7 +164,7 @@ def test_create_corpus_non_admin_non_super(client: TestClient, user_header_token
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to CREATE a CORPORA"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to CREATE a CORPUS"
 
 
 def test_create_corpus_admin_non_super(client: TestClient, admin_user_header_token):
@@ -174,7 +174,7 @@ def test_create_corpus_admin_non_super(client: TestClient, admin_user_header_tok
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User admin@cpr.org is not authorised to CREATE a CORPORA"
+    assert data["detail"] == "User admin@cpr.org is not authorised to CREATE a CORPUS"
 
 
 def test_create_corpus_rollback(

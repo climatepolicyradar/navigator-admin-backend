@@ -55,7 +55,7 @@ def test_search_corpus_non_super(
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPORA"
+    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS"
 
 
 def test_search_corpus_when_not_authorised(client: TestClient, data_db: Session):
