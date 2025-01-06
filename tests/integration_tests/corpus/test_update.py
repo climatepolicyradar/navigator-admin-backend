@@ -152,14 +152,16 @@ def test_update_corpus_allows_none_corpus_text(
 def test_update_corpus_when_not_authorised(client: TestClient, data_db: Session):
     setup_db(data_db)
     new_corpus = create_corpus_write_dto()
-    response = client.put("/api/v1/corpora/C.0.0.2", json=new_corpus.model_dump())
+    response = client.put(
+        "/api/v1/corpora/CCLW.corpus.i00000001.n0000", json=new_corpus.model_dump()
+    )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_update_corpus_non_super_non_admin(client: TestClient, user_header_token):
     new_corpus = create_corpus_write_dto()
     response = client.put(
-        "/api/v1/corpora/C.0.0.2",
+        "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
         headers=user_header_token,
     )
@@ -171,7 +173,7 @@ def test_update_corpus_non_super_non_admin(client: TestClient, user_header_token
 def test_update_corpus_non_super_admin(client: TestClient, admin_user_header_token):
     new_corpus = create_corpus_write_dto()
     response = client.put(
-        "/api/v1/corpora/C.0.0.2",
+        "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
         headers=admin_user_header_token,
     )
@@ -260,10 +262,10 @@ def test_update_corpus_when_not_found(
     setup_db(data_db)
     new_corpus = create_corpus_write_dto(title="Updated Title")
     response = client.put(
-        "/api/v1/corpora/C.0.0.22",
+        "/api/v1/corpora/CCLW.corpus.i00000999.n0000",
         json=new_corpus.model_dump(),
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Corpus not updated: C.0.0.22"
+    assert data["detail"] == "Corpus not updated: CCLW.corpus.i00000999.n0000"
