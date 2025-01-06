@@ -32,6 +32,7 @@ class DBEntry(TypedDict):
     title: str
     summary: str
     geography: str
+    geographies: list[str]
     category: str
     status: str
     metadata: dict
@@ -53,6 +54,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "title": "apple",
         "summary": "",
         "geography": "AFG",
+        "geographies": ["AFG"],
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {
@@ -79,6 +81,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "title": "apple orange banana",
         "summary": "apple",
         "geography": "ZWE",
+        "geographies": ["ZWE"],
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {
@@ -105,6 +108,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "title": "title",
         "summary": "orange peas",
         "geography": "AFG",
+        "geographies": ["AFG"],
         "category": "UNFCCC",
         "status": "Created",
         "metadata": {"author": ["CPR"], "author_type": ["Party"]},
