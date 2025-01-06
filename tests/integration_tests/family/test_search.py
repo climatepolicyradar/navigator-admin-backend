@@ -76,6 +76,72 @@ def test_search_geographies(
         assert ids == expected_ids
 
 
+def test_search_retrieves_families_with_multiple_geographies(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    add_data(
+        data_db,
+        [
+            {
+                "import_id": "A.0.0.4",
+                "title": "title",
+                "summary": "gregarious magazine rub",
+                "geography": "ALB",
+                "geographies": ["ALB", "USA", "BRB"],
+                "category": "UNFCCC",
+                "status": "Created",
+                "metadata": {"author": ["CPR"], "author_type": ["Party"]},
+                "organisation": "UNFCCC",
+                "corpus_import_id": "UNFCCC.corpus.i00000001.n0000",
+                "corpus_title": "UNFCCC Submissions",
+                "corpus_type": "Intl. agreements",
+                "slug": "Slug4",
+                "events": ["E.0.0.3"],
+                "published_date": "2018-12-24T04:59:33Z",
+                "last_updated_date": "2018-12-24T04:59:33Z",
+                "documents": ["D.0.0.1", "D.0.0.2"],
+                "collections": ["C.0.0.4"],
+            },
+            {
+                "import_id": "A.0.0.5",
+                "title": "title",
+                "summary": "flour umbrella established",
+                "geography": "AGO",
+                "geographies": ["AGO", "ALB"],
+                "category": "UNFCCC",
+                "status": "Created",
+                "metadata": {"author": ["CPR"], "author_type": ["Party"]},
+                "organisation": "UNFCCC",
+                "corpus_import_id": "UNFCCC.corpus.i00000001.n0000",
+                "corpus_title": "UNFCCC Submissions",
+                "corpus_type": "Intl. agreements",
+                "slug": "Slug5",
+                "events": ["E.0.0.3"],
+                "published_date": "2018-12-24T04:59:33Z",
+                "last_updated_date": "2018-12-24T04:59:33Z",
+                "documents": ["D.0.0.1", "D.0.0.2"],
+                "collections": ["C.0.0.4"],
+            },
+        ],
+    )
+
+    test_geography = {"display_name": "albania", "iso_code": "ALB"}
+
+    geographies_query = f"&geography={test_geography['display_name']}"
+    response = client.get(
+        f"/api/v1/families/?{geographies_query}",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    breakpoint()
+    for item in data:
+        assert "geographies" in item
+        assert isinstance(item["geographies"], list)
+        assert test_geography["iso_code"] in item["geographies"]
+
+
 def test_search_family_super(
     client: TestClient, data_db: Session, superuser_header_token
 ):
