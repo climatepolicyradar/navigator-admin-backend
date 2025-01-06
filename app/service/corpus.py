@@ -58,7 +58,6 @@ def validate(db: Session, corpus_import_id: str) -> bool:
     raise ValidationError(msg)
 
 
-@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def validate_import_id(import_id: str, db: Optional[Session] = None) -> None:
     """Validate the import id for a corpus.
@@ -81,7 +80,6 @@ def validate_import_id(import_id: str, db: Optional[Session] = None) -> None:
         raise ValidationError(f"The import id {import_id} is invalid!")
 
 
-@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def get(import_id: str, db: Optional[Session] = None) -> Optional[CorpusReadDTO]:
     """
