@@ -37,6 +37,7 @@ class CorpusWriteDTO(BaseModel):
 class CorpusCreateDTO(BaseModel):
     """Representation of a Corpus."""
 
+    import_id: Optional[str] = None
     title: str
     description: str
     corpus_text: Optional[str]

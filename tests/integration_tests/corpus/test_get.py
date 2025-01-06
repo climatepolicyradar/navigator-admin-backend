@@ -59,12 +59,12 @@ def test_get_corpus_when_not_found(
 ):
     setup_db(data_db)
     response = client.get(
-        "/api/v1/corpora/D.0.0.8",
+        "/api/v1/corpora/CCLW.corpus.i00000999.n0000",
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == "Corpus not found: D.0.0.8"
+    assert data["detail"] == "Corpus not found: CCLW.corpus.i00000999.n0000"
 
 
 def test_get_corpus_when_id_invalid(
