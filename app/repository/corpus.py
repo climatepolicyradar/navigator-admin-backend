@@ -281,7 +281,11 @@ def create(db: Session, corpus: CorpusCreateDTO) -> str:
     :return str: The ID of the created corpus.
     """
     try:
-        import_id = generate_import_id(db, CountedEntity.Corpus, corpus.organisation_id)
+        import_id = (
+            generate_import_id(db, CountedEntity.Corpus, corpus.organisation_id)
+            if corpus.import_id is None
+            else corpus.import_id
+        )
         new_corpus = Corpus(
             import_id=import_id,
             title=corpus.title,

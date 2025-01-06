@@ -58,31 +58,47 @@ def validate(db: Session, corpus_import_id: str) -> bool:
     raise ValidationError(msg)
 
 
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def validate_import_id(import_id: str) -> None:
-    """
-    Validates the import id for a corpus.
+def validate_import_id(import_id: str, db: Optional[Session] = None) -> None:
+    """Validate the import id for a corpus.
 
     :param str import_id: import id to check.
+    :param Optional[Session] db: The DB session to connect to.
     :raises ValidationError: raised should the import_id be invalid.
     """
+    if db is None:
+        db = db_session.get_db()
+
     id.validate(import_id)
 
+    # Validate the first part contains either the org name or type.
+    id_parts = import_id.split(".")
+    if (
+        id_parts[0] not in org_repo.get_distinct_org_options(db)
+        or id_parts[1] != "corpus"
+    ):
+        raise ValidationError(f"The import id {import_id} is invalid!")
 
+
+@db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def get(import_id: str) -> Optional[CorpusReadDTO]:
+def get(import_id: str, db: Optional[Session] = None) -> Optional[CorpusReadDTO]:
     """
     Gets a corpus given the import_id.
 
     :param str import_id: The import_id to use to get the corpus.
+    :param Optional[Session] db: The DB session to connect to.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[CorpusReadDTO]: The corpus found or None.
     """
-    validate_import_id(import_id)
+    if db is None:
+        db = db_session.get_db()
+
+    validate_import_id(import_id, db)
     try:
-        with db_session.get_db() as db:
-            return corpus_repo.get(db, import_id)
+        return corpus_repo.get(db, import_id)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
         raise RepositoryError(str(e))
@@ -186,6 +202,9 @@ def create(
     # Check that the organisation ID exists in the database.
     if org_repo.get_name_from_id(db, corpus.organisation_id) is None:
         raise ValidationError("Invalid organisation")
+
+    if corpus.import_id is not None:
+        validate_import_id(corpus.import_id, db)
 
     try:
         import_id = corpus_repo.create(db, corpus)
