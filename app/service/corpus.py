@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 import app.repository.corpus as corpus_repo
 import app.repository.organisation as org_repo
-from app.errors import RepositoryError, ValidationError
+from app.errors import ConflictError, RepositoryError, ValidationError
 from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
 from app.model.user import UserContext
 from app.service import app_user, id
@@ -206,7 +206,7 @@ def create(
 
         corpus_exists = get(corpus.import_id)
         if corpus_exists is not None:
-            raise RepositoryError(f"Corpus '{corpus.import_id}' already exists")
+            raise ConflictError(f"Corpus '{corpus.import_id}' already exists")
 
     try:
         import_id = corpus_repo.create(db, corpus)
