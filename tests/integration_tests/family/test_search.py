@@ -135,7 +135,6 @@ def test_search_retrieves_families_with_multiple_geographies(
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    breakpoint()
     for item in data:
         assert "geographies" in item
         assert isinstance(item["geographies"], list)
