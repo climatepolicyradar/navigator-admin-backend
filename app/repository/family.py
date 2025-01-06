@@ -26,6 +26,7 @@ from sqlalchemy import desc, func, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session, lazyload
+from sqlalchemy.sql import Subquery
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
@@ -110,7 +111,7 @@ def _family_to_dto_search_endpoint(
     )
 
 
-def get_family_geography_subquery(db: Session) -> Query:
+def get_family_geography_subquery(db: Session) -> Subquery:
     """
     Creates a subquery to aggregate geography values for families, accomodating
     those with multiple associated geographies.
