@@ -9,3 +9,11 @@ class CorpusTypeReadDTO(BaseModel):
     name: str
     description: str
     metadata: Json
+
+
+class CorpusTypeCreateDTO(BaseModel):
+    """Representation of a Corpus Type."""
+
+    name: str
+    description: str
+    metadata: Json
