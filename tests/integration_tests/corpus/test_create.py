@@ -236,7 +236,7 @@ def test_create_corpus_when_invalid_import_id(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     data = response.json()
-    assert data["detail"] == "Invalid import ID"
+    assert data["detail"] == f"The import id {import_id} is invalid!"
 
     actual_corpus = (
         data_db.query(Corpus).filter(Corpus.import_id == import_id).one_or_none()
