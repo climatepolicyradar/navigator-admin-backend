@@ -1,3 +1,4 @@
+import pytest
 from db_client.models.organisation.corpus import Corpus
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -209,3 +210,35 @@ def test_create_corpus_when_db_error(
     data = response.json()
     assert data["detail"] == "Bad Repo"
     assert bad_corpus_repo.create.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "import_id",
+    [
+        "invalid_import_id",
+        "CCLW.family.i00000002.n0001",
+        "TEST.corpus.i00000001.n0001",
+    ],
+)
+def test_create_corpus_when_invalid_import_id(
+    client: TestClient,
+    data_db: Session,
+    superuser_header_token,
+    import_id: str,
+):
+    setup_db(data_db)
+    new_corpus = create_corpus_create_dto("Laws and Policies", import_id=import_id)
+    response = client.post(
+        "/api/v1/corpora",
+        json=new_corpus.model_dump(),
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    data = response.json()
+    assert data["detail"] == f"The import id {import_id} is invalid!"
+
+    actual_corpus = (
+        data_db.query(Corpus).filter(Corpus.import_id == import_id).one_or_none()
+    )
+    assert actual_corpus is None

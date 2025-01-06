@@ -26,8 +26,10 @@ def create_corpus_create_dto(
     corpus_text: Optional[str] = "corpus_text",
     image_url: Optional[str] = "some-picture.png",
     org_id: int = 1,
+    import_id: Optional[str] = None,
 ) -> CorpusCreateDTO:
     return CorpusCreateDTO(
+        import_id=import_id,
         title=title,
         description=description,
         corpus_text=corpus_text,

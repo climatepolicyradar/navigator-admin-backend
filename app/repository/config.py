@@ -47,7 +47,12 @@ def _to_corpus_data(row) -> CorpusData:
         description=row.description,
         corpus_type=row.corpus_type,
         corpus_type_description=row.corpus_type_description,
-        organisation={"name": row.org_name, "id": row.org_id},
+        organisation={
+            "name": row.org_name,
+            "id": row.org_id,
+            "display_name": row.org_display_name,
+            "type": row.org_type,
+        },
         taxonomy={**row.taxonomy},
     )
 
@@ -62,6 +67,8 @@ def get_corpora(db: Session, user: UserContext) -> Sequence[CorpusData]:
             CorpusType.description.label("corpus_type_description"),
             Organisation.name.label("org_name"),
             Organisation.id.label("org_id"),
+            Organisation.display_name.label("org_display_name"),
+            Organisation.organisation_type.label("org_type"),
             CorpusType.valid_metadata.label("taxonomy"),
         )
         .join(
