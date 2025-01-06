@@ -204,6 +204,10 @@ def create(
     if corpus.import_id is not None:
         validate_import_id(corpus.import_id, db)
 
+        corpus_exists = get(corpus.import_id)
+        if corpus_exists is not None:
+            raise RepositoryError(f"Corpus '{corpus.import_id}' already exists")
+
     try:
         import_id = corpus_repo.create(db, corpus)
         if len(import_id) == 0:
