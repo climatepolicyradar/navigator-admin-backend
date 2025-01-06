@@ -43,12 +43,15 @@ FamilyGeoMetaOrg = Tuple[
 ]
 
 
-def _get_query(db: Session) -> Query:
-    # NOTE: SqlAlchemy will make a complete hash of query generation
-    #       if columns are used in the query() call. Therefore, entire
-    #       objects are returned.
+def get_family_geography_subquery(db: Session) -> Query:
+    """
+    Creates a subquery to aggregate geography values for families, accomodating
+    those with multiple associated geographies.
 
-    geography_subquery = (
+    :param db Session: the database connection
+    :return Query: A subquery containing family import IDs and their associated geography values
+    """
+    return (
         db.query(
             FamilyGeography.family_import_id,
             func.array_agg(Geography.value).label("geography_values"),
@@ -57,6 +60,14 @@ def _get_query(db: Session) -> Query:
         .group_by(FamilyGeography.family_import_id)
         .subquery()
     )
+
+
+def _get_query(db: Session) -> Query:
+    # NOTE: SqlAlchemy will make a complete hash of query generation
+    #       if columns are used in the query() call. Therefore, entire
+    #       objects are returned.
+
+    geography_subquery = get_family_geography_subquery(db)
 
     query = (
         db.query(
@@ -245,25 +256,27 @@ def search(
             search.append(Family.description.ilike(term))
 
     if geography is not None:
-        geography_filter = or_(
-            *[(Geography.display_value == g.title()) for g in geography]
-        )
-        search.append(geography_filter)
+        geographies = [geo.capitalize() for geo in geography]
+        import_ids = _get_family_import_ids_by_geographies(db, geographies)
+        search.append(Family.import_id.in_(import_ids))
 
     if "status" in search_params.keys():
         term = cast(str, search_params["status"])
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
+
     try:
         query = _get_query(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
+
         found = (
             query.order_by(desc(Family.last_modified))
             .limit(search_params["max_results"])
             .all()
         )
+
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -573,3 +586,22 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         return
 
     return n_families
+
+
+def _get_family_import_ids_by_geographies(db: Session, geographies: list[str]) -> Query:
+    """
+    Filters import IDs of families based on the provided geography values.
+
+    :param db Session: the database connection
+    :param list[str] geographies: A list of geography display values to filter by
+    :return Query: A subquery containing the filtered family import IDs
+    """
+
+    return (
+        db.query(
+            FamilyGeography.family_import_id,
+        )
+        .join(Geography, Geography.id == FamilyGeography.geography_id)
+        .filter(Geography.display_value.in_(geographies))
+        .subquery()
+    )
