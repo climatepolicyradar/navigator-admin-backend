@@ -75,6 +75,7 @@ AUTH_TABLE: AuthMap = {
     },
     # Corpus Type
     AuthEndpoint.CORPUS_TYPE: {
+        AuthOperation.CREATE: AuthAccess.SUPER,
         AuthOperation.READ: AuthAccess.SUPER,
     },
 }
