@@ -40,6 +40,7 @@ class FamilyWriteDTO(BaseModel):
     title: str
     summary: str
     geography: str
+    geographies: Optional[list[str]] = None  # update once implemented on the frontend
     category: str
     metadata: dict[str, list[str]]
     collections: list[str]
