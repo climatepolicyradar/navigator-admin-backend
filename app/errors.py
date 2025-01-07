@@ -23,6 +23,12 @@ class RepositoryError(ExceptionWithMessage):
     pass
 
 
+class ConflictError(ExceptionWithMessage):
+    """Raised when entity already exists."""
+
+    pass
+
+
 class TokenError(ExceptionWithMessage):
     """Raised when there is an error encoding/decoding the token."""
 
