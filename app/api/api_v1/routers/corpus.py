@@ -7,7 +7,12 @@ from app.api.api_v1.query_params import (
     set_default_query_params,
     validate_query_params,
 )
-from app.errors import AuthorisationError, RepositoryError, ValidationError
+from app.errors import (
+    AuthorisationError,
+    ConflictError,
+    RepositoryError,
+    ValidationError,
+)
 from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
 from app.service import corpus as corpus_service
 
@@ -161,5 +166,7 @@ async def create_corpus(request: Request, new_corpus: CorpusCreateDTO) -> str:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except ConflictError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=e.message)
 
     return corpus_id
