@@ -31,7 +31,11 @@ from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from app.repository.helpers import generate_import_id, generate_slug
+from app.repository.helpers import (
+    generate_import_id,
+    generate_slug,
+    perform_family_geographies_update,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,7 +245,8 @@ def _update_intention(
     )
 
     update_geographies = False
-    # TODO: remove this conditional once multi-geography support is implemented on the frontend
+    # TODO: Todo APP-97: remove this conditional once multi-geography support is
+    # implemented on the frontend
     if geo_ids != []:
         current_family_geographies_ids = [
             family_geography.geography_id
@@ -500,36 +505,7 @@ def update(
 
     # Update geographies if geographies have changed.
     if update_geographies:
-        original_geographies = set(
-            [
-                fg.geography_id
-                for fg in db.query(FamilyGeography).filter(
-                    FamilyGeography.family_import_id == import_id
-                )
-            ]
-        )
-
-        cols_to_remove = set(original_geographies) - set(geo_ids)
-
-        for col in cols_to_remove:
-            result = db.execute(
-                db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
-            )
-
-            if result.rowcount == 0:  # type: ignore
-                msg = f"Could not remove family {import_id} from geography {col}"
-                _LOGGER.error(msg)
-                raise RepositoryError(msg)
-
-        cols_to_add = set(geo_ids) - set(original_geographies)
-
-        for col in cols_to_add:
-            db.flush()
-            new_geography = FamilyGeography(
-                family_import_id=import_id,
-                geography_id=col,
-            )
-            db.add(new_geography)
+        perform_family_geographies_update(db, import_id, geo_ids)
 
     return True
 
