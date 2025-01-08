@@ -25,5 +25,7 @@ def get_ids_from_values(db: Session, geo_strings: list[str]) -> list[int]:
     """
     return [
         geography.id
-        for geography in db.query(Geography).filter(Geography.value.in_(geo_strings))
+        for geography in db.query(Geography)
+        .filter(Geography.value.in_(geo_strings))
+        .all()
     ]
