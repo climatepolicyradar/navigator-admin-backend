@@ -23,7 +23,7 @@ def test_geo_service_raises_error_when_validating_invalid_geo_ids(
 ):
     geography_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
-        result = geography_service.get_ids(None, ["CHN", "USA", "AGO"])  # type: ignore
+        result = geography_service.get_ids(geography_repo_mock, ["CHN", "USA", "AGO"])
         assert result == []
 
     expected_msg = (
@@ -36,6 +36,6 @@ def test_geo_service_raises_error_when_validating_invalid_geo_ids(
 def test_geo_service_gets_ids_from_repo(
     geography_repo_mock,
 ):
-    result = geography_service.get_ids(None, ["CHN", "USA"])  # type: ignore
+    result = geography_service.get_ids(geography_repo_mock, ["CHN", "USA"])
     assert result == [1, 2]
     assert geography_repo_mock.get_ids_from_values.call_count == 1
