@@ -133,7 +133,8 @@ def update(
     geo_id = geography.get_id(db, family_dto.geography)
 
     # Validate geographies if they are passed as part of the json object, otherwise
-    # pass an empty list, will update this once the frontend can send multiple geographies
+    # pass an empty list
+    # Todo APP-97: update this once the frontend can send multiple geographies
     geography_ids = (
         geography.get_ids(db, family_dto.geographies) if family_dto.geographies else []
     )

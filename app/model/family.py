@@ -42,7 +42,7 @@ class FamilyWriteDTO(BaseModel):
     summary: str
     geography: str
     geographies: Optional[list[str]] = (
-        None  # remove default once implemented on the frontend
+        None  # Todo APP-97: remove default once implemented on the frontend
     )
     category: str
     metadata: dict[str, list[str]]
