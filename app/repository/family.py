@@ -241,7 +241,8 @@ def _update_intention(
     )
 
     update_geographies = False
-    if geo_ids:
+    # TODO: remove this conditional once multi-geography support is implemented on the frontend
+    if geo_ids != []:
         current_family_geographies_ids = [
             family_geography.geography_id
             for family_geography in db.query(FamilyGeography).filter(
