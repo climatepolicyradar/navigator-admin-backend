@@ -574,3 +574,27 @@ def test_update_family_returns_error_if_payload_contains_invalid_geography_ids(
         data["detail"]
         == "One or more of the following geography values are invalid: AGO, ZWE, ABC"
     )
+
+
+def test_update_family_updates_geographies_if_changed(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/families/A.0.0.2",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    family_data = response.json()
+    assert family_data["geographies"] == ["ZWE"]
+    family_data["geographies"] = ["AGO", "ZWE"]
+    family_data["title"] = "Updated Title"
+
+    response = client.put(
+        "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["geographies"] == ["AGO", "ZWE"]
+    assert data["title"] == "Updated Title"
