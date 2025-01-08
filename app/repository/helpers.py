@@ -1,13 +1,19 @@
 """Helper functions for repos"""
 
+import logging
 from typing import Optional, Union, cast
 from uuid import uuid4
 
-from db_client.models.dfce.family import Slug
+from db_client.models.dfce.family import FamilyGeography, Slug
 from db_client.models.organisation.counters import CountedEntity, EntityCounter
 from db_client.models.organisation.users import Organisation
 from slugify import slugify
+from sqlalchemy import delete as db_delete
 from sqlalchemy.orm import Session
+
+from app.errors import RepositoryError
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def generate_unique_slug(
@@ -91,3 +97,79 @@ def generate_import_id(
         db.query(EntityCounter).filter(EntityCounter.prefix == org_name).one()
     )
     return counter.create_import_id(entity_type)
+
+
+def remove_old_geographies(
+    db: Session, import_id: str, geo_ids: list[int], original_geographies: set[int]
+):
+    """
+    Removes geographies that are no longer in geo_ids.
+
+    This function compares the original set of geographies with the new geo_ids
+    and removes the geographies that are no longer present.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the geographies
+    :param list[int] geo_ids: the list of geography IDs to be kept
+    :param set[int] original_geographies: the set of original geography IDs to be compared
+    :raises RepositoryError: if a geography removal fails
+    """
+    cols_to_remove = set(original_geographies) - set(geo_ids)
+    for col in cols_to_remove:
+        result = db.execute(
+            db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
+        )
+
+        if result.rowcount == 0:  # type: ignore
+            msg = f"Could not remove family {import_id} from geography {col}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
+
+
+def add_new_geographies(
+    db: Session, import_id: str, geo_ids: list[int], original_geographies: set[int]
+):
+    """
+    Adds new geographies that are not already in the original geographies.
+
+    This function identifies the geographies that need to be added (i.e., those
+    that are in geo_ids but not in the original set) and adds them to the database.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the geographies
+    :param list[str] geo_ids: the list of geography IDs to be added
+    :param set[str] original_geographies: the set of original geography IDs to be checked against
+    """
+    cols_to_add = set(geo_ids) - set(original_geographies)
+
+    for col in cols_to_add:
+        db.flush()
+        new_geography = FamilyGeography(
+            family_import_id=import_id,
+            geography_id=col,
+        )
+        db.add(new_geography)
+
+
+def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list[int]):
+    """
+    Updates geographies by removing old ones and adding new ones.
+
+    This function performs a complete update by removing geographies that are no
+    longer in geo_ids and adding new geographies that were not previously present.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the geographies
+    :param list[str] geo_ids: the list of geography IDs to be updated
+    """
+    original_geographies = set(
+        [
+            fg.geography_id
+            for fg in db.query(FamilyGeography).filter(
+                FamilyGeography.family_import_id == import_id
+            )
+        ]
+    )
+
+    remove_old_geographies(db, import_id, geo_ids, original_geographies)
+    add_new_geographies(db, import_id, geo_ids, original_geographies)
