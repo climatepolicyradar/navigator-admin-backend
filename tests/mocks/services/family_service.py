@@ -59,7 +59,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
                 data.title,
                 data.summary,
                 data.geography,
-                data.geographies,  # type: ignore
+                data.geographies,
                 data.category,
                 data.metadata,
                 "slug",

@@ -242,3 +242,20 @@ def test_create_corpus_when_invalid_import_id(
         data_db.query(Corpus).filter(Corpus.import_id == import_id).one_or_none()
     )
     assert actual_corpus is None
+
+
+def test_create_corpus_raises_on_conflict(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    new_corpus = create_corpus_create_dto(
+        "Laws and Policies", import_id="CCLW.corpus.i00000001.n0000"
+    )
+    response = client.post(
+        "/api/v1/corpora",
+        json=new_corpus.model_dump(),
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_409_CONFLICT
+    data = response.json()
+    assert data["detail"] == f"Corpus '{new_corpus.import_id}' already exists"

@@ -22,10 +22,11 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, func, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm import Query, Session, lazyload
+from sqlalchemy.sql import Subquery
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
@@ -34,13 +35,22 @@ from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
 
-FamilyGeoMetaOrg = Tuple[Family, Geography, FamilyMetadata, Corpus, Organisation]
+FamilyGeoMetaOrg = Tuple[
+    Family,
+    list[str],
+    FamilyMetadata,
+    Corpus,
+    Organisation,
+]
 
 
-def _get_query(db: Session) -> Query:
+def _get_query_search_endpoint(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
+    # NOTE: Whilst we are updating the queries to handle multiple geographies, we are keeping
+    #       the returned results for search as they are currently to enable backwards
+    #       compatibility, and as to not extend beyond this pr.
     return (
         db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
         .join(FamilyGeography, FamilyGeography.family_import_id == Family.import_id)
@@ -55,9 +65,19 @@ def _get_query(db: Session) -> Query:
     )
 
 
-def _family_to_dto(
-    db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
+def _family_to_dto_search_endpoint(
+    db: Session,
+    fam_geo_meta_corp_org: Tuple[
+        Family,
+        Geography,
+        FamilyMetadata,
+        Corpus,
+        Organisation,
+    ],
 ) -> FamilyReadDTO:
+    # NOTE: Whilst we are updating the queries to handle multiple geographies, we are keeping
+    #       the returned results for search as they are currently to enable backwards
+    #       compatibility, and as to not extend beyond this pr.
     fam, geo_value, meta, corpus, org = fam_geo_meta_corp_org
     metadata = cast(dict, meta.value)
     org = cast(str, org.name)
@@ -67,6 +87,111 @@ def _family_to_dto(
         title=str(fam.title),
         summary=str(fam.description),
         geography=str(geo_value.value),
+        geographies=[str(geo_value.value)],
+        category=str(fam.family_category),
+        status=str(fam.family_status),
+        metadata=metadata,
+        slug=str(fam.slugs[0].name if len(fam.slugs) > 0 else ""),
+        events=[str(e.import_id) for e in fam.events],
+        published_date=fam.published_date,
+        last_updated_date=fam.last_updated_date,
+        documents=[str(d.import_id) for d in fam.family_documents],
+        collections=[
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                fam.import_id == CollectionFamily.family_import_id
+            )
+        ],
+        organisation=org,
+        corpus_import_id=cast(str, corpus.import_id),
+        corpus_title=cast(str, corpus.title),
+        corpus_type=cast(str, corpus.corpus_type_name),
+        created=cast(datetime, fam.created),
+        last_modified=cast(datetime, fam.last_modified),
+    )
+
+
+def get_family_geography_subquery(db: Session) -> Subquery:
+    """
+    Creates a subquery to aggregate geography values for families, accomodating
+    those with multiple associated geographies.
+
+    :param db Session: the database connection
+    :return Query: A subquery containing family import IDs and their associated geography values
+    """
+    return (
+        db.query(
+            FamilyGeography.family_import_id,
+            func.array_agg(Geography.value).label("geography_values"),
+        )
+        .join(Geography, Geography.id == FamilyGeography.geography_id)
+        .group_by(FamilyGeography.family_import_id)
+        .subquery()
+    )
+
+
+def _get_query(db: Session) -> Query:
+    # NOTE: SqlAlchemy will make a complete hash of query generation
+    #       if columns are used in the query() call. Therefore, entire
+    #       objects are returned.
+
+    geography_subquery = get_family_geography_subquery(db)
+
+    query = (
+        db.query(
+            Family,
+            geography_subquery.c.geography_values,
+            FamilyMetadata,
+            Corpus,
+            Organisation,
+        )
+        .join(
+            geography_subquery,
+            geography_subquery.c.family_import_id == Family.import_id,
+        )
+        .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
+        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+        .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Corpus.organisation_id == Organisation.id)
+        .group_by(
+            Family.import_id,
+            Family.title,
+            geography_subquery.c.geography_values,
+            FamilyMetadata.family_import_id,
+            Corpus.import_id,
+            Organisation,
+        )
+        .options(
+            # Disable any default eager loading as this was causing multiplicity due to
+            # implicit joins in relationships on the selected models.
+            lazyload("*")
+        )
+    )
+    _LOGGER.error(query)
+
+    return query
+
+
+def _family_to_dto(
+    db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
+) -> FamilyReadDTO:
+    (
+        fam,
+        geo_values,
+        meta,
+        corpus,
+        org,
+    ) = fam_geo_meta_corp_org
+
+    metadata = cast(dict, meta.value)
+    org = cast(str, org.name)
+
+    return FamilyReadDTO(
+        import_id=str(fam.import_id),
+        title=str(fam.title),
+        summary=str(fam.description),
+        geography=str(geo_values[0]),
+        geographies=[str(value) for value in geo_values],
         category=str(fam.family_category),
         status=str(fam.family_status),
         metadata=metadata,
@@ -227,21 +352,24 @@ def search(
         search.append(Family.family_status == term.capitalize())
 
     condition = and_(*search) if len(search) > 1 else search[0]
+
     try:
-        query = _get_query(db).filter(condition)
+        query = _get_query_search_endpoint(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
+
         found = (
             query.order_by(desc(Family.last_modified))
             .limit(search_params["max_results"])
             .all()
         )
+
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [_family_to_dto(db, f) for f in found]
+    return [_family_to_dto_search_endpoint(db, f) for f in found]
 
 
 def update(

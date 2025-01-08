@@ -11,7 +11,7 @@ def create_family_read_dto(
     title: str = "title",
     summary: str = "summary",
     geography: str = "CHN",
-    geographies: Optional[list[str]] = [],
+    geographies: list[str] = ["CHN", "BRB", "BHS"],
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     slug: str = "slug",
