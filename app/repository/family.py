@@ -95,6 +95,7 @@ def _update_intention(
     import_id: str,
     family: FamilyWriteDTO,
     geo_id: int,
+    geo_ids: list[int],
     original_family: Family,
 ):
     original_collections = [
@@ -113,6 +114,17 @@ def _update_intention(
         .geography_id
         != geo_id
     )
+
+    update_geographies = False
+    if geo_ids:
+        current_family_geographies_ids = [
+            family_geography.geography_id
+            for family_geography in db.query(FamilyGeography).filter(
+                FamilyGeography.family_import_id == import_id
+            )
+        ]
+        update_geographies = set(current_family_geographies_ids) != set(geo_ids)
+
     update_basics = (
         update_title
         or update_geo
@@ -125,7 +137,13 @@ def _update_intention(
         .one()
     )
     update_metadata = existing_metadata.value != family.metadata
-    return update_title, update_basics, update_metadata, update_collections
+    return (
+        update_title,
+        update_basics,
+        update_metadata,
+        update_collections,
+        update_geographies,
+    )
 
 
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
@@ -226,7 +244,9 @@ def search(
     return [_family_to_dto(db, f) for f in found]
 
 
-def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
+def update(
+    db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int, geo_ids: list[int]
+) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -234,6 +254,7 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
     :param int geo_id: a validated geography id
+    :param list[int] geo_ids: a list of validated geography ids
     :return bool: True if new values were set otherwise false.
     """
     new_values = family.model_dump()
@@ -252,7 +273,8 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
         update_basics,
         update_metadata,
         update_collections,
-    ) = _update_intention(db, import_id, family, geo_id, original_family)
+        update_geographies,
+    ) = _update_intention(db, import_id, family, geo_id, geo_ids, original_family)
 
     # Return if nothing to do
     if not (update_title or update_basics or update_metadata or update_collections):
@@ -346,6 +368,39 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
                 collection_import_id=col,
             )
             db.add(new_collection)
+
+    # Update geographies if geographies have changed.
+    if update_geographies:
+        original_geographies = set(
+            [
+                fg.geography_id
+                for fg in db.query(FamilyGeography).filter(
+                    FamilyGeography.family_import_id == import_id
+                )
+            ]
+        )
+
+        cols_to_remove = set(original_geographies) - set(geo_ids)
+
+        for col in cols_to_remove:
+            result = db.execute(
+                db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
+            )
+
+            if result.rowcount == 0:  # type: ignore
+                msg = f"Could not remove family {import_id} from geography {col}"
+                _LOGGER.error(msg)
+                raise RepositoryError(msg)
+
+        cols_to_add = set(geo_ids) - set(original_geographies)
+
+        for col in cols_to_add:
+            db.flush()
+            new_geography = FamilyGeography(
+                family_import_id=import_id,
+                geography_id=col,
+            )
+            db.add(new_geography)
 
     return True
 
