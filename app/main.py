@@ -120,7 +120,7 @@ app.include_router(
     dependencies=[Depends(check_user_auth)],
 )
 
-# Add CORS middleware to allow cross origin requests from any port
+# Add CORS middleware to allow cross origin requests from any port.
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=_ALLOW_ORIGIN_REGEX,
