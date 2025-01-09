@@ -531,9 +531,11 @@ def create(
         )
         db.add(new_family)
 
-        # TODO: PDCT-1406: Properly implement multi-geography support
-        for geo_id in geo_ids:
-            db.add(FamilyGeography(family_import_id=import_id, geography_id=geo_id))
+        family_geographies = [
+            FamilyGeography(family_import_id=import_id, geography_id=geo_id)
+            for geo_id in geo_ids
+        ]
+        db.add_all(family_geographies)
 
         # Add corpus - family link.
         db.add(
