@@ -338,7 +338,13 @@ def update(
     ) = _update_intention(db, import_id, family, geo_id, geo_ids, original_family)
 
     # Return if nothing to do
-    if not (update_title or update_basics or update_metadata or update_collections):
+    if not (
+        update_title
+        or update_basics
+        or update_metadata
+        or update_collections
+        or update_geographies
+    ):
         return True
 
     # Update basic fields
