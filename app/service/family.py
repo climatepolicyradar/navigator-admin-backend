@@ -194,12 +194,7 @@ def create(
         db = db_session.get_db()
 
     # Validate geographies
-    geo_ids = []
-    if isinstance(family.geography, str):
-        geo_ids.append(geography.get_id(db, family.geography))
-    elif isinstance(family.geography, list):
-        for geo_id in family.geography:
-            geo_ids.append(geography.get_id(db, geo_id))
+    geo_ids = geography.get_ids(db, family.geographies)
 
     # Validate category
     category.validate(family.category)
