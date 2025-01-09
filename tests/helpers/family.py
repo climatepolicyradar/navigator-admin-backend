@@ -89,7 +89,7 @@ def create_family_write_dto(
     title: str = "title",
     summary: str = "summary",
     geography: str = "CHN",
-    geographies: list[str] = ["CHN", "BRB", "BHS"],
+    geographies: Optional[list[str]] = [],
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     collections: Optional[list[str]] = None,

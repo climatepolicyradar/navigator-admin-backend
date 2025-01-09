@@ -38,7 +38,11 @@ class FamilyRepo(Protocol):
 
     @staticmethod
     def update(
-        db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int
+        db: Session,
+        import_id: str,
+        family: FamilyWriteDTO,
+        geo_id: int,
+        geography_ids: list[int],
     ) -> bool:
         """Updates a family"""
         ...

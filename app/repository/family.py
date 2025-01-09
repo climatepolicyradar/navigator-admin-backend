@@ -220,6 +220,7 @@ def _update_intention(
     import_id: str,
     family: FamilyWriteDTO,
     geo_id: int,
+    geo_ids: list[int],
     original_family: Family,
 ):
     original_collections = [
@@ -238,6 +239,19 @@ def _update_intention(
         .geography_id
         != geo_id
     )
+
+    update_geographies = False
+    # TODO: Todo APP-97: remove this conditional once multi-geography support is
+    # implemented on the frontend
+    if geo_ids != []:
+        current_family_geographies_ids = [
+            family_geography.geography_id
+            for family_geography in db.query(FamilyGeography).filter(
+                FamilyGeography.family_import_id == import_id
+            )
+        ]
+        update_geographies = set(current_family_geographies_ids) != set(geo_ids)
+
     update_basics = (
         update_title
         or update_geo
@@ -250,7 +264,13 @@ def _update_intention(
         .one()
     )
     update_metadata = existing_metadata.value != family.metadata
-    return update_title, update_basics, update_metadata, update_collections
+    return (
+        update_title,
+        update_basics,
+        update_metadata,
+        update_collections,
+        update_geographies,
+    )
 
 
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
@@ -354,7 +374,9 @@ def search(
     return [_family_to_dto_search_endpoint(db, f) for f in found]
 
 
-def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> bool:
+def update(
+    db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int, geo_ids: list[int]
+) -> bool:
     """
     Updates a single entry with the new values passed.
 
@@ -362,6 +384,7 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
     :param str import_id: The family import id to change.
     :param FamilyDTO family: The new values
     :param int geo_id: a validated geography id
+    :param list[int] geo_ids: a list of validated geography ids
     :return bool: True if new values were set otherwise false.
     """
     new_values = family.model_dump()
@@ -380,7 +403,8 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
         update_basics,
         update_metadata,
         update_collections,
-    ) = _update_intention(db, import_id, family, geo_id, original_family)
+        update_geographies,
+    ) = _update_intention(db, import_id, family, geo_id, geo_ids, original_family)
 
     # Return if nothing to do
     if not (update_title or update_basics or update_metadata or update_collections):
@@ -474,6 +498,10 @@ def update(db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int) -> 
                 collection_import_id=col,
             )
             db.add(new_collection)
+
+    # Update geographies if geographies have changed.
+    if update_geographies:
+        perform_family_geographies_update(db, import_id, geo_ids)
 
     return True
 
@@ -655,3 +683,85 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         return
 
     return n_families
+
+
+def remove_old_geographies(
+    db: Session, import_id: str, geo_ids: list[int], original_geographies: set[int]
+):
+    """
+    Removes geographies that are no longer in geo_ids.
+
+    This function compares the original set of geographies with the new geo_ids
+    and removes the geographies that are no longer present.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the geographies
+    :param list[int] geo_ids: the list of geography IDs to be kept
+    :param set[int] original_geographies: the set of original geography IDs to be compared
+    :raises RepositoryError: if a geography removal fails
+    """
+    cols_to_remove = set(original_geographies) - set(geo_ids)
+    for col in cols_to_remove:
+        try:
+            db.execute(
+                db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
+            )
+        except Exception as e:
+            msg = f"Could not remove family {import_id} from geography {col}: {str(e)}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
+
+
+def add_new_geographies(
+    db: Session, import_id: str, geo_ids: list[int], original_geographies: set[int]
+):
+    """
+    Adds new geographies that are not already in the original geographies.
+
+    This function identifies the geographies that need to be added (i.e., those
+    that are in geo_ids but not in the original set) and adds them to the database.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the geographies
+    :param list[str] geo_ids: the list of geography IDs to be added
+    :param set[str] original_geographies: the set of original geography IDs to be checked against
+    :raises RepositoryError: if fails to add a geography
+    """
+    cols_to_add = set(geo_ids) - set(original_geographies)
+
+    for col in cols_to_add:
+        try:
+            new_geography = FamilyGeography(
+                family_import_id=import_id,
+                geography_id=col,
+            )
+            db.add(new_geography)
+            db.flush()
+        except Exception as e:
+            msg = f"Failed to add geography {col} to family {import_id}: {str(e)}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
+
+
+def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list[int]):
+    """
+    Updates geographies by removing old ones and adding new ones.
+
+    This function performs a complete update by removing geographies that are no
+    longer in geo_ids and adding new geographies that were not previously present.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the geographies
+    :param list[str] geo_ids: the list of geography IDs to be updated
+    """
+    original_geographies = set(
+        [
+            fg.geography_id
+            for fg in db.query(FamilyGeography).filter(
+                FamilyGeography.family_import_id == import_id
+            )
+        ]
+    )
+
+    remove_old_geographies(db, import_id, geo_ids, original_geographies)
+    add_new_geographies(db, import_id, geo_ids, original_geographies)

@@ -7,7 +7,7 @@ Uses a family repo mock and ensures that the repo is called.
 import pytest
 
 import app.service.family as family_service
-from app.errors import AuthorisationError, ValidationError
+from app.errors import AuthorisationError, RepositoryError, ValidationError
 from tests.helpers.family import create_family_write_dto
 
 
@@ -418,3 +418,43 @@ def test_update_success_when_family_organisation_mismatch_with_user_org(
     assert collection_repo_mock.get_org_from_collection_id.call_count == 3
     assert collection_repo_mock.validate.call_count == 1
     assert family_repo_mock.update.call_count == 1
+
+
+def test_update_raises_error_when_removing_family_geographies_fails(
+    family_repo_mock, geography_repo_mock, admin_user_context
+):
+    family = family_service.get("a.b.c.d")
+    assert family is not None  # needed to placate pyright
+
+    updated_family = create_family_write_dto(
+        title="UPDATED TITLE",
+        collections=["x.y.z.2", "x.y.z.3"],
+        metadata={"size": ["100"], "color": ["blue"]},
+        geographies=["MYS"],
+    )
+
+    geography_repo_mock.failed_to_remove_geography = True
+    with pytest.raises(RepositoryError) as e:
+        family_service.update("a.b.c.d", admin_user_context, updated_family)
+    expected_msg = "Failed to remove geography from family"
+    assert e.value.message == expected_msg
+
+
+def test_update_raises_error_when_adding_family_geographies_fails(
+    family_repo_mock, geography_repo_mock, admin_user_context
+):
+    family = family_service.get("a.b.c.d")
+    assert family is not None  # needed to placate pyright
+
+    updated_family = create_family_write_dto(
+        title="UPDATED TITLE",
+        collections=["x.y.z.2", "x.y.z.3"],
+        metadata={"size": ["100"], "color": ["blue"]},
+        geographies=["CHN", "JPN"],
+    )
+
+    geography_repo_mock.failed_to_add_geography = True
+    with pytest.raises(RepositoryError) as e:
+        family_service.update("a.b.c.d", admin_user_context, updated_family)
+    expected_msg = "Failed to add geography to family"
+    assert e.value.message == expected_msg
