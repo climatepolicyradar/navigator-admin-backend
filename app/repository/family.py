@@ -702,12 +702,12 @@ def remove_old_geographies(
     """
     cols_to_remove = set(original_geographies) - set(geo_ids)
     for col in cols_to_remove:
-        result = db.execute(
-            db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
-        )
-
-        if result.rowcount == 0:  # type: ignore
-            msg = f"Could not remove family {import_id} from geography {col}"
+        try:
+            db.execute(
+                db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
+            )
+        except Exception as e:
+            msg = f"Could not remove family {import_id} from geography {col}: {str(e)}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
 
@@ -725,16 +725,22 @@ def add_new_geographies(
     :param str import_id: the family import ID for the geographies
     :param list[str] geo_ids: the list of geography IDs to be added
     :param set[str] original_geographies: the set of original geography IDs to be checked against
+    :raises RepositoryError: if fails to add a geography
     """
     cols_to_add = set(geo_ids) - set(original_geographies)
 
     for col in cols_to_add:
-        db.flush()
-        new_geography = FamilyGeography(
-            family_import_id=import_id,
-            geography_id=col,
-        )
-        db.add(new_geography)
+        try:
+            new_geography = FamilyGeography(
+                family_import_id=import_id,
+                geography_id=col,
+            )
+            db.add(new_geography)
+            db.flush()
+        except Exception as e:
+            msg = f"Failed to add geography {col} to family {import_id}: {str(e)}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
 
 
 def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list[int]):
