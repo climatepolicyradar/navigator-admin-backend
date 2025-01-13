@@ -44,73 +44,6 @@ FamilyGeoMetaOrg = Tuple[
 ]
 
 
-def _get_query_search_endpoint(db: Session) -> Query:
-    # NOTE: SqlAlchemy will make a complete hash of query generation
-    #       if columns are used in the query() call. Therefore, entire
-    #       objects are returned.
-    # NOTE: Whilst we are updating the queries to handle multiple geographies, we are keeping
-    #       the returned results for search as they are currently to enable backwards
-    #       compatibility, and as to not extend beyond this pr.
-    return (
-        db.query(Family, Geography, FamilyMetadata, Corpus, Organisation)
-        .join(FamilyGeography, FamilyGeography.family_import_id == Family.import_id)
-        .join(
-            Geography,
-            Geography.id == FamilyGeography.geography_id,
-        )
-        .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
-        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
-        .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
-        .join(Organisation, Corpus.organisation_id == Organisation.id)
-    )
-
-
-def _family_to_dto_search_endpoint(
-    db: Session,
-    fam_geo_meta_corp_org: Tuple[
-        Family,
-        Geography,
-        FamilyMetadata,
-        Corpus,
-        Organisation,
-    ],
-) -> FamilyReadDTO:
-    # NOTE: Whilst we are updating the queries to handle multiple geographies, we are keeping
-    #       the returned results for search as they are currently to enable backwards
-    #       compatibility, and as to not extend beyond this pr.
-    fam, geo_value, meta, corpus, org = fam_geo_meta_corp_org
-    metadata = cast(dict, meta.value)
-    org = cast(str, org.name)
-
-    return FamilyReadDTO(
-        import_id=str(fam.import_id),
-        title=str(fam.title),
-        summary=str(fam.description),
-        geography=str(geo_value.value),
-        geographies=[str(geo_value.value)],
-        category=str(fam.family_category),
-        status=str(fam.family_status),
-        metadata=metadata,
-        slug=str(fam.slugs[0].name if len(fam.slugs) > 0 else ""),
-        events=[str(e.import_id) for e in fam.events],
-        published_date=fam.published_date,
-        last_updated_date=fam.last_updated_date,
-        documents=[str(d.import_id) for d in fam.family_documents],
-        collections=[
-            c.collection_import_id
-            for c in db.query(CollectionFamily).filter(
-                fam.import_id == CollectionFamily.family_import_id
-            )
-        ],
-        organisation=org,
-        corpus_import_id=cast(str, corpus.import_id),
-        corpus_title=cast(str, corpus.title),
-        corpus_type=cast(str, corpus.corpus_type_name),
-        created=cast(datetime, fam.created),
-        last_modified=cast(datetime, fam.last_modified),
-    )
-
-
 def get_family_geography_subquery(db: Session) -> Subquery:
     """
     Creates a subquery to aggregate geography values for families, accomodating
@@ -344,10 +277,8 @@ def search(
             search.append(Family.description.ilike(term))
 
     if geography is not None:
-        geography_filter = or_(
-            *[(Geography.display_value == g.title()) for g in geography]
-        )
-        search.append(geography_filter)
+        import_ids = _get_family_import_ids_by_geographies(db, geography)
+        search.append(Family.import_id.in_(import_ids))
 
     if "status" in search_params.keys():
         term = cast(str, search_params["status"])
@@ -356,7 +287,7 @@ def search(
     condition = and_(*search) if len(search) > 1 else search[0]
 
     try:
-        query = _get_query_search_endpoint(db).filter(condition)
+        query = _get_query(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
 
@@ -371,7 +302,7 @@ def search(
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [_family_to_dto_search_endpoint(db, f) for f in found]
+    return [_family_to_dto(db, f) for f in found]
 
 
 def update(
@@ -407,7 +338,13 @@ def update(
     ) = _update_intention(db, import_id, family, geo_id, geo_ids, original_family)
 
     # Return if nothing to do
-    if not (update_title or update_basics or update_metadata or update_collections):
+    if not (
+        update_title
+        or update_basics
+        or update_metadata
+        or update_collections
+        or update_geographies
+    ):
         return True
 
     # Update basic fields
@@ -765,3 +702,21 @@ def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list
 
     remove_old_geographies(db, import_id, geo_ids, original_geographies)
     add_new_geographies(db, import_id, geo_ids, original_geographies)
+
+
+def _get_family_import_ids_by_geographies(db: Session, geographies: list[str]) -> Query:
+    """
+    Filters import IDs of families based on the provided geography values.
+    :param db Session: the database connection
+    :param list[str] geographies: A list of geography display values to filter by
+    :return Query: A subquery containing the filtered family import IDs
+    """
+
+    return (
+        db.query(
+            FamilyGeography.family_import_id,
+        )
+        .join(Geography, Geography.id == FamilyGeography.geography_id)
+        .filter(Geography.display_value.in_(geographies))
+        .subquery()
+    )
