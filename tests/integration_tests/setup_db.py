@@ -523,12 +523,9 @@ def _setup_family_data(
     num_families = len(initial_data)
     for index in range(num_families):
         data = initial_data[index]
-
-        geo_id = (
-            test_db.query(Geography.id)
-            .filter(Geography.value == data["geography"])
-            .scalar()
-        )
+        geographies = (
+            test_db.query(Geography).filter(Geography.value.in_(data["geographies"]))
+        ).all()
 
         test_db.add(
             Family(
@@ -538,9 +535,13 @@ def _setup_family_data(
                 family_category=data["category"],
             )
         )
-        test_db.add(
-            FamilyGeography(family_import_id=data["import_id"], geography_id=geo_id)
-        )
+        family_geographies = [
+            FamilyGeography(
+                family_import_id=data["import_id"], geography_id=geography.id
+            )
+            for geography in geographies
+        ]
+        test_db.add_all(family_geographies)
 
         corpus = (
             test_db.query(Corpus)
