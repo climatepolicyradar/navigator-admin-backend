@@ -285,3 +285,36 @@ def test_create_family_when_org_mismatch(
         data["detail"]
         == "User 'cclw@cpr.org' is not authorised to perform operation on 'UNFCCC.corpus.i00000001.n0000'"
     )
+
+
+def test_create_endpoint_creates_family_with_multiple_geographies(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_family = create_family_create_dto(
+        title="Test Title",
+        summary="test test test",
+        geographies=["CHN", "BRB", "BHS"],
+    )
+    response = client.post(
+        "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    expected_import_id = "CCLW.family.i00000002.n0000"
+    assert response.json() == expected_import_id
+    actual_family = (
+        data_db.query(Family).filter(Family.import_id == expected_import_id).one()
+    )
+
+    assert actual_family.title == "Test Title"
+
+    actual_geos = (
+        data_db.query(Geography)
+        .join(FamilyGeography, FamilyGeography.geography_id == Geography.id)
+        .filter(FamilyGeography.family_import_id == expected_import_id)
+        .all()
+    )
+
+    breakpoint()
+    assert len(actual_geos) == 3
+    assert [geo.value for geo in actual_geos] == ["CHN", "BRB", "BHS"]
