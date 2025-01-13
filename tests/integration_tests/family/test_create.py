@@ -145,13 +145,16 @@ def test_create_family_when_invalid_geo(
         title="Title",
         summary="test test test",
     )
-    new_family.geography = "UK"
+    new_family.geographies = ["UK"]
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "The geography value UK is invalid!"
+    assert (
+        data["detail"]
+        == "One or more of the following geography values are invalid: UK"
+    )
 
 
 def test_create_family_when_invalid_category(

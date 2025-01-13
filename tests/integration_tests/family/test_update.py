@@ -496,7 +496,7 @@ def test_update_family__invalid_geo(
         title="Updated Title",
         summary="just a test",
     )
-    new_family.geography = "UK"
+    new_family.geographies = ["UK"]
     response = client.put(
         "/api/v1/families/A.0.0.3",
         json=new_family.model_dump(),
@@ -504,7 +504,10 @@ def test_update_family__invalid_geo(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["detail"] == "The geography value UK is invalid!"
+    assert (
+        data["detail"]
+        == "One or more of the following geography values are invalid: UK"
+    )
 
 
 def test_update_family_metadata_if_changed(
