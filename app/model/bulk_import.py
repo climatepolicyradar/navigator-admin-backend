@@ -54,6 +54,7 @@ class BulkImportFamilyDTO(BaseModel):
             title=self.title,
             summary=self.summary,
             geography=self.geographies,
+            geographies=self.geographies,
             category=self.category,
             metadata=self.metadata.model_dump(),
             collections=self.collections,
