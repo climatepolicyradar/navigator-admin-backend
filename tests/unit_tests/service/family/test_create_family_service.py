@@ -297,6 +297,4 @@ def test_create_endpoint_raises_validation_error_when_validating_invalid_geograp
 
     expected_msg = "One or more of the following geography values are invalid: CHN"
     assert e.value.message == expected_msg
-
     assert family_repo_mock.create.call_count == 0
-    assert e.value.message == expected_msg
