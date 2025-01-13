@@ -22,10 +22,10 @@ def mock_geography_repo(geography_repo, monkeypatch: MonkeyPatch, mocker):
             return 1
         return None
 
-    def mock_get_ids_from_values(_, __) -> list[int]:
+    def mock_get_ids_from_values(_, values) -> list[int]:
         maybe_throw()
         if not geography_repo.error:
-            return [1, 2]
+            return list(range(1, len(values) + 1))
         return []
 
     geography_repo.error = False
