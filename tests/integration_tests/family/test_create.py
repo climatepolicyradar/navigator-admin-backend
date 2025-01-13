@@ -294,7 +294,8 @@ def test_create_endpoint_creates_family_with_multiple_geographies(
     new_family = create_family_create_dto(
         title="Test Title",
         summary="test test test",
-        geographies=["CHN", "BRB", "BHS"],
+        geography="ALB",
+        geographies=["ALB", "BRB", "BHS"],
     )
     response = client.post(
         "/api/v1/families", json=new_family.model_dump(), headers=user_header_token
@@ -314,7 +315,5 @@ def test_create_endpoint_creates_family_with_multiple_geographies(
         .filter(FamilyGeography.family_import_id == expected_import_id)
         .all()
     )
-
-    breakpoint()
     assert len(actual_geos) == 3
-    assert [geo.value for geo in actual_geos] == ["CHN", "BRB", "BHS"]
+    assert [geo.value for geo in actual_geos] == ["ALB", "BHS", "BRB"]
