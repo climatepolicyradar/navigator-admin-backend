@@ -281,7 +281,7 @@ def test_create_success_when_corpus_org_different_to_usr_org_super(
     assert family_repo_mock.create.call_count == 1
 
 
-def test_create_endpoint_raises_repository_error_when_validating_invalid_geographies(
+def test_create_endpoint_raises_validation_error_when_validating_invalid_geographies(
     family_repo_mock,
     geography_repo_mock,
     admin_user_context,
@@ -292,9 +292,11 @@ def test_create_endpoint_raises_repository_error_when_validating_invalid_geograp
     )
     geography_repo_mock.error = True
 
-    with pytest.raises(RepositoryError) as e:
+    with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
 
     expected_msg = "One or more of the following geography values are invalid: CHN"
-    assert family_repo_mock.create.call_count == 1
+    assert e.value.message == expected_msg
+
+    assert family_repo_mock.create.call_count == 0
     assert e.value.message == expected_msg
