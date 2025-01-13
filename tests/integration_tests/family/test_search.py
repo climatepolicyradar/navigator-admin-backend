@@ -58,9 +58,9 @@ def test_search_geographies(
     )
 
     tests_cases = [
-        (["afghanistan"], ["A.0.0.1", "A.0.0.3"]),
-        (["zimbabwe"], ["A.0.0.2"]),
-        (["albania", "zambia"], ["A.0.0.4", "A.0.0.5"]),
+        (["Afghanistan"], ["A.0.0.1", "A.0.0.3"]),
+        (["Zimbabwe"], ["A.0.0.2"]),
+        (["Albania", "Zambia"], ["A.0.0.4", "A.0.0.5"]),
     ]
 
     for countries, expected_ids in tests_cases:
@@ -126,7 +126,7 @@ def test_search_retrieves_families_with_multiple_geographies(
         ],
     )
 
-    test_geography = {"display_name": "albania", "iso_code": "ALB"}
+    test_geography = {"display_name": "Albania", "iso_code": "ALB"}
 
     geographies_query = f"&geography={test_geography['display_name']}"
     response = client.get(
