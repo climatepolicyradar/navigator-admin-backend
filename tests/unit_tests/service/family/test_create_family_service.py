@@ -26,7 +26,7 @@ def test_create(
     family = family_service.create(new_family, admin_user_context)
     assert family is not None
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
@@ -54,7 +54,7 @@ def test_create_repo_fails(
     expected_msg = "bad family repo"
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
@@ -81,7 +81,7 @@ def test_create_raises_when_category_invalid(
     expected_msg = "Invalid is not a valid FamilyCategory"
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 0
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
@@ -107,7 +107,7 @@ def test_create_raises_when_missing_metadata(
     expected_msg = "Metadata validation failed: Missing metadata keys: {'size'}"
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
@@ -136,7 +136,7 @@ def test_create_raises_when_missing_taxonomy(
     expected_msg = "No taxonomy found for corpus"
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
@@ -166,7 +166,7 @@ def test_create_raises_when_collection_org_different_to_usr_org(
 
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
@@ -193,7 +193,7 @@ def test_create_raises_when_corpus_missing(
     expected_msg = "Corpus 'CCLW.corpus.i00000001.n0000' not found"
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 0
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
@@ -221,7 +221,7 @@ def test_create_when_no_org_associated_with_entity(
     expected_msg = "No organisation associated with corpus CCLW.corpus.i00000001.n0000"
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
@@ -248,7 +248,7 @@ def test_create_raises_when_corpus_org_different_to_usr_org(
 
     assert e.value.message == expected_msg
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 0
@@ -272,10 +272,29 @@ def test_create_success_when_corpus_org_different_to_usr_org_super(
     family = family_service.create(new_family, super_user_context)
     assert family is not None
 
-    assert geography_repo_mock.get_id_from_value.call_count == 1
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert corpus_repo_mock.verify_corpus_exists.call_count == 1
     assert corpus_repo_mock.get_corpus_org_id.call_count == 1
     assert db_client_metadata_mock.get_taxonomy_from_corpus.call_count == 1
     assert db_client_metadata_mock.get_entity_specific_taxonomy.call_count == 0
     assert collection_repo_mock.get_org_from_collection_id.call_count == 2
     assert family_repo_mock.create.call_count == 1
+
+
+def test_create_endpoint_raises_repository_error_when_validating_invalid_geographies(
+    family_repo_mock,
+    geography_repo_mock,
+    admin_user_context,
+):
+    new_family = create_family_create_dto(
+        collections=["x.y.z.1", "x.y.z.2"],
+        metadata={"size": ["100"], "color": ["blue"]},
+    )
+    geography_repo_mock.error = True
+
+    with pytest.raises(RepositoryError) as e:
+        family_service.create(new_family, admin_user_context)
+
+    expected_msg = "One or more of the following geography values are invalid: CHN"
+    assert family_repo_mock.create.call_count == 1
+    assert e.value.message == expected_msg
