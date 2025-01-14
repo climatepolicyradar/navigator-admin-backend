@@ -287,6 +287,7 @@ def test_create_endpoint_raises_validation_error_when_validating_invalid_geograp
     admin_user_context,
 ):
     new_family = create_family_create_dto(
+        geographies=["123"],
         collections=["x.y.z.1", "x.y.z.2"],
         metadata={"size": ["100"], "color": ["blue"]},
     )
@@ -295,6 +296,7 @@ def test_create_endpoint_raises_validation_error_when_validating_invalid_geograp
     with pytest.raises(ValidationError) as e:
         family_service.create(new_family, admin_user_context)
 
-    expected_msg = "One or more of the following geography values are invalid: CHN"
+    expected_msg = "One or more of the following geography values are invalid: 123"
     assert e.value.message == expected_msg
+    assert geography_repo_mock.get_ids_from_values.call_count == 1
     assert family_repo_mock.create.call_count == 0
