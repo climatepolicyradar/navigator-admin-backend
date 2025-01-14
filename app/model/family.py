@@ -63,6 +63,7 @@ class FamilyCreateDTO(BaseModel):
     title: str
     summary: str
     geography: Union[str, list[str]]
+    geographies: list[str]
     category: str
     metadata: dict[str, list[str]]
     collections: list[str]
