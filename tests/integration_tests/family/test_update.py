@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from tests.helpers.family import create_family_write_dto
-from tests.integration_tests.setup_db import EXPECTED_FAMILIES, setup_db
+from tests.integration_tests.setup_db import EXPECTED_FAMILIES, add_data, setup_db
 
 USA_GEO_ID = 209
 
@@ -583,57 +583,110 @@ def test_update_family_updates_geographies_if_changed(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
+    add_data(
+        data_db,
+        [
+            {
+                "import_id": "A.0.0.6",
+                "title": "title",
+                "summary": "gregarious magazine rub",
+                "geography": "ALB",
+                "geographies": ["ALB", "AND", "ZWE"],
+                "category": "UNFCCC",
+                "status": "Created",
+                "metadata": {
+                    "topic": [],
+                    "hazard": [],
+                    "sector": [],
+                    "keyword": [],
+                    "framework": [],
+                    "instrument": [],
+                },
+                "organisation": "CCLW",
+                "corpus_import_id": "CCLW.corpus.i00000001.n0000",
+                "corpus_title": "CCLW national policies",
+                "corpus_type": "Laws and Policies",
+                "slug": "Slug6",
+                "events": ["E.0.0.1", "E.0.0.2"],
+                "published_date": "2018-12-24T04:59:31Z",
+                "last_updated_date": "2020-12-24T04:59:31Z",
+                "documents": [],
+                "collections": ["C.0.0.2"],
+            }
+        ],
+    )
     response = client.get(
-        "/api/v1/families/A.0.0.2",
+        "/api/v1/families/A.0.0.6",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     family_data = response.json()
-    assert family_data["geographies"] == ["ZWE"]
-    family_data["geographies"] = ["AGO", "ZWE"]
+    assert family_data["geographies"] == ["ALB", "AND", "ZWE"]
+    family_data["geographies"] = ["ALB", "AND", "USA"]
     family_data["title"] = "Updated Title"
 
     response = client.put(
-        "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
+        "/api/v1/families/A.0.0.6", json=family_data, headers=user_header_token
     )
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["geographies"] == ["AGO", "ZWE"]
+    assert data["geographies"] == ["AGO", "AND", "USA"]
     assert data["title"] == "Updated Title"
 
 
-def test_update_endpoint_handles_multiple_updates(
+def test_update_family_successfully_removes_a_geography(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
+    add_data(
+        data_db,
+        [
+            {
+                "import_id": "A.0.0.6",
+                "title": "Title of Albania and Andorran project",
+                "summary": "gregarious magazine rub",
+                "geography": "ALB",
+                "geographies": ["ALB", "AND"],
+                "category": "UNFCCC",
+                "status": "Created",
+                "metadata": {
+                    "topic": [],
+                    "hazard": [],
+                    "sector": [],
+                    "keyword": [],
+                    "framework": [],
+                    "instrument": [],
+                },
+                "organisation": "CCLW",
+                "corpus_import_id": "CCLW.corpus.i00000001.n0000",
+                "corpus_title": "CCLW national policies",
+                "corpus_type": "Laws and Policies",
+                "slug": "Slug6",
+                "events": ["E.0.0.1", "E.0.0.2"],
+                "published_date": "2018-12-24T04:59:31Z",
+                "last_updated_date": "2020-12-24T04:59:31Z",
+                "documents": [],
+                "collections": ["C.0.0.2"],
+            }
+        ],
+    )
     response = client.get(
-        "/api/v1/families/A.0.0.2",
+        "/api/v1/families/A.0.0.6",
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_200_OK
     family_data = response.json()
-    assert family_data["geographies"] == ["ZWE"]
-    family_data["geographies"] = ["AGO", "ZWE"]
-    family_data["title"] = "Updated Title"
+    assert family_data["geographies"] == ["ALB", "AND"]
 
+    family_data["geographies"] = [
+        "ALB",
+    ]
+    family_data["title"] = "Updated Title of Albanian project"
     response = client.put(
-        "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
+        "/api/v1/families/A.0.0.6", json=family_data, headers=user_header_token
     )
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["geographies"] == ["AGO", "ZWE"]
-    assert data["title"] == "Updated Title"
-
-    family_data["geographies"] = ["AGO", "ZWE", "USA"]
-    family_data["title"] = "Updated Title for Angola, Zimbabwe and USA"
-
-    response = client.put(
-        "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
-    )
-
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["geographies"] == ["AGO", "ZWE", "USA"]
-    assert data["title"] == "Updated Title for Angola, Zimbabwe and USA"
+    assert data["geographies"] == ["ALB"]
