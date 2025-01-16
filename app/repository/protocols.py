@@ -41,8 +41,8 @@ class FamilyRepo(Protocol):
         db: Session,
         import_id: str,
         family: FamilyWriteDTO,
-        geo_id: int,
         geography_ids: list[int],
+        geo_id: Optional[int] = None,
     ) -> bool:
         """Updates a family"""
         ...
