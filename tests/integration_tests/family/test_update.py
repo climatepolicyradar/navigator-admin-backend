@@ -601,3 +601,42 @@ def test_update_family_updates_geographies_if_changed(
     data = response.json()
     assert data["geographies"] == ["AGO", "ZWE"]
     assert data["title"] == "Updated Title"
+
+
+def test_update_endpoint_handles_multiple_updates(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/families/A.0.0.2",
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    family_data = response.json()
+    assert family_data["geographies"] == ["ZWE"]
+
+    family_data["geographies"] = ["MYS", "ZWE"]
+    family_data["title"] = "Title for Malaysia and Zimbabwe"
+
+    update_endpoint_response = client.put(
+        "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
+    )
+
+    assert update_endpoint_response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    assert data["geographies"] == ["MYS", "ZWE"]
+    assert data["title"] == "Title for Malaysia and Zimbabwe"
+
+    family_data["tite"] = "Title for the countries of Malaysia and Zimbabwe and USA"
+    family_data["geographies"] = ["MYS", "ZWE", "USA"]
+
+    update_endpoint_response = client.put(
+        "/api/v1/families/A.0.0.2", json=family_data, headers=user_header_token
+    )
+
+    assert update_endpoint_response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["geographies"] == ["MYS", "ZWE", "USA"]
+    assert data["title"] == "Title for the countries of Malaysia and Zimbabwe and USA"
