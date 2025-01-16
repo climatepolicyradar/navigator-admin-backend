@@ -18,7 +18,7 @@ def test_update_family(client: TestClient, data_db: Session, user_header_token):
     new_family = create_family_write_dto(
         title="apple",
         summary="just a test",
-        geography="USA",
+        geographies=["USA"],
         category=FamilyCategory.UNFCCC,
         collections=["C.0.0.3"],
     )
@@ -60,7 +60,7 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="",
-        geography="South Asia",
+        geographies=["South Asia"],
         category=FamilyCategory.UNFCCC,
         collections=["C.0.0.2"],
     )
@@ -74,7 +74,7 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
     data = response.json()
     assert data["title"] == "Updated Title"
     assert data["summary"] == ""
-    assert data["geography"] == "South Asia"
+    assert data["geographies"] == ["South Asia"]
     assert data["category"] == "UNFCCC"
     assert data["slug"].startswith("updated-title")
     assert data["collections"] == ["C.0.0.2"]
@@ -115,7 +115,7 @@ def test_update_family_remove_collections(
     new_family = create_family_write_dto(
         title="apple",
         summary="",
-        geography="Other",
+        geographies=["Other"],
         category=FamilyCategory.UNFCCC,
         collections=[],
     )
@@ -128,7 +128,7 @@ def test_update_family_remove_collections(
     data = response.json()
     assert data["title"] == "apple"
     assert data["summary"] == ""
-    assert data["geography"] == "Other"
+    assert data["geographies"] == ["Other"]
     assert data["category"] == "UNFCCC"
     assert data["slug"] == "Slug1"
     assert data["collections"] == []
@@ -162,7 +162,7 @@ def test_update_family_append_collections(
     new_family = create_family_write_dto(
         title="apple",
         summary="",
-        geography="Other",
+        geographies=["Other"],
         category=FamilyCategory.UNFCCC,
         collections=["C.0.0.2", "C.0.0.3"],
     )
@@ -175,7 +175,7 @@ def test_update_family_append_collections(
     data = response.json()
     assert data["title"] == "apple"
     assert data["summary"] == ""
-    assert data["geography"] == "Other"
+    assert data["geographies"] == ["Other"]
     assert data["category"] == "UNFCCC"
     assert data["slug"] == "Slug1"
     assert data["collections"] == ["C.0.0.2", "C.0.0.3"]
@@ -212,7 +212,7 @@ def test_update_family_collections_to_one_that_does_not_exist(
     new_family = create_family_write_dto(
         title="apple",
         summary="",
-        geography="Other",
+        geographies=["Other"],
         category=FamilyCategory.UNFCCC,
         collections=["C.0.0.2", "X.Y.Z.3"],
     )
@@ -256,7 +256,7 @@ def test_update_fails_family_when_user_org_different_to_family_org(
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
-        geography="USA",
+        geographies=["USA"],
         category=FamilyCategory.UNFCCC,
         collections=[],
     )
@@ -294,7 +294,7 @@ def test_update_family_succeeds_when_user_org_different_to_family_org_super(
     new_family = create_family_write_dto(
         title="apple",
         summary="just a test",
-        geography="USA",
+        geographies=["USA"],
         category=FamilyCategory.UNFCCC,
         collections=["C.0.0.3"],
     )
@@ -307,7 +307,7 @@ def test_update_family_succeeds_when_user_org_different_to_family_org_super(
     data = response.json()
     assert data["title"] == "apple"
     assert data["summary"] == "just a test"
-    assert data["geography"] == "USA"
+    assert data["geographies"] == ["USA"]
     assert data["category"] == "UNFCCC"
     assert data["collections"] == ["C.0.0.3"]
 
@@ -372,7 +372,7 @@ def test_update_family_when_not_authenticated(client: TestClient, data_db: Sessi
     new_family = create_family_write_dto(
         title="Updated Title",
         summary="just a test",
-        geography="USA",
+        geographies=["USA"],
         category=FamilyCategory.UNFCCC,
     )
     response = client.put("/api/v1/families/A.0.0.2", json=new_family.model_dump())
@@ -393,7 +393,7 @@ def test_update_family_idempotent_when_ok(
     data = response.json()
     assert data["title"] == expected_family["title"]
     assert data["summary"] == expected_family["summary"]
-    assert data["geography"] == expected_family["geography"]
+    assert data["geographies"] == expected_family["geographies"]
     assert data["category"] == expected_family["category"]
     db_family: Family = (
         data_db.query(Family)

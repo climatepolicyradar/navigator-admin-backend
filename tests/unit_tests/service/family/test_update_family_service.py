@@ -185,7 +185,7 @@ def test_update_family_raises_when_geography_invalid(
     geography_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
-    expected_msg = "The geography value CHN is invalid!"
+    expected_msg = "One or more of the following geography values are invalid: CHN"
     assert e.value.message == expected_msg
 
     assert family_repo_mock.get.call_count == 1
