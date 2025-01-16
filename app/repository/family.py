@@ -152,7 +152,6 @@ def _update_intention(
     db: Session,
     import_id: str,
     family: FamilyWriteDTO,
-    geo_id: int,
     geo_ids: list[int],
     original_family: Family,
 ):
@@ -164,30 +163,17 @@ def _update_intention(
     ]
     update_collections = set(original_collections) != set(family.collections)
     update_title = cast(str, original_family.title) != family.title
-    # TODO: PDCT-1406: Properly implement multi-geography support
-    update_geo = (
-        db.query(FamilyGeography)
-        .filter(FamilyGeography.family_import_id == import_id)
-        .one()
-        .geography_id
-        != geo_id
-    )
 
-    update_geographies = False
-    # TODO: Todo APP-97: remove this conditional once multi-geography support is
-    # implemented on the frontend
-    if geo_ids != []:
-        current_family_geographies_ids = [
-            family_geography.geography_id
-            for family_geography in db.query(FamilyGeography).filter(
-                FamilyGeography.family_import_id == import_id
-            )
-        ]
-        update_geographies = set(current_family_geographies_ids) != set(geo_ids)
+    current_family_geographies_ids = [
+        family_geography.geography_id
+        for family_geography in db.query(FamilyGeography).filter(
+            FamilyGeography.family_import_id == import_id
+        )
+    ]
+    update_geographies = set(current_family_geographies_ids) != set(geo_ids)
 
     update_basics = (
         update_title
-        or update_geo
         or original_family.description != family.summary
         or original_family.family_category != family.category
     )
@@ -306,7 +292,7 @@ def search(
 
 
 def update(
-    db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int, geo_ids: list[int]
+    db: Session, import_id: str, family: FamilyWriteDTO, geo_ids: list[int]
 ) -> bool:
     """
     Updates a single entry with the new values passed.
@@ -335,7 +321,7 @@ def update(
         update_metadata,
         update_collections,
         update_geographies,
-    ) = _update_intention(db, import_id, family, geo_id, geo_ids, original_family)
+    ) = _update_intention(db, import_id, family, geo_ids, original_family)
 
     # Return if nothing to do
     if not (
@@ -358,13 +344,6 @@ def update(
                 description=new_values["summary"],
                 family_category=new_values["category"],
             )
-        )
-        updates = result.rowcount  # type: ignore
-        # TODO: PDCT-1406: Properly implement multi-geography support
-        result = db.execute(
-            db_update(FamilyGeography)
-            .where(FamilyGeography.family_import_id == import_id)
-            .values(geography_id=geo_id)
         )
 
         updates += result.rowcount  # type: ignore

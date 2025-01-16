@@ -58,7 +58,7 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
                 import_id,
                 data.title,
                 data.summary,
-                data.geography,
+                data.geography if data.geography else None,
                 data.geographies,
                 data.category,
                 data.metadata,

@@ -54,7 +54,11 @@ def search(
 
 
 def update(
-    db: Session, import_id: str, family: FamilyWriteDTO, geo_id: int, geo_ids: list[int]
+    db: Session,
+    import_id: str,
+    family: FamilyWriteDTO,
+    geo_ids: list[int],
+    geo_id: Optional[int] = None,
 ) -> bool:
     _maybe_throw()
     return family_repo.return_empty is False

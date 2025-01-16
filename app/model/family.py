@@ -10,7 +10,9 @@ class FamilyReadDTO(BaseModel):
     import_id: str
     title: str
     summary: str
-    geography: str
+    geography: Optional[str] = (
+        None  # Todo APP-97: remove default once implemented on the frontend
+    )
     geographies: list[str]
     category: str
     status: str
@@ -40,10 +42,10 @@ class FamilyWriteDTO(BaseModel):
 
     title: str
     summary: str
-    geography: str
-    geographies: Optional[list[str]] = (
+    geography: Optional[str] = (
         None  # Todo APP-97: remove default once implemented on the frontend
     )
+    geographies: list[str]
     category: str
     metadata: dict[str, list[str]]
     collections: list[str]
