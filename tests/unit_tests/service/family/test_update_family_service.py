@@ -149,9 +149,6 @@ def test_update_raises_when_organisation_invalid(
     updated_family = create_family_write_dto(
         metadata={"size": ["100"], "color": ["blue"]}
     )
-
-    breakpoint()
-
     corpus_repo_mock.error = True
     with pytest.raises(ValidationError) as e:
         family_service.update("a.b.c.d", admin_user_context, updated_family)
