@@ -631,7 +631,7 @@ def test_update_family_updates_geographies_if_changed(
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["geographies"] == ["AGO", "AND", "USA"]
+    assert data["geographies"] == ["ALB", "AND", "USA"]
     assert data["title"] == "Updated Title"
 
 
