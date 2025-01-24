@@ -1,6 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
+import time
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -22,10 +23,10 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func, or_, text
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session, lazyload
+from sqlalchemy.orm import Query, Session
 from sqlalchemy.sql import Subquery
 from sqlalchemy_utils import escape_like
 
@@ -63,88 +64,204 @@ def get_family_geography_subquery(db: Session) -> Subquery:
     )
 
 
-def _get_query(db: Session) -> Query:
+def _get_query(db: Session, org_id=None) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
 
-    geography_subquery = get_family_geography_subquery(db)
+    # geography_subquery = get_family_geography_subquery(db)
 
-    query = (
-        db.query(
-            Family,
-            geography_subquery.c.geography_values,
-            FamilyMetadata,
-            Corpus,
-            Organisation,
-        )
-        .join(
-            geography_subquery,
-            geography_subquery.c.family_import_id == Family.import_id,
-        )
-        .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
-        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
-        .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
-        .join(Organisation, Corpus.organisation_id == Organisation.id)
-        .group_by(
-            Family.import_id,
-            Family.title,
-            geography_subquery.c.geography_values,
-            FamilyMetadata.family_import_id,
-            Corpus.import_id,
-            Organisation,
-        )
-        .options(
-            # Disable any default eager loading as this was causing multiplicity due to
-            # implicit joins in relationships on the selected models.
-            lazyload("*")
-        )
-    )
-    _LOGGER.error(query)
+    # query = (
+    #     db.query(
+    #         Family,
+    #         geography_subquery.c.geography_values,
+    #         FamilyMetadata,
+    #         Corpus,
+    #         Organisation,
+    #     )
+    #     .join(
+    #         geography_subquery,
+    #         geography_subquery.c.family_import_id == Family.import_id,
+    #     )
+    #     .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
+    #     .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+    #     .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+    #     .join(Organisation, Corpus.organisation_id == Organisation.id)
+    #     .group_by(
+    #         Family.import_id,
+    #         Family.title,
+    #         geography_subquery.c.geography_values,
+    #         FamilyMetadata.family_import_id,
+    #         Corpus.import_id,
+    #         Organisation,
+    #     )
+    #     .options(
+    #         # Disable any default eager loading as this was causing multiplicity due to
+    #         # implicit joins in relationships on the selected models.
+    #         lazyload("*")
+    #     )
+    # )
+    # _LOGGER.error(query)
 
-    return query
+    import_id = None
+    raw_sql = construct_raw_sql_query(org_id, import_id)
+
+    # NOTE wrap this in a try block and raise accordingly
+
+    # Execute the query with parameters using SQLAlchemy's `text` object
+    result = db.execute(text(raw_sql), {"org_id": org_id, "import_id": import_id})
+
+    return result.mappings().fetchall()
 
 
-def _family_to_dto(
-    db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
-) -> FamilyReadDTO:
-    (
-        fam,
-        geo_values,
-        meta,
-        corpus,
-        org,
-    ) = fam_geo_meta_corp_org
+def construct_raw_sql_query(org_id=None, import_id=None, filters=None):
+    main_sql_query = """
+        SELECT
+            f.*,
+            geography_subquery.geography_values,
+            family_documents_subquery.document_ids,
+            family_events_subquery.event_ids,
+            fm.*,
+            c.*,
+            o.*
+        FROM
+            family f
+        JOIN
+            (
+                SELECT
+                    fg.family_import_id,
+                    array_agg(g.value) AS geography_values
+                FROM
+                    family_geography fg
+                JOIN
+                    geography g ON g.id = fg.geography_id
+                GROUP BY
+                    fg.family_import_id
+            ) AS geography_subquery
+            ON geography_subquery.family_import_id = f.import_id
+        JOIN
+            (
+                SELECT
+                    fd.family_import_id,
+                    array_agg(fd.import_id) AS document_ids
+                FROM
+                    family_document fd
+                GROUP BY
+                    fd.family_import_id
+            ) AS family_documents_subquery
+            ON family_documents_subquery.family_import_id = f.import_id
+        JOIN
+            (
+                SELECT
+                    fe.family_import_id,
+                    array_agg(fe.import_id) AS event_ids
+                FROM
+                    family_event fe
+                GROUP BY
+                    fe.family_import_id
+            ) AS family_events_subquery
+            ON family_events_subquery.family_import_id = f.import_id
+        JOIN
+            family_metadata fm ON fm.family_import_id = f.import_id
+        JOIN
+            family_corpus fc ON fc.family_import_id = f.import_id
+        JOIN
+            corpus c ON c.import_id = fc.corpus_import_id
+        JOIN
+            organisation o ON o.id = c.organisation_id
+        """
 
-    metadata = cast(dict, meta.value)
-    org = cast(str, org.name)
+    # Apply filter condition before GROUP BY
+    if org_id is not None:
+        main_sql_query += "WHERE o.id = :org_id"
+
+    elif import_id is not None:
+        main_sql_query += "WHERE f.import_id = :import_id"
+
+    # Append GROUP BY at the end
+    main_sql_query += """
+    GROUP BY
+        f.import_id, f.title, geography_subquery.geography_values,
+        family_documents_subquery.document_ids, family_events_subquery.event_ids,
+        fm.family_import_id, c.import_id, o.id
+    ORDER BY f.last_modified DESC
+    """
+
+    return main_sql_query
+
+
+def _family_to_dto(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDTO:
+    family_row = fam_geo_meta_corp_org
+
+    family_row["family_import_id"]
+    metadata = cast(dict, family_row["value"])
+    org = cast(str, family_row["name"])
+    family_status = "Published"
+    #     "Published"  # cast(str, db.get(Family, family_import_id).family_status.value)
+    # )
+    # db.query(Slug).filter(family_import_id == Slug.family_import_id).all()
+    # add this to the main query
+    cast(str, family_row["id"])
+
+    # RMKeyView = Tuple()
+
+    # # (Pdb) fam.keys()
+    # RMKeyView(
+    #     [
+    #         "title",
+    #         "import_id",
+    #         "description",
+    #         "family_category",
+    #         "created",
+    #         "last_modified",
+    #         "geography_values",
+    #         "document_ids",
+    #         "family_import_id",
+    #         "value",
+    #         "import_id",
+    #         "title",
+    #         "description",
+    #         "organisation_id",
+    #         "corpus_type_name",
+    #         "corpus_text",
+    #         "corpus_image_url",
+    #         "id",
+    #         "name",
+    #         "description",
+    #         "organisation_type",
+    #         "display_name",
+    #     ]
+    # )
 
     return FamilyReadDTO(
-        import_id=str(fam.import_id),
-        title=str(fam.title),
-        summary=str(fam.description),
-        geography=str(geo_values[0]),
-        geographies=[str(value) for value in geo_values],
-        category=str(fam.family_category),
-        status=str(fam.family_status),
+        import_id=str(family_row["import_id"]),
+        title=str(family_row["title"]),
+        summary=str(family_row["description"]),
+        geography=str(
+            family_row["geography_values"][0] if family_row["geography_values"] else ""
+        ),
+        geographies=[str(value) for value in family_row["geography_values"]],
+        category=str(family_row["family_category"]),
+        status=str(family_status),
         metadata=metadata,
-        slug=str(fam.slugs[0].name if len(fam.slugs) > 0 else ""),
-        events=[str(e.import_id) for e in fam.events],
-        published_date=fam.published_date,
-        last_updated_date=fam.last_updated_date,
-        documents=[str(d.import_id) for d in fam.family_documents],
+        slug=str('family_slugs[0].name if len(family_slugs) > 0 else ""'),
+        events=family_row["event_ids"],
+        published_date=datetime.now(),  # return proper published date
+        last_updated_date=datetime.now(),  # return proper last updated date, maybe from the family status query
+        documents=family_row["document_ids"],
         collections=[
-            c.collection_import_id
-            for c in db.query(CollectionFamily).filter(
-                fam.import_id == CollectionFamily.family_import_id
-            )
+            # c.collection_import_id
+            # for c in db.query(CollectionFamily).filter(
+            #     family_import_id == CollectionFamily.family_import_id
+            # )
+            "12"
         ],
         organisation=org,
-        corpus_import_id=cast(str, corpus.import_id),
-        corpus_title=cast(str, corpus.title),
-        corpus_type=cast(str, corpus.corpus_type_name),
-        created=cast(datetime, fam.created),
-        last_modified=cast(datetime, fam.last_modified),
+        corpus_import_id="1",  # This column should probably be changed in the sql query
+        corpus_title=cast(str, family_row["title"]),
+        corpus_type=cast(str, family_row["corpus_type_name"]),
+        created=cast(datetime, family_row["created"]),
+        last_modified=cast(datetime, family_row["last_modified"]),
     )
 
 
@@ -192,6 +309,9 @@ def _update_intention(
     )
 
 
+# NOTE ONLY UPDATE THE ALL ENDPOINT DUPLICATE THE SEARCH AND ALL ENDPOINT
+
+
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     """
     Returns all the families.
@@ -200,17 +320,42 @@ def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     :param org_id int: the ID of the organisation the user belongs to
     :return Optional[FamilyResponse]: All of things
     """
-    query = _get_query(db)
-    if org_id is not None:
-        query = query.filter(Organisation.id == org_id)
-    family_geo_metas = query.order_by(desc(Family.last_modified)).all()
+    # query = _get_query(db)
+    # if org_id is not None:
+    #     query = query.filter(Organisation.id == org_id)
 
-    if not family_geo_metas:
-        return []
+    # family_geo_metas = query.order_by(desc(Family.last_modified)).all()
 
+    start_time = time.time()
+    query = _get_query(db, org_id)
+    end_time = time.time()
+    print(f"ORM Query Execution Time Query: {end_time - start_time} seconds")
+
+    family_geo_metas = query
+
+    # if not family_geo_metas:
+    #     return []
+
+    start_time = time.time()
     result = [_family_to_dto(db, fgm) for fgm in family_geo_metas]
+    end_time = time.time()
+    print(f"Mapping Query Execution Time Query: {end_time - start_time} seconds")
 
+    breakpoint()
     return result
+
+
+def time_orm_query(db: Session, org_id=12):
+    start_time = time.time()
+    query = all(db, org_id)
+    end_time = time.time()
+    print("TIME OF QUERY TAKENNNNN")
+    varibale = f"ORM Query Execution Time: {end_time - start_time} seconds"
+    print(varibale)
+
+    breakpoint()
+
+    return query
 
 
 def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
