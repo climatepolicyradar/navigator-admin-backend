@@ -156,7 +156,7 @@ def _get_query_all_search(db: Session, org_id=None) -> Query:
     return result.mappings().fetchall()
 
 
-def construct_raw_sql_query(org_id=None, import_id=None, filters=None):
+def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
     main_sql_query = """
         SELECT
             f.*,
@@ -165,7 +165,22 @@ def construct_raw_sql_query(org_id=None, import_id=None, filters=None):
             family_events_subquery.event_ids,
             fm.*,
             c.*,
-            o.*
+            o.*,
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM family_document fd
+                WHERE fd.family_import_id = f.import_id
+                AND fd.document_status = 'PUBLISHED'
+            ) THEN 'PUBLISHED'
+            WHEN EXISTS (
+                SELECT 1
+                FROM family_document fd
+                WHERE fd.family_import_id = f.import_id
+                AND fd.document_status = 'CREATED'
+            ) THEN 'CREATED'
+            ELSE 'DELETED'
+        END AS family_status
         FROM
             family f
         JOIN
@@ -213,12 +228,22 @@ def construct_raw_sql_query(org_id=None, import_id=None, filters=None):
             organisation o ON o.id = c.organisation_id
         """
 
-    # Apply filter condition before GROUP BY
-    if org_id is not None:
-        main_sql_query += "WHERE o.id = :org_id"
+    where_conditions = []
+    query_params = {}
 
-    elif import_id is not None:
-        main_sql_query += "WHERE f.import_id = :import_id"
+    if org_id is not None:
+        where_conditions.append("o.id = :org_id")
+        query_params["org_id"] = org_id
+
+    if filters:
+        where_conditions.append(filters)
+        if filter_params:
+            query_params.update(filter_params)
+
+    # Combine WHERE conditions
+    if where_conditions:
+        where_clause = " AND ".join(where_conditions)
+        main_sql_query += f" WHERE {where_clause}"
 
     # Append GROUP BY at the end
     main_sql_query += """
@@ -229,7 +254,7 @@ def construct_raw_sql_query(org_id=None, import_id=None, filters=None):
     ORDER BY f.last_modified DESC
     """
 
-    return main_sql_query
+    return main_sql_query, query_params
 
 
 def _family_to_dto_all(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDTO:
