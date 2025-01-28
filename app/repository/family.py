@@ -405,28 +405,16 @@ def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     :param org_id int: the ID of the organisation the user belongs to
     :return Optional[FamilyResponse]: All of things
     """
-    # query = _get_query(db)
-    # if org_id is not None:
-    #     query = query.filter(Organisation.id == org_id)
+    query = _get_query(db)
+    if org_id is not None:
+        query = query.filter(Organisation.id == org_id)
+    family_geo_metas = query.order_by(desc(Family.last_modified)).all()
 
-    # family_geo_metas = query.order_by(desc(Family.last_modified)).all()
+    if not family_geo_metas:
+        return []
 
-    start_time = time.time()
-    query = _get_query(db, org_id)
-    end_time = time.time()
-    print(f"ORM Query Execution Time Query: {end_time - start_time} seconds")
-
-    family_geo_metas = query
-
-    # if not family_geo_metas:
-    #     return []
-
-    start_time = time.time()
     result = [_family_to_dto(db, fgm) for fgm in family_geo_metas]
-    end_time = time.time()
-    print(f"Mapping Query Execution Time Query: {end_time - start_time} seconds")
 
-    breakpoint()
     return result
 
 
