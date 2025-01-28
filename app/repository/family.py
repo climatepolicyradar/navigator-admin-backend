@@ -26,7 +26,7 @@ from sqlalchemy import delete as db_delete
 from sqlalchemy import desc, func, or_, text
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm import Query, Session, lazyload
 from sqlalchemy.sql import Subquery
 from sqlalchemy_utils import escape_like
 
@@ -64,7 +64,49 @@ def get_family_geography_subquery(db: Session) -> Subquery:
     )
 
 
-def _get_query(db: Session, org_id=None) -> Query:
+def _get_query(db: Session) -> Query:
+    # NOTE: SqlAlchemy will make a complete hash of query generation
+    #       if columns are used in the query() call. Therefore, entire
+    #       objects are returned.
+
+    geography_subquery = get_family_geography_subquery(db)
+
+    query = (
+        db.query(
+            Family,
+            geography_subquery.c.geography_values,
+            FamilyMetadata,
+            Corpus,
+            Organisation,
+        )
+        .join(
+            geography_subquery,
+            geography_subquery.c.family_import_id == Family.import_id,
+        )
+        .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
+        .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
+        .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
+        .join(Organisation, Corpus.organisation_id == Organisation.id)
+        .group_by(
+            Family.import_id,
+            Family.title,
+            geography_subquery.c.geography_values,
+            FamilyMetadata.family_import_id,
+            Corpus.import_id,
+            Organisation,
+        )
+        .options(
+            # Disable any default eager loading as this was causing multiplicity due to
+            # implicit joins in relationships on the selected models.
+            lazyload("*")
+        )
+    )
+    _LOGGER.error(query)
+
+    return query
+
+
+def _get_query_all_search(db: Session, org_id=None) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
@@ -190,7 +232,7 @@ def construct_raw_sql_query(org_id=None, import_id=None, filters=None):
     return main_sql_query
 
 
-def _family_to_dto(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDTO:
+def _family_to_dto_all(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDTO:
     family_row = fam_geo_meta_corp_org
 
     family_row["family_import_id"]
@@ -262,6 +304,49 @@ def _family_to_dto(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDTO:
         corpus_type=cast(str, family_row["corpus_type_name"]),
         created=cast(datetime, family_row["created"]),
         last_modified=cast(datetime, family_row["last_modified"]),
+    )
+
+
+def _family_to_dto(
+    db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
+) -> FamilyReadDTO:
+    (
+        fam,
+        geo_values,
+        meta,
+        corpus,
+        org,
+    ) = fam_geo_meta_corp_org
+
+    metadata = cast(dict, meta.value)
+    org = cast(str, org.name)
+
+    return FamilyReadDTO(
+        import_id=str(fam.import_id),
+        title=str(fam.title),
+        summary=str(fam.description),
+        geography=str(geo_values[0]),
+        geographies=[str(value) for value in geo_values],
+        category=str(fam.family_category),
+        status=str(fam.family_status),
+        metadata=metadata,
+        slug=str(fam.slugs[0].name if len(fam.slugs) > 0 else ""),
+        events=[str(e.import_id) for e in fam.events],
+        published_date=fam.published_date,
+        last_updated_date=fam.last_updated_date,
+        documents=[str(d.import_id) for d in fam.family_documents],
+        collections=[
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                fam.import_id == CollectionFamily.family_import_id
+            )
+        ],
+        organisation=org,
+        corpus_import_id=cast(str, corpus.import_id),
+        corpus_title=cast(str, corpus.title),
+        corpus_type=cast(str, corpus.corpus_type_name),
+        created=cast(datetime, fam.created),
+        last_modified=cast(datetime, fam.last_modified),
     )
 
 
