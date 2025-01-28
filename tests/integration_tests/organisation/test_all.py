@@ -31,7 +31,7 @@ def test_get_all_organisations(
         assert all(key in EXPECTED_ORG_KEYS for key in item)
 
     # Check CCLW content.
-    cclw_org = data[0]
+    cclw_org = data[2]
     assert cclw_org == EXPECTED_CCLW_ORG
 
     # Check UNFCCC content.

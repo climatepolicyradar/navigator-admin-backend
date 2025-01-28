@@ -57,7 +57,9 @@ def test_get_organisation_non_super(
     response = client.get("/api/v1/organisations/CCLW", headers=user_header_token)
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
-    assert data["detail"] == "User cclw@cpr.org is not authorised to READ a CORPUS_TYPE"
+    assert (
+        data["detail"] == "User cclw@cpr.org is not authorised to READ an ORGANISATION"
+    )
 
 
 def test_get_organisation_when_not_authenticated(client: TestClient, data_db: Session):
