@@ -304,6 +304,22 @@ EXPECTED_CORPORA_KEYS = [
     "metadata",
 ]
 
+EXPECTED_NUM_ORGS = 2
+EXPECTED_CCLW_ORG = {
+    "id": 1,
+    "internal_name": "CCLW",
+    "display_name": "CCLW",
+    "description": "CCLW",
+    "type": "Academic",
+}
+EXPECTED_UNFCCC_ORG = {
+    "id": 2,
+    "internal_name": "UNFCCC",
+    "display_name": "UNFCCC",
+    "description": "UNFCCC",
+    "type": "UN",
+}
+
 
 def add_data(test_db: Session, data: list[DBEntry]):
     org_id = test_db.query(Organisation).filter(Organisation.name == "CCLW").one().id

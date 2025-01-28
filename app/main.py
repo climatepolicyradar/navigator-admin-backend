@@ -25,6 +25,7 @@ from app.api.api_v1.routers import (
     document_router,
     event_router,
     families_router,
+    organisations_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
@@ -117,6 +118,13 @@ app.include_router(
     corpus_types_router,
     prefix="/api/v1",
     tags=["corpus-types"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    organisations_router,
+    prefix="/api/v1",
+    tags=["organisations"],
     dependencies=[Depends(check_user_auth)],
 )
 
