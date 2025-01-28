@@ -1,7 +1,6 @@
 """Operations on the repository for the Family entity."""
 
 import logging
-import time
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -441,19 +440,6 @@ def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     result = [_family_to_dto(db, fgm) for fgm in family_geo_metas]
 
     return result
-
-
-def time_orm_query(db: Session, org_id=12):
-    start_time = time.time()
-    query = all(db, org_id)
-    end_time = time.time()
-    print("TIME OF QUERY TAKENNNNN")
-    varibale = f"ORM Query Execution Time: {end_time - start_time} seconds"
-    print(varibale)
-
-    breakpoint()
-
-    return query
 
 
 def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
