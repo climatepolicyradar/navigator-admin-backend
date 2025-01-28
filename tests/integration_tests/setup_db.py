@@ -304,19 +304,19 @@ EXPECTED_CORPORA_KEYS = [
     "metadata",
 ]
 
-EXPECTED_NUM_ORGS = 2
+EXPECTED_NUM_ORGS = 3
 EXPECTED_CCLW_ORG = {
     "id": 1,
     "internal_name": "CCLW",
     "display_name": "CCLW",
-    "description": "CCLW",
+    "description": "LSE CCLW team",
     "type": "Academic",
 }
 EXPECTED_UNFCCC_ORG = {
     "id": 2,
     "internal_name": "UNFCCC",
     "display_name": "UNFCCC",
-    "description": "UNFCCC",
+    "description": "United Nations Framework Convention on Climate Change",
     "type": "UN",
 }
 
