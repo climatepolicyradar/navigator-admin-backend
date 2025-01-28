@@ -20,9 +20,9 @@ from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.organisation.corpus import Corpus
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
-from sqlalchemy import Column, and_
+from sqlalchemy import Column
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, func, or_, text
+from sqlalchemy import desc, func, text
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session, lazyload
@@ -105,53 +105,10 @@ def _get_query(db: Session) -> Query:
     return query
 
 
-def _get_query_all_search(db: Session, org_id=None) -> Query:
-    # NOTE: SqlAlchemy will make a complete hash of query generation
-    #       if columns are used in the query() call. Therefore, entire
-    #       objects are returned.
-
-    # geography_subquery = get_family_geography_subquery(db)
-
-    # query = (
-    #     db.query(
-    #         Family,
-    #         geography_subquery.c.geography_values,
-    #         FamilyMetadata,
-    #         Corpus,
-    #         Organisation,
-    #     )
-    #     .join(
-    #         geography_subquery,
-    #         geography_subquery.c.family_import_id == Family.import_id,
-    #     )
-    #     .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
-    #     .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
-    #     .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
-    #     .join(Organisation, Corpus.organisation_id == Organisation.id)
-    #     .group_by(
-    #         Family.import_id,
-    #         Family.title,
-    #         geography_subquery.c.geography_values,
-    #         FamilyMetadata.family_import_id,
-    #         Corpus.import_id,
-    #         Organisation,
-    #     )
-    #     .options(
-    #         # Disable any default eager loading as this was causing multiplicity due to
-    #         # implicit joins in relationships on the selected models.
-    #         lazyload("*")
-    #     )
-    # )
-    # _LOGGER.error(query)
-
-    import_id = None
-    raw_sql = construct_raw_sql_query(org_id, import_id)
-
-    # NOTE wrap this in a try block and raise accordingly
-
-    # Execute the query with parameters using SQLAlchemy's `text` object
-    result = db.execute(text(raw_sql), {"org_id": org_id, "import_id": import_id})
-
+def _get_query_all_search_endpoint(
+    db: Session, raw_sql_query: str, query_params: Optional[dict] = {}
+) -> Query:
+    result = db.execute(text(raw_sql_query), query_params)
     return result.mappings().fetchall()
 
 
@@ -164,6 +121,7 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
             family_events_subquery.event_ids,
             fm.*,
             c.*,
+            c.import_id AS corpus_import_id,
             o.*,
         CASE
             WHEN EXISTS (
@@ -256,48 +214,10 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
     return main_sql_query, query_params
 
 
-def _family_to_dto_all(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDTO:
-    family_row = fam_geo_meta_corp_org
-
-    family_row["family_import_id"]
+def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
+    family_import_id = family_row["family_import_id"]
     metadata = cast(dict, family_row["value"])
     org = cast(str, family_row["name"])
-    family_status = "Published"
-    #     "Published"  # cast(str, db.get(Family, family_import_id).family_status.value)
-    # )
-    # db.query(Slug).filter(family_import_id == Slug.family_import_id).all()
-    # add this to the main query
-    cast(str, family_row["id"])
-
-    # RMKeyView = Tuple()
-
-    # # (Pdb) fam.keys()
-    # RMKeyView(
-    #     [
-    #         "title",
-    #         "import_id",
-    #         "description",
-    #         "family_category",
-    #         "created",
-    #         "last_modified",
-    #         "geography_values",
-    #         "document_ids",
-    #         "family_import_id",
-    #         "value",
-    #         "import_id",
-    #         "title",
-    #         "description",
-    #         "organisation_id",
-    #         "corpus_type_name",
-    #         "corpus_text",
-    #         "corpus_image_url",
-    #         "id",
-    #         "name",
-    #         "description",
-    #         "organisation_type",
-    #         "display_name",
-    #     ]
-    # )
 
     return FamilyReadDTO(
         import_id=str(family_row["import_id"]),
@@ -308,7 +228,7 @@ def _family_to_dto_all(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDT
         ),
         geographies=[str(value) for value in family_row["geography_values"]],
         category=str(family_row["family_category"]),
-        status=str(family_status),
+        status=str(family_row["family_status"]),
         metadata=metadata,
         slug=str('family_slugs[0].name if len(family_slugs) > 0 else ""'),
         events=family_row["event_ids"],
@@ -316,14 +236,13 @@ def _family_to_dto_all(db: Session, fam_geo_meta_corp_org: dict) -> FamilyReadDT
         last_updated_date=datetime.now(),  # return proper last updated date, maybe from the family status query
         documents=family_row["document_ids"],
         collections=[
-            # c.collection_import_id
-            # for c in db.query(CollectionFamily).filter(
-            #     family_import_id == CollectionFamily.family_import_id
-            # )
-            "12"
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                family_import_id == CollectionFamily.family_import_id
+            )
         ],
         organisation=org,
-        corpus_import_id="1",  # This column should probably be changed in the sql query
+        corpus_import_id=family_row["corpus_import_id"],
         corpus_title=cast(str, family_row["title"]),
         corpus_type=cast(str, family_row["corpus_type_name"]),
         created=cast(datetime, family_row["created"]),
@@ -478,46 +397,63 @@ def search(
     :return list[FamilyReadDTO]: A list of families matching the search
         terms.
     """
-    search = []
-    if "q" in search_params.keys():
-        term = f"%{escape_like(search_params['q'])}%"
-        search.append(or_(Family.title.ilike(term), Family.description.ilike(term)))
-    else:
-        if "title" in search_params.keys():
-            term = f"%{escape_like(search_params['title'])}%"
-            search.append(Family.title.ilike(term))
 
-        if "summary" in search_params.keys():
+    conditions = []
+    params = {}
+
+    # Add conditions based on parameters
+    if "q" in search_params:
+        term = f"%{escape_like(search_params['q'])}%"
+        conditions.append("(f.title ILIKE :q OR f.description ILIKE :q)")
+        params["q"] = term
+    else:
+        if "title" in search_params:
+            term = f"%{escape_like(search_params['title'])}%"
+            conditions.append("f.title ILIKE :title")
+            params["title"] = term
+
+        if "summary" in search_params:
             term = f"%{escape_like(search_params['summary'])}%"
-            search.append(Family.description.ilike(term))
+            conditions.append("f.description ILIKE :summary")
+            params["summary"] = term
 
     if geography is not None:
         import_ids = _get_family_import_ids_by_geographies(db, geography)
-        search.append(Family.import_id.in_(import_ids))
+        if import_ids:
+            conditions.append("f.import_id IN :import_ids")
+            params["import_ids"] = tuple(
+                [geography.family_import_id for geography in import_ids]
+            )
 
-    if "status" in search_params.keys():
-        term = cast(str, search_params["status"])
-        search.append(Family.family_status == term.capitalize())
+    if "status" in search_params:
+        term = cast(str, search_params["status"]).upper()
+        conditions.append(
+            """
+            CASE
+                WHEN EXISTS (SELECT 1 FROM family_document fd WHERE fd.family_import_id = f.import_id AND fd.document_status = 'PUBLISHED') THEN 'PUBLISHED'
+                WHEN EXISTS (SELECT 1 FROM family_document fd WHERE fd.family_import_id = f.import_id AND fd.document_status = 'CREATED') THEN 'CREATED'
+                ELSE 'DELETED'
+            END = :family_status
+        """
+        )
+        params["family_status"] = term
 
-    condition = and_(*search) if len(search) > 1 else search[0]
+    # Combine conditions into a WHERE clause
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+
+    sql_query, query_params = construct_raw_sql_query(
+        org_id=org_id, filters=where_clause, filter_params=params
+    )
 
     try:
-        query = _get_query(db).filter(condition)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
-
-        found = (
-            query.order_by(desc(Family.last_modified))
-            .limit(search_params["max_results"])
-            .all()
-        )
+        query = _get_query_all_search_endpoint(db, sql_query, query_params)
 
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [_family_to_dto(db, f) for f in found]
+    return [_family_to_dto_search_endpoint(db, row) for row in query]
 
 
 def update(
@@ -928,5 +864,4 @@ def _get_family_import_ids_by_geographies(db: Session, geographies: list[str]) -
         )
         .join(Geography, Geography.id == FamilyGeography.geography_id)
         .filter(Geography.display_value.in_(geographies))
-        .subquery()
     )
