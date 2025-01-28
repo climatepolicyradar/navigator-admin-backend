@@ -138,7 +138,22 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
                 AND fd.document_status = 'CREATED'
             ) THEN 'CREATED'
             ELSE 'DELETED'
-        END AS family_status
+        END AS family_status,
+        (
+            SELECT MAX(fe.date)
+            FROM family_event fe
+            WHERE fe.family_import_id = f.import_id
+        ) AS last_updated_date,
+        (
+            SELECT MIN(fe.date)
+            FROM family_event fe
+            WHERE fe.family_import_id = f.import_id
+            AND EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements_text(fe.valid_metadata::jsonb->'datetime_event_name') AS datetime_event_name
+                    WHERE datetime_event_name = fe.event_type_name
+                )
+        ) AS published_date
         FROM
             family f
         JOIN
@@ -229,7 +244,6 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
 
 def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
     family_import_id = family_row["family_import_id"]
-    fam = db.query(Family).get(family_row["family_import_id"])
     metadata = cast(dict, family_row["value"])
     org = cast(str, family_row["name"])
     family_slugs = family_row["slugs"]
@@ -247,8 +261,8 @@ def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadD
         metadata=metadata,
         slug=str(family_slugs[0] if len(family_slugs) > 0 else ""),
         events=family_row["event_ids"],
-        published_date=fam.published_date,
-        last_updated_date=fam.last_updated_date,
+        published_date=family_row["published_date"],
+        last_updated_date=family_row["last_updated_date"],
         documents=family_row["document_ids"],
         collections=[
             c.collection_import_id
@@ -466,6 +480,7 @@ def search(
 
     try:
         query = _get_query_all_search_endpoint(db, sql_query, query_params)
+
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
