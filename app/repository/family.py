@@ -123,6 +123,7 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
             c.*,
             c.import_id AS corpus_import_id,
             o.*,
+            slug_subquery.slugs,
         CASE
             WHEN EXISTS (
                 SELECT 1
@@ -175,6 +176,17 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
                     fe.family_import_id
             ) AS family_events_subquery
             ON family_events_subquery.family_import_id = f.import_id
+        LEFT JOIN
+            (
+                SELECT
+                    s.family_import_id,
+                    array_agg(s.name ORDER BY s.created) AS slugs  -- Aggregate slugs and order by `created`
+                FROM
+                    slug s
+                GROUP BY
+                    s.family_import_id
+            ) AS slug_subquery
+            ON slug_subquery.family_import_id = f.import_id
         JOIN
             family_metadata fm ON fm.family_import_id = f.import_id
         JOIN
@@ -207,8 +219,9 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
     GROUP BY
         f.import_id, f.title, geography_subquery.geography_values,
         family_documents_subquery.document_ids, family_events_subquery.event_ids,
-        fm.family_import_id, c.import_id, o.id
+        fm.family_import_id, c.import_id, o.id, slug_subquery.slugs
     ORDER BY f.last_modified DESC
+    LIMIT :max_results
     """
 
     return main_sql_query, query_params
@@ -216,8 +229,10 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
 
 def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
     family_import_id = family_row["family_import_id"]
+    fam = db.query(Family).get(family_row["family_import_id"])
     metadata = cast(dict, family_row["value"])
     org = cast(str, family_row["name"])
+    family_slugs = family_row["slugs"]
 
     return FamilyReadDTO(
         import_id=str(family_row["import_id"]),
@@ -230,10 +245,10 @@ def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadD
         category=str(family_row["family_category"]),
         status=str(family_row["family_status"]),
         metadata=metadata,
-        slug=str('family_slugs[0].name if len(family_slugs) > 0 else ""'),
+        slug=str(family_slugs[0] if len(family_slugs) > 0 else ""),
         events=family_row["event_ids"],
-        published_date=datetime.now(),  # return proper published date
-        last_updated_date=datetime.now(),  # return proper last updated date, maybe from the family status query
+        published_date=fam.published_date,
+        last_updated_date=fam.last_updated_date,
         documents=family_row["document_ids"],
         collections=[
             c.collection_import_id
@@ -420,8 +435,8 @@ def search(
     if geography is not None:
         import_ids = _get_family_import_ids_by_geographies(db, geography)
         if import_ids:
-            conditions.append("f.import_id IN :import_ids")
-            params["import_ids"] = tuple(
+            conditions.append("f.import_id IN :import_ids_for_geographies")
+            params["import_ids_for_geographies"] = tuple(
                 [geography.family_import_id for geography in import_ids]
             )
 
@@ -438,6 +453,10 @@ def search(
         )
         params["family_status"] = term
 
+    params["max_results"] = search_params[
+        "max_results"
+    ]  # We know that query params will always have a value, see query_params.py
+
     # Combine conditions into a WHERE clause
     where_clause = " AND ".join(conditions) if conditions else "1=1"
 
@@ -447,7 +466,6 @@ def search(
 
     try:
         query = _get_query_all_search_endpoint(db, sql_query, query_params)
-
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
