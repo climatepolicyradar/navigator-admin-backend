@@ -116,6 +116,7 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
     main_sql_query = """
         SELECT
             f.*,
+            f.title AS family_title,
             geography_subquery.geography_values,
             family_documents_subquery.document_ids,
             family_events_subquery.event_ids,
@@ -249,8 +250,8 @@ def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadD
     family_slugs = family_row["slugs"]
 
     return FamilyReadDTO(
-        import_id=str(family_row["import_id"]),
-        title=str(family_row["title"]),
+        import_id=str(family_import_id),
+        title=str(family_row["family_title"]),
         summary=str(family_row["description"]),
         geography=str(
             family_row["geography_values"][0] if family_row["geography_values"] else ""
@@ -486,7 +487,9 @@ def search(
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [_family_to_dto_search_endpoint(db, row) for row in query]
+    results = [_family_to_dto_search_endpoint(db, row) for row in query]
+
+    return results
 
 
 def update(
