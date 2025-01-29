@@ -367,9 +367,6 @@ def _update_intention(
     )
 
 
-# NOTE ONLY UPDATE THE ALL ENDPOINT DUPLICATE THE SEARCH AND ALL ENDPOINT
-
-
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     """
     Returns all the families.
