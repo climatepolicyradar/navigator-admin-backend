@@ -31,7 +31,11 @@ from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from app.repository.helpers import generate_import_id, generate_slug
+from app.repository.helpers import (
+    construct_raw_sql_query,
+    generate_import_id,
+    generate_slug,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,137 +114,6 @@ def _get_query_all_search_endpoint(
 ) -> Query:
     result = db.execute(text(raw_sql_query), query_params)
     return result.mappings().fetchall()
-
-
-def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
-    main_sql_query = """
-        SELECT
-            f.*,
-            f.title AS family_title,
-            geography_subquery.geography_values,
-            family_documents_subquery.document_ids,
-            family_events_subquery.event_ids,
-            fm.*,
-            c.*,
-            c.import_id AS corpus_import_id,
-            o.*,
-            slug_subquery.slugs,
-        CASE
-            WHEN EXISTS (
-                SELECT 1
-                FROM family_document fd
-                WHERE fd.family_import_id = f.import_id
-                AND fd.document_status = 'PUBLISHED'
-            ) THEN 'PUBLISHED'
-            WHEN EXISTS (
-                SELECT 1
-                FROM family_document fd
-                WHERE fd.family_import_id = f.import_id
-                AND fd.document_status = 'CREATED'
-            ) THEN 'CREATED'
-            ELSE 'DELETED'
-        END AS family_status,
-        (
-            SELECT MAX(fe.date)
-            FROM family_event fe
-            WHERE fe.family_import_id = f.import_id
-        ) AS last_updated_date,
-        (
-            SELECT MIN(fe.date)
-            FROM family_event fe
-            WHERE fe.family_import_id = f.import_id
-            AND EXISTS (
-                    SELECT 1
-                    FROM jsonb_array_elements_text(fe.valid_metadata::jsonb->'datetime_event_name') AS datetime_event_name
-                    WHERE datetime_event_name = fe.event_type_name
-                )
-        ) AS published_date
-        FROM
-            family f
-        JOIN
-            (
-                SELECT
-                    fg.family_import_id,
-                    array_agg(g.value) AS geography_values
-                FROM
-                    family_geography fg
-                JOIN
-                    geography g ON g.id = fg.geography_id
-                GROUP BY
-                    fg.family_import_id
-            ) AS geography_subquery
-            ON geography_subquery.family_import_id = f.import_id
-        JOIN
-            (
-                SELECT
-                    fd.family_import_id,
-                    array_agg(fd.import_id) AS document_ids
-                FROM
-                    family_document fd
-                GROUP BY
-                    fd.family_import_id
-            ) AS family_documents_subquery
-            ON family_documents_subquery.family_import_id = f.import_id
-        JOIN
-            (
-                SELECT
-                    fe.family_import_id,
-                    array_agg(fe.import_id) AS event_ids
-                FROM
-                    family_event fe
-                GROUP BY
-                    fe.family_import_id
-            ) AS family_events_subquery
-            ON family_events_subquery.family_import_id = f.import_id
-        LEFT JOIN
-            (
-                SELECT
-                    s.family_import_id,
-                    array_agg(s.name ORDER BY s.created) AS slugs  -- Aggregate slugs and order by `created`
-                FROM
-                    slug s
-                GROUP BY
-                    s.family_import_id
-            ) AS slug_subquery
-            ON slug_subquery.family_import_id = f.import_id
-        JOIN
-            family_metadata fm ON fm.family_import_id = f.import_id
-        JOIN
-            family_corpus fc ON fc.family_import_id = f.import_id
-        JOIN
-            corpus c ON c.import_id = fc.corpus_import_id
-        JOIN
-            organisation o ON o.id = c.organisation_id
-        """
-
-    where_conditions = []
-    query_params = {}
-
-    if org_id is not None:
-        where_conditions.append("o.id = :org_id")
-        query_params["org_id"] = org_id
-
-    if filters:
-        where_conditions.append(filters)
-        if filter_params:
-            query_params.update(filter_params)
-
-    # Combine WHERE conditions
-    if where_conditions:
-        where_clause = " AND ".join(where_conditions)
-        main_sql_query += f" WHERE {where_clause}"
-
-    # Append GROUP BY at the end
-    main_sql_query += """
-    GROUP BY
-        f.import_id, f.title, geography_subquery.geography_values,
-        family_documents_subquery.document_ids, family_events_subquery.event_ids,
-        fm.family_import_id, c.import_id, o.id, slug_subquery.slugs
-    ORDER BY f.last_modified DESC
-    LIMIT :max_results
-    """
-
-    return main_sql_query, query_params
 
 
 def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
@@ -445,11 +318,11 @@ def search(
             params["summary"] = term
 
     if geography is not None:
-        import_ids = _get_family_import_ids_by_geographies(db, geography)
-        if import_ids:
+        family_geographies = _get_family_geographies_by_display_values(db, geography)
+        if family_geographies:
             conditions.append("f.import_id IN :import_ids_for_geographies")
             params["import_ids_for_geographies"] = tuple(
-                [geography.family_import_id for geography in import_ids]
+                [geography.family_import_id for geography in family_geographies]
             )
 
     if "status" in search_params:
@@ -467,7 +340,7 @@ def search(
 
     params["max_results"] = search_params[
         "max_results"
-    ]  # We know that query params will always have a value, see query_params.py
+    ]  # We know that max_results will always have a value, see query_params.py
 
     # Combine conditions into a WHERE clause
     where_clause = " AND ".join(conditions) if conditions else "1=1"
@@ -883,7 +756,9 @@ def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list
     add_new_geographies(db, import_id, geo_ids, original_geographies)
 
 
-def _get_family_import_ids_by_geographies(db: Session, geographies: list[str]) -> Query:
+def _get_family_geographies_by_display_values(
+    db: Session, geographies: list[str]
+) -> Query:
     """
     Filters import IDs of families based on the provided geography values.
     :param db Session: the database connection
