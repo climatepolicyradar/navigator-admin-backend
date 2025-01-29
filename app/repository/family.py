@@ -32,7 +32,7 @@ from sqlalchemy_utils import escape_like
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
 from app.repository.helpers import (
-    construct_raw_sql_query,
+    construct_raw_sql_query_to_retrieve_all_families,
     generate_import_id,
     generate_slug,
 )
@@ -356,7 +356,7 @@ def search(
     # Combine conditions into a WHERE clause
     where_clause = " AND ".join(conditions) if conditions else "1=1"
 
-    sql_query, query_params = construct_raw_sql_query(
+    sql_query, query_params = construct_raw_sql_query_to_retrieve_all_families(
         org_id=org_id, filters=where_clause, filter_params=params
     )
 

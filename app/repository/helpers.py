@@ -175,7 +175,7 @@ def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list
     add_new_geographies(db, import_id, geo_ids, original_geographies)
 
 
-def construct_raw_sql_query(
+def construct_raw_sql_query_to_retrieve_all_families(
     org_id: Optional[int] = None,
     filters: Optional[str] = None,
     filter_params: Optional[dict[str, Union[str, int]]] = None,
