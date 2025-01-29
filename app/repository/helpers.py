@@ -1,7 +1,7 @@
 """Helper functions for repos"""
 
 import logging
-from typing import Optional, Union, cast
+from typing import Optional, Tuple, Union, cast
 from uuid import uuid4
 
 from db_client.models.dfce.family import FamilyGeography, Slug
@@ -175,7 +175,19 @@ def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list
     add_new_geographies(db, import_id, geo_ids, original_geographies)
 
 
-def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
+def construct_raw_sql_query(
+    org_id: Optional[int] = None,
+    filters: Optional[str] = None,
+    filter_params: Optional[dict[str, Union[str, int]]] = None,
+) -> Tuple[str, dict[str, Union[str, int]]]:
+    """
+    Constructs a raw SQL query for retrieving family-related data based on provided filters.
+
+    :param Optional[int] org_id: The ID of the organization to filter by (default is None).
+    :param Optional[str] filters: A string representing additional filtering conditions (default is None).
+    :param Optional[Dict[str, any]] filter_params: A dictionary of filter parameters to be used in the query (default is None).
+    :return: A tuple containing the constructed SQL query string and a dictionary of query parameters.
+    """
     main_sql_query = """
         SELECT
             f.*,
@@ -233,7 +245,7 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
                     fg.family_import_id
             ) AS geography_subquery
             ON geography_subquery.family_import_id = f.import_id
-        JOIN
+        LEFT JOIN
             (
                 SELECT
                     fd.family_import_id,
@@ -244,7 +256,7 @@ def construct_raw_sql_query(org_id=None, filters=None, filter_params=None):
                     fd.family_import_id
             ) AS family_documents_subquery
             ON family_documents_subquery.family_import_id = f.import_id
-        JOIN
+        LEFT JOIN
             (
                 SELECT
                     fe.family_import_id,

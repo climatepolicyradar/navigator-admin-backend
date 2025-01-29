@@ -110,8 +110,17 @@ def _get_query(db: Session) -> Query:
 
 
 def _get_query_all_search_endpoint(
-    db: Session, raw_sql_query: str, query_params: Optional[dict] = {}
-) -> Query:
+    db: Session, raw_sql_query: str, query_params: dict
+) -> list[dict]:
+    """
+    Executes a raw SQL query and returns the result as a list of mappings (dictionaries).
+
+    :param db: The database session to execute the query.
+    :param str raw_sql_query: The raw SQL query string to execute.
+    :param dict query_params: Optional parameters for the SQL query.
+    :return list[dict]: A list of dictionaries representing the query results.
+    """
+
     result = db.execute(text(raw_sql_query), query_params)
     return result.mappings().fetchall()
 
@@ -121,6 +130,8 @@ def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadD
     metadata = cast(dict, family_row["value"])
     org = cast(str, family_row["name"])
     family_slugs = family_row["slugs"]
+    event_ids = family_row["event_ids"] if family_row["event_ids"] else []
+    document_ids = family_row["document_ids"] if family_row["document_ids"] else []
 
     return FamilyReadDTO(
         import_id=str(family_import_id),
@@ -134,10 +145,10 @@ def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadD
         status=str(family_row["family_status"]),
         metadata=metadata,
         slug=str(family_slugs[0] if len(family_slugs) > 0 else ""),
-        events=family_row["event_ids"],
+        events=event_ids,
         published_date=family_row["published_date"],
         last_updated_date=family_row["last_updated_date"],
-        documents=family_row["document_ids"],
+        documents=document_ids,
         collections=[
             c.collection_import_id
             for c in db.query(CollectionFamily).filter(
@@ -320,10 +331,10 @@ def search(
     if geography is not None:
         family_geographies = _get_family_geographies_by_display_values(db, geography)
         if family_geographies:
-            conditions.append("f.import_id IN :import_ids_for_geographies")
-            params["import_ids_for_geographies"] = tuple(
-                [geography.family_import_id for geography in family_geographies]
-            )
+            conditions.append("f.import_id = ANY(:import_ids_for_geographies)")
+            params["import_ids_for_geographies"] = [
+                geography.family_import_id for geography in family_geographies
+            ]
 
     if "status" in search_params:
         term = cast(str, search_params["status"]).upper()
