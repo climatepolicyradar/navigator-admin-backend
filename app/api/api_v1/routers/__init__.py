@@ -8,6 +8,7 @@ from app.api.api_v1.routers.corpus_type import corpus_types_router
 from app.api.api_v1.routers.document import document_router
 from app.api.api_v1.routers.event import event_router
 from app.api.api_v1.routers.family import families_router
+from app.api.api_v1.routers.organisation import organisations_router
 
 __all__ = (
     "analytics_router",
@@ -19,5 +20,6 @@ __all__ = (
     "document_router",
     "event_router",
     "families_router",
+    "organisations_router",
     "bulk_import_router",
 )

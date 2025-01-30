@@ -21,6 +21,7 @@ class AuthEndpoint(str, enum.Enum):
     BULK_IMPORT = "BULK-IMPORT"
     CORPUS = "CORPORA"
     CORPUS_TYPE = "CORPUS-TYPES"
+    ORGANISATION = "ORGANISATIONS"
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
@@ -76,6 +77,10 @@ AUTH_TABLE: AuthMap = {
     # Corpus Type
     AuthEndpoint.CORPUS_TYPE: {
         AuthOperation.CREATE: AuthAccess.SUPER,
+        AuthOperation.READ: AuthAccess.SUPER,
+    },
+    # Organisation
+    AuthEndpoint.ORGANISATION: {
         AuthOperation.READ: AuthAccess.SUPER,
     },
 }
