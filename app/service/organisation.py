@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union
+from typing import Optional
 
 from pydantic import ConfigDict, validate_call
 from sqlalchemy.orm import Session
@@ -31,18 +31,15 @@ def all() -> list[OrganisationReadDTO]:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def get(
-    organisation: Union[int, str], db: Optional[Session] = None
+    organisation: int, db: Optional[Session] = None
 ) -> Optional[OrganisationReadDTO]:
     """Retrieve an organisation by ID or name.
 
-    :param Union[int, str] organisation: The name or ID of an
-        organisation to retrieve.
+    :param int organisation: The ID of an organisation to retrieve.
     :return OrganisationReadDTO: The requested organisation.
     :raises RepositoryError: If there is an error during retrieval.
     """
     if db is None:
         db = db_session.get_db()
 
-    if isinstance(organisation, int):
-        return organisation_repo.get_by_id(db, organisation)
-    return organisation_repo.get_by_name(db, organisation)
+    return organisation_repo.get_by_id(db, organisation)

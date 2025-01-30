@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -34,11 +33,10 @@ async def get_all_organisations() -> list[OrganisationReadDTO]:
     "/organisations/{organisation}",
     response_model=OrganisationReadDTO,
 )
-async def get_organisation(organisation: Union[int, str]) -> OrganisationReadDTO:
+async def get_organisation(organisation: int) -> OrganisationReadDTO:
     """Retrieve a specific organisation by its name.
 
-    :param Union[int, str] organisation: The ID or name of the
-        organisation to retrieve.
+    :param int organisation: The ID of the organisation to retrieve.
     :raises HTTPException: If the organisation is not found.
     :return OrganisationReadDTO: The requested organisation.
     """
