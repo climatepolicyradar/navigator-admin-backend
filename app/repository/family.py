@@ -1,6 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
+import time
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -288,7 +289,12 @@ def search(
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [_family_to_dto(db, f) for f in found]
+    start_time = time.time()
+    results = [_family_to_dto(db, f) for f in found]
+    end_time = time.time()
+    print(f"Search Query Execution Time: {end_time - start_time} seconds")
+
+    return results
 
 
 def update(
