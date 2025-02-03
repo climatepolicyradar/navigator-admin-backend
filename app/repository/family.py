@@ -109,22 +109,6 @@ def _get_query(db: Session) -> Query:
     return query
 
 
-def _get_query_all_search_endpoint(
-    db: Session, raw_sql_query: str, query_params: dict
-) -> list[dict]:
-    """
-    Executes a raw SQL query and returns the result as a list of mappings (dictionaries).
-
-    :param db: The database session to execute the query.
-    :param str raw_sql_query: The raw SQL query string to execute.
-    :param dict query_params: Optional parameters for the SQL query.
-    :return list[dict]: A list of dictionaries representing the query results.
-    """
-
-    result = db.execute(text(raw_sql_query), query_params)
-    return result.mappings().fetchall()
-
-
 def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
     family_import_id = family_row["family_import_id"]
     metadata = cast(dict, family_row["value"])
@@ -334,7 +318,7 @@ def search(
         if family_geographies:
             conditions.append("f.import_id = ANY(:import_ids_for_geographies)")
             params["import_ids_for_geographies"] = [
-                geography.family_import_id for geography in family_geographies
+                str(geography.family_import_id) for geography in family_geographies
             ]
 
     if "status" in search_params:
@@ -354,18 +338,21 @@ def search(
     where_clause = " AND ".join(conditions) if conditions else "1=1"
 
     sql_query, query_params = construct_raw_sql_query_to_retrieve_all_families(
-        org_id=org_id, filters=where_clause, filter_params=params
+        params,
+        org_id=org_id,
+        filters=where_clause,
     )
 
     try:
-        query = _get_query_all_search_endpoint(db, sql_query, query_params)
+        query = db.execute(text(sql_query), query_params)
+        query_results = query.mappings().fetchall()
 
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
         raise RepositoryError(e)
 
-    results = [_family_to_dto_search_endpoint(db, row) for row in query]
+    results = [_family_to_dto_search_endpoint(db, row) for row in query_results]
 
     return results
 
