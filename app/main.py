@@ -15,18 +15,11 @@ from fastapi_health import health
 from fastapi_pagination import add_pagination
 from fastapi_utils.timing import add_timing_middleware
 
-from app.api.api_v1.routers import (
-    analytics_router,
-    auth_router,
-    bulk_import_router,
-    collections_router,
-    config_router,
-    corpora_router,
-    corpus_types_router,
-    document_router,
-    event_router,
-    families_router,
-)
+from app.api.api_v1.routers import (analytics_router, auth_router,
+                                    bulk_import_router, collections_router,
+                                    config_router, corpora_router,
+                                    corpus_types_router, document_router,
+                                    event_router, families_router)
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
