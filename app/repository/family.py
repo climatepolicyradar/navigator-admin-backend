@@ -310,7 +310,8 @@ def search(
     """
 
     conditions = []
-    params = {}
+    params = {"max_results": search_params["max_results"]}
+    # We know that max_results will always have a value, so can set this when initialising, see query_params.py
 
     # Add conditions based on parameters
     if "q" in search_params:
@@ -348,10 +349,6 @@ def search(
         """
         )
         params["family_status"] = term
-
-    params["max_results"] = search_params[
-        "max_results"
-    ]  # We know that max_results will always have a value, see query_params.py
 
     # Combine conditions into a WHERE clause
     where_clause = " AND ".join(conditions) if conditions else "1=1"
