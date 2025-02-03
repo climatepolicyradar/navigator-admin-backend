@@ -292,7 +292,7 @@ def search(
     start_time = time.time()
     results = [_family_to_dto(db, f) for f in found]
     end_time = time.time()
-    print(f"Search Query Execution Time: {end_time - start_time} seconds")
+    _LOGGER.info(f"Search Query Execution Time: {end_time - start_time} seconds")
 
     return results
 
