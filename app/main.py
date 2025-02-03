@@ -143,6 +143,7 @@ async def root():
     return {"message": "CPR Navigator Admin API v1"}
 
 
+# trunk-ignore(trunk/DS002)
 if __name__ == "__main__":
     uvicorn.run(
         app,
