@@ -361,7 +361,7 @@ def _get_requested_language(db: Session, new_values: dict) -> Optional[Language]
 
     new_language = (
         db.query(Language)
-        .filter(Language.name == new_values["user_language_name"])
+        .filter(Language.language_code == new_values["user_language_name"])
         .one()
     )
     return new_language
