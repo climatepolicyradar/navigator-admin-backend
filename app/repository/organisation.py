@@ -78,21 +78,3 @@ def get_by_id(db: Session, org_id: int) -> Optional[OrganisationReadDTO]:
         raise RepositoryError(e)
 
     return _org_to_dto(org) if org is not None else None
-
-
-def get_by_name(db: Session, org_name: str) -> Optional[OrganisationReadDTO]:
-    """Get an organisation from the database given a name.
-
-    :param db Session: The database connection.
-    :param str org_name: The name of the organisation to retrieve.
-    :return Optional[OrganisationReadDTO]: The requested org or None.
-    :raises RepositoryError: If there is an error during query.
-    """
-    try:
-        org = db.query(Organisation).filter(Organisation.name == org_name).one_or_none()
-
-    except MultipleResultsFound as e:
-        _LOGGER.error(e)
-        raise RepositoryError(e)
-
-    return _org_to_dto(org) if org is not None else None

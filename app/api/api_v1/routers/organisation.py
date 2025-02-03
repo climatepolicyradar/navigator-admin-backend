@@ -30,18 +30,18 @@ async def get_all_organisations() -> list[OrganisationReadDTO]:
 
 
 @organisations_router.get(
-    "/organisations/{organisation}",
+    "/organisations/{organisation_id}",
     response_model=OrganisationReadDTO,
 )
-async def get_organisation(organisation: int) -> OrganisationReadDTO:
+async def get_organisation(organisation_id: int) -> OrganisationReadDTO:
     """Retrieve a specific organisation by its name.
 
-    :param int organisation: The ID of the organisation to retrieve.
+    :param int organisation_id: The ID of the organisation to retrieve.
     :raises HTTPException: If the organisation is not found.
     :return OrganisationReadDTO: The requested organisation.
     """
     try:
-        org = organisation_service.get(organisation)
+        org = organisation_service.get(organisation_id)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
@@ -52,6 +52,6 @@ async def get_organisation(organisation: int) -> OrganisationReadDTO:
     if org is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Organisation not found: {organisation}",
+            detail=f"Organisation not found: {organisation_id}",
         )
     return org
