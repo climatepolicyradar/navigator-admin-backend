@@ -9,22 +9,29 @@ import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
+from db_client import run_migrations
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_health import health
 from fastapi_pagination import add_pagination
 from fastapi_utils.timing import add_timing_middleware
 
-from app.api.api_v1.routers import (analytics_router, auth_router,
-                                    bulk_import_router, collections_router,
-                                    config_router, corpora_router,
-                                    corpus_types_router, document_router,
-                                    event_router, families_router)
+from app.api.api_v1.routers import (
+    analytics_router,
+    auth_router,
+    bulk_import_router,
+    collections_router,
+    config_router,
+    corpora_router,
+    corpus_types_router,
+    document_router,
+    event_router,
+    families_router,
+)
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.service.health import is_database_online
-from db_client import run_migrations
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -136,7 +143,6 @@ async def root():
     return {"message": "CPR Navigator Admin API v1"}
 
 
-# trunk-ignore(trunk/DS002)
 if __name__ == "__main__":
     uvicorn.run(
         app,
