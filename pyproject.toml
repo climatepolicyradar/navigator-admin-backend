@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "admin_backend"
-version = "2.17.34"
+version = "2.17.36"
 description = ""
 authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
 packages = [{ include = "app" }, { include = "tests" }]
@@ -34,10 +34,11 @@ navigator-notify = { git = "https://github.com/climatepolicyradar/navigator-noti
 bcrypt = "4.0.1"
 fastapi-cli = "^0.0.5"
 pytest-watch = "^4.2.0"
+fastapi-utils = { version = "0.8.0", extras = ["all"] }
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^3.8.0"
-python-dotenv = "^0.19.2"
+python-dotenv = "^0.21.0"
 pytest = "^8.3.2"
 pytest-dotenv = "^0.5.2"
 pytest-mock = "^3.7.0"

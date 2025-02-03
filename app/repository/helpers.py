@@ -1,7 +1,7 @@
 """Helper functions for repos"""
 
 import logging
-from typing import Optional, Union, cast
+from typing import Optional, Tuple, Union, cast
 from uuid import uuid4
 
 from db_client.models.dfce.family import FamilyGeography, Slug
@@ -173,3 +173,146 @@ def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list
 
     remove_old_geographies(db, import_id, geo_ids, original_geographies)
     add_new_geographies(db, import_id, geo_ids, original_geographies)
+
+
+def construct_raw_sql_query_to_retrieve_all_families(
+    filter_params: dict[str, Union[str, int, list[str]]],
+    org_id: Optional[int] = None,
+    filters: Optional[str] = None,
+) -> Tuple[str, dict[str, Union[str, int]]]:
+    """
+    Constructs a raw SQL query for retrieving family-related data based on provided filters.
+
+    :param Optional[int] org_id: The ID of the organization to filter by (default is None).
+    :param Optional[str] filters: A string representing additional filtering conditions (default is None).
+    :param Optional[Dict[str, any]] filter_params: A dictionary of filter parameters to be used in the query (default is None).
+    :return: A tuple containing the constructed SQL query string and a dictionary of query parameters.
+    """
+    main_sql_query = """
+        SELECT
+            f.*,
+            f.title AS family_title,
+            geography_subquery.geography_values,
+            family_documents_subquery.document_ids,
+            family_events_subquery.event_ids,
+            fm.*,
+            c.*,
+            c.import_id AS corpus_import_id,
+            o.*,
+            slug_subquery.slugs,
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM family_document fd
+                WHERE fd.family_import_id = f.import_id
+                AND fd.document_status = 'PUBLISHED'
+            ) THEN 'PUBLISHED'
+            WHEN EXISTS (
+                SELECT 1
+                FROM family_document fd
+                WHERE fd.family_import_id = f.import_id
+                AND fd.document_status = 'CREATED'
+            ) THEN 'CREATED'
+            ELSE 'DELETED'
+        END AS family_status,
+        (
+            SELECT MAX(fe.date)
+            FROM family_event fe
+            WHERE fe.family_import_id = f.import_id
+        ) AS last_updated_date,
+        (
+            SELECT MIN(fe.date)
+            FROM family_event fe
+            WHERE fe.family_import_id = f.import_id
+            AND EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements_text(fe.valid_metadata::jsonb->'datetime_event_name') AS datetime_event_name
+                    WHERE datetime_event_name = fe.event_type_name
+                )
+        ) AS published_date
+        FROM
+            family f
+        JOIN
+            (
+                SELECT
+                    fg.family_import_id,
+                    array_agg(g.value) AS geography_values
+                FROM
+                    family_geography fg
+                JOIN
+                    geography g ON g.id = fg.geography_id
+                GROUP BY
+                    fg.family_import_id
+            ) AS geography_subquery
+            ON geography_subquery.family_import_id = f.import_id
+        LEFT JOIN
+            (
+                SELECT
+                    fd.family_import_id,
+                    array_agg(fd.import_id) AS document_ids
+                FROM
+                    family_document fd
+                GROUP BY
+                    fd.family_import_id
+            ) AS family_documents_subquery
+            ON family_documents_subquery.family_import_id = f.import_id
+        LEFT JOIN
+            (
+                SELECT
+                    fe.family_import_id,
+                    array_agg(fe.import_id) AS event_ids
+                FROM
+                    family_event fe
+                GROUP BY
+                    fe.family_import_id
+            ) AS family_events_subquery
+            ON family_events_subquery.family_import_id = f.import_id
+        LEFT JOIN
+            (
+                SELECT
+                    s.family_import_id,
+                    array_agg(s.name ORDER BY s.created) AS slugs  -- Aggregate slugs and order by `created`
+                FROM
+                    slug s
+                GROUP BY
+                    s.family_import_id
+            ) AS slug_subquery
+            ON slug_subquery.family_import_id = f.import_id
+        JOIN
+            family_metadata fm ON fm.family_import_id = f.import_id
+        JOIN
+            family_corpus fc ON fc.family_import_id = f.import_id
+        JOIN
+            corpus c ON c.import_id = fc.corpus_import_id
+        JOIN
+            organisation o ON o.id = c.organisation_id
+        """
+
+    where_conditions = []
+    query_params = {}
+
+    if org_id is not None:
+        where_conditions.append("o.id = :org_id")
+        query_params["org_id"] = org_id
+
+    if filters:
+        where_conditions.append(filters)
+        if filter_params:
+            query_params.update(filter_params)
+
+    # Combine WHERE conditions
+    if where_conditions:
+        where_clause = " AND ".join(where_conditions)
+        main_sql_query += f" WHERE {where_clause}"
+
+    # Append GROUP BY at the end
+    main_sql_query += """
+    GROUP BY
+        f.import_id, f.title, geography_subquery.geography_values,
+        family_documents_subquery.document_ids, family_events_subquery.event_ids,
+        fm.family_import_id, c.import_id, o.id, slug_subquery.slugs
+    ORDER BY f.last_modified DESC
+    LIMIT :max_results
+    """
+
+    return main_sql_query, query_params
