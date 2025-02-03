@@ -176,9 +176,9 @@ def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list
 
 
 def construct_raw_sql_query_to_retrieve_all_families(
+    filter_params: dict[str, Union[str, int, list[str]]],
     org_id: Optional[int] = None,
     filters: Optional[str] = None,
-    filter_params: Optional[dict[str, Union[str, int]]] = None,
 ) -> Tuple[str, dict[str, Union[str, int]]]:
     """
     Constructs a raw SQL query for retrieving family-related data based on provided filters.
