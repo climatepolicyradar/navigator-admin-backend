@@ -294,7 +294,9 @@ def search(
     """
 
     conditions = []
-    params = {"max_results": search_params["max_results"]}
+    params: dict[str, Union[str, int, list[str]]] = {
+        "max_results": search_params["max_results"]
+    }
     # We know that max_results will always have a value, so can set this when initialising, see query_params.py
 
     # Add conditions based on parameters
