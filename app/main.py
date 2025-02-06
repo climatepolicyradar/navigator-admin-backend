@@ -5,6 +5,7 @@ Note: If you want to add a new endpoint, please make sure you update
 AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
 
+import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -13,6 +14,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_health import health
 from fastapi_pagination import add_pagination
+from fastapi_utils.timing import add_timing_middleware
 
 from app.api.api_v1.routers import (
     analytics_router,
@@ -25,6 +27,7 @@ from app.api.api_v1.routers import (
     document_router,
     event_router,
     families_router,
+    organisations_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
@@ -40,6 +43,8 @@ _ALLOW_ORIGIN_REGEX = (
     r"https://.+\.climate-laws\.org|"
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
@@ -54,6 +59,7 @@ app = FastAPI(
 )
 setup_json_logging(app)
 add_pagination(app)
+add_timing_middleware(app, record=_LOGGER.info)
 
 app.include_router(
     config_router,
@@ -117,6 +123,13 @@ app.include_router(
     corpus_types_router,
     prefix="/api/v1",
     tags=["corpus-types"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    organisations_router,
+    prefix="/api/v1",
+    tags=["organisations"],
     dependencies=[Depends(check_user_auth)],
 )
 
