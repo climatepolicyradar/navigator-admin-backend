@@ -18,7 +18,7 @@ services:
       ADMIN_POSTGRES_USER: navigator_admin
       ADMIN_POSTGRES_DATABASE: navigator
       ADMIN_POSTGRES_PASSWORD: password
-      SECRET_KEY: ???
+      SECRET_KEY: secret_test_key
     depends_on:
       postgres:
         condition: service_healthy
