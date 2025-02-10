@@ -14,7 +14,9 @@ from app.errors import (
     ValidationError,
 )
 from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
+from app.model.custom_app import CustomAppCreateDTO
 from app.service import corpus as corpus_service
+from app.service.custom_app import create_configuration_token
 
 corpora_router = r = APIRouter()
 
@@ -170,3 +172,21 @@ async def create_corpus(request: Request, new_corpus: CorpusCreateDTO) -> str:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=e.message)
 
     return corpus_id
+
+
+@r.post("corpora/app-tokens", response_model=str)
+async def create_custom_app_token(new_token: CustomAppCreateDTO) -> str:
+    """Create a custom app token for the navigator app.
+
+    :param CustomAppCreateDTO new_token: New custom app object.
+    :raises HTTPException: If there is an error raised during validation
+    :return str: returns the newly encoded custom app token.
+    """
+    try:
+        token = create_configuration_token(new_token)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+
+    return token
