@@ -57,12 +57,7 @@ def test_create_app_token_default_expiry(
 
 @pytest.mark.parametrize("expiry_years", [EXPIRE_AFTER_1_YEAR, EXPIRE_AFTER_5_YEARS])
 def test_create_app_token_specific_expiry(
-    client: TestClient,
-    data_db: Session,
-    superuser_header_token,
-    expiry_years: int,
-    expected_subject: str,
-    expected_audience: str,
+    client: TestClient, data_db: Session, superuser_header_token, expiry_years: int
 ):
     setup_db(data_db)
     test_token = create_custom_app_create_dto(

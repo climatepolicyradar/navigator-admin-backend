@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, cast
 
 from dateutil.relativedelta import relativedelta
 from pydantic import AnyUrl
@@ -23,7 +23,7 @@ def create_custom_app_create_dto(
     return CustomAppCreateDTO(
         theme=theme,
         corpora_ids=corpora_ids,
-        hostname=AnyUrl(hostname),
+        hostname=cast(AnyUrl, hostname),
         expiry_years=expiry_years,
     )
 

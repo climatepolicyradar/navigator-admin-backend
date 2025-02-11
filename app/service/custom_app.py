@@ -49,9 +49,6 @@ def create_configuration_token(
     if TOKEN_SECRET_KEY in [None, ""]:
         raise ValidationError("TOKEN_SECRET_KEY is not set")
 
-    if not all(validate(db, import_id) for import_id in input.corpora_ids):
-        raise ValidationError("One or more import IDs don't exist")
-
     if _contains_special_chars(input.theme):
         _LOGGER.error("Theme must not contain any special characters, including spaces")
         raise ValidationError("Invalid subject provided")
@@ -59,6 +56,9 @@ def create_configuration_token(
     if "://" in str(input.hostname) or str(input.hostname).endswith("/"):
         _LOGGER.error("Hostname must not include scheme or trailing slash")
         raise ValidationError("Invalid audience provided")
+
+    if not all(validate(db, import_id) for import_id in input.corpora_ids):
+        raise ValidationError("One or more import IDs don't exist")
 
     expiry_years = years or CUSTOM_APP_TOKEN_EXPIRE_YEARS
     issued_at = datetime.utcnow()
