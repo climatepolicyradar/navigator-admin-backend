@@ -24,7 +24,7 @@ class CustomAppReadDTO(BaseModel):
 
     allowed_corpora_ids: list[str]
     subject: str
-    audience: AnyUrl
+    audience: str
     issuer: str
     expiry: Union[float, datetime]
     issued_at: int

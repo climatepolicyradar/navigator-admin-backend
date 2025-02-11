@@ -206,30 +206,3 @@ def test_create_app_token_admin_non_super(client: TestClient, admin_user_header_
     assert (
         data["detail"] == "User admin@cpr.org is not authorised to CREATE an APP_TOKEN"
     )
-
-
-@pytest.mark.parametrize(
-    "aud",
-    [
-        "http://example.test.org",
-        "https://example.test.org",
-        "example.test.org/",
-    ],
-)
-def test_create_app_token_when_invalid_audience(
-    client: TestClient,
-    data_db: Session,
-    superuser_header_token,
-    aud: str,
-):
-    setup_db(data_db)
-    test_token = create_custom_app_create_dto(hostname=aud)
-    response = client.post(
-        "/api/v1/app-tokens",
-        json=test_token.model_dump(mode="json"),
-        headers=superuser_header_token,
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-    data = response.json()
-    assert data["detail"] == "Invalid audience provided"

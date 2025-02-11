@@ -14,7 +14,7 @@ EXPIRE_AFTER_DEFAULT_YEARS = 10
 def create_custom_app_create_dto(
     corpora_ids: Optional[list[str]] = None,
     theme: str = "TEST",
-    hostname: str = "example.test.org",
+    hostname: str = "http://example.test.org",
     expiry_years: Optional[int] = EXPIRE_AFTER_DEFAULT_YEARS,
 ) -> CustomAppCreateDTO:
     if corpora_ids is None:
