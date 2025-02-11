@@ -6,7 +6,7 @@ from db_client.models.organisation.authorisation import AuthAccess, AuthOperatio
 
 class AuthEndpoint(str, enum.Enum):
     """
-    An Entity that can be authorized.
+    An Entity that can be authorised.
 
     NOTE: At the moment these are the upper-case plural
     version of the entity that is used in the url.
