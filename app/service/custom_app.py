@@ -56,10 +56,6 @@ def create_configuration_token(
     if not all(validate(db, import_id) for import_id in input.corpora_ids):
         raise ValidationError("One or more import IDs don't exist")
 
-    if input.hostname.host is None:
-        _LOGGER.error("Host must not be empty or None")
-        raise ValidationError("Invalid audience provided")
-
     expiry_years = years or CUSTOM_APP_TOKEN_EXPIRE_YEARS
     issued_at = datetime.utcnow()
     expire = issued_at + relativedelta(years=expiry_years)
@@ -68,12 +64,16 @@ def create_configuration_token(
         allowed_corpora_ids=sorted(input.corpora_ids),
         subject=input.theme,
         issuer=ISSUER,
-        audience=input.hostname.host,
+        audience=input.hostname.host if input.hostname.host is not None else "",
         expiry=expire,
         issued_at=int(
             datetime.timestamp(issued_at.replace(microsecond=0))
         ),  # No microseconds
     )
+
+    if config.audience in [None, ""]:
+        _LOGGER.error("Host must not be empty or None")
+        raise ValidationError("Invalid audience provided")
 
     msg = "Creating custom app configuration token for {input.subject} that "
     msg += f"expires on {expire.strftime('%a %d %B %Y at %H:%M:%S:%f')} "
