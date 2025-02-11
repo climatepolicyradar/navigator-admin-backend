@@ -1,5 +1,4 @@
 import logging
-import os
 from datetime import datetime
 from typing import Optional
 
@@ -9,12 +8,12 @@ from jwt import PyJWTError
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
+from app.config import TOKEN_SECRET_KEY
 from app.errors import ValidationError
 from app.model.custom_app import CustomAppCreateDTO, CustomAppReadDTO
 from app.service.corpus import validate
 
 _LOGGER = logging.getLogger(__name__)
-TOKEN_SECRET_KEY = os.environ["TOKEN_SECRET_KEY"]
 ALGORITHM = "HS256"
 
 CUSTOM_APP_TOKEN_EXPIRE_YEARS: int = 10  # token valid for 10 years
@@ -46,6 +45,9 @@ def create_configuration_token(
     """
     if db is None:
         db = db_session.get_db()
+
+    if TOKEN_SECRET_KEY in [None, ""]:
+        raise ValidationError("TOKEN_SECRET_KEY is not set")
 
     if not all(validate(db, import_id) for import_id in input.corpora_ids):
         raise ValidationError("One or more import IDs don't exist")
@@ -95,6 +97,9 @@ def decode(token: str) -> CustomAppReadDTO:
         expiry date and an issued at date.
     :return list[str]: A decoded list of valid corpora ids.
     """
+    if TOKEN_SECRET_KEY in [None, ""]:
+        raise ValidationError("TOKEN_SECRET_KEY is not set")
+
     try:
         decoded_token = jwt.decode(
             token,
