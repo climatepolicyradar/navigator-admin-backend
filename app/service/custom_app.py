@@ -52,6 +52,14 @@ def create_configuration_token(
     if not all(validate(db, import_id) for import_id in input.corpora_ids):
         raise ValidationError("One or more import IDs don't exist")
 
+    if _contains_special_chars(input.theme):
+        _LOGGER.error("Theme must not contain any special characters, including spaces")
+        raise ValidationError("Invalid subject provided")
+
+    if "://" in str(input.hostname) or str(input.hostname).endswith("/"):
+        _LOGGER.error("Hostname must not include scheme or trailing slash")
+        raise ValidationError("Invalid audience provided")
+
     expiry_years = years or CUSTOM_APP_TOKEN_EXPIRE_YEARS
     issued_at = datetime.utcnow()
     expire = issued_at + relativedelta(years=expiry_years)
@@ -66,12 +74,6 @@ def create_configuration_token(
             datetime.timestamp(issued_at.replace(microsecond=0))
         ),  # No microseconds
     )
-
-    if _contains_special_chars(config.subject):
-        _LOGGER.error(
-            "Subject must not contain any special characters, including spaces"
-        )
-        raise ValueError
 
     msg = "Creating custom app configuration token for {input.subject} that "
     msg += f"expires on {expire.strftime('%a %d %B %Y at %H:%M:%S:%f')} "

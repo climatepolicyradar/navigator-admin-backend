@@ -46,7 +46,8 @@ def test_create_app_token_default_expiry(
     assert decoded_data.audience == "example.test.org"
     assert decoded_data.issuer == "Climate Policy Radar"
     assert timedelta_years(
-        EXPIRE_AFTER_DEFAULT_YEARS, datetime.fromtimestamp(decoded_data.expiry)
+        EXPIRE_AFTER_DEFAULT_YEARS,
+        datetime.fromtimestamp(cast(float, decoded_data.expiry)),
     ) == datetime.fromtimestamp(decoded_data.issued_at)
 
     assert not cast(str, decoded_data.audience).endswith("/")
@@ -89,7 +90,7 @@ def test_create_app_token_specific_expiry(
     assert decoded_data.audience == "example.test.org"
     assert decoded_data.issuer == "Climate Policy Radar"
     assert timedelta_years(
-        expiry_years, datetime.fromtimestamp(decoded_data.expiry)
+        expiry_years, datetime.fromtimestamp(cast(float, decoded_data.expiry))
     ) == datetime.fromtimestamp(decoded_data.issued_at)
 
     assert not cast(str, decoded_data.audience).endswith("/")
@@ -119,7 +120,8 @@ def test_create_app_token_allows_empty_corpora_list(
     assert decoded_data.audience == "example.test.org"
     assert decoded_data.issuer == "Climate Policy Radar"
     assert timedelta_years(
-        EXPIRE_AFTER_DEFAULT_YEARS, datetime.fromtimestamp(decoded_data.expiry)
+        EXPIRE_AFTER_DEFAULT_YEARS,
+        datetime.fromtimestamp(cast(float, decoded_data.expiry)),
     ) == datetime.fromtimestamp(decoded_data.issued_at)
 
     assert not cast(str, decoded_data.audience).endswith("/")
@@ -147,10 +149,7 @@ def test_create_app_token_subject_contains_special_chars(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     data = response.json()
-    assert (
-        data["detail"]
-        == "Subject must not contain any special characters, including spaces"
-    )
+    assert data["detail"] == "Invalid subject provided"
 
 
 def test_create_app_token_when_a_corpus_does_not_exist(
@@ -215,21 +214,21 @@ def test_create_app_token_admin_non_super(client: TestClient, admin_user_header_
 
 
 @pytest.mark.parametrize(
-    "import_id",
+    "aud",
     [
-        "invalid_import_id",
-        "CCLW.family.i00000002.n0001",
-        "TEST.corpus.i00000001.n0001",
+        "http://example.test.org",
+        "https://example.test.org",
+        "example.test.org/",
     ],
 )
 def test_create_app_token_when_invalid_audience(
     client: TestClient,
     data_db: Session,
     superuser_header_token,
-    import_id: str,
+    aud: str,
 ):
     setup_db(data_db)
-    test_token = create_custom_app_create_dto(hostname=import_id)
+    test_token = create_custom_app_create_dto(hostname=aud)
     response = client.post(
         "/api/v1/app-tokens",
         json=test_token.model_dump(),
@@ -238,9 +237,4 @@ def test_create_app_token_when_invalid_audience(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     data = response.json()
-    assert data["detail"] == f"The import id {import_id} is invalid!"
-
-    actual_corpus = (
-        data_db.query(Corpus).filter(Corpus.import_id == import_id).one_or_none()
-    )
-    assert actual_corpus is None
+    assert data["detail"] == "Invalid audience provided"
