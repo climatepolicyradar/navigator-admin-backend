@@ -24,6 +24,7 @@ from app.api.api_v1.routers import (
     config_router,
     corpora_router,
     corpus_types_router,
+    custom_app_router,
     document_router,
     event_router,
     families_router,
@@ -130,6 +131,13 @@ app.include_router(
     organisations_router,
     prefix="/api/v1",
     tags=["organisations"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    custom_app_router,
+    prefix="/api/v1",
+    tags=["app-token"],
     dependencies=[Depends(check_user_auth)],
 )
 
