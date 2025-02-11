@@ -8,6 +8,7 @@ services:
     tty: true
     volumes:
       - ./tests:/usr/src/tests
+      - ./app:/usr/src/app
     environment:
       # This is for when people explicitly set the tests they want to run
       # It is used in the makefile
