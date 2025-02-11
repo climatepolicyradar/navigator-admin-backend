@@ -28,7 +28,7 @@ def test_create_app_token_default_expiry(
     )
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -37,7 +37,7 @@ def test_create_app_token_default_expiry(
     assert isinstance(data, str)
 
     decoded_data = decode(data)
-    assert has_expected_keys(list(decoded_data.model_dump().keys()))
+    assert has_expected_keys(list(decoded_data.model_dump(mode="json").keys()))
     assert decoded_data.allowed_corpora_ids == [
         "CCLW.corpus.i00000001.n0000",
         "UNFCCC.corpus.i00000001.n0000",
@@ -72,7 +72,7 @@ def test_create_app_token_specific_expiry(
 
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -81,7 +81,7 @@ def test_create_app_token_specific_expiry(
     assert isinstance(data, str)
 
     decoded_data = decode(data)
-    assert has_expected_keys(list(decoded_data.model_dump().keys()))
+    assert has_expected_keys(list(decoded_data.model_dump(mode="json").keys()))
     assert decoded_data.allowed_corpora_ids == [
         "CCLW.corpus.i00000001.n0000",
         "UNFCCC.corpus.i00000001.n0000",
@@ -105,7 +105,7 @@ def test_create_app_token_allows_empty_corpora_list(
     test_token = create_custom_app_create_dto()
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -114,7 +114,7 @@ def test_create_app_token_allows_empty_corpora_list(
     assert isinstance(data, str)
 
     decoded_data = decode(data)
-    assert has_expected_keys(list(decoded_data.model_dump().keys()))
+    assert has_expected_keys(list(decoded_data.model_dump(mode="json").keys()))
     assert decoded_data.allowed_corpora_ids == []
     assert decoded_data.subject == "TEST"
     assert decoded_data.audience == "example.test.org"
@@ -143,7 +143,7 @@ def test_create_app_token_subject_contains_special_chars(
     test_token = create_custom_app_create_dto(theme=subject)
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -159,7 +159,7 @@ def test_create_app_token_when_a_corpus_does_not_exist(
     test_token = create_custom_app_create_dto(["CCLW.corpus.i00000002.n0000"])
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -180,7 +180,7 @@ def test_create_app_token_when_not_authenticated(client: TestClient, data_db: Se
     test_token = create_custom_app_create_dto()
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -189,7 +189,7 @@ def test_create_app_token_non_admin_non_super(client: TestClient, user_header_to
     test_token = create_custom_app_create_dto()
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=user_header_token,
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -203,7 +203,7 @@ def test_create_app_token_admin_non_super(client: TestClient, admin_user_header_
     test_token = create_custom_app_create_dto()
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=admin_user_header_token,
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -231,7 +231,7 @@ def test_create_app_token_when_invalid_audience(
     test_token = create_custom_app_create_dto(hostname=aud)
     response = client.post(
         "/api/v1/app-tokens",
-        json=test_token.model_dump(),
+        json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
