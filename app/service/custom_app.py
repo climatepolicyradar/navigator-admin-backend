@@ -87,7 +87,7 @@ def create_configuration_token(
     return jwt.encode(to_encode, TOKEN_SECRET_KEY, algorithm=ALGORITHM)
 
 
-def decode(token: str) -> list[str]:
+def decode(token: str) -> CustomAppReadDTO:
     """Decodes a configuration token.
 
     :param str token : A JWT token that has been encoded with a list

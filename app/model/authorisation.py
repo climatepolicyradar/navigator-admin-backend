@@ -22,6 +22,7 @@ class AuthEndpoint(str, enum.Enum):
     CORPUS = "CORPORA"
     CORPUS_TYPE = "CORPUS-TYPES"
     ORGANISATION = "ORGANISATIONS"
+    APP_TOKEN = "APP-TOKENS"  # nosec B105
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
@@ -82,5 +83,9 @@ AUTH_TABLE: AuthMap = {
     # Organisation
     AuthEndpoint.ORGANISATION: {
         AuthOperation.READ: AuthAccess.SUPER,
+    },
+    # App token
+    AuthEndpoint.APP_TOKEN: {
+        AuthOperation.CREATE: AuthAccess.SUPER,
     },
 }

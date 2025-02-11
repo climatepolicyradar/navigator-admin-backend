@@ -1,4 +1,4 @@
-from datetime import datetime
+from typing import Optional
 
 from pydantic import AnyUrl, BaseModel
 
@@ -15,6 +15,7 @@ class CustomAppCreateDTO(BaseModel):
     corpora_ids: list[str]
     theme: str
     hostname: AnyUrl
+    expiry_years: Optional[int]
 
 
 class CustomAppReadDTO(BaseModel):
@@ -24,5 +25,5 @@ class CustomAppReadDTO(BaseModel):
     subject: str
     audience: AnyUrl
     issuer: str
-    expiry: datetime
+    expiry: float
     issued_at: int
