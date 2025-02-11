@@ -17,8 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 TOKEN_SECRET_KEY = os.environ["TOKEN_SECRET_KEY"]
 ALGORITHM = "HS256"
 
-custom_app_token_expire_years: int = 10  # token valid for 10 years
-iss: str = "Climate Policy Radar"
+CUSTOM_APP_TOKEN_EXPIRE_YEARS: int = 10  # token valid for 10 years
+ISSUER: str = "Climate Policy Radar"
 
 
 def _contains_special_chars(input: str) -> bool:
@@ -50,14 +50,14 @@ def create_configuration_token(
     if not all(validate(db, import_id) for import_id in input.corpora_ids):
         raise ValidationError("One or more import IDs don't exist")
 
-    expiry_years = years or custom_app_token_expire_years
+    expiry_years = years or CUSTOM_APP_TOKEN_EXPIRE_YEARS
     issued_at = datetime.utcnow()
     expire = issued_at + relativedelta(years=expiry_years)
 
     config = CustomAppReadDTO(
         allowed_corpora_ids=sorted(input.corpora_ids),
         subject=input.theme,
-        issuer=iss,
+        issuer=ISSUER,
         audience=input.hostname,
         expiry=expire,
         issued_at=int(
@@ -100,7 +100,7 @@ def decode(token: str) -> CustomAppReadDTO:
             token,
             TOKEN_SECRET_KEY,
             algorithms=[ALGORITHM],
-            issuer=iss,
+            issuer=ISSUER,
         )
     except PyJWTError as e:
         _LOGGER.error(e)

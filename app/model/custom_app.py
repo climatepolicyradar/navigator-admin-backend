@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import datetime
+from typing import Optional, Union
 
 from pydantic import AnyUrl, BaseModel
 
@@ -25,5 +26,5 @@ class CustomAppReadDTO(BaseModel):
     subject: str
     audience: AnyUrl
     issuer: str
-    expiry: float
+    expiry: Union[float, datetime]
     issued_at: int
