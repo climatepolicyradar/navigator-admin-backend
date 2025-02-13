@@ -208,6 +208,9 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
         assert updated_title == title, f"Updated title does not match for {entity}"
 
 
+# TODO: add test for only updating if there are changes
+
+
 @pytest.mark.s3
 def test_bulk_import_does_not_save_data_to_db_on_error(
     caplog,

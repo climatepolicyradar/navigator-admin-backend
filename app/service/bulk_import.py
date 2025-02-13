@@ -181,10 +181,14 @@ def save_collections(
     for coll in collection_data:
         if not _exists_in_db(Collection, coll["import_id"], db):
             _LOGGER.info(f"Importing collection {coll['import_id']}")
-            dto = BulkImportCollectionDTO(**coll).to_collection_create_dto()
-            import_id = collection_repository.create(db, dto, org_id)
+            create_dto = BulkImportCollectionDTO(**coll).to_collection_create_dto()
+            import_id = collection_repository.create(db, create_dto, org_id)
             collection_import_ids.append(import_id)
             total_collections_saved += 1
+        else:
+            _LOGGER.info(f"Updating collection {coll['import_id']}")
+            update_dto = BulkImportCollectionDTO(**coll).to_collection_write_dto()
+            import_id = collection_repository.update(db, coll["import_id"], update_dto)
 
     _LOGGER.info(f"Saved {total_collections_saved} collections")
     return collection_import_ids
