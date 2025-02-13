@@ -13,7 +13,7 @@ from app.service.bulk_import import (
     get_family_template,
     import_data,
 )
-from app.service.validation import validate_bulk_import_data
+from app.service.validation import validate_bulk_import_data, validate_corpus_exists
 
 bulk_import_router = r = APIRouter()
 
@@ -70,6 +70,7 @@ async def bulk_import(
     try:
         content = await data.read()
         data_dict = json.loads(content)
+        validate_corpus_exists(corpus_import_id)
         validate_bulk_import_data(data_dict)
 
         background_tasks.add_task(

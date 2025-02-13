@@ -8,8 +8,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import update
 from sqlalchemy.orm import Session
-
-from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
@@ -17,6 +15,8 @@ from tests.helpers.bulk_import import (
     default_event,
     default_family,
 )
+
+from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 
 
 def create_input_json_with_two_of_each_entity():
@@ -55,7 +55,7 @@ def create_input_json_with_two_of_each_entity():
 
 
 @pytest.mark.s3
-def test_bulk_import_when_ok(
+def test_bulk_import_successfully_saves_all_data_to_db__when_no_error(
     data_db: Session, client: TestClient, superuser_header_token
 ):
     input_json = create_input_json_with_two_of_each_entity()
@@ -120,7 +120,7 @@ def test_bulk_import_when_ok(
 
 
 @pytest.mark.s3
-def test_import_data_rollback(
+def test_bulk_import_does_not_save_data_to_db_on_error(
     caplog,
     data_db: Session,
     client: TestClient,
@@ -151,7 +151,7 @@ def test_import_data_rollback(
 
 
 @pytest.mark.s3
-def test_bulk_import_saves_default_number_of_documents_if_no_limit_provided_in_request(
+def test_bulk_import_only_saves_default_number_of_documents_if_no_limit_provided_in_request(
     data_db: Session, client: TestClient, superuser_header_token
 ):
     input_json = build_json_file(
@@ -327,28 +327,24 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
 
 
 @pytest.mark.s3
-def test_bulk_import_when_corpus_import_id_invalid(
-    caplog,
-    data_db: Session,
+def test_bulk_import_returns_bad_request_response_when_corpus_import_id_invalid(
     client: TestClient,
+    data_db: Session,
     superuser_header_token,
 ):
     invalid_corpus = "test"
     input_json = create_input_json_with_two_of_each_entity()
 
-    with caplog.at_level(logging.ERROR):
-        response = client.post(
-            f"/api/v1/bulk-import/{invalid_corpus}",
-            files={"data": input_json},
-            headers=superuser_header_token,
-        )
+    response = client.post(
+        f"/api/v1/bulk-import/{invalid_corpus}",
+        files={"data": input_json},
+        headers=superuser_header_token,
+    )
 
-        assert response.status_code == status.HTTP_202_ACCEPTED
-        assert response.json() == {
-            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-        }
-
-    assert f"No organisation associated with corpus {invalid_corpus}" in caplog.text
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "detail": f"No corpus found for import_id: {invalid_corpus}"
+    }
 
 
 @pytest.mark.s3
