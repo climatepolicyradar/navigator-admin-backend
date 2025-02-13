@@ -19,9 +19,20 @@ services:
       ADMIN_POSTGRES_DATABASE: navigator
       ADMIN_POSTGRES_PASSWORD: password
       SECRET_KEY: secret_test_key
+
+      # Bulk import
+      SLACK_WEBHOOK_URL: skip
+      BULK_IMPORT_BUCKET: bulk-import-bucket
+
+      # localstack
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://localstack:4566
     depends_on:
       postgres:
         condition: service_healthy
+      localstack:
+        condition: service_started
 
   postgres:
     environment:
@@ -40,3 +51,18 @@ services:
       retries: 30
     ports:
       - 5432:5432
+
+  localstack:
+    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
+    image: localstack/localstack:s3-latest
+    ports:
+      - 4566:4566 # LocalStack Gateway
+    environment:
+      DEBUG: ${DEBUG:-0}
+      # These values are used by the init-s3.py script
+      BULK_IMPORT_BUCKET: bulk-import-bucket
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://localhost:4566
+    volumes:
+      - ./tests/integration_tests/init-s3.py:/etc/localstack/init/ready.d/init-s3.py
