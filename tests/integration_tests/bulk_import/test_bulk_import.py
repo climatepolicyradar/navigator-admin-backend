@@ -55,7 +55,7 @@ def create_input_json_with_two_of_each_entity():
 
 
 @pytest.mark.s3
-def test_bulk_import_successfully_saves_all_data_to_db__when_no_error(
+def test_bulk_import_successfully_saves_all_data_to_db_when_no_error(
     data_db: Session, client: TestClient, superuser_header_token
 ):
     input_json = create_input_json_with_two_of_each_entity()
@@ -117,6 +117,68 @@ def test_bulk_import_successfully_saves_all_data_to_db__when_no_error(
     for ev in saved_events:
         assert ev.import_id in expected_event_import_ids
         assert ev.family_import_id in expected_family_import_ids
+
+
+@pytest.mark.s3
+def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    original_data = {
+        "collections": [
+            default_collection,
+        ],
+        "families": [
+            default_family,
+        ],
+        "documents": [
+            default_document,
+        ],
+        "events": [
+            default_event,
+        ],
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    updated_title = "Updated"
+    updated_input_json = build_json_file(
+        {
+            "collections": [
+                {**original_data["collections"][0], "title": updated_title},
+            ],
+            "families": [
+                {**original_data["families"][0], "title": updated_title},
+            ],
+            "documents": [
+                {**original_data["documents"][0], "title": updated_title},
+            ],
+            "events": [
+                {**original_data["events"][0], "event_title": updated_title},
+            ],
+        }
+    )
+
+    update_response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": updated_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_collection = (
+        data_db.query(Collection)
+        .filter(Collection.import_id == original_data["collections"][0]["import_id"])
+        .one_or_none()
+    )
+    assert updated_title == saved_collection.title
 
 
 @pytest.mark.s3
