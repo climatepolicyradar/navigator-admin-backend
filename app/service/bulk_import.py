@@ -189,6 +189,8 @@ def save_collections(
             _LOGGER.info(f"Updating collection {coll['import_id']}")
             update_dto = BulkImportCollectionDTO(**coll).to_collection_write_dto()
             import_id = collection_repository.update(db, coll["import_id"], update_dto)
+            collection_import_ids.append(import_id)
+            total_collections_saved += 1
 
     _LOGGER.info(f"Saved {total_collections_saved} collections")
     return collection_import_ids
@@ -221,13 +223,26 @@ def save_families(
     for fam in family_data:
         if not _exists_in_db(Family, fam["import_id"], db):
             _LOGGER.info(f"Importing family {fam['import_id']}")
-            dto = BulkImportFamilyDTO(
+            create_dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
             geo_ids = []
-            for geo in dto.geography:
+            for geo in create_dto.geographies:
                 geo_ids.append(geography.get_id(db, geo))
-            import_id = family_repository.create(db, dto, geo_ids, org_id)
+            import_id = family_repository.create(db, create_dto, geo_ids, org_id)
+            family_import_ids.append(import_id)
+            total_families_saved += 1
+        else:
+            _LOGGER.info(f"Updating family {fam['import_id']}")
+            update_dto = BulkImportFamilyDTO(
+                **fam, corpus_import_id=corpus_import_id
+            ).to_family_write_dto()
+            geo_ids = []
+            for geo in update_dto.geographies:
+                geo_ids.append(geography.get_id(db, geo))
+            import_id = family_repository.update(
+                db, fam["import_id"], update_dto, geo_ids
+            )
             family_import_ids.append(import_id)
             total_families_saved += 1
 

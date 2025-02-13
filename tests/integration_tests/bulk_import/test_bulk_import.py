@@ -185,7 +185,7 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
         .scalar()
     )
     saved_document = (
-        data_db.query(PhysicalDocument.title)
+        data_db.query(PhysicalDocument)
         .join(
             FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
         )

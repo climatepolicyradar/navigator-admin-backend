@@ -6,7 +6,7 @@ from pydantic import AnyHttpUrl, BaseModel, RootModel
 from app.model.collection import CollectionCreateDTO, CollectionWriteDTO
 from app.model.document import DocumentCreateDTO
 from app.model.event import EventCreateDTO
-from app.model.family import FamilyCreateDTO
+from app.model.family import FamilyCreateDTO, FamilyWriteDTO
 
 Metadata = RootModel[Dict[str, Union[str, List[str]]]]
 
@@ -69,6 +69,21 @@ class BulkImportFamilyDTO(BaseModel):
             metadata=self.metadata.model_dump(),
             collections=self.collections,
             corpus_import_id=corpus_import_id,
+        )
+
+    def to_family_write_dto(self) -> FamilyWriteDTO:
+        """
+        Convert BulkImportFamilyDTO to FamilyWriteDTO.
+
+        :return FamilyWriteDTO: Converted FamilyWriteDTO instance.
+        """
+        return FamilyWriteDTO(
+            title=self.title,
+            summary=self.summary,
+            geographies=self.geographies,
+            category=self.category,
+            metadata=self.metadata.model_dump(),
+            collections=self.collections,
         )
 
 
