@@ -178,7 +178,25 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
         .filter(Collection.import_id == original_data["collections"][0]["import_id"])
         .one_or_none()
     )
+    saved_family = (
+        data_db.query(Family)
+        .filter(Family.import_id == original_data["families"][0]["import_id"])
+        .one_or_none()
+    )
+    saved_document = (
+        data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == original_data["documents"][0]["import_id"])
+        .one_or_none()
+    )
+    saved_event = (
+        data_db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id == original_data["events"][0]["import_id"])
+        .one_or_none()
+    )
     assert updated_title == saved_collection.title
+    assert updated_title == saved_family.title
+    assert updated_title == saved_document.title
+    assert updated_title == saved_event.title
 
 
 @pytest.mark.s3
