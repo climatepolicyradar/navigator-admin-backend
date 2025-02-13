@@ -4,6 +4,7 @@ import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
+from db_client.models.document import PhysicalDocument
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import update
@@ -176,27 +177,35 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
     saved_collection = (
         data_db.query(Collection)
         .filter(Collection.import_id == original_data["collections"][0]["import_id"])
-        .one_or_none()
+        .scalar()
     )
     saved_family = (
         data_db.query(Family)
         .filter(Family.import_id == original_data["families"][0]["import_id"])
-        .one_or_none()
+        .scalar()
     )
     saved_document = (
-        data_db.query(FamilyDocument)
+        data_db.query(PhysicalDocument.title)
+        .join(
+            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
+        )
         .filter(FamilyDocument.import_id == original_data["documents"][0]["import_id"])
-        .one_or_none()
+        .scalar()
     )
     saved_event = (
         data_db.query(FamilyEvent)
         .filter(FamilyEvent.import_id == original_data["events"][0]["import_id"])
-        .one_or_none()
+        .scalar()
     )
-    assert updated_title == saved_collection.title
-    assert updated_title == saved_family.title
-    assert updated_title == saved_document.title
-    assert updated_title == saved_event.title
+    updated_entities = {
+        "collection": saved_collection.title,
+        "family": saved_family.title,
+        "document": saved_document.title,
+        "event": saved_event.title,
+    }
+
+    for entity, title in updated_entities.items():
+        assert updated_title == title, f"Updated title does not match for {entity}"
 
 
 @pytest.mark.s3
