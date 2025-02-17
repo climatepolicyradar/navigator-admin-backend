@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Union
 from pydantic import AnyHttpUrl, BaseModel, RootModel
 
 from app.model.collection import CollectionCreateDTO, CollectionWriteDTO
-from app.model.document import DocumentCreateDTO
+from app.model.document import DocumentCreateDTO, DocumentWriteDTO
 from app.model.event import EventCreateDTO
 from app.model.family import FamilyCreateDTO, FamilyWriteDTO
 
@@ -133,6 +133,20 @@ class BulkImportDocumentDTO(BaseModel):
         return DocumentCreateDTO(
             import_id=self.import_id,
             family_import_id=self.family_import_id,
+            variant_name=self.variant_name,
+            metadata=self.metadata.model_dump(),
+            title=self.title,
+            source_url=self.source_url,
+            user_language_name=self.user_language_name,
+        )
+
+    def to_document_write_dto(self) -> DocumentWriteDTO:
+        """
+        Convert BulkImportDocumentDTO to DocumentWriteDTO.
+
+        :return DocumentWriteDTO: Converted DocumentWriteDTO instance.
+        """
+        return DocumentWriteDTO(
             variant_name=self.variant_name,
             metadata=self.metadata.model_dump(),
             title=self.title,

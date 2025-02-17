@@ -30,7 +30,8 @@ default_document = {
     "metadata": {"role": ["MAIN"], "type": ["Law"]},
     "variant_name": None,
     "title": "Test title",
-    "user_language_name": "",
+    "user_language_name": None,
+    "source_url": None,
 }
 
 

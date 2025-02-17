@@ -282,10 +282,18 @@ def save_documents(
             and total_documents_saved < document_limit
         ):
             _LOGGER.info(f"Importing document {doc['import_id']}")
-            dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
-            slug = generate_slug(db=db, title=dto.title, created_slugs=document_slugs)
-            import_id = document_repository.create(db, dto, slug)
+            create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
+            slug = generate_slug(
+                db=db, title=create_dto.title, created_slugs=document_slugs
+            )
+            import_id = document_repository.create(db, create_dto, slug)
             document_slugs.add(slug)
+            document_import_ids.append(import_id)
+            total_documents_saved += 1
+        else:
+            _LOGGER.info(f"Updating document {doc['import_id']}")
+            update_dto = BulkImportDocumentDTO(**doc).to_document_write_dto()
+            import_id = document_repository.update(db, doc["import_id"], update_dto)
             document_import_ids.append(import_id)
             total_documents_saved += 1
 
