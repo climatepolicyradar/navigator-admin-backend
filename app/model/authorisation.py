@@ -42,7 +42,7 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.USER,
     },
-    # Collection
+    # Document
     AuthEndpoint.DOCUMENT: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
