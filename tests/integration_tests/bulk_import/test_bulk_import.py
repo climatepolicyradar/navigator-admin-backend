@@ -208,7 +208,6 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
         assert updated_title == title, f"Updated title does not match for {entity}"
 
 
-# TODO: add test for only updating if there are changes
 # TODO: add test for only updating the number of docs within limit
 # TODO: add test for generating document slug if title updated
 
