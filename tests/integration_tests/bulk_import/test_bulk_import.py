@@ -290,7 +290,7 @@ def test_bulk_import_only_saves_default_number_of_documents_if_no_limit_provided
 
 
 @pytest.mark.s3
-def test_bulk_import_idempotency(
+def test_bulk_import_idempotency_on_create(
     caplog,
     data_db: Session,
     client: TestClient,
