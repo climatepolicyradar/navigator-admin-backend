@@ -5,7 +5,7 @@ from pydantic import AnyHttpUrl, BaseModel, RootModel
 
 from app.model.collection import CollectionCreateDTO, CollectionWriteDTO
 from app.model.document import DocumentCreateDTO, DocumentWriteDTO
-from app.model.event import EventCreateDTO
+from app.model.event import EventCreateDTO, EventWriteDTO
 from app.model.family import FamilyCreateDTO, FamilyWriteDTO
 
 Metadata = RootModel[Dict[str, Union[str, List[str]]]]
@@ -106,6 +106,18 @@ class BulkImportEventDTO(BaseModel):
         return EventCreateDTO(
             import_id=self.import_id,
             family_import_id=self.family_import_id,
+            event_title=self.event_title,
+            date=self.date,
+            event_type_value=self.event_type_value,
+        )
+
+    def to_event_write_dto(self) -> EventWriteDTO:
+        """
+        Convert BulkImportEventDTO to EventWriteDTO.
+
+        :return EventWriteDTO: Converted EventWriteDTO instance.
+        """
+        return EventWriteDTO(
             event_title=self.event_title,
             date=self.date,
             event_type_value=self.event_type_value,

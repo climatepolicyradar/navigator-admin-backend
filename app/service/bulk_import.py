@@ -334,6 +334,12 @@ def save_events(
             import_id = event_repository.create(db, dto, event_metadata)
             event_import_ids.append(import_id)
             total_events_saved += 1
+        else:
+            _LOGGER.info(f"Updating event {event['import_id']}")
+            update_dto = BulkImportEventDTO(**event).to_event_write_dto()
+            import_id = event_repository.update(db, event["import_id"], update_dto)
+            event_import_ids.append(import_id)
+            total_events_saved += 1
 
     _LOGGER.info(f"Saved {total_events_saved} events")
     return event_import_ids
