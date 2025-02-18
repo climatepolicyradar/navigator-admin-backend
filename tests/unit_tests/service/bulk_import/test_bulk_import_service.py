@@ -5,6 +5,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 from db_client.models.dfce.collection import Collection
+from db_client.models.dfce.family import Family
+from sqlalchemy.ext.hybrid import hybrid_property
 from tests.helpers.bulk_import import default_document, default_family
 
 import app.service.bulk_import as bulk_import_service
@@ -234,6 +236,8 @@ def test_save_collections_skips_update_when_no_changes(
     mock_collection.import_id = test_data[0]["import_id"]
     mock_collection.title = test_data[0]["title"]
     mock_collection.description = test_data[0]["description"]
+    mock_collection.created = ""
+    mock_collection.last_modified = ""
 
     with patch(
         "app.service.bulk_import._find_entity_in_db", return_value=mock_collection
@@ -241,4 +245,51 @@ def test_save_collections_skips_update_when_no_changes(
         result = bulk_import_service.save_collections(test_data, "test_corpus_id")
 
     assert collection_repo_mock.update.call_count == 0
+    assert result == []
+
+
+def test_save_families_skips_update_when_no_changes(
+    family_repo_mock,
+    corpus_repo_mock,
+    geography_repo_mock,
+    validation_service_mock,
+):
+
+    test_data = [
+        {
+            "import_id": "test.new.collection.0",
+            "title": "Test title",
+            "summary": "Test description",
+            "geographies": ["XAA"],
+            "category": "Executive",
+            "metadata": {"metadata_key": ["metadata_value"]},
+            "collections": [],
+        }
+    ]
+
+    class MockFamily(Family):
+        @hybrid_property
+        def last_updated_date(self):
+            return None
+
+        @hybrid_property
+        def published_date(self):
+            return None
+
+    mock_family = Mock(spec=MockFamily)
+    mock_family.import_id = test_data[0]["import_id"]
+    mock_family.title = test_data[0]["title"]
+    mock_family.description = test_data[0]["summary"]
+    mock_family.geographies = [Mock(value=geo) for geo in test_data[0]["geographies"]]
+    mock_family.family_category = test_data[0]["category"]
+    mock_family.family_documents = []
+    mock_family.slugs = []
+    mock_family.events = None
+    mock_family.created = ""
+    mock_family.last_modified = ""
+
+    with patch("app.service.bulk_import._find_entity_in_db", return_value=mock_family):
+        result = bulk_import_service.save_families(test_data, "test_corpus_id")
+
+    assert family_repo_mock.update.call_count == 0
     assert result == []

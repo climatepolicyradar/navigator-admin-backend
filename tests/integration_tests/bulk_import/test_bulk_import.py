@@ -210,6 +210,8 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
 
 # TODO: add test for only updating the number of docs within limit
 # TODO: add test for generating document slug if title updated
+# TODO: add test for updating family on changes to metadata
+# TODO: add test for updating family on changes to collections[]
 
 
 @pytest.mark.s3

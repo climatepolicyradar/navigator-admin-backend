@@ -55,7 +55,7 @@ class CollectionComparisonDTO(BaseModel):
             description=collection.description,
         )
 
-    def is_different(self, other_dto):
+    def is_different_from(self, other_dto):
         """Check if this DTO is different from another DTO"""
         keys = set(self.model_fields.keys())
         return self.model_dump(include=keys) != other_dto.dict(include=keys)
@@ -105,6 +105,34 @@ class BulkImportFamilyDTO(BaseModel):
             metadata=self.metadata.model_dump(),
             collections=self.collections,
         )
+
+
+class FamilyComparisonDTO(BaseModel):
+    """DTO for comparing families for bulk update"""
+
+    title: str
+    summary: str
+    geographies: list[str]
+    category: str
+    # metadata: Metadata
+    # collections: list[str]
+
+    @classmethod
+    def from_family(cls, family):
+        """Create a DTO from a family"""
+        return cls(
+            title=family.title,
+            summary=family.description,
+            geographies=[geo.value for geo in family.geographies],
+            category=family.family_category,
+            # metadata=[],
+            # collections=[]
+        )
+
+    def is_different_from(self, other_dto):
+        """Check if this DTO is different from another DTO"""
+        keys = set(self.model_fields.keys())
+        return self.model_dump(include=keys) != other_dto.dict(include=keys)
 
 
 class BulkImportEventDTO(BaseModel):

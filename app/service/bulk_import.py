@@ -35,6 +35,7 @@ from app.model.bulk_import import (
     BulkImportEventDTO,
     BulkImportFamilyDTO,
     CollectionComparisonDTO,
+    FamilyComparisonDTO,
 )
 from app.repository.helpers import generate_slug
 from app.service.event import (
@@ -189,7 +190,7 @@ def save_collections(
         else:
             update_dto = BulkImportCollectionDTO(**coll).to_collection_write_dto()
             existing_dto = CollectionComparisonDTO.from_collection(existing_collection)
-            if existing_dto.is_different(update_dto):
+            if existing_dto.is_different_from(update_dto):
                 _LOGGER.info(f"Updating collection {coll['import_id']}")
                 import_id = collection_repository.update(
                     db, coll["import_id"], update_dto
@@ -226,7 +227,8 @@ def save_families(
     total_families_saved = 0
 
     for fam in family_data:
-        if not _find_entity_in_db(Family, fam["import_id"], db):
+        existing_family = _find_entity_in_db(Family, fam["import_id"], db)
+        if not existing_family:
             _LOGGER.info(f"Importing family {fam['import_id']}")
             create_dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
@@ -238,18 +240,20 @@ def save_families(
             family_import_ids.append(import_id)
             total_families_saved += 1
         else:
-            _LOGGER.info(f"Updating family {fam['import_id']}")
             update_dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_write_dto()
-            geo_ids = []
-            for geo in update_dto.geographies:
-                geo_ids.append(geography.get_id(db, geo))
-            import_id = family_repository.update(
-                db, fam["import_id"], update_dto, geo_ids
-            )
-            family_import_ids.append(import_id)
-            total_families_saved += 1
+            existing_dto = FamilyComparisonDTO.from_family(existing_family)
+            if existing_dto.is_different_from(update_dto):
+                _LOGGER.info(f"Updating family {fam['import_id']}")
+                geo_ids = []
+                for geo in update_dto.geographies:
+                    geo_ids.append(geography.get_id(db, geo))
+                import_id = family_repository.update(
+                    db, fam["import_id"], update_dto, geo_ids
+                )
+                family_import_ids.append(import_id)
+                total_families_saved += 1
 
     _LOGGER.info(f"Saved {total_families_saved} families")
 

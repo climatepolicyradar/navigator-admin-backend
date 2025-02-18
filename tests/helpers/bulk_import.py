@@ -17,7 +17,7 @@ default_family = {
     "import_id": "test.new.family.0",
     "title": "Test title",
     "summary": "Test",
-    "geographies": ["South Asia"],
+    "geographies": ["XAA"],
     "category": "UNFCCC",
     "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
     "collections": ["test.new.collection.0"],
