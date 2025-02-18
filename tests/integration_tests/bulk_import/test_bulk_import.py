@@ -2,7 +2,7 @@ import logging
 
 import pytest
 from db_client.models.dfce import FamilyEvent
-from db_client.models.dfce.collection import Collection
+from db_client.models.dfce.collection import Collection, CollectionFamily
 from db_client.models.dfce.family import Family, FamilyDocument
 from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.document import PhysicalDocument
@@ -259,9 +259,64 @@ def test_bulk_import_successfully_updates_family_metadata_when_no_error(
     assert updated_metadata == saved_family_metadata.value
 
 
+@pytest.mark.s3
+def test_bulk_import_successfully_updates_family_collections_when_no_error(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    original_data = {
+        "collections": [
+            default_collection,
+        ],
+        "families": [
+            default_family,
+        ],
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    new_collection = {**default_collection, "import_id": "test.new.collection.1"}
+    updated_data = {
+        "collections": [
+            new_collection,
+        ],
+        "families": [
+            {**default_family, "collections": [new_collection["import_id"]]},
+        ],
+    }
+    updated_input_json = build_json_file(updated_data)
+
+    update_response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": updated_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_family_collections = (
+        data_db.query(CollectionFamily)
+        .filter(
+            CollectionFamily.family_import_id
+            == original_data["families"][0]["import_id"]
+        )
+        .all()
+    )
+
+    assert len(saved_family_collections) == 1
+    assert (
+        new_collection["import_id"] == saved_family_collections[0].collection_import_id
+    )
+
+
 # TODO: add test for only updating the number of docs within limit
 # TODO: add test for generating document slug if title updated
-# TODO: add test for updating family on changes to collections[]
 
 
 @pytest.mark.s3

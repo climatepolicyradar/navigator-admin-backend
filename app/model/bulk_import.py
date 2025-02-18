@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
+from db_client.models.dfce.collection import CollectionFamily
 from db_client.models.dfce.metadata import FamilyMetadata
 from pydantic import AnyHttpUrl, BaseModel, RootModel
 
@@ -116,7 +117,7 @@ class FamilyComparisonDTO(BaseModel):
     geographies: list[str]
     category: str
     metadata: Optional[Metadata]
-    # collections: list[str]
+    collections: list[str]
 
     @classmethod
     def from_family(cls, family, db):
@@ -126,12 +127,19 @@ class FamilyComparisonDTO(BaseModel):
             .filter(FamilyMetadata.family_import_id == family.import_id)
             .one_or_none()
         )
+        collections = [
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                family.import_id == CollectionFamily.family_import_id
+            )
+        ]
         return cls(
             title=family.title,
             summary=family.description,
             geographies=[geo.value for geo in family.geographies],
             category=family.family_category,
             metadata=metadata.value if metadata else None,
+            collections=collections,
         )
 
     def is_different_from(self, other_dto):
