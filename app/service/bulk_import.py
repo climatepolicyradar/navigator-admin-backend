@@ -241,7 +241,7 @@ def save_families(
             update_dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_write_dto()
-            existing_dto = FamilyComparisonDTO.from_family(existing_family)
+            existing_dto = FamilyComparisonDTO.from_family(existing_family, db)
             if existing_dto.is_different_from(update_dto):
                 _LOGGER.info(f"Updating family {fam['import_id']}")
                 geo_ids = [geography.get_id(db, geo) for geo in update_dto.geographies]

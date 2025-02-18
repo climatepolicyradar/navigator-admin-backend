@@ -1,12 +1,13 @@
 import json
 import logging
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, create_autospec, patch
 
 import pytest
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Session
 from tests.helpers.bulk_import import default_document, default_family
 
 import app.service.bulk_import as bulk_import_service
@@ -254,7 +255,7 @@ def test_save_families_skips_update_when_no_changes(
     geography_repo_mock,
     validation_service_mock,
 ):
-
+    test_metadata = {"metadata_key": ["metadata_value"]}
     test_data = [
         {
             "import_id": "test.new.collection.0",
@@ -262,7 +263,7 @@ def test_save_families_skips_update_when_no_changes(
             "summary": "Test description",
             "geographies": ["XAA"],
             "category": "Executive",
-            "metadata": {"metadata_key": ["metadata_value"]},
+            "metadata": test_metadata,
             "collections": [],
         }
     ]
@@ -288,8 +289,15 @@ def test_save_families_skips_update_when_no_changes(
     mock_family.created = ""
     mock_family.last_modified = ""
 
+    mock_db = create_autospec(Session)
+    mock_db.query.return_value.filter.return_value.one_or_none.return_value = Mock(
+        value=test_metadata
+    )
+
     with patch("app.service.bulk_import._find_entity_in_db", return_value=mock_family):
-        result = bulk_import_service.save_families(test_data, "test_corpus_id")
+        result = bulk_import_service.save_families(
+            test_data, "test_corpus_id", db=mock_db
+        )
 
     assert family_repo_mock.update.call_count == 0
     assert result == []

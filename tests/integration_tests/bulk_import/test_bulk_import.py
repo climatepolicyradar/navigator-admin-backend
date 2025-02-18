@@ -4,6 +4,7 @@ import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection
 from db_client.models.dfce.family import Family, FamilyDocument
+from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.document import PhysicalDocument
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -208,9 +209,58 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
         assert updated_title == title, f"Updated title does not match for {entity}"
 
 
+@pytest.mark.s3
+def test_bulk_import_successfully_updates_family_metadata_when_no_error(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    original_data = {
+        "families": [
+            {**default_family, "collections": []},
+        ]
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    updated_metadata = {
+        **original_data["families"][0]["metadata"],
+        "author_type": ["Party"],
+    }
+    updated_input_json = build_json_file(
+        {
+            "families": [
+                {**original_data["families"][0], "metadata": updated_metadata},
+            ]
+        }
+    )
+
+    update_response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": updated_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_family_metadata = (
+        data_db.query(FamilyMetadata)
+        .filter(
+            FamilyMetadata.family_import_id == original_data["families"][0]["import_id"]
+        )
+        .scalar()
+    )
+
+    assert updated_metadata == saved_family_metadata.value
+
+
 # TODO: add test for only updating the number of docs within limit
 # TODO: add test for generating document slug if title updated
-# TODO: add test for updating family on changes to metadata
 # TODO: add test for updating family on changes to collections[]
 
 
