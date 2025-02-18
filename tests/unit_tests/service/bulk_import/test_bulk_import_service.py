@@ -221,9 +221,7 @@ def test_save_events_when_data_invalid(validation_service_mock):
 
 
 def test_save_collections_skips_update_when_no_changes(
-    collection_repo_mock,
-    corpus_repo_mock,
-    validation_service_mock,
+    collection_repo_mock, corpus_repo_mock, validation_service_mock
 ):
 
     test_data = [
@@ -250,10 +248,7 @@ def test_save_collections_skips_update_when_no_changes(
 
 
 def test_save_families_skips_update_when_no_changes(
-    family_repo_mock,
-    corpus_repo_mock,
-    geography_repo_mock,
-    validation_service_mock,
+    family_repo_mock, corpus_repo_mock, geography_repo_mock, validation_service_mock
 ):
     test_metadata = {"metadata_key": ["metadata_value"]}
     test_data = [
