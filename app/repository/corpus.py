@@ -87,7 +87,6 @@ def verify_corpus_exists(db: Session, corpus_id: str) -> bool:
     :return bool: Return whether or not the corpus exists in the DB.
     """
     corpora = [corpus[0] for corpus in db.query(Corpus.import_id).distinct().all()]
-    print(corpora)
     return bool(corpus_id in corpora)
 
 
