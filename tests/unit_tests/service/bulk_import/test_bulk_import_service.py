@@ -5,7 +5,7 @@ from unittest.mock import Mock, create_autospec, patch
 
 import pytest
 from db_client.models.dfce.collection import Collection
-from db_client.models.dfce.family import Family
+from db_client.models.dfce.family import Family, FamilyDocument
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Session
 from tests.helpers.bulk_import import default_document, default_family
@@ -253,7 +253,7 @@ def test_save_families_skips_update_when_no_changes(
     test_metadata = {"metadata_key": ["metadata_value"]}
     test_data = [
         {
-            "import_id": "test.new.collection.0",
+            "import_id": "test.new.family.0",
             "title": "Test title",
             "summary": "Test description",
             "geographies": ["XAA"],
@@ -298,5 +298,41 @@ def test_save_families_skips_update_when_no_changes(
     assert result == []
 
 
-# TODO: add test for only updating docs on changes
+def test_save_documents_skips_update_when_no_changes(
+    document_repo_mock, corpus_repo_mock, validation_service_mock
+):
+
+    test_data = [
+        {
+            "import_id": "test.new.document.0",
+            "family_import_id": "test.new.family.0",
+            "title": "Test title",
+            "variant_name": "original language",
+            "metadata": {},
+            "source_url": None,
+            "user_language_name": None,
+        }
+    ]
+    mock_document = Mock(spec=FamilyDocument)
+    mock_document.import_id = test_data[0]["import_id"]
+    mock_document.family_import_id = test_data[0]["family_import_id"]
+    mock_document.title = test_data[0]["title"]
+    mock_document.variant_name = test_data[0]["variant_name"]
+    mock_document.valid_metadata = test_data[0]["metadata"]
+    mock_document.document_status = "Created"
+    mock_document.slugs = []
+    mock_document.created = ""
+    mock_document.last_modified = ""
+
+    with patch(
+        "app.service.bulk_import._find_entity_in_db", return_value=mock_document
+    ):
+        result = bulk_import_service.save_documents(
+            test_data, "test_corpus_id", document_limit=1
+        )
+
+    assert document_repo_mock.update.call_count == 0
+    assert result == []
+
+
 # TODO: add test for only updating events on changes

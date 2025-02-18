@@ -148,43 +148,6 @@ class FamilyComparisonDTO(BaseModel):
         return self.model_dump(include=keys) != other_dto.dict(include=keys)
 
 
-class BulkImportEventDTO(BaseModel):
-    """Representation of an event for bulk import."""
-
-    import_id: str
-    family_import_id: str
-    family_document_import_id: Optional[str] = None
-    event_title: str
-    date: datetime
-    event_type_value: str
-
-    def to_event_create_dto(self) -> EventCreateDTO:
-        """
-        Convert BulkImportEventDTO to EventCreateDTO.
-
-        :return EventCreateDTO: Converted EventCreateDTO instance.
-        """
-        return EventCreateDTO(
-            import_id=self.import_id,
-            family_import_id=self.family_import_id,
-            event_title=self.event_title,
-            date=self.date,
-            event_type_value=self.event_type_value,
-        )
-
-    def to_event_write_dto(self) -> EventWriteDTO:
-        """
-        Convert BulkImportEventDTO to EventWriteDTO.
-
-        :return EventWriteDTO: Converted EventWriteDTO instance.
-        """
-        return EventWriteDTO(
-            event_title=self.event_title,
-            date=self.date,
-            event_type_value=self.event_type_value,
-        )
-
-
 class BulkImportDocumentDTO(BaseModel):
     """Representation of a document for bulk import."""
 
@@ -225,4 +188,66 @@ class BulkImportDocumentDTO(BaseModel):
             title=self.title,
             source_url=self.source_url,
             user_language_name=self.user_language_name,
+        )
+
+
+class DocumentComparisonDTO(BaseModel):
+    """DTO for comparing documents for bulk update"""
+
+    title: str
+    variant_name: Optional[str] = None
+    metadata: Metadata
+    source_url: Optional[AnyHttpUrl] = None
+    user_language_name: Optional[str] = None
+
+    @classmethod
+    def from_family_document(cls, family_document, db):
+        """Create a DTO from a family"""
+
+        return cls(
+            title=family_document.title,
+            variant_name=family_document.variant_name,
+            metadata=family_document.valid_metadata,
+        )
+
+    def is_different_from(self, other_dto):
+        """Check if this DTO is different from another DTO"""
+        keys = set(self.model_fields.keys())
+        return self.model_dump(include=keys) != other_dto.dict(include=keys)
+
+
+class BulkImportEventDTO(BaseModel):
+    """Representation of an event for bulk import."""
+
+    import_id: str
+    family_import_id: str
+    family_document_import_id: Optional[str] = None
+    event_title: str
+    date: datetime
+    event_type_value: str
+
+    def to_event_create_dto(self) -> EventCreateDTO:
+        """
+        Convert BulkImportEventDTO to EventCreateDTO.
+
+        :return EventCreateDTO: Converted EventCreateDTO instance.
+        """
+        return EventCreateDTO(
+            import_id=self.import_id,
+            family_import_id=self.family_import_id,
+            event_title=self.event_title,
+            date=self.date,
+            event_type_value=self.event_type_value,
+        )
+
+    def to_event_write_dto(self) -> EventWriteDTO:
+        """
+        Convert BulkImportEventDTO to EventWriteDTO.
+
+        :return EventWriteDTO: Converted EventWriteDTO instance.
+        """
+        return EventWriteDTO(
+            event_title=self.event_title,
+            date=self.date,
+            event_type_value=self.event_type_value,
         )

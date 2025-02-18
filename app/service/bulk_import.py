@@ -35,6 +35,7 @@ from app.model.bulk_import import (
     BulkImportEventDTO,
     BulkImportFamilyDTO,
     CollectionComparisonDTO,
+    DocumentComparisonDTO,
     FamilyComparisonDTO,
 )
 from app.repository.helpers import generate_slug
@@ -282,8 +283,9 @@ def save_documents(
     total_documents_saved = 0
 
     for doc in document_data:
+        existing_document = _find_entity_in_db(FamilyDocument, doc["import_id"], db)
         if total_documents_saved < document_limit:
-            if not _find_entity_in_db(FamilyDocument, doc["import_id"], db):
+            if not existing_document:
                 _LOGGER.info(f"Importing document {doc['import_id']}")
                 create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
                 slug = generate_slug(
@@ -294,11 +296,17 @@ def save_documents(
                 document_import_ids.append(import_id)
                 total_documents_saved += 1
             else:
-                _LOGGER.info(f"Updating document {doc['import_id']}")
                 update_dto = BulkImportDocumentDTO(**doc).to_document_write_dto()
-                import_id = document_repository.update(db, doc["import_id"], update_dto)
-                document_import_ids.append(import_id)
-                # total_documents_saved += 1
+                existing_dto = DocumentComparisonDTO.from_family_document(
+                    existing_document, db
+                )
+                if existing_dto.is_different_from(update_dto):
+                    _LOGGER.info(f"Updating document {doc['import_id']}")
+                    import_id = document_repository.update(
+                        db, doc["import_id"], update_dto
+                    )
+                    document_import_ids.append(import_id)
+                    # total_documents_saved += 1
 
     _LOGGER.info(f"Saved {total_documents_saved} documents")
     return document_import_ids

@@ -126,18 +126,10 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
     data_db: Session, client: TestClient, superuser_header_token
 ):
     original_data = {
-        "collections": [
-            default_collection,
-        ],
-        "families": [
-            default_family,
-        ],
-        "documents": [
-            default_document,
-        ],
-        "events": [
-            default_event,
-        ],
+        "collections": [default_collection],
+        "families": [default_family],
+        "documents": [default_document],
+        "events": [default_event],
     }
     original_input_json = build_json_file(original_data)
 
@@ -153,17 +145,11 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
     updated_input_json = build_json_file(
         {
             "collections": [
-                {**original_data["collections"][0], "title": updated_title},
+                {**original_data["collections"][0], "title": updated_title}
             ],
-            "families": [
-                {**original_data["families"][0], "title": updated_title},
-            ],
-            "documents": [
-                {**original_data["documents"][0], "title": updated_title},
-            ],
-            "events": [
-                {**original_data["events"][0], "event_title": updated_title},
-            ],
+            "families": [{**original_data["families"][0], "title": updated_title}],
+            "documents": [{**original_data["documents"][0], "title": updated_title}],
+            "events": [{**original_data["events"][0], "event_title": updated_title}],
         }
     )
 
@@ -213,11 +199,7 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
 def test_bulk_import_successfully_updates_family_metadata_when_no_error(
     data_db: Session, client: TestClient, superuser_header_token
 ):
-    original_data = {
-        "families": [
-            {**default_family, "collections": []},
-        ]
-    }
+    original_data = {"families": [{**default_family, "collections": []}]}
     original_input_json = build_json_file(original_data)
 
     response = client.post(
@@ -264,12 +246,8 @@ def test_bulk_import_successfully_updates_family_collections_when_no_error(
     data_db: Session, client: TestClient, superuser_header_token
 ):
     original_data = {
-        "collections": [
-            default_collection,
-        ],
-        "families": [
-            default_family,
-        ],
+        "collections": [default_collection],
+        "families": [default_family],
     }
     original_input_json = build_json_file(original_data)
 
@@ -283,12 +261,8 @@ def test_bulk_import_successfully_updates_family_collections_when_no_error(
 
     new_collection = {**default_collection, "import_id": "test.new.collection.1"}
     updated_data = {
-        "collections": [
-            new_collection,
-        ],
-        "families": [
-            {**default_family, "collections": [new_collection["import_id"]]},
-        ],
+        "collections": [new_collection],
+        "families": [{**default_family, "collections": [new_collection["import_id"]]}],
     }
     updated_input_json = build_json_file(updated_data)
 
