@@ -233,9 +233,7 @@ def save_families(
             create_dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
-            geo_ids = []
-            for geo in create_dto.geographies:
-                geo_ids.append(geography.get_id(db, geo))
+            geo_ids = [geography.get_id(db, geo) for geo in create_dto.geographies]
             import_id = family_repository.create(db, create_dto, geo_ids, org_id)
             family_import_ids.append(import_id)
             total_families_saved += 1
@@ -246,9 +244,7 @@ def save_families(
             existing_dto = FamilyComparisonDTO.from_family(existing_family)
             if existing_dto.is_different_from(update_dto):
                 _LOGGER.info(f"Updating family {fam['import_id']}")
-                geo_ids = []
-                for geo in update_dto.geographies:
-                    geo_ids.append(geography.get_id(db, geo))
+                geo_ids = [geography.get_id(db, geo) for geo in update_dto.geographies]
                 import_id = family_repository.update(
                     db, fam["import_id"], update_dto, geo_ids
                 )
