@@ -10,6 +10,8 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import update
 from sqlalchemy.orm import Session
+
+from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
@@ -17,8 +19,6 @@ from tests.helpers.bulk_import import (
     default_event,
     default_family,
 )
-
-from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 
 
 def create_input_json_with_two_of_each_entity():
