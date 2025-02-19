@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 from fastapi import status
 from fastapi.testclient import TestClient
-
 from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,

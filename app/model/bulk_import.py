@@ -201,13 +201,15 @@ class DocumentComparisonDTO(BaseModel):
     user_language_name: Optional[str] = None
 
     @classmethod
-    def from_family_document(cls, family_document, db):
-        """Create a DTO from a family"""
+    def from_document(cls, document):
+        """Create a DTO from a document"""
 
         return cls(
-            title=family_document.title,
-            variant_name=family_document.variant_name,
-            metadata=family_document.valid_metadata,
+            title=document.title,
+            variant_name=document.variant_name,
+            metadata=document.metadata,
+            source_url=document.source_url,
+            user_language_name=document.user_language_name,
         )
 
     def is_different_from(self, other_dto):

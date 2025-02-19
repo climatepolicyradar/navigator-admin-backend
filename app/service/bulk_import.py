@@ -10,7 +10,7 @@ from typing import Any, Optional, Type, TypeVar
 from uuid import uuid4
 
 from db_client.models.dfce.collection import Collection
-from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
+from db_client.models.dfce.family import Family, FamilyEvent
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
@@ -283,7 +283,7 @@ def save_documents(
     total_documents_saved = 0
 
     for doc in document_data:
-        existing_document = _find_entity_in_db(FamilyDocument, doc["import_id"], db)
+        existing_document = document_repository.get(db, doc["import_id"])
         if total_documents_saved < document_limit:
             if not existing_document:
                 _LOGGER.info(f"Importing document {doc['import_id']}")
@@ -297,9 +297,7 @@ def save_documents(
                 total_documents_saved += 1
             else:
                 update_dto = BulkImportDocumentDTO(**doc).to_document_write_dto()
-                existing_dto = DocumentComparisonDTO.from_family_document(
-                    existing_document, db
-                )
+                existing_dto = DocumentComparisonDTO.from_document(existing_document)
                 if existing_dto.is_different_from(update_dto):
                     _LOGGER.info(f"Updating document {doc['import_id']}")
                     import_id = document_repository.update(
