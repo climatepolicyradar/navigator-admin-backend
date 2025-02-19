@@ -1,13 +1,10 @@
 import json
 import logging
 import os
-from unittest.mock import Mock, create_autospec, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from db_client.models.dfce.collection import Collection
-from db_client.models.dfce.family import Family, FamilyDocument
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Session
 from tests.helpers.bulk_import import default_document, default_family
 
 import app.service.bulk_import as bulk_import_service
@@ -119,9 +116,10 @@ def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_m
     ],
 )
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-@patch("app.service.bulk_import._find_entity_in_db", Mock(return_value=False))
 def test_import_data_when_metadata_contains_non_string_values(
     test_data,
+    family_repo_mock,
+    document_repo_mock,
     corpus_repo_mock,
     validation_service_mock,
     caplog,
@@ -185,6 +183,7 @@ def test_save_documents_when_data_invalid(validation_service_mock):
 def test_do_not_save_documents_over_bulk_import_limit(
     validation_service_mock, document_repo_mock, monkeypatch
 ):
+    document_repo_mock.return_empty = True
     test_data = [
         {
             "import_id": "test.new.document.0",
@@ -250,49 +249,26 @@ def test_save_collections_skips_update_when_no_changes(
 def test_save_families_skips_update_when_no_changes(
     family_repo_mock, corpus_repo_mock, geography_repo_mock, validation_service_mock
 ):
-    test_metadata = {"metadata_key": ["metadata_value"]}
     test_data = [
         {
             "import_id": "test.new.family.0",
-            "title": "Test title",
-            "summary": "Test description",
-            "geographies": ["XAA"],
-            "category": "Executive",
-            "metadata": test_metadata,
-            "collections": [],
+            "title": "title",
+            "summary": "summary",
+            "geographies": ["CHN", "BRB", "BHS"],
+            "category": "Legislative",
+            "metadata": {
+                "topic": [],
+                "hazard": [],
+                "sector": [],
+                "keyword": [],
+                "framework": [],
+                "instrument": [],
+            },
+            "collections": ["x.y.z.1", "x.y.z.2"],
         }
     ]
 
-    class MockFamily(Family):
-        @hybrid_property
-        def last_updated_date(self):
-            return None
-
-        @hybrid_property
-        def published_date(self):
-            return None
-
-    mock_family = Mock(spec=MockFamily)
-    mock_family.import_id = test_data[0]["import_id"]
-    mock_family.title = test_data[0]["title"]
-    mock_family.description = test_data[0]["summary"]
-    mock_family.geographies = [Mock(value=geo) for geo in test_data[0]["geographies"]]
-    mock_family.family_category = test_data[0]["category"]
-    mock_family.family_documents = []
-    mock_family.slugs = []
-    mock_family.events = None
-    mock_family.created = ""
-    mock_family.last_modified = ""
-
-    mock_db = create_autospec(Session)
-    mock_db.query.return_value.filter.return_value.one_or_none.return_value = Mock(
-        value=test_metadata
-    )
-
-    with patch("app.service.bulk_import._find_entity_in_db", return_value=mock_family):
-        result = bulk_import_service.save_families(
-            test_data, "test_corpus_id", db=mock_db
-        )
+    result = bulk_import_service.save_families(test_data, "CCLW.corpus.i00000001.n0000")
 
     assert family_repo_mock.update.call_count == 0
     assert result == []
@@ -305,31 +281,18 @@ def test_save_documents_skips_update_when_no_changes(
     test_data = [
         {
             "import_id": "test.new.document.0",
-            "family_import_id": "test.new.family.0",
-            "title": "Test title",
-            "variant_name": "original language",
-            "metadata": {},
-            "source_url": None,
-            "user_language_name": None,
+            "family_import_id": "test.family.1.0",
+            "title": "title",
+            "variant_name": "Original Language",
+            "metadata": {"role": ["MAIN"], "type": ["Law"]},
+            "source_url": "http://source",
+            "user_language_name": "Ghotuo",
         }
     ]
-    mock_document = Mock(spec=FamilyDocument)
-    mock_document.import_id = test_data[0]["import_id"]
-    mock_document.family_import_id = test_data[0]["family_import_id"]
-    mock_document.title = test_data[0]["title"]
-    mock_document.variant_name = test_data[0]["variant_name"]
-    mock_document.valid_metadata = test_data[0]["metadata"]
-    mock_document.document_status = "Created"
-    mock_document.slugs = []
-    mock_document.created = ""
-    mock_document.last_modified = ""
 
-    with patch(
-        "app.service.bulk_import._find_entity_in_db", return_value=mock_document
-    ):
-        result = bulk_import_service.save_documents(
-            test_data, "test_corpus_id", document_limit=1
-        )
+    result = bulk_import_service.save_documents(
+        test_data, "test_corpus_id", document_limit=1
+    )
 
     assert document_repo_mock.update.call_count == 0
     assert result == []

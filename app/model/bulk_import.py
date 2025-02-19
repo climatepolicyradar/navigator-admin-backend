@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from db_client.models.dfce.collection import CollectionFamily
-from db_client.models.dfce.metadata import FamilyMetadata
 from pydantic import AnyHttpUrl, BaseModel, RootModel
 
 from app.model.collection import CollectionCreateDTO, CollectionWriteDTO
@@ -108,44 +106,21 @@ class BulkImportFamilyDTO(BaseModel):
             collections=self.collections,
         )
 
-
-class FamilyComparisonDTO(BaseModel):
-    """DTO for comparing families for bulk update"""
-
-    title: str
-    summary: str
-    geographies: list[str]
-    category: str
-    metadata: Optional[Metadata]
-    collections: list[str]
-
-    @classmethod
-    def from_family(cls, family, db):
-        """Create a DTO from a family"""
-        metadata = (
-            db.query(FamilyMetadata)
-            .filter(FamilyMetadata.family_import_id == family.import_id)
-            .one_or_none()
-        )
-        collections = [
-            c.collection_import_id
-            for c in db.query(CollectionFamily).filter(
-                family.import_id == CollectionFamily.family_import_id
-            )
-        ]
-        return cls(
-            title=family.title,
-            summary=family.description,
-            geographies=[geo.value for geo in family.geographies],
-            category=family.family_category,
-            metadata=metadata.value if metadata else None,
-            collections=collections,
-        )
-
-    def is_different_from(self, other_dto):
+    def is_different_from(self, family):
         """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportFamilyDTO(
+            import_id=family.import_id,
+            title=family.title,
+            summary=family.summary,
+            geographies=family.geographies,
+            category=family.category,
+            metadata=family.metadata,
+            collections=family.collections,
+            corpus_import_id=family.corpus_import_id,
+        )
+
         keys = set(self.model_fields.keys())
-        return self.model_dump(include=keys) != other_dto.dict(include=keys)
+        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
 
 
 class BulkImportDocumentDTO(BaseModel):

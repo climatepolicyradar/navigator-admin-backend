@@ -10,7 +10,7 @@ from typing import Any, Optional, Type, TypeVar
 from uuid import uuid4
 
 from db_client.models.dfce.collection import Collection
-from db_client.models.dfce.family import Family, FamilyEvent
+from db_client.models.dfce.family import FamilyEvent
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
@@ -35,7 +35,6 @@ from app.model.bulk_import import (
     BulkImportEventDTO,
     BulkImportFamilyDTO,
     CollectionComparisonDTO,
-    FamilyComparisonDTO,
 )
 from app.repository.helpers import generate_slug
 from app.service.event import (
@@ -227,7 +226,7 @@ def save_families(
     total_families_saved = 0
 
     for fam in family_data:
-        existing_family = _find_entity_in_db(Family, fam["import_id"], db)
+        existing_family = family_repository.get(db, fam["import_id"])
         if not existing_family:
             _LOGGER.info(f"Importing family {fam['import_id']}")
             create_dto = BulkImportFamilyDTO(
@@ -238,15 +237,16 @@ def save_families(
             family_import_ids.append(import_id)
             total_families_saved += 1
         else:
-            update_dto = BulkImportFamilyDTO(
+            update_family = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
-            ).to_family_write_dto()
-            existing_dto = FamilyComparisonDTO.from_family(existing_family, db)
-            if existing_dto.is_different_from(update_dto):
+            )
+            if update_family.is_different_from(existing_family):
                 _LOGGER.info(f"Updating family {fam['import_id']}")
-                geo_ids = [geography.get_id(db, geo) for geo in update_dto.geographies]
+                geo_ids = [
+                    geography.get_id(db, geo) for geo in update_family.geographies
+                ]
                 import_id = family_repository.update(
-                    db, fam["import_id"], update_dto, geo_ids
+                    db, fam["import_id"], update_family.to_family_write_dto(), geo_ids
                 )
                 family_import_ids.append(import_id)
                 total_families_saved += 1
@@ -296,7 +296,7 @@ def save_documents(
                 total_documents_saved += 1
             else:
                 update_document = BulkImportDocumentDTO(**doc)
-                if update_document.is_different_from(document=existing_document):
+                if update_document.is_different_from(existing_document):
                     _LOGGER.info(f"Updating document {doc['import_id']}")
                     import_id = document_repository.update(
                         db, doc["import_id"], update_document.to_document_write_dto()
