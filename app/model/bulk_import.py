@@ -190,21 +190,11 @@ class BulkImportDocumentDTO(BaseModel):
             user_language_name=self.user_language_name,
         )
 
-
-class DocumentComparisonDTO(BaseModel):
-    """DTO for comparing documents for bulk update"""
-
-    title: str
-    variant_name: Optional[str] = None
-    metadata: Metadata
-    source_url: Optional[AnyHttpUrl] = None
-    user_language_name: Optional[str] = None
-
-    @classmethod
-    def from_document(cls, document):
-        """Create a DTO from a document"""
-
-        return cls(
+    def is_different_from(self, document):
+        """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportDocumentDTO(
+            import_id=document.import_id,
+            family_import_id=document.family_import_id,
             title=document.title,
             variant_name=document.variant_name,
             metadata=document.metadata,
@@ -212,10 +202,8 @@ class DocumentComparisonDTO(BaseModel):
             user_language_name=document.user_language_name,
         )
 
-    def is_different_from(self, other_dto):
-        """Check if this DTO is different from another DTO"""
         keys = set(self.model_fields.keys())
-        return self.model_dump(include=keys) != other_dto.dict(include=keys)
+        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
 
 
 class BulkImportEventDTO(BaseModel):

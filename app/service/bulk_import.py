@@ -35,7 +35,6 @@ from app.model.bulk_import import (
     BulkImportEventDTO,
     BulkImportFamilyDTO,
     CollectionComparisonDTO,
-    DocumentComparisonDTO,
     FamilyComparisonDTO,
 )
 from app.repository.helpers import generate_slug
@@ -296,12 +295,11 @@ def save_documents(
                 document_import_ids.append(import_id)
                 total_documents_saved += 1
             else:
-                update_dto = BulkImportDocumentDTO(**doc).to_document_write_dto()
-                existing_dto = DocumentComparisonDTO.from_document(existing_document)
-                if existing_dto.is_different_from(update_dto):
+                update_document = BulkImportDocumentDTO(**doc)
+                if update_document.is_different_from(document=existing_document):
                     _LOGGER.info(f"Updating document {doc['import_id']}")
                     import_id = document_repository.update(
-                        db, doc["import_id"], update_dto
+                        db, doc["import_id"], update_document.to_document_write_dto()
                     )
                     document_import_ids.append(import_id)
                     # total_documents_saved += 1
