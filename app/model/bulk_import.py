@@ -40,25 +40,16 @@ class BulkImportCollectionDTO(BaseModel):
             title=self.title, description=self.description, organisation=""
         )
 
-
-class CollectionComparisonDTO(BaseModel):
-    """DTO for comparing collections for bulk update"""
-
-    title: str
-    description: str
-
-    @classmethod
-    def from_collection(cls, collection):
-        """Create a DTO from a collection"""
-        return cls(
+    def is_different_from(self, collection):
+        """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportCollectionDTO(
+            import_id=collection.import_id,
             title=collection.title,
             description=collection.description,
         )
 
-    def is_different_from(self, other_dto):
-        """Check if this DTO is different from another DTO"""
         keys = set(self.model_fields.keys())
-        return self.model_dump(include=keys) != other_dto.dict(include=keys)
+        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
 
 
 class BulkImportFamilyDTO(BaseModel):

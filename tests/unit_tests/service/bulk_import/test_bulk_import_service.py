@@ -4,7 +4,6 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
-from db_client.models.dfce.collection import Collection
 from tests.helpers.bulk_import import default_document, default_family
 
 import app.service.bulk_import as bulk_import_service
@@ -13,7 +12,6 @@ from app.errors import ValidationError
 
 @patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-@patch("app.service.bulk_import._find_entity_in_db", Mock(return_value=False))
 def test_input_json_and_result_saved_to_s3_on_bulk_import(
     basic_s3_client, validation_service_mock, corpus_repo_mock, collection_repo_mock
 ):
@@ -42,7 +40,6 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
     assert {"collections": ["test.new.collection.0"]} == json.loads(body)
 
 
-@patch("app.service.bulk_import._find_entity_in_db", Mock(return_value=False))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_slack_notification_sent_on_success(
     basic_s3_client,
@@ -179,7 +176,6 @@ def test_save_documents_when_data_invalid(validation_service_mock):
 
 
 @patch("app.service.bulk_import.generate_slug", Mock(return_value="test-slug_1234"))
-@patch("app.service.bulk_import._find_entity_in_db", Mock(return_value=False))
 def test_do_not_save_documents_over_bulk_import_limit(
     validation_service_mock, document_repo_mock, monkeypatch
 ):
@@ -222,25 +218,16 @@ def test_save_events_when_data_invalid(validation_service_mock):
 def test_save_collections_skips_update_when_no_changes(
     collection_repo_mock, corpus_repo_mock, validation_service_mock
 ):
-
+    collection_repo_mock.return_empty = True
     test_data = [
         {
             "import_id": "test.new.collection.0",
-            "title": "Test title",
-            "description": "Test description",
+            "title": "title",
+            "description": "description",
         }
     ]
-    mock_collection = Mock(spec=Collection)
-    mock_collection.import_id = test_data[0]["import_id"]
-    mock_collection.title = test_data[0]["title"]
-    mock_collection.description = test_data[0]["description"]
-    mock_collection.created = ""
-    mock_collection.last_modified = ""
 
-    with patch(
-        "app.service.bulk_import._find_entity_in_db", return_value=mock_collection
-    ):
-        result = bulk_import_service.save_collections(test_data, "test_corpus_id")
+    result = bulk_import_service.save_collections(test_data, "test_corpus_id")
 
     assert collection_repo_mock.update.call_count == 0
     assert result == []
