@@ -9,7 +9,6 @@ import logging
 from typing import Any, Optional, Type, TypeVar
 from uuid import uuid4
 
-from db_client.models.dfce.family import FamilyEvent
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
@@ -35,10 +34,7 @@ from app.model.bulk_import import (
     BulkImportFamilyDTO,
 )
 from app.repository.helpers import generate_slug
-from app.service.event import (
-    create_event_metadata_object,
-    get_datetime_event_name_for_corpus,
-)
+from app.service.event import create_event_metadata_object
 
 # Any increase to this number should first be discussed with the Platform Team
 DEFAULT_DOCUMENT_LIMIT = 1000
@@ -326,28 +322,31 @@ def save_events(
         db = db_session.get_db()
 
     validation.validate_events(event_data, corpus_import_id)
-    datetime_event_name = get_datetime_event_name_for_corpus(db, corpus_import_id)
 
     event_import_ids = []
     total_events_saved = 0
 
     for event in event_data:
         import_id = event["import_id"]
-        if not _find_entity_in_db(FamilyEvent, import_id, db):
+        existing_event = event_repository.get(db, import_id)
+        if not existing_event:
             _LOGGER.info(f"Importing event {import_id}")
             dto = BulkImportEventDTO(**event).to_event_create_dto()
             event_metadata = create_event_metadata_object(
-                db, corpus_import_id, event["event_type_value"], datetime_event_name
+                db, corpus_import_id, event["event_type_value"]
             )
             event_repository.create(db, dto, event_metadata)
             event_import_ids.append(import_id)
             total_events_saved += 1
         else:
-            _LOGGER.info(f"Updating event {import_id}")
-            update_dto = BulkImportEventDTO(**event).to_event_write_dto()
-            event_repository.update(db, import_id, update_dto)
-            event_import_ids.append(import_id)
-            total_events_saved += 1
+            update_event = BulkImportEventDTO(**event)
+            if update_event.is_different_from(existing_event):
+                _LOGGER.info(f"Updating event {import_id}")
+                event_repository.update(
+                    db, import_id, update_event.to_event_write_dto()
+                )
+                event_import_ids.append(import_id)
+                total_events_saved += 1
 
     _LOGGER.info(f"Saved {total_events_saved} events")
     return event_import_ids

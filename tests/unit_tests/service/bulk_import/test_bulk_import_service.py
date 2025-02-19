@@ -70,7 +70,6 @@ def test_slack_notification_sent_on_success(
         )
 
 
-@patch("app.service.bulk_import._find_entity_in_db", Mock(return_value=False))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_mock):
     corpus_repo_mock.error = True
@@ -285,4 +284,30 @@ def test_save_documents_skips_update_when_no_changes(
     assert result == []
 
 
-# TODO: add test for only updating events on changes
+@patch(
+    "app.service.bulk_import.create_event_metadata_object",
+    Mock(
+        return_value={
+            "event_type": ["Amended"],
+            "datetime_event_name": ["Amended"],
+        }
+    ),
+)
+def test_save_events_skips_update_when_no_changes(
+    event_repo_mock, corpus_repo_mock, validation_service_mock
+):
+    test_data = [
+        {
+            "import_id": "test.new.collection.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": None,
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+        }
+    ]
+
+    result = bulk_import_service.save_events(test_data, "test_corpus_id")
+
+    assert event_repo_mock.update.call_count == 0
+    assert result == []

@@ -207,3 +207,17 @@ class BulkImportEventDTO(BaseModel):
             date=self.date,
             event_type_value=self.event_type_value,
         )
+
+    def is_different_from(self, event):
+        """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportEventDTO(
+            import_id=event.import_id,
+            family_import_id=event.family_import_id,
+            family_document_import_id=event.family_document_import_id,
+            event_title=event.event_title,
+            date=event.date,
+            event_type_value=event.event_type_value,
+        )
+
+        keys = set(self.model_fields.keys())
+        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
