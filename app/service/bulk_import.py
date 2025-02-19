@@ -6,13 +6,12 @@ import of data and other services for validation etc.
 """
 
 import logging
-from typing import Any, Optional, Type, TypeVar
+from typing import Any, Optional
 from uuid import uuid4
 
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
-from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -41,25 +40,6 @@ DEFAULT_DOCUMENT_LIMIT = 1000
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
-
-
-class BaseModel(DeclarativeMeta):
-    import_id: str
-
-
-T = TypeVar("T", bound=BaseModel)
-
-
-def _find_entity_in_db(entity: Type[T], import_id: str, db: Session) -> Type[T]:
-    """
-    Finds the entity from the database by import_id.
-
-    :param Type[T] entity: The model of the entity to be looked up in the db.
-    :param str import_id: The import_id of the entity.
-    :param Session db: The database session.
-    :return Type[T]: The found entity or None.
-    """
-    return db.query(entity).filter(entity.import_id == import_id).one_or_none()
 
 
 def get_collection_template() -> dict:
