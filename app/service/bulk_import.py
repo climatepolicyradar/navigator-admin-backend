@@ -278,7 +278,7 @@ def save_documents(
                         db, import_id, update_document.to_document_write_dto()
                     )
                     document_import_ids.append(import_id)
-                    # total_documents_saved += 1
+                    total_documents_saved += 1
 
     _LOGGER.info(f"Saved {total_documents_saved} documents")
     return document_import_ids

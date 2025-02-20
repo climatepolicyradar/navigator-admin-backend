@@ -289,7 +289,6 @@ def test_bulk_import_successfully_updates_family_collections_when_no_error(
     )
 
 
-# TODO: add test for only updating the number of docs within limit
 # TODO: add test for generating document slug if title updated
 
 
@@ -369,6 +368,70 @@ def test_bulk_import_only_saves_default_number_of_documents_if_no_limit_provided
         )
         .one_or_none()
     )
+
+
+def test_bulk_import_only_updates_number_of_documents_within_provided_limit(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    original_data = {
+        "families": [{**default_family, "collections": []}],
+        "documents": [
+            default_document,
+            {**default_document, "import_id": "test.new.document.1"},
+        ],
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    updated_title = "Updated"
+    updated_input_json = build_json_file(
+        {
+            **original_data,
+            "documents": [
+                {**original_data["documents"][0], "title": updated_title},
+                {**original_data["documents"][1], "title": updated_title},
+            ],
+        }
+    )
+
+    update_response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": updated_input_json},
+        headers=superuser_header_token,
+        params={"document_limit": 1},
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_document_1_title = (
+        data_db.query(PhysicalDocument)
+        .join(
+            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
+        )
+        .filter(FamilyDocument.import_id == original_data["documents"][0]["import_id"])
+        .one_or_none()
+        .title
+    )
+
+    saved_document_2_title = (
+        data_db.query(PhysicalDocument)
+        .join(
+            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
+        )
+        .filter(FamilyDocument.import_id == original_data["documents"][1]["import_id"])
+        .one_or_none()
+        .title
+    )
+
+    assert updated_title == saved_document_1_title
+    assert original_data["documents"][1]["title"] == saved_document_2_title
 
 
 @pytest.mark.s3
