@@ -106,10 +106,11 @@ class BulkImportFamilyDTO(BaseModel):
             geographies=sorted(family.geographies),
             category=family.category,
             metadata=family.metadata,
-            collections=family.collections,
+            collections=sorted(family.collections),
             corpus_import_id=family.corpus_import_id,
         )
 
+        self.collections = sorted(self.collections)
         self.geographies = sorted(self.geographies)
 
         keys = set(self.model_fields.keys())

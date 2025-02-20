@@ -250,7 +250,7 @@ def test_save_families_skips_update_when_no_changes(
                 "framework": [],
                 "instrument": [],
             },
-            "collections": ["x.y.z.1", "x.y.z.2"],
+            "collections": ["x.y.z.2", "x.y.z.1"],
         }
     ]
 
