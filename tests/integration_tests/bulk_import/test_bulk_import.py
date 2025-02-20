@@ -554,6 +554,7 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
 
+    assert 1000 == len(data_db.query(FamilyDocument).all())
     assert (
         "Created"
         == data_db.query(FamilyDocument)
