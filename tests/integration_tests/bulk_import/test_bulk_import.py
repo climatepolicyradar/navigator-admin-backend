@@ -289,9 +289,6 @@ def test_bulk_import_successfully_updates_family_collections_when_no_error(
     )
 
 
-# TODO: add test for generating document slug if title updated
-
-
 @pytest.mark.s3
 def test_bulk_import_does_not_save_data_to_db_on_error(
     caplog,
@@ -519,7 +516,7 @@ def test_bulk_import_idempotency_on_create(
 
 
 @pytest.mark.s3
-def test_generates_unique_slugs_for_documents_with_identical_titles(
+def test_generates_unique_slugs_for_documents_with_identical_titles_on_create(
     caplog,
     data_db: Session,
     client: TestClient,
@@ -529,7 +526,9 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
     This test ensures that given multiple documents with the same title a unique slug
     is generated for each and thus the documents can be saved to the DB at the end
     of bulk import. However, the current length of the suffix added to the slug
-    to ensure uniqueness (6), means that the likelihood of a collision is extremely low.
+    to ensure uniqueness (6), means that the likelihood of a collision is extremely low,
+    which makes it extremely difficult to write a consistently failing test.
+    So in most cases, this test will pass simply because there no slugs were duplicated.
     """
 
     input_json = build_json_file(
@@ -554,14 +553,64 @@ def test_generates_unique_slugs_for_documents_with_identical_titles(
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
 
-    assert 1000 == len(data_db.query(FamilyDocument).all())
-    assert (
-        "Created"
-        == data_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "test.new.document.999")
-        .one_or_none()
-        .document_status
-    )
+    saved_documents = data_db.query(FamilyDocument).all()
+    saved_unique_slugs = set(doc.slugs[0].name for doc in saved_documents)
+    # check all created slugs are unique
+    assert len(saved_documents) == len(saved_unique_slugs)
+
+
+@pytest.mark.s3
+def test_generates_unique_slugs_for_documents_with_identical_titles_on_update(
+    caplog,
+    data_db: Session,
+    client: TestClient,
+    superuser_header_token,
+):
+    """
+    This test ensures that given multiple documents with the same title a unique slug
+    is generated for each and thus the documents can be saved to the DB at the end
+    of bulk import. However, the current length of the suffix added to the slug
+    to ensure uniqueness (6), means that the likelihood of a collision is extremely low,
+    which makes it extremely difficult to write a consistently failing test.
+    So in most cases, this test will pass simply because there no slugs were duplicated.
+    """
+    input_data = {
+        "families": [{**default_family, "collections": []}],
+        "documents": [
+            {**default_document, "import_id": f"test.new.document.{i}"}
+            for i in range(1000)
+        ],
+    }
+
+    with caplog.at_level(logging.ERROR):
+        response = client.post(
+            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+            files={"data": build_json_file(input_data)},
+            headers=superuser_header_token,
+        )
+
+        assert response.status_code == status.HTTP_202_ACCEPTED
+
+    updated_data = {
+        **input_data,
+        "documents": [{**doc, "title": "Updated"} for doc in input_data["documents"]],
+    }
+
+    with caplog.at_level(logging.ERROR):
+        response = client.post(
+            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+            files={"data": build_json_file(updated_data)},
+            headers=superuser_header_token,
+        )
+
+        assert response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_documents = data_db.query(FamilyDocument).all()
+    saved_unique_slugs = set(doc.slugs[0].name for doc in saved_documents)
+
+    assert all(slug.startswith("updated") for slug in saved_unique_slugs)
+    # check all updated slugs are unique
+    assert len(saved_documents) == len(saved_unique_slugs)
 
 
 @pytest.mark.s3

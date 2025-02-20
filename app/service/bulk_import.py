@@ -274,9 +274,13 @@ def save_documents(
                 update_document = BulkImportDocumentDTO(**doc)
                 if update_document.is_different_from(existing_document):
                     _LOGGER.info(f"Updating document {import_id}")
-                    document_repository.update(
-                        db, import_id, update_document.to_document_write_dto()
+                    slug = generate_slug(
+                        db=db, title=update_document.title, created_slugs=document_slugs
                     )
+                    document_repository.update(
+                        db, import_id, update_document.to_document_write_dto(), slug
+                    )
+                    document_slugs.add(slug)
                     document_import_ids.append(import_id)
                     total_documents_saved += 1
 

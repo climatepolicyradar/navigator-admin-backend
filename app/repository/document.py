@@ -231,13 +231,16 @@ def search(
     return [_doc_to_dto(doc) for doc in result]
 
 
-def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
+def update(
+    db: Session, import_id: str, document: DocumentWriteDTO, slug: Optional[str] = None
+) -> bool:
     """
     Updates a single entry with the new values passed.
 
-    :param db Session: the database connection
+    :param db Session: The database connection.
     :param str import_id: The document import id to change.
-    :param DocumentDTO document: The new values
+    :param DocumentDTO document: The new values.
+    :param Optional[str] slug: The document slug if already generated.
     :return bool: True if new values were set otherwise false.
     """
 
@@ -334,7 +337,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         db.add(
             Slug(
                 family_document_import_id=original_fd.import_id,
-                name=generate_slug(db, new_values["title"]),
+                name=slug or generate_slug(db, new_values["title"]),
             )
         )
     return True
