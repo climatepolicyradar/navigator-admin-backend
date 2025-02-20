@@ -103,12 +103,14 @@ class BulkImportFamilyDTO(BaseModel):
             import_id=family.import_id,
             title=family.title,
             summary=family.summary,
-            geographies=family.geographies,
+            geographies=sorted(family.geographies),
             category=family.category,
             metadata=family.metadata,
             collections=family.collections,
             corpus_import_id=family.corpus_import_id,
         )
+
+        self.geographies = sorted(self.geographies)
 
         keys = set(self.model_fields.keys())
         return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)

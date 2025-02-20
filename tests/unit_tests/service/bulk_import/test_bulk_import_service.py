@@ -240,7 +240,7 @@ def test_save_families_skips_update_when_no_changes(
             "import_id": "test.new.family.0",
             "title": "title",
             "summary": "summary",
-            "geographies": ["CHN", "BRB", "BHS"],
+            "geographies": ["BRB", "CHN", "BHS"],
             "category": "Legislative",
             "metadata": {
                 "topic": [],
