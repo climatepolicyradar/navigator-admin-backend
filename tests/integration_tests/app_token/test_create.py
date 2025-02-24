@@ -7,8 +7,8 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.service.custom_app import decode
-from tests.helpers.custom_app import (
+from app.service.app_token import decode
+from tests.helpers.app_token import (
     EXPIRE_AFTER_1_YEAR,
     EXPIRE_AFTER_5_YEARS,
     EXPIRE_AFTER_DEFAULT_YEARS,

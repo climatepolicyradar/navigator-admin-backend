@@ -4,7 +4,7 @@ from typing import Optional, cast
 from dateutil.relativedelta import relativedelta
 from pydantic import AnyUrl
 
-from app.model.custom_app import CustomAppCreateDTO
+from app.model.app_token import AppTokenCreateDTO
 
 EXPIRE_AFTER_1_YEAR = 1
 EXPIRE_AFTER_5_YEARS = 5
@@ -16,11 +16,11 @@ def create_custom_app_create_dto(
     theme: str = "TEST",
     hostname: str = "http://example.test.org",
     expiry_years: Optional[int] = EXPIRE_AFTER_DEFAULT_YEARS,
-) -> CustomAppCreateDTO:
+) -> AppTokenCreateDTO:
     if corpora_ids is None:
         corpora_ids = []
 
-    return CustomAppCreateDTO(
+    return AppTokenCreateDTO(
         theme=theme,
         corpora_ids=corpora_ids,
         hostname=cast(AnyUrl, hostname),

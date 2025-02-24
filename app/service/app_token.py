@@ -10,13 +10,13 @@ from sqlalchemy.orm import Session
 import app.clients.db.session as db_session
 from app.config import TOKEN_SECRET_KEY
 from app.errors import ValidationError
-from app.model.custom_app import CustomAppCreateDTO, CustomAppReadDTO
+from app.model.app_token import AppTokenCreateDTO, AppTokenReadDTO
 from app.service.corpus import validate
 
 _LOGGER = logging.getLogger(__name__)
 ALGORITHM = "HS256"
 
-CUSTOM_APP_TOKEN_EXPIRE_YEARS: int = 10  # token valid for 10 years
+APP_TOKEN_EXPIRE_YEARS: int = 10  # token valid for 10 years
 ISSUER: str = "Climate Policy Radar"
 
 
@@ -32,7 +32,7 @@ def _contains_special_chars(input: str) -> bool:
 
 
 def create_configuration_token(
-    input: CustomAppCreateDTO,
+    input: AppTokenCreateDTO,
     years: Optional[int] = None,
     db: Optional[Session] = None,
 ) -> str:
@@ -56,11 +56,11 @@ def create_configuration_token(
     if not all(validate(db, import_id) for import_id in input.corpora_ids):
         raise ValidationError("One or more import IDs don't exist")
 
-    expiry_years = years or CUSTOM_APP_TOKEN_EXPIRE_YEARS
+    expiry_years = years or APP_TOKEN_EXPIRE_YEARS
     issued_at = datetime.utcnow()
     expire = issued_at + relativedelta(years=expiry_years)
 
-    config = CustomAppReadDTO(
+    config = AppTokenReadDTO(
         allowed_corpora_ids=sorted(input.corpora_ids),
         subject=input.theme,
         issuer=ISSUER,
@@ -91,7 +91,7 @@ def create_configuration_token(
     return jwt.encode(to_encode, TOKEN_SECRET_KEY, algorithm=ALGORITHM)
 
 
-def decode(token: str) -> CustomAppReadDTO:
+def decode(token: str) -> AppTokenReadDTO:
     """Decodes a configuration token.
 
     :param str token : A JWT token that has been encoded with a list

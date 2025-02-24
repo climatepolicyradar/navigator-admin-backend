@@ -3,19 +3,19 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 
 from app.errors import AuthorisationError, ValidationError
-from app.model.custom_app import CustomAppCreateDTO
-from app.service.custom_app import create_configuration_token
+from app.model.app_token import AppTokenCreateDTO
+from app.service.app_token import create_configuration_token
 
-custom_app_router = r = APIRouter()
+app_token_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__file__)
 
 
 @r.post("app-tokens", response_model=str)
-async def create_custom_app_token(new_token: CustomAppCreateDTO) -> str:
+async def create_app_token(new_token: AppTokenCreateDTO) -> str:
     """Create a custom app token for the navigator app.
 
-    :param CustomAppCreateDTO new_token: New custom app object.
+    :param AppTokenCreateDTO new_token: New custom app object.
     :raises HTTPException: If there is an error raised during validation
     :return str: returns the newly encoded custom app token.
     """

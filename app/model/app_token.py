@@ -4,7 +4,7 @@ from typing import Optional, Union
 from pydantic import AnyUrl, BaseModel
 
 
-class CustomAppCreateDTO(BaseModel):
+class AppTokenCreateDTO(BaseModel):
     """A JSON representation of custom app configurable options.
 
     allowed_corpora_ids: A list of the corpus import IDs that the custom
@@ -19,7 +19,7 @@ class CustomAppCreateDTO(BaseModel):
     expiry_years: Optional[int]
 
 
-class CustomAppReadDTO(BaseModel):
+class AppTokenReadDTO(BaseModel):
     """A JSON representation of a decoded custom app token."""
 
     allowed_corpora_ids: list[str]
