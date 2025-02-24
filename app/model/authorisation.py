@@ -6,7 +6,7 @@ from db_client.models.organisation.authorisation import AuthAccess, AuthOperatio
 
 class AuthEndpoint(str, enum.Enum):
     """
-    An Entity that can be authorized.
+    An Entity that can be authorised.
 
     NOTE: At the moment these are the upper-case plural
     version of the entity that is used in the url.
@@ -22,6 +22,7 @@ class AuthEndpoint(str, enum.Enum):
     CORPUS = "CORPORA"
     CORPUS_TYPE = "CORPUS-TYPES"
     ORGANISATION = "ORGANISATIONS"
+    APP_TOKEN = "APP-TOKENS"  # nosec B105
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
@@ -41,7 +42,7 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.UPDATE: AuthAccess.USER,
         AuthOperation.DELETE: AuthAccess.USER,
     },
-    # Collection
+    # Document
     AuthEndpoint.DOCUMENT: {
         AuthOperation.CREATE: AuthAccess.USER,
         AuthOperation.READ: AuthAccess.USER,
@@ -82,5 +83,9 @@ AUTH_TABLE: AuthMap = {
     # Organisation
     AuthEndpoint.ORGANISATION: {
         AuthOperation.READ: AuthAccess.SUPER,
+    },
+    # App token
+    AuthEndpoint.APP_TOKEN: {
+        AuthOperation.CREATE: AuthAccess.SUPER,
     },
 }
