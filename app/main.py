@@ -18,13 +18,13 @@ from fastapi_utils.timing import add_timing_middleware
 
 from app.api.api_v1.routers import (
     analytics_router,
+    app_token_router,
     auth_router,
     bulk_import_router,
     collections_router,
     config_router,
     corpora_router,
     corpus_types_router,
-    custom_app_router,
     document_router,
     event_router,
     families_router,
@@ -135,7 +135,7 @@ app.include_router(
 )
 
 app.include_router(
-    custom_app_router,
+    app_token_router,
     prefix="/api/v1",
     tags=["app-token"],
     dependencies=[Depends(check_user_auth)],

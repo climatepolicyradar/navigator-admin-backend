@@ -170,17 +170,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.36.21"
+version = "1.36.26"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.36.21-py3-none-any.whl", hash = "sha256:f94faa7cf932d781f474d87f8b4c14a033af95ac1460136b40d75e7a30086ef0"},
-    {file = "boto3-1.36.21.tar.gz", hash = "sha256:41eb2b73eb612d300e629e3328b83f1ffea0fc6633e75c241a72a76746c1db26"},
+    {file = "boto3-1.36.26-py3-none-any.whl", hash = "sha256:f67d014a7c5a3cd540606d64d7cb9eec3600cf42acab1ac0518df9751ae115e2"},
+    {file = "boto3-1.36.26.tar.gz", hash = "sha256:523b69457eee55ac15aa707c0e768b2a45ca1521f95b2442931090633ec72458"},
 ]
 
 [package.dependencies]
-botocore = ">=1.36.21,<1.37.0"
+botocore = ">=1.36.26,<1.37.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.11.0,<0.12.0"
 
@@ -189,13 +189,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.36.21"
+version = "1.36.26"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.36.21-py3-none-any.whl", hash = "sha256:24a7052e792639dc2726001bd474cd0aaa959c1e18ddd92c17f3adc6efa1b132"},
-    {file = "botocore-1.36.21.tar.gz", hash = "sha256:da746240e2ad64fd4997f7f3664a0a8e303d18075fc1d473727cb6375080ea16"},
+    {file = "botocore-1.36.26-py3-none-any.whl", hash = "sha256:4e3f19913887a58502e71ef8d696fe7eaa54de7813ff73390cd5883f837dfa6e"},
+    {file = "botocore-1.36.26.tar.gz", hash = "sha256:4a63bcef7ecf6146fd3a61dc4f9b33b7473b49bdaf1770e9aaca6eee0c9eab62"},
 ]
 
 [package.dependencies]
@@ -1070,13 +1070,13 @@ socks = ["socksio (==1.*)"]
 
 [[package]]
 name = "identify"
-version = "2.6.7"
+version = "2.6.8"
 description = "File identification library for Python"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "identify-2.6.7-py2.py3-none-any.whl", hash = "sha256:155931cb617a401807b09ecec6635d6c692d180090a1cedca8ef7d58ba5b6aa0"},
-    {file = "identify-2.6.7.tar.gz", hash = "sha256:3fa266b42eba321ee0b2bb0936a6a6b9e36a1351cbb69055b3082f4193035684"},
+    {file = "identify-2.6.8-py2.py3-none-any.whl", hash = "sha256:83657f0f766a3c8d0eaea16d4ef42494b39b34629a4b3192a9d020d349b3e255"},
+    {file = "identify-2.6.8.tar.gz", hash = "sha256:61491417ea2c0c5c670484fd8abbb34de34cdae1e5f39a73ee65e48e4bb663fc"},
 ]
 
 [package.extras]
@@ -1633,13 +1633,13 @@ files = [
 
 [[package]]
 name = "pkginfo"
-version = "1.12.0"
+version = "1.12.1.2"
 description = "Query metadata from sdists / bdists / installed packages."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pkginfo-1.12.0-py3-none-any.whl", hash = "sha256:dcd589c9be4da8973eceffa247733c144812759aa67eaf4bbf97016a02f39088"},
-    {file = "pkginfo-1.12.0.tar.gz", hash = "sha256:8ad91a0445a036782b9366ef8b8c2c50291f83a553478ba8580c73d3215700cf"},
+    {file = "pkginfo-1.12.1.2-py3-none-any.whl", hash = "sha256:c783ac885519cab2c34927ccfa6bf64b5a704d7c69afaea583dd9b7afe969343"},
+    {file = "pkginfo-1.12.1.2.tar.gz", hash = "sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b"},
 ]
 
 [package.extras]
@@ -2015,13 +2015,13 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
 name = "pydantic-settings"
-version = "2.7.1"
+version = "2.8.0"
 description = "Settings management using Pydantic"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pydantic_settings-2.7.1-py3-none-any.whl", hash = "sha256:590be9e6e24d06db33a4262829edef682500ef008565a969c73d39d5f8bfb3fd"},
-    {file = "pydantic_settings-2.7.1.tar.gz", hash = "sha256:10c9caad35e64bfb3c2fbf70a078c0e25cc92499782e5200747f942a065dec93"},
+    {file = "pydantic_settings-2.8.0-py3-none-any.whl", hash = "sha256:c782c7dc3fb40e97b238e713c25d26f64314aece2e91abcff592fcac15f71820"},
+    {file = "pydantic_settings-2.8.0.tar.gz", hash = "sha256:88e2ca28f6e68ea102c99c3c401d6c9078e68a5df600e97b43891c34e089500a"},
 ]
 
 [package.dependencies]
@@ -2106,13 +2106,13 @@ files = [
 
 [[package]]
 name = "pyright"
-version = "1.1.391"
+version = "1.1.394"
 description = "Command line wrapper for pyright"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyright-1.1.391-py3-none-any.whl", hash = "sha256:54fa186f8b3e8a55a44ebfa842636635688670c6896dcf6cf4a7fc75062f4d15"},
-    {file = "pyright-1.1.391.tar.gz", hash = "sha256:66b2d42cdf5c3cbab05f2f4b76e8bec8aa78e679bfa0b6ad7b923d9e027cadb2"},
+    {file = "pyright-1.1.394-py3-none-any.whl", hash = "sha256:5f74cce0a795a295fb768759bbeeec62561215dea657edcaab48a932b031ddbb"},
+    {file = "pyright-1.1.394.tar.gz", hash = "sha256:56f2a3ab88c5214a451eb71d8f2792b7700434f841ea219119ade7f42ca93608"},
 ]
 
 [package.dependencies]
@@ -2810,13 +2810,13 @@ files = [
 
 [[package]]
 name = "trove-classifiers"
-version = "2025.1.15.22"
+version = "2025.2.18.16"
 description = "Canonical source for classifiers on PyPI (pypi.org)."
 optional = false
 python-versions = "*"
 files = [
-    {file = "trove_classifiers-2025.1.15.22-py3-none-any.whl", hash = "sha256:5f19c789d4f17f501d36c94dbbf969fb3e8c2784d008e6f5164dd2c3d6a2b07c"},
-    {file = "trove_classifiers-2025.1.15.22.tar.gz", hash = "sha256:90af74358d3a01b3532bc7b3c88d8c6a094c2fd50a563d13d9576179326d7ed9"},
+    {file = "trove_classifiers-2025.2.18.16-py3-none-any.whl", hash = "sha256:7f6dfae899f23f04b73bc09e0754d9219a6fc4d6cca6acd62f1850a87ea92262"},
+    {file = "trove_classifiers-2025.2.18.16.tar.gz", hash = "sha256:b1ee2e1668589217d4edf506743e28b1834da128f8a122bad522c02d837006e1"},
 ]
 
 [[package]]
@@ -3323,4 +3323,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4f8e3c250ff1a529e708a580357376f87a58495dbe10d943dda109b9b587d1ab"
+content-hash = "1551b9a6fcdb31d7aa1fcf4ceeeea5c29ecd090e63aeaf9ae68688dfe9ee4e19"
