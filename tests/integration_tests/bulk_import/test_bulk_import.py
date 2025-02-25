@@ -5,7 +5,11 @@ from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection, CollectionFamily
 from db_client.models.dfce.family import Family, FamilyDocument
 from db_client.models.dfce.metadata import FamilyMetadata
-from db_client.models.document import PhysicalDocument
+from db_client.models.document.physical_document import (
+    Language,
+    PhysicalDocument,
+    PhysicalDocumentLanguage,
+)
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import update
@@ -193,6 +197,67 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
 
     for entity, title in updated_entities.items():
         assert updated_title == title, f"Updated title does not match for {entity}"
+
+
+@pytest.mark.s3
+def test_bulk_import_successfully_updates_document_when_user_language_has_changed(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    original_data = {
+        "collections": [default_collection],
+        "families": [default_family],
+        "documents": [default_document],
+        "events": [default_event],
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    updated_user_language_name = "German"
+    updated_input_json = build_json_file(
+        {
+            **original_data,
+            "documents": [
+                {
+                    **original_data["documents"][0],
+                    "user_language_name": updated_user_language_name,
+                }
+            ],
+        }
+    )
+
+    update_response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": updated_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_document_language = (
+        data_db.query(Language)
+        .join(
+            PhysicalDocumentLanguage,
+            PhysicalDocumentLanguage.language_id == Language.id,
+        )
+        .join(
+            PhysicalDocument,
+            PhysicalDocument.id == PhysicalDocumentLanguage.document_id,
+        )
+        .join(
+            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
+        )
+        .filter(FamilyDocument.import_id == original_data["documents"][0]["import_id"])
+        .scalar()
+    )
+
+    assert updated_user_language_name == saved_document_language.name
 
 
 @pytest.mark.s3

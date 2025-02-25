@@ -272,7 +272,6 @@ def test_save_documents_skips_update_when_no_changes(
             "variant_name": "Original Language",
             "metadata": {"role": ["MAIN"], "type": ["Law"]},
             "source_url": "http://source",
-            "user_language_name": "Ghotuo",
         }
     ]
 
