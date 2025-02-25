@@ -60,7 +60,7 @@ app = FastAPI(
 )
 setup_json_logging(app)
 add_pagination(app)
-add_timing_middleware(app, record=_LOGGER.info)
+add_timing_middleware(app, record=_LOGGER.info, exclude="health")
 
 app.include_router(
     config_router,
