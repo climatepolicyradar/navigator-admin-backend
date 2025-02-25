@@ -57,8 +57,6 @@ def mock_document_repo(document_repo, monkeypatch: MonkeyPatch, mocker):
 
     def mock_create(_, data: DocumentCreateDTO, slug: Optional[str] = "") -> str:
         maybe_throw()
-        if document_repo.return_empty:
-            raise exc.NoResultFound()
         return data.import_id if data.import_id else "test.new.doc.0"
 
     def mock_delete(_, import_id: str) -> bool:
