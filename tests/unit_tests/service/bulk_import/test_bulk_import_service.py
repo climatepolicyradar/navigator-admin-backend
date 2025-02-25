@@ -4,10 +4,10 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
+from tests.helpers.bulk_import import default_document, default_family
 
 import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
-from tests.helpers.bulk_import import default_document, default_family
 
 
 @patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
@@ -272,7 +272,6 @@ def test_save_documents_skips_update_when_no_changes(
             "variant_name": "Original Language",
             "metadata": {"role": ["MAIN"], "type": ["Law"]},
             "source_url": "http://source",
-            "user_language_name": "Ghotuo",
         }
     ]
 

@@ -172,6 +172,9 @@ class BulkImportDocumentDTO(BaseModel):
         )
 
         keys = set(self.model_fields.keys())
+        # if self.user_language_name is None:
+        keys.remove("user_language_name")
+
         return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
 
 
