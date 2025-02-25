@@ -44,6 +44,7 @@ _ALLOW_ORIGIN_REGEX = (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.INFO)
 
 
 @asynccontextmanager
