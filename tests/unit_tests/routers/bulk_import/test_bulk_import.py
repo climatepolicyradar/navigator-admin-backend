@@ -1,6 +1,6 @@
 import io
 import json
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -66,6 +66,7 @@ def test_bulk_import_when_admin_non_super(client: TestClient, admin_user_header_
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+@patch("app.api.api_v1.routers.bulk_import.validate_corpus_exists", Mock())
 def test_bulk_import_data_when_ok(client: TestClient, superuser_header_token):
     corpus_import_id = "test"
     input_json = create_input_json_with_two_of_each_entity()
@@ -85,6 +86,7 @@ def test_bulk_import_data_when_ok(client: TestClient, superuser_header_token):
     }
 
 
+@patch("app.api.api_v1.routers.bulk_import.validate_corpus_exists", Mock())
 def test_bulk_import_when_no_data(
     client: TestClient,
     superuser_header_token,
@@ -105,6 +107,7 @@ def test_bulk_import_when_no_data(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+@patch("app.api.api_v1.routers.bulk_import.validate_corpus_exists", Mock())
 def test_bulk_import_documents_when_no_family(
     client: TestClient, superuser_header_token
 ):

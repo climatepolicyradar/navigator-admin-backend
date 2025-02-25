@@ -5,6 +5,7 @@ from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from fastapi import HTTPException, status
 
 import app.clients.db.session as db_session
+import app.repository.corpus as corpus_repo
 import app.service.category as category
 import app.service.collection as collection
 import app.service.corpus as corpus
@@ -240,3 +241,18 @@ def validate_bulk_import_data(data: dict[str, Any]) -> None:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
     validate_entity_relationships(data)
+
+
+def validate_corpus_exists(corpus_import_id: str) -> None:
+    """
+    Validates whether a corpus exists in the db for the given corpus import_id.
+
+    :param str corpus_import_id: The import_id used to find a corpus in the database.
+    :raises ValidationError: raised if corpus is not found for the given import_id.
+    """
+    db = db_session.get_db()
+    corpus = corpus_repo.get(db, corpus_import_id)
+
+    if corpus is None:
+        msg = f"No corpus found for import_id: {corpus_import_id}"
+        raise ValidationError(msg)

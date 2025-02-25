@@ -6,15 +6,12 @@ import of data and other services for validation etc.
 """
 
 import logging
-from typing import Any, Optional, Type, TypeVar
+from typing import Any, Optional
 from uuid import uuid4
 
-from db_client.models.dfce.collection import Collection
-from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
-from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -36,36 +33,13 @@ from app.model.bulk_import import (
     BulkImportFamilyDTO,
 )
 from app.repository.helpers import generate_slug
-from app.service.event import (
-    create_event_metadata_object,
-    get_datetime_event_name_for_corpus,
-)
+from app.service.event import create_event_metadata_object
 
 # Any increase to this number should first be discussed with the Platform Team
 DEFAULT_DOCUMENT_LIMIT = 1000
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
-
-
-class BaseModel(DeclarativeMeta):
-    import_id: str
-
-
-T = TypeVar("T", bound=BaseModel)
-
-
-def _exists_in_db(entity: Type[T], import_id: str, db: Session) -> bool:
-    """
-    Check if a entity exists in the database by import_id.
-
-    :param Type[T] entity: The model of the entity to be looked up in the db.
-    :param str import_id: The import_id of the entity.
-    :param Session db: The database session.
-    :return bool: True if the entity exists, False otherwise.
-    """
-    entity_exists = db.query(entity).filter(entity.import_id == import_id).one_or_none()
-    return entity_exists is not None
 
 
 def get_collection_template() -> dict:
@@ -179,12 +153,23 @@ def save_collections(
     total_collections_saved = 0
 
     for coll in collection_data:
-        if not _exists_in_db(Collection, coll["import_id"], db):
-            _LOGGER.info(f"Importing collection {coll['import_id']}")
-            dto = BulkImportCollectionDTO(**coll).to_collection_create_dto()
-            import_id = collection_repository.create(db, dto, org_id)
+        import_id = coll["import_id"]
+        existing_collection = collection_repository.get(db, import_id)
+        if not existing_collection:
+            _LOGGER.info(f"Importing collection {import_id}")
+            create_dto = BulkImportCollectionDTO(**coll).to_collection_create_dto()
+            collection_repository.create(db, create_dto, org_id)
             collection_import_ids.append(import_id)
             total_collections_saved += 1
+        else:
+            update_collection = BulkImportCollectionDTO(**coll)
+            if update_collection.is_different_from(existing_collection):
+                _LOGGER.info(f"Updating collection {import_id}")
+                collection_repository.update(
+                    db, import_id, update_collection.to_collection_write_dto()
+                )
+                collection_import_ids.append(import_id)
+                total_collections_saved += 1
 
     _LOGGER.info(f"Saved {total_collections_saved} collections")
     return collection_import_ids
@@ -215,17 +200,31 @@ def save_families(
     total_families_saved = 0
 
     for fam in family_data:
-        if not _exists_in_db(Family, fam["import_id"], db):
-            _LOGGER.info(f"Importing family {fam['import_id']}")
-            dto = BulkImportFamilyDTO(
+        import_id = fam["import_id"]
+        existing_family = family_repository.get(db, import_id)
+        if not existing_family:
+            _LOGGER.info(f"Importing family {import_id}")
+            create_dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
-            geo_ids = []
-            for geo in dto.geography:
-                geo_ids.append(geography.get_id(db, geo))
-            import_id = family_repository.create(db, dto, geo_ids, org_id)
+            geo_ids = [geography.get_id(db, geo) for geo in create_dto.geographies]
+            family_repository.create(db, create_dto, geo_ids, org_id)
             family_import_ids.append(import_id)
             total_families_saved += 1
+        else:
+            update_family = BulkImportFamilyDTO(
+                **fam, corpus_import_id=corpus_import_id
+            )
+            if update_family.is_different_from(existing_family):
+                _LOGGER.info(f"Updating family {import_id}")
+                geo_ids = [
+                    geography.get_id(db, geo) for geo in update_family.geographies
+                ]
+                family_repository.update(
+                    db, import_id, update_family.to_family_write_dto(), geo_ids
+                )
+                family_import_ids.append(import_id)
+                total_families_saved += 1
 
     _LOGGER.info(f"Saved {total_families_saved} families")
 
@@ -258,17 +257,32 @@ def save_documents(
     total_documents_saved = 0
 
     for doc in document_data:
-        if (
-            not _exists_in_db(FamilyDocument, doc["import_id"], db)
-            and total_documents_saved < document_limit
-        ):
-            _LOGGER.info(f"Importing document {doc['import_id']}")
-            dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
-            slug = generate_slug(db=db, title=dto.title, created_slugs=document_slugs)
-            import_id = document_repository.create(db, dto, slug)
-            document_slugs.add(slug)
-            document_import_ids.append(import_id)
-            total_documents_saved += 1
+        import_id = doc["import_id"]
+        existing_document = document_repository.get(db, import_id)
+        if total_documents_saved < document_limit:
+            if not existing_document:
+                _LOGGER.info(f"Importing document {import_id}")
+                create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
+                slug = generate_slug(
+                    db=db, title=create_dto.title, created_slugs=document_slugs
+                )
+                document_repository.create(db, create_dto, slug)
+                document_slugs.add(slug)
+                document_import_ids.append(import_id)
+                total_documents_saved += 1
+            else:
+                update_document = BulkImportDocumentDTO(**doc)
+                if update_document.is_different_from(existing_document):
+                    _LOGGER.info(f"Updating document {import_id}")
+                    slug = generate_slug(
+                        db=db, title=update_document.title, created_slugs=document_slugs
+                    )
+                    document_repository.update(
+                        db, import_id, update_document.to_document_write_dto(), slug
+                    )
+                    document_slugs.add(slug)
+                    document_import_ids.append(import_id)
+                    total_documents_saved += 1
 
     _LOGGER.info(f"Saved {total_documents_saved} documents")
     return document_import_ids
@@ -292,21 +306,31 @@ def save_events(
         db = db_session.get_db()
 
     validation.validate_events(event_data, corpus_import_id)
-    datetime_event_name = get_datetime_event_name_for_corpus(db, corpus_import_id)
 
     event_import_ids = []
     total_events_saved = 0
 
     for event in event_data:
-        if not _exists_in_db(FamilyEvent, event["import_id"], db):
-            _LOGGER.info(f"Importing event {event['import_id']}")
+        import_id = event["import_id"]
+        existing_event = event_repository.get(db, import_id)
+        if not existing_event:
+            _LOGGER.info(f"Importing event {import_id}")
             dto = BulkImportEventDTO(**event).to_event_create_dto()
             event_metadata = create_event_metadata_object(
-                db, corpus_import_id, event["event_type_value"], datetime_event_name
+                db, corpus_import_id, event["event_type_value"]
             )
-            import_id = event_repository.create(db, dto, event_metadata)
+            event_repository.create(db, dto, event_metadata)
             event_import_ids.append(import_id)
             total_events_saved += 1
+        else:
+            update_event = BulkImportEventDTO(**event)
+            if update_event.is_different_from(existing_event):
+                _LOGGER.info(f"Updating event {import_id}")
+                event_repository.update(
+                    db, import_id, update_event.to_event_write_dto()
+                )
+                event_import_ids.append(import_id)
+                total_events_saved += 1
 
     _LOGGER.info(f"Saved {total_events_saved} events")
     return event_import_ids

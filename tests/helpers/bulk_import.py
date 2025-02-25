@@ -15,9 +15,9 @@ default_collection = {
 
 default_family = {
     "import_id": "test.new.family.0",
-    "title": "Test",
+    "title": "Test title",
     "summary": "Test",
-    "geographies": ["South Asia"],
+    "geographies": ["XAA"],
     "category": "UNFCCC",
     "metadata": {"author_type": ["Non-Party"], "author": ["Test"]},
     "collections": ["test.new.collection.0"],
@@ -29,15 +29,16 @@ default_document = {
     "family_import_id": "test.new.family.0",
     "metadata": {"role": ["MAIN"], "type": ["Law"]},
     "variant_name": None,
-    "title": "",
-    "user_language_name": "",
+    "title": "Test title",
+    "user_language_name": "Spanish",
+    "source_url": None,
 }
 
 
 default_event = {
     "import_id": "test.new.event.0",
     "family_import_id": "test.new.family.0",
-    "event_title": "Test",
+    "event_title": "Test title",
     "date": "2024-01-01",
     "event_type_value": "Amended",
 }
