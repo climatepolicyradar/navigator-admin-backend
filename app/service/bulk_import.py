@@ -6,6 +6,7 @@ import of data and other services for validation etc.
 """
 
 import logging
+import time
 from typing import Any, Optional
 from uuid import uuid4
 
@@ -189,6 +190,7 @@ def save_families(
     :param Optional[Session] db: The database session to use for saving families or None.
     :return list[str]: The new import_ids for the saved families.
     """
+    start_time = time.time()
 
     if db is None:
         db = db_session.get_db()
@@ -225,8 +227,10 @@ def save_families(
                 )
                 family_import_ids.append(import_id)
                 total_families_saved += 1
-
-    _LOGGER.info(f"Saved {total_families_saved} families")
+    elapsed_time = time.time() - start_time
+    _LOGGER.info(
+        f"Saved {total_families_saved} families in ⏱️ {elapsed_time:.2f} seconds"
+    )
 
     return family_import_ids
 
@@ -247,6 +251,7 @@ def save_documents(
     :param Optional[Session] db: The database session to use for saving documents or None.
     :return list[str]: The new import_ids for the saved documents.
     """
+    start_time = time.time()
     if db is None:
         db = db_session.get_db()
 
@@ -284,7 +289,10 @@ def save_documents(
                     document_import_ids.append(import_id)
                     total_documents_saved += 1
 
-    _LOGGER.info(f"Saved {total_documents_saved} documents")
+    elapsed_time = time.time() - start_time
+    _LOGGER.info(
+        f"Saved {total_documents_saved} documents in ⏱️ {elapsed_time:.2f} seconds"
+    )
     return document_import_ids
 
 
@@ -302,6 +310,7 @@ def save_events(
     :param Optional[Session] db: The database session to use for saving events or None.
     :return list[str]: The new import_ids for the saved events.
     """
+    start_time = time.time()
     if db is None:
         db = db_session.get_db()
 
@@ -332,7 +341,8 @@ def save_events(
                 event_import_ids.append(import_id)
                 total_events_saved += 1
 
-    _LOGGER.info(f"Saved {total_events_saved} events")
+    elapsed_time = time.time() - start_time
+    _LOGGER.info(f"Saved {total_events_saved} events in ⏱️ {elapsed_time:.2f} seconds")
     return event_import_ids
 
 
@@ -351,6 +361,7 @@ def import_data(
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
+    start_time = time.time()
     notification_service.send_notification(
         f"🚀 Bulk import for corpus: {corpus_import_id} has started."
     )
@@ -393,9 +404,8 @@ def import_data(
 
         upload_bulk_import_json_to_s3(f"{import_uuid}-result", corpus_import_id, result)
 
-        end_message = (
-            f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed."
-        )
+        elapsed_time = time.time() - start_time
+        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in ⏱️ {elapsed_time:.2f} seconds."
         db.commit()
     except Exception as e:
         _LOGGER.error(
