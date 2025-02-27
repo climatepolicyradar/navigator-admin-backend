@@ -104,7 +104,6 @@ def _get_query(db: Session) -> Query:
             lazyload("*")
         )
     )
-    _LOGGER.error(query)
 
     return query
 
@@ -267,7 +266,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     try:
         fam_geo_meta = _get_query(db).filter(Family.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _family_to_dto(db, fam_geo_meta)
@@ -665,7 +664,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_families = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_families

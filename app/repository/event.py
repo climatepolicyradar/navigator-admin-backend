@@ -131,7 +131,7 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
             _get_query(db).filter(FamilyEvent.import_id == import_id).one()
         )
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
     return _event_to_dto(family_event_meta)
 
@@ -296,7 +296,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_events = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_events

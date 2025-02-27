@@ -121,7 +121,7 @@ def get(db: Session, import_id: str) -> Optional[CorpusReadDTO]:
     try:
         result = _get_query(db).filter(Corpus.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _corpus_to_dto(result)
