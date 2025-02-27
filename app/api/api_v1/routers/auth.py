@@ -16,6 +16,7 @@ from app.service.authentication import authenticate_user
 auth_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__file__)
+_LOGGER.setLevel(logging.INFO)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/tokens")
 
