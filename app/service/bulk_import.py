@@ -39,7 +39,7 @@ from app.service.event import create_event_metadata_object
 DEFAULT_DOCUMENT_LIMIT = 1000
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
+_LOGGER.setLevel(logging.INFO)
 
 
 def get_collection_template() -> dict:
