@@ -223,7 +223,6 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
             image_url_has_changed,
         ]
     ):
-        _LOGGER.error("idempotent")
         return True
 
     commands = []
@@ -297,7 +296,7 @@ def create(db: Session, corpus: CorpusCreateDTO) -> str:
         db.add(new_corpus)
         db.flush()
     except Exception as e:
-        _LOGGER.exception("Error trying to create Corpus")
+        _LOGGER.exception(f"Error trying to create Corpus: {e}")
         raise RepositoryError(e)
 
     return cast(str, new_corpus.import_id)

@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from pydantic import ConfigDict, validate_call
@@ -10,8 +9,6 @@ from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 from app.model.user import UserContext
 from app.repository import corpus_type as corpus_type_repo
 from app.service import app_user
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

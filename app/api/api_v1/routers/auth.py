@@ -91,7 +91,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         access_token = authenticate_user(form_data.username, form_data.password)
     except (RepositoryError, AuthenticationError) as e:
-        _LOGGER.info(f"Error getting token: {e.message}")
+        _LOGGER.error(f"Error getting token: {e.message}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",

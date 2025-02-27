@@ -203,9 +203,9 @@ def create(
             )
 
         db.add(new_family_event)
-    except Exception:
-        _LOGGER.exception("Error trying to create Event")
-        raise
+    except Exception as e:
+        _LOGGER.exception(f"Error trying to create Event: {e}")
+        raise e
 
     return cast(str, new_family_event.import_id)
 

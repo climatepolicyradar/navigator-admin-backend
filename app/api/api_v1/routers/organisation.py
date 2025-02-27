@@ -24,6 +24,7 @@ async def get_all_organisations() -> list[OrganisationReadDTO]:
     try:
         return organisation_service.all()
     except RepositoryError as e:
+        _LOGGER.error(e)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
@@ -43,15 +44,19 @@ async def get_organisation(organisation_id: int) -> OrganisationReadDTO:
     try:
         org = organisation_service.get(organisation_id)
     except ValidationError as e:
+        _LOGGER.error(e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:
+        _LOGGER.error(e)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
 
     if org is None:
+        msg = f"Organisation not found: {organisation_id}"
+        _LOGGER.error(msg)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Organisation not found: {organisation_id}",
+            detail=msg,
         )
     return org

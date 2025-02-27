@@ -443,7 +443,7 @@ def create(
             )
         )
     except Exception as e:
-        _LOGGER.exception("Error when creating document!")
+        _LOGGER.exception(f"Error when creating document: {e}")
         raise RepositoryError(str(e))
 
     return cast(str, family_doc.import_id)

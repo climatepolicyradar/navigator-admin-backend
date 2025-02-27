@@ -14,7 +14,7 @@ from app.clients.aws.client import AWSClient
 from app.errors import RepositoryError
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
+_LOGGER.setLevel(logging.INFO)
 
 
 class S3UploadContext(BaseModel):

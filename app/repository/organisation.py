@@ -70,7 +70,6 @@ def get_by_id(db: Session, org_id: int) -> Optional[OrganisationReadDTO]:
     :raises RepositoryError: If there is an error during query.
     """
     try:
-        _LOGGER.info(db.query(Organisation).all())
         org = db.query(Organisation).filter(Organisation.id == org_id).one_or_none()
 
     except MultipleResultsFound as e:

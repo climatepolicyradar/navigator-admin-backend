@@ -40,9 +40,10 @@ def get(import_id: str) -> Optional[CollectionReadDTO]:
     try:
         with db_session.get_db() as db:
             return collection_repo.get(db, import_id)
-    except exc.SQLAlchemyError:
-        _LOGGER.exception(f"When getting collection {import_id}")
-        raise RepositoryError(f"Error when getting collection {import_id}")
+    except exc.SQLAlchemyError as e:
+        msg = f"Error when getting collection {import_id}: {e}"
+        _LOGGER.exception(msg)
+        raise RepositoryError(msg)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -57,9 +58,10 @@ def all(user: UserContext) -> list[CollectionReadDTO]:
         with db_session.get_db() as db:
             org_id = app_user.restrict_entities_to_user_org(user)
             return collection_repo.all(db, org_id)
-    except exc.SQLAlchemyError:
-        _LOGGER.exception("When getting all collections")
-        raise RepositoryError("Error when getting all collection")
+    except exc.SQLAlchemyError as e:
+        msg = f"Error when getting all collections: {e}"
+        _LOGGER.exception(msg)
+        raise RepositoryError(msg)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

@@ -131,7 +131,7 @@ def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
     try:
         collection_org = _get_query(db).filter(Collection.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _collection_to_dto(db, collection_org)

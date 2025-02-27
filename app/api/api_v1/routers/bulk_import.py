@@ -33,8 +33,6 @@ async def get_bulk_import_template(corpus_type: str) -> Json:
     :return Json: json representation of bulk import template.
     """
 
-    _LOGGER.info(f"Creating template for corpus type: {corpus_type}")
-
     try:
         return {
             "collections": [get_collection_template()],
@@ -81,13 +79,13 @@ async def bulk_import(
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
     except ValidationError as e:
-        _LOGGER.error(e.message, exc_info=True)
+        _LOGGER.error(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except HTTPException as e:
-        _LOGGER.error(e, exc_info=True)
+        _LOGGER.error(e)
         raise e
     except Exception as e:
-        _LOGGER.error(e, exc_info=True)
+        _LOGGER.error(e)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
         )

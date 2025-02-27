@@ -377,7 +377,7 @@ def update(
         db.query(Family).filter(Family.import_id == import_id).one_or_none()
     )
 
-    if original_family is None:  # Not found the family to update
+    if original_family is None:
         _LOGGER.error(f"Unable to find family for update {family}")
         return False
 
@@ -415,7 +415,7 @@ def update(
 
         updates += result.rowcount  # type: ignore
         if updates == 0:  # type: ignore
-            msg = "Could not update family fields: {family}"
+            msg = f"Could not update family fields: {family}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
 
@@ -530,7 +530,7 @@ def create(
 
         db.flush()
     except Exception as e:
-        _LOGGER.exception("Error trying to create Family")
+        _LOGGER.exception(f"Error trying to create Family: {e}")
         raise RepositoryError(e)
 
     # Add a slug
