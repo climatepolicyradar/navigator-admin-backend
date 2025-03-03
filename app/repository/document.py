@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -35,6 +36,7 @@ from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
 ReadObj = Tuple[

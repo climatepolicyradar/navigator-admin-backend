@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -24,6 +25,7 @@ from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 FamilyEventTuple = Tuple[FamilyEvent, Family, FamilyDocument, Organisation]
 

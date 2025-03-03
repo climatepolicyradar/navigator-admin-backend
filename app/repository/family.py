@@ -1,6 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -38,6 +39,7 @@ from app.repository.helpers import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 FamilyGeoMetaOrg = Tuple[
     Family,

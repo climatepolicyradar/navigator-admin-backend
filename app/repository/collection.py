@@ -1,6 +1,7 @@
 """Operations on the repository for the Collection entity."""
 
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -26,6 +27,7 @@ from app.model.collection import (
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 CollectionOrg = Tuple[Collection, Organisation]
 

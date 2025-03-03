@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Optional, Union, cast
 
 from db_client.models.organisation import Corpus, CorpusType, Organisation
@@ -14,6 +15,7 @@ from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 def _get_query(db: Session) -> Query:

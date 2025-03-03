@@ -1,9 +1,11 @@
 import logging
+import os
 from typing import Union, cast
 
 from fastapi import HTTPException, status
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 def get_query_params_as_dict(query_params) -> dict[str, Union[str, int]]:
