@@ -16,15 +16,15 @@ class AppTokenCreateDTO(BaseModel):
     corpora_ids: list[str]
     theme: str
     hostname: AnyUrl
-    expiry_years: Optional[int]
+    expiry_years: Optional[int] = None
 
 
 class AppTokenReadDTO(BaseModel):
     """A JSON representation of a decoded custom app token."""
 
     allowed_corpora_ids: list[str]
-    subject: str
-    audience: str
-    issuer: str
-    expiry: Union[float, datetime]
-    issued_at: int
+    sub: str
+    aud: str
+    iss: str
+    exp: Union[float, datetime]
+    iat: int

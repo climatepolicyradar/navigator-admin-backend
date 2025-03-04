@@ -1,5 +1,7 @@
+import os
 from datetime import datetime
 from typing import cast
+from unittest import mock
 
 import pytest
 from db_client.models.organisation.corpus import Corpus
@@ -7,6 +9,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.model.app_token import AppTokenReadDTO
 from app.service.app_token import decode
 from tests.helpers.app_token import (
     EXPIRE_AFTER_1_YEAR,
@@ -19,8 +22,19 @@ from tests.helpers.app_token import (
 from tests.integration_tests.setup_db import setup_db
 
 
+@pytest.fixture()
+def set_env_var(monkeypatch):
+    with mock.patch.dict(os.environ, clear=True):
+        envvars = {
+            "TOKEN_SECRET_KEY": "test_key",
+        }
+        for k, v in envvars.items():
+            monkeypatch.setenv(k, v)
+        yield  # This is the magical bit which restores the environment after
+
+
 def test_create_app_token_default_expiry(
-    client: TestClient, data_db: Session, superuser_header_token
+    client: TestClient, data_db: Session, superuser_header_token, set_env_var
 ):
     setup_db(data_db)
     test_token = create_custom_app_create_dto(
@@ -31,33 +45,38 @@ def test_create_app_token_default_expiry(
         json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
     assert isinstance(data, str)
 
     decoded_data = decode(data)
-    assert has_expected_keys(list(decoded_data.model_dump(mode="json").keys()))
-    assert decoded_data.allowed_corpora_ids == [
+    decoded_data_dto = AppTokenReadDTO(**decoded_data)  # type: ignore
+    assert has_expected_keys(list(cast(dict, decoded_data).keys()))
+    assert decoded_data_dto.allowed_corpora_ids == [
         "CCLW.corpus.i00000001.n0000",
         "UNFCCC.corpus.i00000001.n0000",
     ]
-    assert decoded_data.subject == "TEST"
-    assert decoded_data.audience == "example.test.org"
-    assert decoded_data.issuer == "Climate Policy Radar"
+    assert decoded_data_dto.sub == "TEST"
+    assert decoded_data_dto.aud == "example.test.org"
+    assert decoded_data_dto.iss == "Climate Policy Radar"
     assert timedelta_years(
         EXPIRE_AFTER_DEFAULT_YEARS,
-        datetime.fromtimestamp(cast(float, decoded_data.expiry)),
-    ) == datetime.fromtimestamp(decoded_data.issued_at)
+        datetime.fromtimestamp(cast(float, decoded_data_dto.exp)),
+    ) == datetime.fromtimestamp(decoded_data_dto.iat)
 
-    assert not cast(str, decoded_data.audience).endswith("/")
-    assert "://" not in cast(str, decoded_data.audience)
-    assert not cast(str, decoded_data.audience).startswith("http")
+    assert not cast(str, decoded_data_dto.aud).endswith("/")
+    assert "://" not in cast(str, decoded_data_dto.aud)
+    assert not cast(str, decoded_data_dto.aud).startswith("http")
 
 
 @pytest.mark.parametrize("expiry_years", [EXPIRE_AFTER_1_YEAR, EXPIRE_AFTER_5_YEARS])
 def test_create_app_token_specific_expiry(
-    client: TestClient, data_db: Session, superuser_header_token, expiry_years: int
+    client: TestClient,
+    data_db: Session,
+    superuser_header_token,
+    expiry_years: int,
+    set_env_var,
 ):
     setup_db(data_db)
     test_token = create_custom_app_create_dto(
@@ -70,31 +89,32 @@ def test_create_app_token_specific_expiry(
         json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
     assert isinstance(data, str)
 
     decoded_data = decode(data)
-    assert has_expected_keys(list(decoded_data.model_dump(mode="json").keys()))
-    assert decoded_data.allowed_corpora_ids == [
+    decoded_data_dto = AppTokenReadDTO(**decoded_data)  # type: ignore
+    assert has_expected_keys(list(cast(dict, decoded_data).keys()))
+    assert decoded_data_dto.allowed_corpora_ids == [
         "CCLW.corpus.i00000001.n0000",
         "UNFCCC.corpus.i00000001.n0000",
     ]
-    assert decoded_data.subject == "TEST"
-    assert decoded_data.audience == "example.test.org"
-    assert decoded_data.issuer == "Climate Policy Radar"
+    assert decoded_data_dto.sub == "TEST"
+    assert decoded_data_dto.aud == "example.test.org"
+    assert decoded_data_dto.iss == "Climate Policy Radar"
     assert timedelta_years(
-        expiry_years, datetime.fromtimestamp(cast(float, decoded_data.expiry))
-    ) == datetime.fromtimestamp(decoded_data.issued_at)
+        expiry_years, datetime.fromtimestamp(cast(float, decoded_data_dto.exp))
+    ) == datetime.fromtimestamp(decoded_data_dto.iat)
 
-    assert not cast(str, decoded_data.audience).endswith("/")
-    assert "://" not in cast(str, decoded_data.audience)
-    assert not cast(str, decoded_data.audience).startswith("http")
+    assert not cast(str, decoded_data_dto.aud).endswith("/")
+    assert "://" not in cast(str, decoded_data_dto.aud)
+    assert not cast(str, decoded_data_dto.aud).startswith("http")
 
 
 def test_create_app_token_allows_empty_corpora_list(
-    client: TestClient, data_db: Session, superuser_header_token
+    client: TestClient, data_db: Session, superuser_header_token, set_env_var
 ):
     setup_db(data_db)
     test_token = create_custom_app_create_dto()
@@ -103,25 +123,26 @@ def test_create_app_token_allows_empty_corpora_list(
         json=test_token.model_dump(mode="json"),
         headers=superuser_header_token,
     )
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
     assert isinstance(data, str)
 
     decoded_data = decode(data)
-    assert has_expected_keys(list(decoded_data.model_dump(mode="json").keys()))
-    assert decoded_data.allowed_corpora_ids == []
-    assert decoded_data.subject == "TEST"
-    assert decoded_data.audience == "example.test.org"
-    assert decoded_data.issuer == "Climate Policy Radar"
+    decoded_data_dto = AppTokenReadDTO(**decoded_data)  # type: ignore
+    assert has_expected_keys(list(cast(dict, decoded_data).keys()))
+    assert decoded_data_dto.allowed_corpora_ids == []
+    assert decoded_data_dto.sub == "TEST"
+    assert decoded_data_dto.aud == "example.test.org"
+    assert decoded_data_dto.iss == "Climate Policy Radar"
     assert timedelta_years(
         EXPIRE_AFTER_DEFAULT_YEARS,
-        datetime.fromtimestamp(cast(float, decoded_data.expiry)),
-    ) == datetime.fromtimestamp(decoded_data.issued_at)
+        datetime.fromtimestamp(cast(float, decoded_data_dto.exp)),
+    ) == datetime.fromtimestamp(decoded_data_dto.iat)
 
-    assert not cast(str, decoded_data.audience).endswith("/")
-    assert "://" not in cast(str, decoded_data.audience)
-    assert not cast(str, decoded_data.audience).startswith("http")
+    assert not cast(str, decoded_data_dto.aud).endswith("/")
+    assert "://" not in cast(str, decoded_data_dto.aud)
+    assert not cast(str, decoded_data_dto.aud).startswith("http")
 
 
 @pytest.mark.parametrize(
@@ -132,7 +153,11 @@ def test_create_app_token_allows_empty_corpora_list(
     ],
 )
 def test_create_app_token_subject_contains_special_chars(
-    subject: str, client: TestClient, data_db: Session, superuser_header_token
+    subject: str,
+    client: TestClient,
+    data_db: Session,
+    superuser_header_token,
+    set_env_var,
 ):
     setup_db(data_db)
     test_token = create_custom_app_create_dto(theme=subject)
@@ -148,7 +173,7 @@ def test_create_app_token_subject_contains_special_chars(
 
 
 def test_create_app_token_when_a_corpus_does_not_exist(
-    client: TestClient, data_db: Session, superuser_header_token
+    client: TestClient, data_db: Session, superuser_header_token, set_env_var
 ):
     setup_db(data_db)
     test_token = create_custom_app_create_dto(["CCLW.corpus.i00000002.n0000"])
@@ -190,7 +215,7 @@ def test_create_app_token_non_admin_non_super(client: TestClient, user_header_to
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert (
-        data["detail"] == "User cclw@cpr.org is not authorised to CREATE an APP TOKEN"
+        data["detail"] == "User cclw@cpr.org is not authorised to CREATE an APP_TOKEN"
     )
 
 

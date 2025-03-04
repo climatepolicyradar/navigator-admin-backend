@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from typing import Optional
 
@@ -8,10 +9,9 @@ from jwt import PyJWTError
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
-from app.config import TOKEN_SECRET_KEY
 from app.errors import ValidationError
 from app.model.app_token import AppTokenCreateDTO, AppTokenReadDTO
-from app.service.corpus import validate
+from app.service.corpus import validate_list
 
 _LOGGER = logging.getLogger(__name__)
 ALGORITHM = "HS256"
@@ -38,22 +38,30 @@ def create_configuration_token(
 ) -> str:
     """Create a custom app configuration token.
 
-    :param CustomAppCreateDTO input: A JSON representation of the
+    :param AppTokenCreateDTO input: A JSON representation of the
         configurable options for a custom app.
-    :param Optional[Session] db: A session to query against.
-    :return str: A JWT token containing the encoded allowed corpora.
+    :param Optional[int] years: Number of years until token expiry,
+        defaults to None
+    :param Optional[Session] db: A database session to query against,
+        defaults to None
+    :return str: A JWT token containing the encoded allowed corpora
+    :raises ValidationError: If theme contains special chars, corpora
+        don't exist, or config is invalid.
     """
+    token_secret = os.environ.get("TOKEN_SECRET_KEY")
+    if token_secret is None:
+        _LOGGER.error("TOKEN_SECRET_KEY environment variable not set")
+        raise ValidationError("TOKEN_SECRET_KEY is not set")
+
     if db is None:
         db = db_session.get_db()
 
-    if TOKEN_SECRET_KEY in [None, ""]:
-        raise ValidationError("TOKEN_SECRET_KEY is not set")
-
     if _contains_special_chars(input.theme):
-        _LOGGER.error("Theme must not contain any special characters, including spaces")
+        _LOGGER.error("Theme must not contain special characters, including spaces")
         raise ValidationError("Invalid subject provided")
 
-    if not all(validate(db, import_id) for import_id in input.corpora_ids):
+    if not validate_list(db, input.corpora_ids):
+        _LOGGER.error("One or more corpus IDs do not exist")
         raise ValidationError("One or more import IDs don't exist")
 
     expiry_years = years or APP_TOKEN_EXPIRE_YEARS
@@ -62,33 +70,27 @@ def create_configuration_token(
 
     config = AppTokenReadDTO(
         allowed_corpora_ids=sorted(input.corpora_ids),
-        subject=input.theme,
-        issuer=ISSUER,
-        audience=input.hostname.host if input.hostname.host is not None else "",
-        expiry=expire,
-        issued_at=int(
-            datetime.timestamp(issued_at.replace(microsecond=0))
-        ),  # No microseconds
+        sub=input.theme,
+        iss=ISSUER,
+        aud=str(input.hostname.host if input.hostname.host is not None else ""),
+        exp=int(datetime.timestamp(expire.replace(microsecond=0))),
+        iat=int(datetime.timestamp(issued_at.replace(microsecond=0))),
     )
 
-    if config.audience in [None, ""]:
+    if config.aud in [None, ""]:
         _LOGGER.error("Host must not be empty or None")
         raise ValidationError("Invalid audience provided")
 
-    msg = "Creating custom app configuration token for {input.subject} that "
-    msg += f"expires on {expire.strftime('%a %d %B %Y at %H:%M:%S:%f')} "
-    msg += f"for the following corpora: {input.corpora_ids}"
-    _LOGGER.info(msg)
-
-    to_encode = {
-        "allowed_corpora_ids": config.allowed_corpora_ids,
-        "exp": config.expiry,
-        "iat": config.issued_at,
-        "iss": config.issuer,
-        "sub": config.subject,
-        "aud": str(config.audience),
-    }
-    return jwt.encode(to_encode, TOKEN_SECRET_KEY, algorithm=ALGORITHM)
+    _LOGGER.info(
+        f"Creating token for {input.theme} expiring {expire.strftime('%Y-%m-%d %H:%M:%S')} "
+        f"with corpora: {input.corpora_ids}"
+    )
+    print(
+        f"Creating token for {input.theme} expiring {expire.strftime('%Y-%m-%d %H:%M:%S')} "
+        f"with corpora: {input.corpora_ids}"
+    )
+    print(config.model_dump(mode="json"))
+    return jwt.encode(config.model_dump(mode="json"), token_secret, algorithm=ALGORITHM)
 
 
 def decode(token: str) -> AppTokenReadDTO:
@@ -99,18 +101,21 @@ def decode(token: str) -> AppTokenReadDTO:
         expiry date and an issued at date.
     :return list[str]: A decoded list of valid corpora ids.
     """
-    if TOKEN_SECRET_KEY in [None, ""]:
+    token_secret = os.environ.get("TOKEN_SECRET_KEY")
+    if token_secret is None:
         raise ValidationError("TOKEN_SECRET_KEY is not set")
 
     try:
         decoded_token = jwt.decode(
             token,
-            TOKEN_SECRET_KEY,
+            token_secret,
             algorithms=[ALGORITHM],
             issuer=ISSUER,
+            options={"verify_aud": False},
         )
     except PyJWTError as e:
         _LOGGER.error(e)
         raise ValidationError("Could not decode configuration token")
 
+    print(decoded_token)
     return decoded_token

@@ -58,6 +58,32 @@ def validate(db: Session, corpus_import_id: str) -> bool:
     raise ValidationError(msg)
 
 
+def validate_list(db: Session, corpus_import_ids: list[str]) -> bool:
+    """Validate whether a list of corpora exists in the DB.
+
+    :param Session db: The DB session to connect to.
+    :param list[str] corpus_import_ids: The corpus import IDs we want to
+        validate.
+    :raises ValidationError: When one or more of the corpus IDs are not
+        found in the DB.
+    :raises RepositoryError: When an error occurs.
+    :return bool: Return whether or not all the corpus exists in the DB.
+    """
+    try:
+        missing_ids = [
+            import_id
+            for import_id in corpus_import_ids
+            if not corpus_repo.verify_corpus_exists(db, import_id)
+        ]
+        if missing_ids:
+            _LOGGER.debug(f"Missing corpus IDs: {missing_ids}")
+            return False
+        return True
+    except Exception as e:
+        _LOGGER.error(e)
+        raise RepositoryError(e)
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def validate_import_id(import_id: str, db: Optional[Session] = None) -> None:
     """Validate the import id for a corpus.
