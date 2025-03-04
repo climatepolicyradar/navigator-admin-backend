@@ -79,13 +79,13 @@ async def bulk_import(
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
     except ValidationError as e:
-        _LOGGER.error(e.message)
+        _LOGGER.exception(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except HTTPException as e:
-        _LOGGER.error(e)
+        _LOGGER.exception(e)
         raise e
     except Exception as e:
-        _LOGGER.error(e)
+        _LOGGER.exception(e)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
         )
