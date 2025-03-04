@@ -219,6 +219,7 @@ def construct_raw_sql_query_to_retrieve_all_families(
             SELECT MAX(fe.date)
             FROM family_event fe
             WHERE fe.family_import_id = f.import_id
+                AND fe.date <= CURRENT_TIMESTAMP
         ) AS last_updated_date,
         (
             SELECT MIN(fe.date)

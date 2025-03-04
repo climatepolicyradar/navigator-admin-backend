@@ -17,9 +17,9 @@ def test_get_all_events_super(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert isinstance(data, list)
-    assert len(data) == 3
+    assert len(data) == 4
     ids_found = set([f["import_id"] for f in data])
-    expected_ids = set(["E.0.0.1", "E.0.0.2", "E.0.0.3"])
+    expected_ids = set(["E.0.0.1", "E.0.0.2", "E.0.0.3", "E.0.0.4"])
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
@@ -28,6 +28,7 @@ def test_get_all_events_super(
     assert actual_data[0] == EXPECTED_EVENTS[0]
     assert actual_data[1] == EXPECTED_EVENTS[1]
     assert actual_data[2] == EXPECTED_EVENTS[2]
+    assert actual_data[3] == EXPECTED_EVENTS[3]
 
 
 def test_get_all_events_cclw(client: TestClient, data_db: Session, user_header_token):
@@ -62,9 +63,9 @@ def test_get_all_events_unfccc(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert isinstance(data, list)
-    assert len(data) == 1
+    assert len(data) == 2
     ids_found = set([f["import_id"] for f in data])
-    expected_ids = set(["E.0.0.3"])
+    expected_ids = set(["E.0.0.3", "E.0.0.4"])
 
     assert ids_found.symmetric_difference(expected_ids) == set([])
 
