@@ -1,4 +1,5 @@
 from app.api.api_v1.routers.analytics import analytics_router
+from app.api.api_v1.routers.app_token import app_token_router
 from app.api.api_v1.routers.auth import auth_router
 from app.api.api_v1.routers.bulk_import import bulk_import_router
 from app.api.api_v1.routers.collection import collections_router
@@ -12,6 +13,7 @@ from app.api.api_v1.routers.organisation import organisations_router
 
 __all__ = (
     "analytics_router",
+    "app_token_router",
     "auth_router",
     "corpora_router",
     "corpus_types_router",
