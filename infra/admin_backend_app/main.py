@@ -115,6 +115,7 @@ def _create_backend_environment() -> dict[str, str]:
     secret_key = CONFIG.require("secret_key")
     bulk_import_bucket = CONFIG.require("bulk_import_bucket")
     slack_webhook_url = CONFIG.require("slack_webhook_url")
+    log_level = CONFIG.require("log_level")
 
     stack = pulumi.get_stack()
     backend_stack = pulumi.StackReference(f"climatepolicyradar/backend/{stack}")
@@ -132,6 +133,7 @@ def _create_backend_environment() -> dict[str, str]:
         "SLACK_WEBHOOK_URL": slack_webhook_url,
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,
+        "LOG_LEVEL": log_level,
     }
 
     return environment
