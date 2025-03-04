@@ -1,7 +1,7 @@
 """
 Bulk Import Service
 
-This layer uses the corpus, collection, family, document and event repos to handle bulk 
+This layer uses the corpus, collection, family, document and event repos to handle bulk
 import of data and other services for validation etc.
 """
 

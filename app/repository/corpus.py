@@ -30,7 +30,7 @@ def _get_query(db: Session) -> Query:
 
 
 def _corpus_to_dto(
-    corpus_corpus_type_org: tuple[Corpus, CorpusType, Organisation]
+    corpus_corpus_type_org: tuple[Corpus, CorpusType, Organisation],
 ) -> CorpusReadDTO:
     corpus, corpus_type, org = corpus_corpus_type_org
 
