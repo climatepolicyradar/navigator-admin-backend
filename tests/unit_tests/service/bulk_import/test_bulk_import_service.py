@@ -12,7 +12,6 @@ from tests.helpers.bulk_import import default_document, default_family
 
 @patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 def test_input_json_and_result_saved_to_s3_on_bulk_import(
     basic_s3_client, validation_service_mock, corpus_repo_mock, collection_repo_mock
 ):
@@ -41,7 +40,6 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
     assert {"collections": ["test.new.collection.0"]} == json.loads(body)
 
 
-@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_slack_notification_sent_on_success(
     basic_s3_client,
@@ -72,7 +70,6 @@ def test_slack_notification_sent_on_success(
         )
 
 
-@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_mock):
     corpus_repo_mock.error = True
@@ -115,9 +112,10 @@ def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_m
     ],
 )
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 def test_import_data_when_metadata_contains_non_string_values(
     test_data,
+    family_repo_mock,
+    document_repo_mock,
     corpus_repo_mock,
     validation_service_mock,
     caplog,
@@ -177,10 +175,10 @@ def test_save_documents_when_data_invalid(validation_service_mock):
 
 
 @patch("app.service.bulk_import.generate_slug", Mock(return_value="test-slug_1234"))
-@patch("app.service.bulk_import._exists_in_db", Mock(return_value=False))
 def test_do_not_save_documents_over_bulk_import_limit(
     validation_service_mock, document_repo_mock, monkeypatch
 ):
+    document_repo_mock.return_empty = True
     test_data = [
         {
             "import_id": "test.new.document.0",
@@ -214,3 +212,101 @@ def test_save_events_when_data_invalid(validation_service_mock):
     with pytest.raises(ValidationError) as e:
         bulk_import_service.save_events(test_data, "test")
     assert "Error" == e.value.message
+
+
+def test_save_collections_skips_update_when_no_changes(
+    collection_repo_mock, corpus_repo_mock, validation_service_mock
+):
+    collection_repo_mock.return_empty = True
+    test_data = [
+        {
+            "import_id": "test.new.collection.0",
+            "title": "title",
+            "description": "description",
+        }
+    ]
+
+    result = bulk_import_service.save_collections(test_data, "test_corpus_id")
+
+    assert collection_repo_mock.update.call_count == 0
+    assert result == []
+
+
+def test_save_families_skips_update_when_no_changes(
+    family_repo_mock, corpus_repo_mock, geography_repo_mock, validation_service_mock
+):
+    test_data = [
+        {
+            "import_id": "test.new.family.0",
+            "title": "title",
+            "summary": "summary",
+            "geographies": ["BRB", "CHN", "BHS"],
+            "category": "Legislative",
+            "metadata": {
+                "topic": [],
+                "hazard": [],
+                "sector": [],
+                "keyword": [],
+                "framework": [],
+                "instrument": [],
+            },
+            "collections": ["x.y.z.2", "x.y.z.1"],
+        }
+    ]
+
+    result = bulk_import_service.save_families(test_data, "CCLW.corpus.i00000001.n0000")
+
+    assert family_repo_mock.update.call_count == 0
+    assert result == []
+
+
+def test_save_documents_skips_update_when_no_changes(
+    document_repo_mock, corpus_repo_mock, validation_service_mock
+):
+
+    test_data = [
+        {
+            "import_id": "test.new.document.0",
+            "family_import_id": "test.family.1.0",
+            "title": "title",
+            "variant_name": "Original Language",
+            "metadata": {"role": ["MAIN"], "type": ["Law"]},
+            "source_url": "http://source",
+        }
+    ]
+
+    result = bulk_import_service.save_documents(
+        test_data, "test_corpus_id", document_limit=1
+    )
+
+    assert document_repo_mock.update.call_count == 0
+    assert result == []
+
+
+@patch(
+    "app.service.bulk_import.create_event_metadata_object",
+    Mock(
+        return_value={
+            "event_type": ["Amended"],
+            "datetime_event_name": ["Amended"],
+        }
+    ),
+)
+def test_save_events_skips_update_when_no_changes(
+    event_repo_mock, corpus_repo_mock, validation_service_mock
+):
+    test_data = [
+        {
+            "import_id": "test.new.collection.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": None,
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+        }
+    ]
+
+    result = bulk_import_service.save_events(test_data, "test_corpus_id")
+
+    assert event_repo_mock.update.call_count == 0
+    assert result == []

@@ -11,7 +11,7 @@ def create_event_read_dto(
     return EventReadDTO(
         import_id=import_id,
         event_title=title,
-        date=datetime.now(timezone.utc),
+        date=datetime.strptime("2020-01-01", "%Y-%m-%d"),
         event_type_value="Amended",
         family_import_id=family_import_id,
         family_document_import_id=None,

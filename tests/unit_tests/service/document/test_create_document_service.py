@@ -23,7 +23,7 @@ def test_create_when_db_fails(
     document_repo_mock, family_repo_mock, admin_user_context, db_client_metadata_mock
 ):
     new_document = create_document_create_dto(metadata={"color": ["pink"]})
-    document_repo_mock.return_empty = True
+    document_repo_mock.throw_repository_error = True
 
     with pytest.raises(RepositoryError):
         doc_service.create(new_document, admin_user_context)
