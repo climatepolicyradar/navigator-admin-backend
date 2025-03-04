@@ -29,5 +29,6 @@ config:
   admin_backend:vpc_security_group_admin_backend:
     secure: AAABANRx6DYMRpEv8Ei3OcHMSFf2fjDTrV6hSaKnMHJSR0qS0/c0Y60zwVw+paAdLqzmng==
   aws:region: eu-west-1
+  admin_backend:log_level: INFO
 environment:
   - admin_backend/staging
