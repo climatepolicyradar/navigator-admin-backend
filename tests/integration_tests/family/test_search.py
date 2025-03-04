@@ -141,6 +141,26 @@ def test_search_retrieves_families_with_multiple_geographies(
         assert test_geography["iso_code"] in item["geographies"]
 
 
+def test_search_excludes_future_events_when_returning_last_updated_date(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    response = client.get(
+        "/api/v1/families/",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    family_with_future_event = next(
+        (item for item in data if item["import_id"] == "A.0.0.3"), None
+    )
+    assert family_with_future_event is not None
+    assert "last_updated_date" in family_with_future_event
+    assert family_with_future_event["last_updated_date"] == "2018-12-24T04:59:33Z"
+    assert family_with_future_event["events"] == ["E.0.0.3", "E.0.0.4"]
+
+
 def test_search_family_super(
     client: TestClient, data_db: Session, superuser_header_token
 ):

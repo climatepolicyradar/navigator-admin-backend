@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import TypedDict, cast
 
 from db_client.models.dfce.collection import (
@@ -117,7 +118,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "corpus_title": "UNFCCC Submissions",
         "corpus_type": "Intl. agreements",
         "slug": "Slug3",
-        "events": ["E.0.0.3"],
+        "events": ["E.0.0.3", "E.0.0.4"],
         "published_date": "2018-12-24T04:59:33Z",
         "last_updated_date": "2018-12-24T04:59:33Z",
         "documents": ["D.0.0.1", "D.0.0.2"],
@@ -236,6 +237,17 @@ EXPECTED_EVENTS = [
         "event_title": "cabbages title3",
         "date": "2018-12-24T04:59:33Z",
         "event_type_value": "Amended",
+        "family_import_id": "A.0.0.3",
+        "family_document_import_id": None,
+        "event_status": EventStatus.OK,
+    },
+    {
+        "import_id": "E.0.0.4",
+        "event_title": "Future Event",
+        "date": (datetime.now(tz=timezone.utc) + timedelta(days=365))
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "event_type_value": "Completed",
         "family_import_id": "A.0.0.3",
         "family_document_import_id": None,
         "event_status": EventStatus.OK,
