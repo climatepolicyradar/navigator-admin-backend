@@ -1,6 +1,7 @@
 """Helper functions for repos"""
 
 import logging
+from functools import cache
 from typing import Optional, Tuple, Union, cast
 from uuid import uuid4
 
@@ -46,6 +47,19 @@ def generate_unique_slug(
     return slug
 
 
+@cache
+def get_db_slugs(
+    db: Session,
+) -> set[str]:
+    """
+    Retrieves existing slugs for a family.
+
+    :param Session db: The connection to the db.
+    :return set[str]: The set of all slugs in the database.
+    """
+    return set([cast(str, n) for n in db.query(Slug.name).all()])
+
+
 def generate_slug(
     db: Session,
     title: str,
@@ -65,7 +79,7 @@ def generate_slug(
     this function runs that have not yet been committed to the DB
     :return str: the slug generated
     """
-    saved_slugs = set([cast(str, n) for n in db.query(Slug.name).all()])
+    saved_slugs = get_db_slugs(db)
 
     existing_slugs = created_slugs.union(saved_slugs) if created_slugs else saved_slugs
 
