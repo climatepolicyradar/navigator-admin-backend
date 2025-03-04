@@ -84,7 +84,7 @@ def test_get_analytics_summary_unfccc(
     assert dict(sorted(data.items())) == {
         "n_collections": 1,
         "n_documents": 2,
-        "n_events": 1,
+        "n_events": 2,
         "n_families": 1,
     }
 

@@ -66,7 +66,7 @@ def test_create_event_rollback(
     )
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     fe_count = data_db.query(FamilyEvent).count()
-    assert fe_count == 3
+    assert fe_count == 4
     actual_fe = (
         data_db.query(FamilyEvent)
         .filter(FamilyEvent.title == "rollback")
