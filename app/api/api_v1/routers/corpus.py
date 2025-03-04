@@ -126,8 +126,6 @@ async def update_corpus(
     :raises HTTPException: If the corpus is not found a 404 is returned.
     :return CorpusReadDTO: returns a CorpusReadDTO of the corpus updated.
     """
-    user = request.state.user
-    _LOGGER.info(f"User {user.email} is getting corpus")
     try:
         corpus = corpus_service.update(import_id, new_corpus, request.state.user)
     except AuthorisationError as e:

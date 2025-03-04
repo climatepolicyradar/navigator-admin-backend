@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import APIRouter, HTTPException, Request, status
 
 from app.errors import AuthorisationError, RepositoryError, ValidationError
@@ -7,8 +5,6 @@ from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 from app.service import corpus_type as corpus_type_service
 
 corpus_types_router = APIRouter()
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @corpus_types_router.get(

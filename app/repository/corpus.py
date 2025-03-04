@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Optional, Union, cast
 
 from db_client.models.organisation import Corpus, CorpusType, Organisation
@@ -14,6 +15,7 @@ from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 def _get_query(db: Session) -> Query:
@@ -28,7 +30,7 @@ def _get_query(db: Session) -> Query:
 
 
 def _corpus_to_dto(
-    corpus_corpus_type_org: tuple[Corpus, CorpusType, Organisation]
+    corpus_corpus_type_org: tuple[Corpus, CorpusType, Organisation],
 ) -> CorpusReadDTO:
     corpus, corpus_type, org = corpus_corpus_type_org
 
@@ -121,7 +123,7 @@ def get(db: Session, import_id: str) -> Optional[CorpusReadDTO]:
     try:
         result = _get_query(db).filter(Corpus.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _corpus_to_dto(result)
@@ -223,7 +225,6 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
             image_url_has_changed,
         ]
     ):
-        _LOGGER.error("idempotent")
         return True
 
     commands = []
@@ -297,7 +298,7 @@ def create(db: Session, corpus: CorpusCreateDTO) -> str:
         db.add(new_corpus)
         db.flush()
     except Exception as e:
-        _LOGGER.exception("Error trying to create Corpus")
+        _LOGGER.exception(f"Error trying to create Corpus: {e}")
         raise RepositoryError(e)
 
     return cast(str, new_corpus.import_id)

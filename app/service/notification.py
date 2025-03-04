@@ -4,7 +4,7 @@ import os
 from notify.slack import slack_message
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
+_LOGGER.setLevel(logging.INFO)
 
 
 def send_notification(notification: str):

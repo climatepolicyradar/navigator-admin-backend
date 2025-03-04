@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from pydantic import ConfigDict, validate_call
@@ -8,8 +7,6 @@ import app.clients.db.session as db_session
 from app.errors import ValidationError
 from app.model.organisation import OrganisationReadDTO
 from app.repository import organisation as organisation_repo
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_id_from_name(db: Session, org_name: str) -> int:

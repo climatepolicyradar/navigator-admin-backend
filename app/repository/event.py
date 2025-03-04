@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -24,6 +25,7 @@ from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 FamilyEventTuple = Tuple[FamilyEvent, Family, FamilyDocument, Organisation]
 
@@ -131,7 +133,7 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
             _get_query(db).filter(FamilyEvent.import_id == import_id).one()
         )
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
     return _event_to_dto(family_event_meta)
 
@@ -203,9 +205,9 @@ def create(
             )
 
         db.add(new_family_event)
-    except Exception:
-        _LOGGER.exception("Error trying to create Event")
-        raise
+    except Exception as e:
+        _LOGGER.exception(f"Error trying to create Event: {e}")
+        raise e
 
     return cast(str, new_family_event.import_id)
 
@@ -296,7 +298,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_events = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_events

@@ -1,3 +1,5 @@
+import logging
+import os
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
@@ -9,6 +11,8 @@ from app.model.event import EventCreateDTO, EventWriteDTO
 from app.model.family import FamilyCreateDTO, FamilyWriteDTO
 
 Metadata = RootModel[Dict[str, Union[str, List[str]]]]
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 class BulkImportCollectionDTO(BaseModel):
@@ -49,7 +53,14 @@ class BulkImportCollectionDTO(BaseModel):
         )
 
         keys = set(self.model_fields.keys())
-        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
 
 
 class BulkImportFamilyDTO(BaseModel):
@@ -114,7 +125,14 @@ class BulkImportFamilyDTO(BaseModel):
         self.geographies = sorted(self.geographies)
 
         keys = set(self.model_fields.keys())
-        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
 
 
 class BulkImportDocumentDTO(BaseModel):
@@ -175,7 +193,14 @@ class BulkImportDocumentDTO(BaseModel):
         if self.user_language_name is None:
             keys.remove("user_language_name")
 
-        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
 
 
 class BulkImportEventDTO(BaseModel):
@@ -226,4 +251,30 @@ class BulkImportEventDTO(BaseModel):
         )
 
         keys = set(self.model_fields.keys())
-        return self.model_dump(include=keys) != comparison_dto.model_dump(include=keys)
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
+
+
+def log_differences(
+    current_dto: BaseModel, comparison_dto: BaseModel, keys: set
+) -> None:
+    """
+    Log the differences between two DTOs.
+
+    :param BaseModel current_dto: The current DTO.
+    :param BaseModel comparison_dto: The DTO to compare with.
+    :param set keys: The keys to compare.
+    """
+    for key in keys:
+        current_value = getattr(current_dto, key)
+        comparison_value = getattr(comparison_dto, key)
+        if current_value != comparison_value:
+            _LOGGER.debug(
+                f"🔀 Change detected in {key}: {current_value} => {comparison_value}"
+            )

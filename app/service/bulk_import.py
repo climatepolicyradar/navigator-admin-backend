@@ -1,11 +1,12 @@
 """
 Bulk Import Service
 
-This layer uses the corpus, collection, family, document and event repos to handle bulk 
+This layer uses the corpus, collection, family, document and event repos to handle bulk
 import of data and other services for validation etc.
 """
 
 import logging
+import os
 from typing import Any, Optional
 from uuid import uuid4
 
@@ -39,7 +40,7 @@ from app.service.event import create_event_metadata_object
 DEFAULT_DOCUMENT_LIMIT = 1000
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 def get_collection_template() -> dict:

@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -35,6 +36,7 @@ from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
 ReadObj = Tuple[
@@ -187,7 +189,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     try:
         result = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _doc_to_dto(result)
@@ -443,7 +445,7 @@ def create(
             )
         )
     except Exception as e:
-        _LOGGER.exception("Error when creating document!")
+        _LOGGER.exception(f"Error when creating document: {e}")
         raise RepositoryError(str(e))
 
     return cast(str, family_doc.import_id)
@@ -493,7 +495,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_documents = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_documents

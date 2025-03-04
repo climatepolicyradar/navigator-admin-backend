@@ -16,6 +16,7 @@ from app.service.authentication import authenticate_user
 auth_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__file__)
+_LOGGER.setLevel(logging.INFO)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/tokens")
 
@@ -90,7 +91,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         access_token = authenticate_user(form_data.username, form_data.password)
     except (RepositoryError, AuthenticationError) as e:
-        _LOGGER.info(f"Error getting token: {e.message}")
+        _LOGGER.error(f"Error getting token: {e.message}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",

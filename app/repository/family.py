@@ -1,6 +1,7 @@
 """Operations on the repository for the Family entity."""
 
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -38,6 +39,7 @@ from app.repository.helpers import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 FamilyGeoMetaOrg = Tuple[
     Family,
@@ -104,7 +106,6 @@ def _get_query(db: Session) -> Query:
             lazyload("*")
         )
     )
-    _LOGGER.error(query)
 
     return query
 
@@ -267,7 +268,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     try:
         fam_geo_meta = _get_query(db).filter(Family.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _family_to_dto(db, fam_geo_meta)
@@ -378,7 +379,7 @@ def update(
         db.query(Family).filter(Family.import_id == import_id).one_or_none()
     )
 
-    if original_family is None:  # Not found the family to update
+    if original_family is None:
         _LOGGER.error(f"Unable to find family for update {family}")
         return False
 
@@ -416,7 +417,7 @@ def update(
 
         updates += result.rowcount  # type: ignore
         if updates == 0:  # type: ignore
-            msg = "Could not update family fields: {family}"
+            msg = f"Could not update family fields: {family}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
 
@@ -531,7 +532,7 @@ def create(
 
         db.flush()
     except Exception as e:
-        _LOGGER.exception("Error trying to create Family")
+        _LOGGER.exception(f"Error trying to create Family: {e}")
         raise RepositoryError(e)
 
     # Add a slug
@@ -665,7 +666,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_families = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_families

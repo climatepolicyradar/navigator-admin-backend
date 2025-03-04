@@ -63,7 +63,7 @@ def test_decode_fails_when_empty():
     with pytest.raises(TokenError) as e:
         token_service.decode("")
 
-    assert e.value.message == "Payload cannot be decoded"
+    assert e.value.message == "Error when decoding token: Not enough segments"
 
 
 def test_decode_fails_when_no_email():

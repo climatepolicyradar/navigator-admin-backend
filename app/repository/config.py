@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Sequence
 
 from db_client.models.base import AnyModel
@@ -10,8 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.model.config import ConfigReadDTO, CorpusData, DocumentConfig
 from app.model.user import UserContext
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _tree_table_to_json(
