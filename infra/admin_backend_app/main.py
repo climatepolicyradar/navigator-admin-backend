@@ -1,5 +1,4 @@
 import json
-from typing import cast
 
 import pulumi
 import pulumi_aws as aws
@@ -118,10 +117,13 @@ def _create_backend_environment() -> dict[str, str]:
     log_level = CONFIG.require("log_level")
 
     stack = pulumi.get_stack()
-    backend_stack = pulumi.StackReference(f"climatepolicyradar/backend/{stack}")
-    backend_token_secret_key = cast(
-        str, backend_stack.get_output("backend_token_secret_key")
+    backend_stack = pulumi.automation.select_stack(
+        stack_name=stack,
+        work_dir="../backend",
     )
+    backend_token_secret_key = backend_stack.get_config(
+        "backend_token_secret_key"
+    ).value
 
     environment: dict[str, str] = {
         "ADMIN_POSTGRES_USER": rds_username,
