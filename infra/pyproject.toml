@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "Pulumi infra definition for the Admin Backend"
 authors = ["CPR tech <tech@climatepolicyradar.org>"]
 repository = "https://github.com/climatepolicyradar/navigator-infra"
-license = { text = "Apache License (2.0)" }
+license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = "^3.9"
