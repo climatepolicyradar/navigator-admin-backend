@@ -207,6 +207,7 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         .values(
             title=new_values["title"],
             description=new_values["description"],
+            valid_metadata=new_values["metadata"],
         )
     )
     if result.rowcount == 0:  # type: ignore

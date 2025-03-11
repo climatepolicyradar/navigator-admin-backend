@@ -14,8 +14,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import update
 from sqlalchemy.orm import Session
-
-from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
@@ -23,6 +21,12 @@ from tests.helpers.bulk_import import (
     default_event,
     default_family,
 )
+
+from app.model.corpus import CorpusCreateDTO
+from app.model.corpus_type import CorpusTypeCreateDTO
+from app.repository import corpus as corpus_repo
+from app.repository import corpus_type as corpus_type_repo
+from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 
 
 def create_input_json_with_two_of_each_entity():
@@ -352,6 +356,69 @@ def test_bulk_import_successfully_updates_family_collections_when_no_error(
     assert (
         new_collection["import_id"] == saved_family_collections[0].collection_import_id
     )
+
+
+@pytest.mark.s3
+def test_bulk_import_successfully_updates_collection_metadata_when_no_error(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    test_corpus_type = CorpusTypeCreateDTO(
+        name="test",
+        description="",
+        metadata={
+            "_collection": {
+                "id": {"allow_any": True, "allow_blanks": True, "allowed_values": []}
+            },
+        },
+    )
+    corpus_type_repo.create(data_db, test_corpus_type)
+    test_corpus = CorpusCreateDTO(
+        import_id="test.corpus.0.1",
+        title="",
+        description="",
+        organisation_id=1,
+        corpus_text="",
+        corpus_image_url="",
+        corpus_type_name=test_corpus_type.name,
+    )
+    corpus_repo.create(data_db, test_corpus)
+
+    original_data = {
+        "collections": [{**default_collection, "metadata": {"id": ["111111"]}}]
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        f"/api/v1/bulk-import/{test_corpus.import_id}",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    updated_metadata = {
+        **original_data["collections"][0]["metadata"],
+        "id": ["222222"],
+    }
+    updated_input_json = build_json_file(
+        {
+            "collections": [
+                {**original_data["collections"][0], "metadata": updated_metadata},
+            ]
+        }
+    )
+
+    update_response = client.post(
+        f"/api/v1/bulk-import/{test_corpus.import_id}",
+        files={"data": updated_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_family_metadata = data_db.query(Collection).scalar()
+
+    assert updated_metadata == saved_family_metadata.valid_metadata
 
 
 @pytest.mark.s3

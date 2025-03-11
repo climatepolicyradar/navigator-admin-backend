@@ -43,7 +43,10 @@ class BulkImportCollectionDTO(BaseModel):
         :return CollectionWriteDTO: Converted CollectionWriteDTO instance.
         """
         return CollectionWriteDTO(
-            title=self.title, description=self.description, organisation=""
+            title=self.title,
+            description=self.description,
+            metadata=self.metadata.model_dump(),
+            organisation="",
         )
 
     def is_different_from(self, collection):

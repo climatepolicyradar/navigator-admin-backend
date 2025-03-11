@@ -25,6 +25,7 @@ class CollectionWriteDTO(BaseModel):
     title: str
     description: str
     organisation: str
+    metadata: Json
 
 
 class CollectionCreateDTO(BaseModel):

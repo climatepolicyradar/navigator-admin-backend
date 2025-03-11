@@ -35,12 +35,14 @@ def validate_collection(collection: dict[str, Any], corpus_import_id: str) -> No
     db = db_session.get_db()
 
     validate_import_id(collection["import_id"])
-    metadata.validate_metadata(
-        db,
-        corpus_import_id,
-        collection["metadata"],
-        EntitySpecificTaxonomyKeys.COLLECTION.value,
-    )
+    metadata_value = collection.get("metadata")
+    if metadata_value and metadata_value != {}:
+        metadata.validate_metadata(
+            db,
+            corpus_import_id,
+            collection["metadata"],
+            EntitySpecificTaxonomyKeys.COLLECTION.value,
+        )
 
 
 def validate_collections(
