@@ -5,20 +5,20 @@ from db_client.models.dfce.family import Variant
 from db_client.models.dfce.geography import Geography
 from db_client.models.document.physical_document import Language
 from db_client.models.organisation import Corpus, CorpusType, Organisation
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Query, Session
 
 from app.model.config import ConfigReadDTO, CorpusData, DocumentConfig
 from app.model.user import UserContext
 
 
 def _tree_table_to_json(
-    table: AnyModel,
+    query: "Query[AnyModel]",
     db: Session,
 ) -> list[dict]:
     json_out = []
     child_list_map: dict[int, Any] = {}
 
-    for row in db.query(table).order_by(table.id).all():
+    for row in query.all():
         row_object = {col.name: getattr(row, col.name) for col in row.__table__.columns}
         row_children: list[dict[str, Any]] = []
         child_list_map[row_object["id"]] = row_children
@@ -89,8 +89,12 @@ def get(db: Session, user: UserContext) -> ConfigReadDTO:
     :param Session db: connection to the database
     :return ConfigReadDTO: The config data
     """
-
-    geographies = _tree_table_to_json(table=Geography, db=db)
+    geographies = _tree_table_to_json(
+        query=db.query(Geography)
+        .filter(Geography.type != "ISO-3166-2")
+        .order_by(Geography.id),
+        db=db,
+    )
     corpora = get_corpora(db, user)
     languages = {lang.language_code: lang.name for lang in db.query(Language).all()}
 

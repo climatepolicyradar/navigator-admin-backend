@@ -304,6 +304,7 @@ def test_save_events_skips_update_when_no_changes(
             "event_title": "title",
             "date": "2020-01-01",
             "event_type_value": "Amended",
+            "valid_metadata": {},
         }
     ]
 
