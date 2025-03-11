@@ -132,33 +132,33 @@ EXPECTED_COLLECTIONS = [
         "import_id": "C.0.0.1",
         "title": "Collection 1 a very big collection",
         "description": "description one",
+        "metadata": {"key": "value"},
         "families": [],
         "organisation": "Another org",
-        "valid_metadata": {},
     },
     {
         "import_id": "C.0.0.2",
         "title": "Collection 2",
         "description": "description two",
+        "metadata": {"key": "value"},
         "families": ["A.0.0.1", "A.0.0.2"],
         "organisation": "CCLW",
-        "valid_metadata": {},
     },
     {
         "import_id": "C.0.0.3",
         "title": "Collection 3",
         "description": "description three",
+        "metadata": {"key": "value"},
         "families": [],
         "organisation": "CCLW",
-        "valid_metadata": {},
     },
     {
         "import_id": "C.0.0.4",
         "title": "Collection 4",
         "description": "description four",
+        "metadata": {"key": "value"},
         "families": ["A.0.0.3"],
         "organisation": "UNFCCC",
-        "valid_metadata": {},
     },
 ]
 EXPECTED_NUM_COLLECTIONS = len(EXPECTED_COLLECTIONS)
@@ -521,7 +521,7 @@ def _setup_collection_data(
                 import_id=data["import_id"],
                 title=data["title"],
                 description=data["description"],
-                valid_metadata={},
+                valid_metadata=data["metadata"],
             )
         )
 

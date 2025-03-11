@@ -35,7 +35,7 @@ async def get_bulk_import_template(corpus_type: str) -> Json:
 
     try:
         return {
-            "collections": [get_collection_template()],
+            "collections": [get_collection_template(corpus_type)],
             "families": [get_family_template(corpus_type)],
             "documents": [get_document_template(corpus_type)],
             "events": [get_event_template(corpus_type)],

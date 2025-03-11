@@ -24,6 +24,7 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
+from app.model.general import Json
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ def _collection_org_from_dto(
             import_id=dto.import_id if dto.import_id else None,
             title=dto.title,
             description=dto.description,
-            valid_metadata=dto.valid_metadata,
+            valid_metadata=dto.metadata,
         ),
         CollectionOrganisation(collection_import_id="", organisation_id=org_id),
     )
@@ -82,11 +83,11 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         import_id=str(collection.import_id),
         title=str(collection.title),
         description=str(collection.description),
+        metadata=cast(Json, collection.valid_metadata),
         organisation=cast(str, org.name),
         families=families,
         created=cast(datetime, collection.created),
         last_modified=cast(datetime, collection.last_modified),
-        valid_metadata=cast(dict[str, list[str]], collection.valid_metadata),
     )
 
 
@@ -207,6 +208,7 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         .values(
             title=new_values["title"],
             description=new_values["description"],
+            valid_metadata=new_values["metadata"],
         )
     )
     if result.rowcount == 0:  # type: ignore
