@@ -6,7 +6,7 @@ authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
 packages = [{ include = "app" }, { include = "tests" }]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 fastapi = "^0.103.0"
 fastapi-health = "^0.4.0"
 fastapi-pagination = "^0.12.9"
@@ -73,5 +73,5 @@ exclude = "^/alembic/versions/"
 [tool.pyright]
 include = ["app", "tests"]
 exclude = ["**/__pycache__"]
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 venv = "admin-backend"
