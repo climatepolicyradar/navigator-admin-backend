@@ -88,7 +88,6 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         families=families,
         created=cast(datetime, collection.created),
         last_modified=cast(datetime, collection.last_modified),
-        valid_metadata=cast(dict[str, list[str]], collection.valid_metadata),
     )
 
 
