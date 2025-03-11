@@ -23,12 +23,10 @@ def create_collection_read_dto(
 
 
 def create_collection_write_dto(
-    title: str = "title", description="description"
+    title: str = "title", description="description", metadata={}
 ) -> CollectionWriteDTO:
     return CollectionWriteDTO(
-        title=title,
-        description=description,
-        organisation="CCLW",
+        title=title, description=description, organisation="CCLW", metadata=metadata
     )
 
 
