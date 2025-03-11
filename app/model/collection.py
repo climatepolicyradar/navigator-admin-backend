@@ -17,7 +17,6 @@ class CollectionReadDTO(BaseModel):
     organisation: str
     created: datetime
     last_modified: datetime
-    valid_metadata: dict[str, list[str]]
 
 
 class CollectionWriteDTO(BaseModel):
