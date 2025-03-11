@@ -48,6 +48,7 @@ def _collection_org_from_dto(
             import_id=dto.import_id if dto.import_id else None,
             title=dto.title,
             description=dto.description,
+            valid_metadata=dto.valid_metadata,
         ),
         CollectionOrganisation(collection_import_id="", organisation_id=org_id),
     )
@@ -76,6 +77,7 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         .all()
     )
     families = [cast(str, f[0]) for f in db_families]
+
     return CollectionReadDTO(
         import_id=str(collection.import_id),
         title=str(collection.title),
@@ -84,6 +86,7 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         families=families,
         created=cast(datetime, collection.created),
         last_modified=cast(datetime, collection.last_modified),
+        valid_metadata=cast(dict[str, list[str]], collection.valid_metadata),
     )
 
 

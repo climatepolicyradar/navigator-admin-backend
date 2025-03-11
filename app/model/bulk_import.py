@@ -21,6 +21,7 @@ class BulkImportCollectionDTO(BaseModel):
     import_id: str
     title: str
     description: str
+    valid_metadata: dict[str, list[str]]
 
     def to_collection_create_dto(self) -> CollectionCreateDTO:
         """
@@ -32,6 +33,7 @@ class BulkImportCollectionDTO(BaseModel):
             import_id=self.import_id,
             title=self.title,
             description=self.description,
+            valid_metadata=self.valid_metadata,
         )
 
     def to_collection_write_dto(self) -> CollectionWriteDTO:
@@ -41,7 +43,10 @@ class BulkImportCollectionDTO(BaseModel):
         :return CollectionWriteDTO: Converted CollectionWriteDTO instance.
         """
         return CollectionWriteDTO(
-            title=self.title, description=self.description, organisation=""
+            title=self.title,
+            description=self.description,
+            organisation="",
+            valid_metadata=self.valid_metadata,
         )
 
     def is_different_from(self, collection):
@@ -50,6 +55,7 @@ class BulkImportCollectionDTO(BaseModel):
             import_id=collection.import_id,
             title=collection.title,
             description=collection.description,
+            valid_metadata=collection.valid_metadata,
         )
 
         keys = set(self.model_fields.keys())
