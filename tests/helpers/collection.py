@@ -14,6 +14,7 @@ def create_collection_read_dto(
         import_id=import_id,
         title=title,
         description=description,
+        metadata={},
         families=[],
         organisation="CCLW",
         created=datetime.now(),
@@ -32,9 +33,6 @@ def create_collection_write_dto(
 
 
 def create_collection_create_dto(
-    title: str = "title", description="description"
+    title: str = "title", description="description", metadata={}
 ) -> CollectionCreateDTO:
-    return CollectionCreateDTO(
-        title=title,
-        description=description,
-    )
+    return CollectionCreateDTO(title=title, description=description, metadata=metadata)

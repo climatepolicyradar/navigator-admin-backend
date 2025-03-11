@@ -21,6 +21,7 @@ class BulkImportCollectionDTO(BaseModel):
     import_id: str
     title: str
     description: str
+    metadata: Metadata
 
     def to_collection_create_dto(self) -> CollectionCreateDTO:
         """
@@ -32,6 +33,7 @@ class BulkImportCollectionDTO(BaseModel):
             import_id=self.import_id,
             title=self.title,
             description=self.description,
+            metadata=self.metadata.model_dump(),
         )
 
     def to_collection_write_dto(self) -> CollectionWriteDTO:
@@ -50,6 +52,7 @@ class BulkImportCollectionDTO(BaseModel):
             import_id=collection.import_id,
             title=collection.title,
             description=collection.description,
+            metadata=collection.metadata,
         )
 
         keys = set(self.model_fields.keys())

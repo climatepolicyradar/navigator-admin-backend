@@ -17,6 +17,7 @@ def test_get_template_unfccc(
                 "import_id": {"title": "Import Id", "type": "string"},
                 "title": {"title": "Title", "type": "string"},
                 "description": {"title": "Description", "type": "string"},
+                "metadata": {},
             }
         ],
         "families": [

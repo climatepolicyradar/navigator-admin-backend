@@ -24,24 +24,36 @@ class BulkImportEntityList(str, Enum):
     Events = "events"
 
 
-def validate_collection(collection: dict[str, Any]) -> None:
+def validate_collection(collection: dict[str, Any], corpus_import_id: str) -> None:
     """
     Validates a collection.
 
     :param dict[str, Any] collection: The collection object to be validated.
+    :param str corpus_import_id: The corpus_import_id to be used for validating the collection object.
     :raises ValidationError: raised should the data be invalid.
     """
+    db = db_session.get_db()
+
     validate_import_id(collection["import_id"])
+    metadata.validate_metadata(
+        db,
+        corpus_import_id,
+        collection["metadata"],
+        EntitySpecificTaxonomyKeys.COLLECTION.value,
+    )
 
 
-def validate_collections(collections: list[dict[str, Any]]) -> None:
+def validate_collections(
+    collections: list[dict[str, Any]], corpus_import_id: str
+) -> None:
     """
     Validates a list of collections.
 
     :param list[dict[str, Any]] collections: The list of collection objects to be validated.
+    :param str corpus_import_id: The corpus_import_id to be used for validating the collection objects.
     """
     for coll in collections:
-        validate_collection(coll)
+        validate_collection(coll, corpus_import_id)
 
 
 def validate_family(family: dict[str, Any], corpus_import_id: str) -> None:

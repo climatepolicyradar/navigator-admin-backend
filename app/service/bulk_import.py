@@ -43,14 +43,18 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
-def get_collection_template() -> dict:
+def get_collection_template(corpus_type: str) -> dict:
     """
     Gets a collection template.
 
+    :param str corpus_type: The corpus_type to use to get the collection template.
     :return dict: The collection template.
     """
     collection_schema = BulkImportCollectionDTO.model_json_schema(mode="serialization")
     collection_template = collection_schema["properties"]
+    collection_template["metadata"] = get_metadata_template(
+        corpus_type, CountedEntity.Collection
+    )
 
     return collection_template
 
@@ -105,6 +109,12 @@ def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dic
         return metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
     elif metadata_type == CountedEntity.Event:
         return metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
+    elif metadata_type == CountedEntity.Collection:
+        return (
+            metadata.pop(EntitySpecificTaxonomyKeys.COLLECTION.value)
+            if metadata.get(EntitySpecificTaxonomyKeys.COLLECTION.value, None)
+            else {}
+        )
     elif metadata_type == CountedEntity.Family:
         metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
         metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
@@ -147,7 +157,7 @@ def save_collections(
     if db is None:
         db = db_session.get_db()
 
-    validation.validate_collections(collection_data)
+    validation.validate_collections(collection_data, corpus_import_id)
 
     collection_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)

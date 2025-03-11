@@ -4,10 +4,14 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
+from tests.helpers.bulk_import import (
+    default_collection,
+    default_document,
+    default_family,
+)
 
 import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
-from tests.helpers.bulk_import import default_document, default_family
 
 
 @patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
@@ -22,6 +26,7 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
                 "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
+                "metadata": {},
             }
         ]
     }
@@ -53,6 +58,7 @@ def test_slack_notification_sent_on_success(
                 "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
+                "metadata": {},
             }
         ],
     }
@@ -71,18 +77,12 @@ def test_slack_notification_sent_on_success(
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_mock):
-    corpus_repo_mock.error = True
+def test_slack_notification_sent_on_error(
+    caplog, basic_s3_client, validation_service_mock
+):
+    validation_service_mock.throw_validation_error = True
 
-    test_data = {
-        "collections": [
-            {
-                "import_id": "test.new.collection.0",
-                "title": "Test title",
-                "description": "Test description",
-            }
-        ]
-    }
+    test_data = {"collections": [{}]}
 
     with (
         caplog.at_level(logging.ERROR),
@@ -96,15 +96,13 @@ def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_m
     mock_notification_service.assert_called_with(
         "💥 Bulk import for corpus: test has failed."
     )
-    assert (
-        "Rolling back transaction due to the following error: No organisation associated with corpus test"
-        in caplog.text
-    )
+    assert "Rolling back transaction due to the following error:" in caplog.text
 
 
 @pytest.mark.parametrize(
     "test_data",
     [
+        {"collections": [{**default_collection, "metadata": {"key": 1}}]},
         {"families": [{**default_family, "metadata": {"key": [1]}}]},
         {"families": [{**default_family, "metadata": {"key": None}}]},
         {"families": [{**default_family, "metadata": {"key": 1}}]},
@@ -116,6 +114,7 @@ def test_import_data_when_metadata_contains_non_string_values(
     test_data,
     family_repo_mock,
     document_repo_mock,
+    collection_repo_mock,
     corpus_repo_mock,
     validation_service_mock,
     caplog,
@@ -135,6 +134,7 @@ def test_import_data_when_data_invalid(caplog, basic_s3_client):
                 "import_id": "invalid",
                 "title": "Test title",
                 "description": "Test description",
+                "metadata": {},
             }
         ]
     }
@@ -223,6 +223,7 @@ def test_save_collections_skips_update_when_no_changes(
             "import_id": "test.new.collection.0",
             "title": "title",
             "description": "description",
+            "metadata": {},
         }
     ]
 

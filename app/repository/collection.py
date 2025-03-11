@@ -24,6 +24,7 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
+from app.model.general import Json
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ def _collection_org_from_dto(
             import_id=dto.import_id if dto.import_id else None,
             title=dto.title,
             description=dto.description,
+            valid_metadata=dto.metadata,
         ),
         CollectionOrganisation(collection_import_id="", organisation_id=org_id),
     )
@@ -80,6 +82,7 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         import_id=str(collection.import_id),
         title=str(collection.title),
         description=str(collection.description),
+        metadata=cast(Json, collection.valid_metadata),
         organisation=cast(str, org.name),
         families=families,
         created=cast(datetime, collection.created),

@@ -11,7 +11,7 @@ def mock_validation_service(validation_service, monkeypatch: MonkeyPatch, mocker
         if validation_service.throw_validation_error:
             raise ValidationError("Error")
 
-    def mock_validate_collection(_) -> None:
+    def mock_validate_collection(_, __) -> None:
         maybe_throw()
 
     def mock_validate_family(_, __) -> None:

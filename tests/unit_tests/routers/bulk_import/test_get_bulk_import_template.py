@@ -48,6 +48,7 @@ def test_bulk_import_template_when_ok(
                 "import_id": {"title": "Import Id", "type": "string"},
                 "title": {"title": "Title", "type": "string"},
                 "description": {"title": "Description", "type": "string"},
+                "metadata": {},
             }
         ],
         "families": [
