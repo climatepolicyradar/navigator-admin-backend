@@ -1,8 +1,8 @@
 import pytest
-from tests.helpers.collection import create_collection_write_dto
 
 import app.service.collection as collection_service
 from app.errors import RepositoryError, ValidationError
+from tests.helpers.collection import create_collection_write_dto
 
 
 def test_update(collection_repo_mock):

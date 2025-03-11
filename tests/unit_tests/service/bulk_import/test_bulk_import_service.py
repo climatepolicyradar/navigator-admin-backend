@@ -4,14 +4,14 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
+
+import app.service.bulk_import as bulk_import_service
+from app.errors import ValidationError
 from tests.helpers.bulk_import import (
     default_collection,
     default_document,
     default_family,
 )
-
-import app.service.bulk_import as bulk_import_service
-from app.errors import ValidationError
 
 
 @patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
