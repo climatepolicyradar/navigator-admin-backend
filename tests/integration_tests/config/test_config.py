@@ -280,3 +280,30 @@ def test_config_geographies(client: TestClient, data_db: Session, user_header_to
     #
     # Geographies.
     assert data["geographies"][0]["node"]["slug"] == "south-asia"
+
+
+def test_get_config_geographies_only_one_level_deep(
+    client: TestClient, data_db: Session, user_header_token
+):
+    # This test is to make sure we're not including the ISO 3166-2 subdivisions in the geography list
+    setup_db(data_db)
+
+    response = client.get(
+        "/api/v1/config",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    assert set(data.keys()) ^ EXPECTED_CONFIG_KEYS == set()
+
+    geography_regions = data["geographies"]
+
+    any_geography_has_children = False
+    for region in geography_regions:
+        for geography in region["children"]:
+            if geography["children"] is not None and len(geography["children"]) > 0:
+                print(geography)
+                any_geography_has_children = True
+
+    assert any_geography_has_children is not True

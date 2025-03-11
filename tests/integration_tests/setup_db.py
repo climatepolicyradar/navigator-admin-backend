@@ -517,6 +517,7 @@ def _setup_collection_data(
                 import_id=data["import_id"],
                 title=data["title"],
                 description=data["description"],
+                valid_metadata={},
             )
         )
 
