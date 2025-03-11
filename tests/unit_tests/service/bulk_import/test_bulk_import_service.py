@@ -22,6 +22,7 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
                 "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
+                "valid_metadata": {},
             }
         ]
     }
@@ -53,6 +54,7 @@ def test_slack_notification_sent_on_success(
                 "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
+                "valid_metadata": {},
             }
         ],
     }
@@ -80,6 +82,7 @@ def test_slack_notification_sent_on_error(caplog, basic_s3_client, corpus_repo_m
                 "import_id": "test.new.collection.0",
                 "title": "Test title",
                 "description": "Test description",
+                "valid_metadata": {},
             }
         ]
     }
@@ -223,6 +226,7 @@ def test_save_collections_skips_update_when_no_changes(
             "import_id": "test.new.collection.0",
             "title": "title",
             "description": "description",
+            "valid_metadata": {},
         }
     ]
 
@@ -303,6 +307,7 @@ def test_save_events_skips_update_when_no_changes(
             "event_title": "title",
             "date": "2020-01-01",
             "event_type_value": "Amended",
+            "valid_metadata": {},
         }
     ]
 

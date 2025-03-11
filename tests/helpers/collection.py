@@ -18,6 +18,7 @@ def create_collection_read_dto(
         organisation="CCLW",
         created=datetime.now(),
         last_modified=datetime.now(),
+        valid_metadata={},
     )
 
 
@@ -28,6 +29,7 @@ def create_collection_write_dto(
         title=title,
         description=description,
         organisation="CCLW",
+        valid_metadata={},
     )
 
 
@@ -37,4 +39,5 @@ def create_collection_create_dto(
     return CollectionCreateDTO(
         title=title,
         description=description,
+        valid_metadata={},
     )

@@ -14,6 +14,7 @@ class CollectionReadDTO(BaseModel):
     organisation: str
     created: datetime
     last_modified: datetime
+    valid_metadata: dict[str, list[str]]
 
 
 class CollectionWriteDTO(BaseModel):
@@ -22,6 +23,7 @@ class CollectionWriteDTO(BaseModel):
     title: str
     description: str
     organisation: str
+    valid_metadata: dict[str, list[str]]
 
 
 class CollectionCreateDTO(BaseModel):
@@ -30,3 +32,4 @@ class CollectionCreateDTO(BaseModel):
     import_id: Optional[str] = None
     title: str
     description: str
+    valid_metadata: dict[str, list[str]]
