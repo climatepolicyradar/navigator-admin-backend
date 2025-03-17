@@ -118,7 +118,7 @@ def _create_backend_environment() -> dict[str, str]:
 
     stack = pulumi.get_stack()
     backend_stack = pulumi.automation.select_stack(
-        stack_name=stack,
+        stack_name=f"climatepolicyradar/backend/{stack}",
         work_dir="../backend",
     )
     backend_token_secret_key = backend_stack.get_config(
