@@ -10,7 +10,7 @@ default_collection = {
     "import_id": "test.new.collection.0",
     "title": "Test title",
     "description": "Test description",
-    "valid_metadata": {},
+    "metadata": {},
 }
 
 

@@ -10,8 +10,7 @@ from tests.integration_tests.setup_db import setup_db
 def test_create_collection(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
     new_collection = create_collection_create_dto(
-        title="Title",
-        description="test test test",
+        title="Title", description="test test test", metadata={}
     )
     response = client.post(
         "/api/v1/collections",
@@ -26,6 +25,7 @@ def test_create_collection(client: TestClient, data_db: Session, user_header_tok
     )
     assert actual_collection.title == "Title"
     assert actual_collection.description == "test test test"
+    assert actual_collection.valid_metadata == {}
 
 
 def test_create_collection_when_not_authenticated(client: TestClient, data_db: Session):

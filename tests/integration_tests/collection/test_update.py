@@ -14,8 +14,7 @@ from tests.integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
 def test_update_collection(client: TestClient, data_db: Session, user_header_token):
     setup_db(data_db)
     new_collection = create_collection_write_dto(
-        title="Updated Title",
-        description="just a test",
+        title="Updated Title", description="just a test", metadata={"key": "value"}
     )
     response = client.put(
         "/api/v1/collections/C.0.0.2",
@@ -26,12 +25,15 @@ def test_update_collection(client: TestClient, data_db: Session, user_header_tok
     data = response.json()
     assert data["title"] == "Updated Title"
     assert data["description"] == "just a test"
+    assert data["metadata"] == {"key": "value"}
 
     db_collection: Collection = (
         data_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
     )
     assert db_collection.title == "Updated Title"
     assert db_collection.description == "just a test"
+    assert db_collection.valid_metadata == {"key": "value"}
+
     families = data_db.query(CollectionFamily).filter(
         CollectionFamily.collection_import_id == "C.0.0.2"
     )

@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from app.model.general import Json
+
 
 class CollectionReadDTO(BaseModel):
     """Representation of a Collection for reading."""
@@ -10,11 +12,11 @@ class CollectionReadDTO(BaseModel):
     import_id: str
     title: str
     description: str
+    metadata: Json
     families: list[str]
     organisation: str
     created: datetime
     last_modified: datetime
-    valid_metadata: dict[str, list[str]]
 
 
 class CollectionWriteDTO(BaseModel):
@@ -23,7 +25,7 @@ class CollectionWriteDTO(BaseModel):
     title: str
     description: str
     organisation: str
-    valid_metadata: dict[str, list[str]]
+    metadata: Json
 
 
 class CollectionCreateDTO(BaseModel):
@@ -32,4 +34,4 @@ class CollectionCreateDTO(BaseModel):
     import_id: Optional[str] = None
     title: str
     description: str
-    valid_metadata: dict[str, list[str]]
+    metadata: Json
