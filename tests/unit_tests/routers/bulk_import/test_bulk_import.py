@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 from fastapi import status
 from fastapi.testclient import TestClient
-
 from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
@@ -120,4 +119,4 @@ def test_bulk_import_documents_when_no_family(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json().get("detail") == "No entity with id test.new.family.0 found"
+    assert response.json().get("detail") == "Missing entities: ['test.new.family.0']"
