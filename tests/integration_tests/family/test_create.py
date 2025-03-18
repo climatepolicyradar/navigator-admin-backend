@@ -319,4 +319,4 @@ def test_create_endpoint_creates_family_with_multiple_geographies(
         .all()
     )
     assert len(actual_geos) == 3
-    assert [geo.value for geo in actual_geos] == ["ALB", "BHS", "BRB"]
+    assert set(geo.value for geo in actual_geos) == {"ALB", "BHS", "BRB"}
