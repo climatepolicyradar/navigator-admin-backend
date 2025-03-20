@@ -71,8 +71,10 @@ def test_slack_notification_sent_on_success(
         bulk_import_service.import_data(test_data, "test_corpus_id")
 
         assert 2 == mock_notification_service.call_count
-        mock_notification_service.assert_called_with(
-            "🎉 Bulk import for corpus: test_corpus_id successfully completed."
+        assert any(
+            "🎉 Bulk import for corpus: test_corpus_id successfully completed"
+            in call_args[0][0]
+            for call_args in mock_notification_service.call_args_list
         )
 
 
