@@ -25,7 +25,7 @@ class CollectionWriteDTO(BaseModel):
     title: str
     description: str
     organisation: str
-    metadata: Json
+    metadata: Optional[Json] = {}
 
 
 class CollectionCreateDTO(BaseModel):
@@ -34,4 +34,4 @@ class CollectionCreateDTO(BaseModel):
     import_id: Optional[str] = None
     title: str
     description: str
-    metadata: Json
+    metadata: Optional[Json] = {}

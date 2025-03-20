@@ -7,11 +7,51 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.model.collection import CollectionWriteDTO
 from tests.helpers.collection import create_collection_write_dto
 from tests.integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
 
 
-def test_update_collection(client: TestClient, data_db: Session, user_header_token):
+def test_update_collection_no_metadata(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_collection = CollectionWriteDTO(
+        title="Updated Title", description="just a test", organisation="CCLW"
+    )
+    response = client.put(
+        "/api/v1/collections/C.0.0.2",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["title"] == "Updated Title"
+    assert data["description"] == "just a test"
+    assert data["metadata"] == {}
+
+    db_collection: Collection = (
+        data_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
+    )
+    assert db_collection.title == "Updated Title"
+    assert db_collection.description == "just a test"
+    assert db_collection.valid_metadata == {}
+
+    families = data_db.query(CollectionFamily).filter(
+        CollectionFamily.collection_import_id == "C.0.0.2"
+    )
+    assert families.count() == 2
+    org: CollectionOrganisation = (
+        data_db.query(CollectionOrganisation)
+        .filter(CollectionOrganisation.collection_import_id == "C.0.0.2")
+        .one()
+    )
+    assert org is not None
+
+
+def test_update_collection_with_metadata(
+    client: TestClient, data_db: Session, user_header_token
+):
     setup_db(data_db)
     new_collection = create_collection_write_dto(
         title="Updated Title", description="just a test", metadata={"key": "value"}
