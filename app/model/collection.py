@@ -34,4 +34,4 @@ class CollectionCreateDTO(BaseModel):
     import_id: Optional[str] = None
     title: str
     description: str
-    metadata: Json
+    metadata: Optional[Json] = {}
