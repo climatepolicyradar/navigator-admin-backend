@@ -767,7 +767,7 @@ def test_bulk_import_returns_bad_request_response_when_corpus_import_id_invalid(
 
 
 @pytest.mark.s3
-def test_bulk_import_events_when_event_type_invalid(
+def test_bulk_import_event_with_link_to_a_document(
     caplog,
     data_db: Session,
     client: TestClient,
@@ -778,26 +778,33 @@ def test_bulk_import_events_when_event_type_invalid(
         {
             "families": [{**default_family, "collections": []}],
             "documents": [default_document],
-            "events": [{**default_event, "event_type_value": "Invalid"}],
+            "events": [
+                {
+                    **default_event,
+                    "family_document_import_id": default_document["import_id"],
+                }
+            ],
         }
     )
 
-    with caplog.at_level(logging.ERROR):
-        response = client.post(
-            "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
-            files={"data": input_json},
-            headers=superuser_header_token,
-        )
-
-        assert response.status_code == status.HTTP_202_ACCEPTED
-        assert response.json() == {
-            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-        }
-
-    assert (
-        "Metadata validation failed: Invalid value '['Invalid']' for metadata key 'event_type'"
-        in caplog.text
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": input_json},
+        headers=superuser_header_token,
     )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.json() == {
+        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
+    }
+
+    saved_event = (
+        data_db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id == default_event["import_id"])
+        .scalar()
+    )
+
+    assert saved_event.family_document_import_id == default_document["import_id"]
 
 
 def test_bulk_import_when_not_authorised(client: TestClient, data_db: Session):

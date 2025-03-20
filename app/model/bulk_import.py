@@ -228,6 +228,7 @@ class BulkImportEventDTO(BaseModel):
         return EventCreateDTO(
             import_id=self.import_id,
             family_import_id=self.family_import_id,
+            family_document_import_id=self.family_document_import_id,
             event_title=self.event_title,
             date=self.date,
             event_type_value=self.event_type_value,
