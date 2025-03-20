@@ -233,7 +233,6 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
         new_collection, collection_organisation = _collection_org_from_dto(
             collection, org_id
         )
-        print(">>>>>>>>>>", collection)
 
         if not new_collection.import_id:
             new_collection.import_id = cast(
