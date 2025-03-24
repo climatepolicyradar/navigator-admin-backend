@@ -30,5 +30,9 @@ config:
     secure: AAABANRx6DYMRpEv8Ei3OcHMSFf2fjDTrV6hSaKnMHJSR0qS0/c0Y60zwVw+paAdLqzmng==
   aws:region: eu-west-1
   admin_backend:log_level: INFO
+  admin_backend:db_subnet_group_name:
+    secure: AAABAPn7H3xVLbXVXsPF2jhtTWwB+zWa+MdGiA7TUeO/LdOltvSh6rVs8VjndCajmUyIsiwkH24p7XrHSg==
+  admin_backend:rds_vpc_security_group_id:
+    secure: AAABAAAvpVIxVCDwoTiLTzWdfMaYtroMGxUJ3y9qo2VayR5OCUi5H8pWS+ohef5nD5pVGQ==
 environment:
   - admin_backend/staging
