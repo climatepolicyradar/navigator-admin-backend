@@ -177,7 +177,7 @@ def _collect_import_ids(
     import_ids = []
     if entity_list_name.value in data:
         for entity in data[entity_list_name.value]:
-            import_ids.append(entity[import_id_key])
+            import_ids.append(entity.get(import_id_key))
     return import_ids
 
 
@@ -194,7 +194,7 @@ def _match_import_ids(
     """
     unmatched_import_ids = []
     for id in parent_references:
-        if id not in parent_import_ids:
+        if id and id not in parent_import_ids:
             unmatched_import_ids.append(id)
 
     return unmatched_import_ids
@@ -239,10 +239,10 @@ def _validate_families_exist_for_documents(data: dict[str, Any]) -> list[str]:
 
 def _validate_families_exist_for_events(data: dict[str, Any]) -> list[str]:
     """
-    Validates that families, the events are linked to exist, based on import_id links in data.
+    Validates that families, the events are linked to, exist based on import_id links in data.
 
     :param dict[str, Any] data: The data object containing entities to be validated.
-    :returns list[str]: List of families ids that are referenced by events but are missing from the list of events
+    :returns list[str]: List of family ids that are referenced by events but are missing from the list of events
     or an empty list.
     """
     families = _collect_import_ids(BulkImportEntityList.Families, data)
@@ -253,6 +253,25 @@ def _validate_families_exist_for_events(data: dict[str, Any]) -> list[str]:
     )
 
     return _match_import_ids(event_family_import_ids, families_set)
+
+
+def _validate_documents_exist_for_events(data: dict[str, Any]) -> list[str]:
+    """
+    Validates that documents, the events are linked to, exist based on import_id links in data.
+    Ignores events where document id is None as not all events will be associated with a document.
+
+    :param dict[str, Any] data: The data object containing entities to be validated.
+    :returns list[str]: List of document ids that are referenced by events but are missing from the list of events
+    or an empty list.
+    """
+    documents = _collect_import_ids(BulkImportEntityList.Documents, data)
+    documents_set = set(documents)
+
+    event_document_import_ids = _collect_import_ids(
+        BulkImportEntityList.Events, data, "family_document_import_id"
+    )
+
+    return _match_import_ids(event_document_import_ids, documents_set)
 
 
 def validate_entity_relationships(data: dict[str, Any]) -> None:
@@ -266,6 +285,7 @@ def validate_entity_relationships(data: dict[str, Any]) -> None:
     missing_entity_ids.update(_validate_collections_exist_for_families(data))
     missing_entity_ids.update(_validate_families_exist_for_documents(data))
     missing_entity_ids.update(_validate_families_exist_for_events(data))
+    missing_entity_ids.update(_validate_documents_exist_for_events(data))
 
     if missing_entity_ids:
         missing_entity_ids = sorted(list(missing_entity_ids))
