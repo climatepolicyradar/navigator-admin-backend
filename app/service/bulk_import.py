@@ -337,9 +337,12 @@ def save_events(
         if not existing_event:
             _LOGGER.info(f"Importing event {import_id}")
             dto = BulkImportEventDTO(**event).to_event_create_dto()
-            event_metadata = create_event_metadata_object(
-                db, corpus_import_id, event["event_type_value"]
-            )
+            event_metadata = event.get("metadata")
+            # TODO: remove below when implementing APP-343
+            if not event_metadata:
+                event_metadata = create_event_metadata_object(
+                    db, corpus_import_id, event["event_type_value"]
+                )
             event_repository.create(db, dto, event_metadata)
             event_import_ids.append(import_id)
             total_events_saved += 1
@@ -415,10 +418,10 @@ def import_data(
             _LOGGER.info("Saving events")
             result["events"] = save_events(event_data, corpus_import_id, db)
 
-        upload_bulk_import_json_to_s3(f"{import_uuid}-result", corpus_import_id, result)
-
-        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {time.time() - start_time} seconds."
         db.commit()
+
+        upload_bulk_import_json_to_s3(f"{import_uuid}-result", corpus_import_id, result)
+        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {time.time() - start_time} seconds."
     except Exception as e:
         _LOGGER.error(
             f"Rolling back transaction due to the following error: {e}", exc_info=True
