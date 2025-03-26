@@ -40,7 +40,7 @@ def test_create_when_db_fails(
     admin_user_context,
 ):
     new_event = create_event_create_dto()
-    event_repo_mock.return_empty = True
+    event_repo_mock.throw_repository_error = True
 
     with pytest.raises(RepositoryError):
         event_service.create(new_event, admin_user_context)

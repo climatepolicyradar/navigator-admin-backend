@@ -53,7 +53,7 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_create(_, data: EventCreateDTO, meta: dict[str, list[str]]) -> str:
         maybe_throw()
         if event_repo.throw_repository_error:
-            raise Exception("Error trying to create Event")
+            raise RepositoryError("Error trying to create Event")
         return "test.new.event.0"
 
     def mock_update(_, import_id: str, data: EventWriteDTO) -> EventReadDTO:
