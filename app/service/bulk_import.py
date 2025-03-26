@@ -415,10 +415,10 @@ def import_data(
             _LOGGER.info("Saving events")
             result["events"] = save_events(event_data, corpus_import_id, db)
 
-        upload_bulk_import_json_to_s3(f"{import_uuid}-result", corpus_import_id, result)
-
-        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {time.time() - start_time} seconds."
         db.commit()
+
+        upload_bulk_import_json_to_s3(f"{import_uuid}-result", corpus_import_id, result)
+        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {time.time() - start_time} seconds."
     except Exception as e:
         _LOGGER.error(
             f"Rolling back transaction due to the following error: {e}", exc_info=True
