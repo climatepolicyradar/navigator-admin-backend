@@ -3,6 +3,7 @@ from typing import Any, Optional
 
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.corpus as corpus_repo
@@ -24,15 +25,17 @@ class BulkImportEntityList(str, Enum):
     Events = "events"
 
 
-def validate_collection(collection: dict[str, Any], corpus_import_id: str) -> None:
+def validate_collection(
+    db: Session, collection: dict[str, Any], corpus_import_id: str
+) -> None:
     """
     Validates a collection.
 
+    :param Session db: The database session to use for validating collections.
     :param dict[str, Any] collection: The collection object to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the collection object.
     :raises ValidationError: raised should the data be invalid.
     """
-    db = db_session.get_db()
 
     validate_import_id(collection["import_id"])
     metadata_value = collection.get("metadata")
@@ -54,20 +57,21 @@ def validate_collections(
     :param list[dict[str, Any]] collections: The list of collection objects to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the collection objects.
     """
+    db = db_session.get_db()
+
     for coll in collections:
-        validate_collection(coll, corpus_import_id)
+        validate_collection(db, coll, corpus_import_id)
 
 
-def validate_family(family: dict[str, Any], corpus_import_id: str) -> None:
+def validate_family(db: Session, family: dict[str, Any], corpus_import_id: str) -> None:
     """
     Validates a family.
 
+    :param Session db: The database session to use for validating families.
     :param dict[str, Any] family: The family object to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the family object.
     :raises ValidationError: raised should the data be invalid.
     """
-    db = db_session.get_db()
-
     validate_import_id(family["import_id"])
     corpus.validate(db, corpus_import_id)
     category.validate(family["category"])
@@ -83,20 +87,22 @@ def validate_families(families: list[dict[str, Any]], corpus_import_id: str) -> 
     :param list[dict[str, Any]] families: The list of family objects to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the family objects.
     """
+    db = db_session.get_db()
     for fam in families:
-        validate_family(fam, corpus_import_id)
+        validate_family(db, fam, corpus_import_id)
 
 
-def validate_document(document: dict[str, Any], corpus_import_id: str) -> None:
+def validate_document(
+    db: Session, document: dict[str, Any], corpus_import_id: str
+) -> None:
     """
     Validates a document.
 
+    :param Session db: The database session to use for validating documents.
     :param dict[str, Any] document: The document object to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the document object.
     :raises ValidationError: raised should the data be invalid.
     """
-    db = db_session.get_db()
-
     validate_import_id(document["import_id"])
     validate_import_id(document["family_import_id"])
     if document["variant_name"] == "":
@@ -116,14 +122,16 @@ def validate_documents(documents: list[dict[str, Any]], corpus_import_id: str) -
     :param list[dict[str, Any]] documents: The list of document objects to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the document objects.
     """
+    db = db_session.get_db()
     for doc in documents:
-        validate_document(doc, corpus_import_id)
+        validate_document(db, doc, corpus_import_id)
 
 
-def validate_event(event: dict[str, Any], corpus_import_id: str) -> None:
+def validate_event(db: Session, event: dict[str, Any], corpus_import_id: str) -> None:
     """
     Validates an event.
 
+    :param Session db: The database session to use for validating events.
     :param dict[str, Any] event: The event object to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for
         validating the event object.
@@ -132,7 +140,6 @@ def validate_event(event: dict[str, Any], corpus_import_id: str) -> None:
     validate_import_id(event["import_id"])
     validate_import_id(event["family_import_id"])
 
-    db = db_session.get_db()
     event_metadata = event.get("metadata")
     # TODO: remove below when implementing APP-343
     if not event_metadata:
@@ -156,8 +163,9 @@ def validate_events(events: list[dict[str, Any]], corpus_import_id: str) -> None
     :param str corpus_import_id: The corpus_import_id to be used for
         validating the event objects.
     """
+    db = db_session.get_db()
     for ev in events:
-        validate_event(ev, corpus_import_id)
+        validate_event(db, ev, corpus_import_id)
 
 
 def _collect_import_ids(

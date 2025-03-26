@@ -4,19 +4,19 @@ import app.service.validation as validation_service
 from app.errors import ValidationError
 
 
-def test_validate_collection_when_ok(db_client_metadata_mock):
+def test_validate_collection_when_ok(db_client_metadata_mock, db_session_mock):
     test_collection = {
         "import_id": "test.new.collection.0",
         "metadata": {"color": ["pink"]},
     }
 
-    validation_service.validate_collection(test_collection, "test")
+    validation_service.validate_collection(db_session_mock, test_collection, "test")
 
 
-def test_validate_collection_when_import_id_invalid():
+def test_validate_collection_when_import_id_invalid(db_session_mock):
     invalid_import_id = "invalid"
     test_collection = {"import_id": invalid_import_id, "metadata": {}}
 
     with pytest.raises(ValidationError) as e:
-        validation_service.validate_collection(test_collection, "test")
+        validation_service.validate_collection(db_session_mock, test_collection, "test")
     assert "The import id invalid is invalid!" == e.value.message
