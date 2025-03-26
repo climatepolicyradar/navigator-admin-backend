@@ -1,30 +1,5 @@
-[tool.poetry]
+[project]
 name = "admin_backend"
-version = "0.0.1"
-description = "Pulumi infra definition for the Admin Backend"
-authors = ["CPR tech <tech@climatepolicyradar.org>"]
-repository = "https://github.com/climatepolicyradar/navigator-infra"
-license = "Apache-2.0"
-
-[tool.poetry.dependencies]
-python = "^3.9"
-pulumi = "^3.5.1"
-pulumi-aws = "^5.0.0"
-boto3 = "^1.26"
-
-[tool.poetry.dev-dependencies]
-black = "^22.1.0"
-flake8 = "^4.0.1"
-importlib-resources = "^5.6.0"
-pre-commit = "^2.17.0"
-pydocstyle = { version = "^6.1.1", extras = ["pydocstyle[toml]"] }
-pytest = "^7.0.1"
-python-dotenv = "^0.19.2"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-addopts = "-p no:cacheprovider"
-asyncio_mode = "strict"
+version = "1.0.0"
+requires-python = ">=3.11"
+dependencies = ["pulumi", "pulumi-aws"]

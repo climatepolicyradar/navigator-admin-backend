@@ -3,4 +3,5 @@ description: Admin Backend API
 runtime:
   name: python
   options:
-    virtualenv: venv
+    toolchain: uv
+    virtualenv: ../.venv
