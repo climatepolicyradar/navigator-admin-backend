@@ -22,6 +22,18 @@ def test_validate_event_when_ok(db_client_metadata_mock):
     assert mock_event_metadata.call_count == 1
 
 
+def test_validate_new_event_schema_when_ok(db_client_metadata_mock):
+    test_event = {
+        "import_id": "test.new.event.0",
+        "family_import_id": "test.new.family.0",
+        "family_document_import_id": "test.new.document.0",
+        "event_type_value": "published",
+        "metadata": {"color": ["pink"]},
+    }
+
+    validation_service.validate_event(test_event, "test")
+
+
 def test_validate_event_when_import_id_wrong_format():
     invalid_import_id = "invalid"
     test_event = {

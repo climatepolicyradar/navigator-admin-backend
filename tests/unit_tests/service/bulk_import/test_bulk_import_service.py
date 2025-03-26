@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -204,6 +204,25 @@ def test_do_not_save_documents_over_bulk_import_limit(
 
     saved_documents = bulk_import_service.save_documents(test_data, "test", 1)
     assert ["test.new.document.0"] == saved_documents
+
+
+def test_save_events_with_correct_metadata(validation_service_mock, event_repo_mock):
+    event_repo_mock.return_empty = True
+    test_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": "test.new.family.0",
+            "family_document_import_id": "test.new.document.0",
+            "event_type_value": "Test event type",
+            "event_title": "Test event title",
+            "date": "2024-01-01",
+            "metadata": {"key": ["value"]},
+        }
+    ]
+
+    bulk_import_service.save_events(test_data, "test")
+
+    event_repo_mock.create.assert_called_with(ANY, ANY, test_data[0]["metadata"])
 
 
 def test_save_events_when_data_invalid(validation_service_mock):
