@@ -111,7 +111,7 @@ rds_kms_key = aws.kms.Key(
     opts=pulumi.ResourceOptions(protect=True),
 )
 # This doesn't have a reason bar the instances were originally provisioned through the console
-availability_zone = "eu-west-1b" if stack == "production" else "eu-west-1c"
+availability_zone = "eu-west-1b" if stack == "production" else "eu-west-1a"
 identifier = (
     "navigator-production-rds-2023-10-17"
     if stack == "production"
