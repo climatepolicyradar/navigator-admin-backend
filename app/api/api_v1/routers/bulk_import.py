@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status
@@ -18,6 +19,7 @@ from app.service.validation import validate_bulk_import_data, validate_corpus_ex
 bulk_import_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 @r.get(
@@ -68,8 +70,14 @@ async def bulk_import(
     try:
         content = await data.read()
         data_dict = json.loads(content)
+
+        _LOGGER.info("🔍 Checking that corpus exists...")
         validate_corpus_exists(corpus_import_id)
+
+        _LOGGER.info("🔍 Validating entity relationships in data...")
         validate_bulk_import_data(data_dict)
+
+        _LOGGER.info("✅ Validation successful")
 
         background_tasks.add_task(
             import_data, data_dict, corpus_import_id, document_limit
