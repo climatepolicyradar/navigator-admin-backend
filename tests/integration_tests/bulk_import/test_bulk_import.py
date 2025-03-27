@@ -416,9 +416,115 @@ def test_bulk_import_successfully_updates_collection_metadata_when_no_error(
 
     assert update_response.status_code == status.HTTP_202_ACCEPTED
 
-    saved_family_metadata = data_db.query(Collection).scalar()
+    saved_collection_metadata = data_db.query(Collection).scalar()
 
-    assert updated_metadata == saved_family_metadata.valid_metadata
+    assert updated_metadata == saved_collection_metadata.valid_metadata
+
+
+@pytest.mark.s3
+def test_bulk_import_successfully_updates_event_metadata_when_no_error(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    test_corpus_type = CorpusTypeCreateDTO(
+        name="test",
+        description="",
+        metadata={
+            "author_type": {
+                "allow_any": True,
+                "allow_blanks": True,
+                "allowed_values": [],
+            },
+            "author": {
+                "allow_any": True,
+                "allow_blanks": True,
+                "allowed_values": [],
+            },
+            "_event": {
+                "event_type": {
+                    "allow_any": False,
+                    "allow_blanks": False,
+                    "allowed_values": ["test1", "test2"],
+                },
+                "datetime_event_name": {
+                    "allow_any": False,
+                    "allow_blanks": False,
+                    "allowed_values": ["test1"],
+                },
+                "description": {
+                    "allow_any": True,
+                    "allow_blanks": True,
+                    "allowed_values": [],
+                },
+            },
+        },
+    )
+    corpus_type_repo.create(data_db, test_corpus_type)
+    test_corpus = CorpusCreateDTO(
+        import_id="test.corpus.0.1",
+        title="",
+        description="",
+        organisation_id=1,
+        corpus_text="",
+        corpus_image_url="",
+        corpus_type_name=test_corpus_type.name,
+    )
+    corpus_repo.create(data_db, test_corpus)
+
+    original_event_metadata = {
+        "event_type": ["test1"],
+        "datetime_event_name": ["test1"],
+        "description": ["Test description"],
+    }
+    original_data = {
+        "collections": [default_collection],
+        "families": [default_family],
+        "events": [
+            {
+                **default_event,
+                "metadata": original_event_metadata,
+            }
+        ],
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        f"/api/v1/bulk-import/{test_corpus.import_id}",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    updated_event_metadata = {
+        **original_data["events"][0]["metadata"],
+        "event_type": ["test2"],
+        "description": ["Updated description"],
+    }
+    updated_input_json = build_json_file(
+        {
+            "collections": [default_collection],
+            "families": [default_family],
+            "events": [
+                {**original_data["events"][0], "metadata": updated_event_metadata},
+            ],
+        }
+    )
+
+    update_response = client.post(
+        f"/api/v1/bulk-import/{test_corpus.import_id}",
+        files={"data": updated_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_event_metadata = data_db.query(FamilyEvent).scalar()
+    expected_event_metadata = {
+        **updated_event_metadata,
+        "datetime_event_name": original_event_metadata["datetime_event_name"],
+    }
+
+    assert expected_event_metadata == saved_event_metadata.valid_metadata
 
 
 @pytest.mark.s3

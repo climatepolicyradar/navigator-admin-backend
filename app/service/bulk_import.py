@@ -351,7 +351,10 @@ def save_events(
             if update_event.is_different_from(existing_event):
                 _LOGGER.info(f"Updating event {import_id}")
                 event_repository.update(
-                    db, import_id, update_event.to_event_write_dto()
+                    db,
+                    import_id,
+                    update_event.to_event_write_dto(),
+                    event.get("metadata"),
                 )
                 event_import_ids.append(import_id)
                 total_events_saved += 1
