@@ -11,6 +11,7 @@ import time
 from typing import Any, Optional
 from uuid import uuid4
 
+from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
@@ -282,8 +283,8 @@ def save_documents(
 
     for doc in document_data:
         import_id = doc["import_id"]
-        existing_document = document_repository.get(db, import_id)
         if total_documents_saved < document_limit:
+            existing_document = document_repository.get(db, import_id)
             if not existing_document:
                 _LOGGER.info(f"Importing document {import_id}")
                 create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
@@ -356,7 +357,13 @@ def save_events(
             total_events_saved += 1
         else:
             update_event = BulkImportEventDTO(**event)
-            if update_event.is_different_from(existing_event):
+            existing_event_metadata = (
+                db.query(FamilyEvent)
+                .filter(FamilyEvent.import_id == event["import_id"])
+                .one()
+                .valid_metadata
+            )
+            if update_event.is_different_from(existing_event, existing_event_metadata):
                 _LOGGER.info(f"Updating event {import_id}")
                 event_repository.update(
                     db,

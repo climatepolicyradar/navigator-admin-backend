@@ -218,6 +218,7 @@ class BulkImportEventDTO(BaseModel):
     event_title: str
     date: datetime
     event_type_value: str
+    metadata: Metadata
 
     def to_event_create_dto(self) -> EventCreateDTO:
         """
@@ -246,15 +247,16 @@ class BulkImportEventDTO(BaseModel):
             event_type_value=self.event_type_value,
         )
 
-    def is_different_from(self, event):
+    def is_different_from(self, event, event_metadata):
         """Check if this DTO is different from another DTO"""
         comparison_dto = BulkImportEventDTO(
             import_id=event.import_id,
             family_import_id=event.family_import_id,
             family_document_import_id=event.family_document_import_id,
             event_title=event.event_title,
-            date=event.date,
+            date=event.date.replace(tzinfo=None),
             event_type_value=event.event_type_value,
+            metadata=event_metadata,
         )
 
         keys = set(self.model_fields.keys())
@@ -268,9 +270,7 @@ class BulkImportEventDTO(BaseModel):
         return is_different
 
 
-def log_differences(
-    current_dto: BaseModel, comparison_dto: BaseModel, keys: set
-) -> None:
+def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) -> None:
     """
     Log the differences between two DTOs.
 
@@ -279,9 +279,9 @@ def log_differences(
     :param set keys: The keys to compare.
     """
     for key in keys:
+        update_value = getattr(update_dto, key)
         current_value = getattr(current_dto, key)
-        comparison_value = getattr(comparison_dto, key)
-        if current_value != comparison_value:
+        if update_value != current_value:
             _LOGGER.debug(
-                f"🔀 Change detected in {key}: {current_value} => {comparison_value}"
+                f"🔀 Change detected in {key}: {current_value} => {update_value}"
             )

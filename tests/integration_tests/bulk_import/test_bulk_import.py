@@ -523,6 +523,7 @@ def test_bulk_import_successfully_updates_event_metadata_when_no_error(
         **updated_event_metadata,
         "datetime_event_name": original_event_metadata["datetime_event_name"],
     }
+    assert False
 
     assert expected_event_metadata == saved_event_metadata.valid_metadata
 
