@@ -306,17 +306,13 @@ def test_save_documents_skips_update_when_no_changes(
 
 
 @patch(
-    "app.service.bulk_import.create_event_metadata_object",
-    Mock(
-        return_value={
-            "event_type": ["Amended"],
-            "datetime_event_name": ["Amended"],
-        }
-    ),
+    "app.repository.event.get_event_metadata",
+    Mock(return_value={}),
 )
 def test_save_events_skips_update_when_no_changes(
     event_repo_mock, corpus_repo_mock, validation_service_mock
 ):
+
     test_data = [
         {
             "import_id": "test.new.collection.0",
@@ -325,7 +321,7 @@ def test_save_events_skips_update_when_no_changes(
             "event_title": "title",
             "date": "2020-01-01",
             "event_type_value": "Amended",
-            "valid_metadata": {},
+            "metadata": {},
         }
     ]
 

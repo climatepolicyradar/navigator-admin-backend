@@ -11,7 +11,6 @@ import time
 from typing import Any, Optional
 from uuid import uuid4
 
-from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
@@ -76,6 +75,7 @@ def get_event_template(corpus_type: str) -> dict:
     if "event_type" not in event_meta:
         raise ValidationError("Bad taxonomy in database")
     event_template["event_type_value"] = event_meta["event_type"]
+    event_template["metadata"] = event_meta
 
     return event_template
 
@@ -357,11 +357,8 @@ def save_events(
             total_events_saved += 1
         else:
             update_event = BulkImportEventDTO(**event)
-            existing_event_metadata = (
-                db.query(FamilyEvent)
-                .filter(FamilyEvent.import_id == event["import_id"])
-                .one()
-                .valid_metadata
+            existing_event_metadata = event_repository.get_event_metadata(
+                db, event["import_id"]
             )
             if update_event.is_different_from(existing_event, existing_event_metadata):
                 _LOGGER.info(f"Updating event {import_id}")

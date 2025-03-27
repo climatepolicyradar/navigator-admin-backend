@@ -316,3 +316,12 @@ def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
         return None
     _, _, _, org = result
     return org.id
+
+
+def get_event_metadata(db: Session, import_id: str):
+    return (
+        db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id == import_id)
+        .one()
+        .valid_metadata
+    )
