@@ -212,13 +212,19 @@ def create(
     return cast(str, new_family_event.import_id)
 
 
-def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
+def update(
+    db: Session,
+    import_id: str,
+    event: EventWriteDTO,
+    event_metadata: Optional[dict[str, list[str]]] = None,
+) -> bool:
     """
     Updates a single entry with the new values passed.
 
     :param db Session: the database connection
     :param str import_id: The event import id to change.
     :param EventWriteDTO event: The new values
+    :param Optional[dict[str, list[str]]] event_metadata: The event metadata.
     :return bool: True if new values were set otherwise false.
     """
     new_values = event.model_dump()
@@ -244,7 +250,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
             title=new_values["event_title"],
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
-            valid_metadata=metadata,
+            valid_metadata=event_metadata or metadata,
         )
     )
 
@@ -310,3 +316,12 @@ def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
         return None
     _, _, _, org = result
     return org.id
+
+
+def get_event_metadata(db: Session, import_id: str):
+    return (
+        db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id == import_id)
+        .one()
+        .valid_metadata
+    )

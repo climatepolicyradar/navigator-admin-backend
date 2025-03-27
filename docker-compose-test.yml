@@ -23,6 +23,7 @@ services:
       PGHOST: postgres
       PGDATABASE: navigator
       SECRET_KEY: ???
+      LOG_LEVEL: DEBUG
       # API_HOST: http://navigator-admin-backend:8888
 
       # Bulk import

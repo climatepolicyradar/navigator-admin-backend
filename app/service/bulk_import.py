@@ -75,6 +75,7 @@ def get_event_template(corpus_type: str) -> dict:
     if "event_type" not in event_meta:
         raise ValidationError("Bad taxonomy in database")
     event_template["event_type_value"] = event_meta["event_type"]
+    event_template["metadata"] = event_meta
 
     return event_template
 
@@ -159,7 +160,9 @@ def save_collections(
     if db is None:
         db = db_session.get_db()
 
+    _LOGGER.info("🔍 Validating collection data...")
     validation.validate_collections(collection_data, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     collection_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
@@ -185,7 +188,7 @@ def save_collections(
                 total_collections_saved += 1
 
     _LOGGER.info(
-        f"Saved {total_collections_saved} collections in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_collections_saved} collections in {time.time() - start_time} seconds"
     )
     return collection_import_ids
 
@@ -208,7 +211,9 @@ def save_families(
     if db is None:
         db = db_session.get_db()
 
+    _LOGGER.info("🔍 Validating family data...")
     validation.validate_families(family_data, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     family_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
@@ -242,7 +247,7 @@ def save_families(
                 total_families_saved += 1
 
     _LOGGER.info(
-        f"Saved {total_families_saved} families in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_families_saved} families in {time.time() - start_time} seconds"
     )
 
     return family_import_ids
@@ -268,7 +273,9 @@ def save_documents(
     if db is None:
         db = db_session.get_db()
 
+    _LOGGER.info("🔍 Validating document data...")
     validation.validate_documents(document_data, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     document_import_ids = []
     document_slugs = set()
@@ -276,8 +283,8 @@ def save_documents(
 
     for doc in document_data:
         import_id = doc["import_id"]
-        existing_document = document_repository.get(db, import_id)
         if total_documents_saved < document_limit:
+            existing_document = document_repository.get(db, import_id)
             if not existing_document:
                 _LOGGER.info(f"Importing document {import_id}")
                 create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
@@ -303,7 +310,7 @@ def save_documents(
                     total_documents_saved += 1
 
     _LOGGER.info(
-        f"Saved {total_documents_saved} documents in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_documents_saved} documents in {time.time() - start_time} seconds"
     )
     return document_import_ids
 
@@ -326,7 +333,9 @@ def save_events(
     if db is None:
         db = db_session.get_db()
 
+    _LOGGER.info("🔍 Validating event data...")
     validation.validate_events(event_data, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     event_import_ids = []
     total_events_saved = 0
@@ -348,16 +357,22 @@ def save_events(
             total_events_saved += 1
         else:
             update_event = BulkImportEventDTO(**event)
-            if update_event.is_different_from(existing_event):
+            existing_event_metadata = event_repository.get_event_metadata(
+                db, event["import_id"]
+            )
+            if update_event.is_different_from(existing_event, existing_event_metadata):
                 _LOGGER.info(f"Updating event {import_id}")
                 event_repository.update(
-                    db, import_id, update_event.to_event_write_dto()
+                    db,
+                    import_id,
+                    update_event.to_event_write_dto(),
+                    event.get("metadata"),
                 )
                 event_import_ids.append(import_id)
                 total_events_saved += 1
 
     _LOGGER.info(
-        f"Saved {total_events_saved} events in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_events_saved} events in {time.time() - start_time} seconds"
     )
     return event_import_ids
 
@@ -399,15 +414,15 @@ def import_data(
 
     try:
         if collection_data:
-            _LOGGER.info("Saving collections")
+            _LOGGER.info("💾 Saving collections")
             result["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
-            _LOGGER.info("Saving families")
+            _LOGGER.info("💾 Saving families")
             result["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
-            _LOGGER.info("Saving documents")
+            _LOGGER.info("💾 Saving documents")
             result["documents"] = save_documents(
                 document_data,
                 corpus_import_id,
@@ -415,7 +430,7 @@ def import_data(
                 db,
             )
         if event_data:
-            _LOGGER.info("Saving events")
+            _LOGGER.info("💾 Saving events")
             result["events"] = save_events(event_data, corpus_import_id, db)
 
         db.commit()
@@ -424,7 +439,8 @@ def import_data(
         end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {time.time() - start_time} seconds."
     except Exception as e:
         _LOGGER.error(
-            f"Rolling back transaction due to the following error: {e}", exc_info=True
+            f"💥 Rolling back transaction due to the following error: {e}",
+            exc_info=True,
         )
         db.rollback()
         end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."

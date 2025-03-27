@@ -42,6 +42,7 @@ default_event = {
     "event_title": "Test title",
     "date": "2024-01-01",
     "event_type_value": "Amended",
+    "metadata": {},
 }
 
 

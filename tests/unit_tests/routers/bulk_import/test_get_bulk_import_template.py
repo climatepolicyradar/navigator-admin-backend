@@ -99,6 +99,13 @@ def test_bulk_import_template_when_ok(
                     "allow_blanks": False,
                     "allowed_values": [],
                 },
+                "metadata": {
+                    "event_type": {
+                        "allow_any": False,
+                        "allow_blanks": False,
+                        "allowed_values": [],
+                    }
+                },
             }
         ],
         "documents": [
