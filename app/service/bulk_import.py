@@ -377,6 +377,30 @@ def save_events(
     return event_import_ids
 
 
+def _filter_event_data(
+    event_data: list[dict[str, Any]], saved_documents: list[str]
+) -> list[dict[str, Any]]:
+    """
+    Filters a list of event data based on the import ids of saved documents.
+    It returns a list of event data objects that either relate to a document that has already been saved
+    or are not linked to a document.
+
+    :param list[dict[str, Any]] event_data: The event data to be filtered.
+    :param list[str] saved_documents: The import ids of documents that have been saved.
+    :return list[dict[str, Any]]: A filtered list of event data.
+    """
+
+    saved_documents_set = set(saved_documents)
+    filtered_event_data = [
+        event
+        for event in event_data
+        if not event.get("family_document_import_id")
+        or event.get("family_document_import_id") in saved_documents_set
+    ]
+
+    return filtered_event_data
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(
     data: dict[str, Any],
@@ -426,12 +450,20 @@ def import_data(
             result["documents"] = save_documents(
                 document_data,
                 corpus_import_id,
-                document_limit or DEFAULT_DOCUMENT_LIMIT,
+                (
+                    document_limit
+                    if document_limit is not None
+                    else DEFAULT_DOCUMENT_LIMIT
+                ),
                 db,
             )
         if event_data:
             _LOGGER.info("💾 Saving events")
-            result["events"] = save_events(event_data, corpus_import_id, db)
+            result["events"] = save_events(
+                _filter_event_data(event_data, result.get("documents", [])),
+                corpus_import_id,
+                db,
+            )
 
         db.commit()
 

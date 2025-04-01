@@ -669,6 +669,50 @@ def test_bulk_import_only_updates_number_of_documents_within_provided_limit(
     assert original_data["documents"][1]["title"] == saved_document_2_title
 
 
+def test_bulk_import_skips_events_when_documents_where_skipped_due_to_limit(
+    data_db: Session, client: TestClient, superuser_header_token, caplog
+):
+    original_data = {
+        "families": [{**default_family, "collections": []}],
+        "documents": [
+            default_document,
+        ],
+        "events": [
+            {
+                **default_event,
+                "family_document_import_id": default_document["import_id"],
+            }
+        ],
+    }
+    original_input_json = build_json_file(original_data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": original_input_json},
+        headers=superuser_header_token,
+        params={"document_limit": 0},
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_document = (
+        data_db.query(PhysicalDocument)
+        .join(
+            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
+        )
+        .one_or_none()
+    )
+
+    saved_event = data_db.query(FamilyEvent).one_or_none()
+
+    assert (
+        "🎉 Bulk import for corpus: UNFCCC.corpus.i00000001.n0000 successfully completed"
+        in caplog.text
+    )
+    assert not saved_document
+    assert not saved_event
+
+
 @pytest.mark.s3
 def test_bulk_import_idempotency_on_create(
     caplog,
