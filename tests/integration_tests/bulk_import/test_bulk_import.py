@@ -204,6 +204,41 @@ def test_bulk_import_successfully_updates_already_imported_data_when_no_error(
 
 
 @pytest.mark.s3
+def test_bulk_import_successfully_saves_families_with_concepts(
+    data_db: Session, client: TestClient, superuser_header_token
+):
+    test_concept = {
+        "id": "Federal Courts",
+        "ids": [],
+        "type": "legal_entity",
+        "preferred_label": "Federal Courts",
+        "relation": "jurisdiction",
+        "subconcept_of_labels": [],
+    }
+    test_data = {
+        "collections": [default_collection],
+        "families": [
+            {
+                **default_family,
+                "concepts": [test_concept],
+            }
+        ],
+    }
+    test_input_json = build_json_file(test_data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": test_input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    saved_family = data_db.query(Family).scalar()
+    assert [test_concept] == saved_family.concepts
+
+
+@pytest.mark.s3
 def test_bulk_import_successfully_updates_document_when_user_language_has_changed(
     data_db: Session, client: TestClient, superuser_header_token
 ):

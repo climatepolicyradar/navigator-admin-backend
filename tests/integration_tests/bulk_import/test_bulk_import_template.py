@@ -48,6 +48,21 @@ def test_get_template_unfccc(
                     "title": "Collections",
                     "type": "array",
                 },
+                "concepts": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "object",
+                            },
+                            "type": "array",
+                        },
+                        {
+                            "type": "null",
+                        },
+                    ],
+                    "default": [],
+                    "title": "Concepts",
+                },
             }
         ],
         "events": [

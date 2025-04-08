@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import TypedDict, cast
+from typing import Any, Optional, TypedDict, cast
 
 from db_client.models.dfce.collection import (
     Collection,
@@ -47,6 +47,7 @@ class DBEntry(TypedDict):
     last_updated_date: str | None
     documents: list[str]
     collections: list[str]
+    concepts: Optional[list[dict[str, Any]]]
 
 
 EXPECTED_FAMILIES: list[DBEntry] = [
@@ -76,6 +77,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "last_updated_date": "2020-12-24T04:59:31Z",
         "documents": [],
         "collections": ["C.0.0.2"],
+        "concepts": [],
     },
     {
         "import_id": "A.0.0.2",
@@ -103,6 +105,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "last_updated_date": None,
         "documents": ["D.0.0.3"],
         "collections": ["C.0.0.2"],
+        "concepts": [],
     },
     {
         "import_id": "A.0.0.3",
@@ -123,6 +126,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "last_updated_date": "2018-12-24T04:59:33Z",
         "documents": ["D.0.0.1", "D.0.0.2"],
         "collections": ["C.0.0.4"],
+        "concepts": [],
     },
 ]
 EXPECTED_NUM_FAMILIES = len(EXPECTED_FAMILIES)

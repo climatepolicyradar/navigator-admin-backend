@@ -7,6 +7,7 @@ from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce.collection import CollectionFamily
 from db_client.models.dfce.family import (
+    Concept,
     DocumentStatus,
     Family,
     FamilyCorpus,
@@ -513,6 +514,7 @@ def create(
             title=family.title,
             description=family.summary,
             family_category=family.category,
+            concepts=[Concept(**c) for c in (family.concepts or [])],
         )
         db.add(new_family)
 
