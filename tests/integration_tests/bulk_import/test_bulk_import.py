@@ -209,6 +209,7 @@ def test_bulk_import_successfully_saves_families_with_concepts(
 ):
     test_concept = {
         "id": "Federal Courts",
+        "ids": [],
         "type": "legal_entity",
         "preferred_label": "Federal Courts",
         "relation": "jurisdiction",
@@ -234,7 +235,7 @@ def test_bulk_import_successfully_saves_families_with_concepts(
     assert response.status_code == status.HTTP_202_ACCEPTED
 
     saved_family = data_db.query(Family).scalar()
-    assert [{**test_concept, "ids": []}] == saved_family.concepts
+    assert [test_concept] == saved_family.concepts
 
 
 @pytest.mark.s3
