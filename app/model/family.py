@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel
 
@@ -29,6 +29,7 @@ class FamilyReadDTO(BaseModel):
     corpus_type: str
     created: datetime
     last_modified: datetime
+    concepts: Optional[list[dict[str, Any]]] = []
 
 
 class FamilyWriteDTO(BaseModel):
@@ -49,6 +50,7 @@ class FamilyWriteDTO(BaseModel):
     category: str
     metadata: dict[str, list[str]]
     collections: list[str]
+    concepts: Optional[list[dict[str, Any]]] = []
 
 
 class FamilyCreateDTO(BaseModel):
@@ -70,3 +72,4 @@ class FamilyCreateDTO(BaseModel):
     metadata: dict[str, list[str]]
     collections: list[str]
     corpus_import_id: str
+    concepts: Optional[list[dict[str, Any]]] = []

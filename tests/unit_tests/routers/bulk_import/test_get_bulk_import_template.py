@@ -74,6 +74,21 @@ def test_bulk_import_template_when_ok(
                     "title": "Collections",
                     "type": "array",
                 },
+                "concepts": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "object",
+                            },
+                            "type": "array",
+                        },
+                        {
+                            "type": "null",
+                        },
+                    ],
+                    "default": [],
+                    "title": "Concepts",
+                },
             }
         ],
         "events": [

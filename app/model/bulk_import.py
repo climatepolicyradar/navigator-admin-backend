@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, RootModel
 
@@ -80,6 +80,7 @@ class BulkImportFamilyDTO(BaseModel):
     metadata: Metadata
     collections: list[str]
     corpus_import_id: str
+    concepts: Optional[list[dict[str, Any]]] = []
 
     def to_family_create_dto(self, corpus_import_id: str) -> FamilyCreateDTO:
         """
@@ -97,6 +98,7 @@ class BulkImportFamilyDTO(BaseModel):
             metadata=self.metadata.model_dump(),
             collections=self.collections,
             corpus_import_id=corpus_import_id,
+            concepts=self.concepts,
         )
 
     def to_family_write_dto(self) -> FamilyWriteDTO:
@@ -112,6 +114,7 @@ class BulkImportFamilyDTO(BaseModel):
             category=self.category,
             metadata=self.metadata.model_dump(),
             collections=self.collections,
+            concepts=self.concepts,
         )
 
     def is_different_from(self, family):
@@ -125,6 +128,7 @@ class BulkImportFamilyDTO(BaseModel):
             metadata=family.metadata,
             collections=sorted(family.collections),
             corpus_import_id=family.corpus_import_id,
+            concepts=family.concepts,
         )
 
         self.collections = sorted(self.collections)
