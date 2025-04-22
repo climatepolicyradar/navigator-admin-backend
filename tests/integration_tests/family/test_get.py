@@ -105,5 +105,4 @@ def test_search_retrieves_families_without_geographies(
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    breakpoint()
     assert data is not None
