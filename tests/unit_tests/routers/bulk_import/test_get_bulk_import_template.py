@@ -77,7 +77,7 @@ def test_bulk_import_template_when_ok(
                 "concepts": {
                     "anyOf": [
                         {
-                            "items": {"type": "object"},
+                            "items": {"additionalProperties": True, "type": "object"},
                             "type": "array",
                         },
                         {"type": "null"},
