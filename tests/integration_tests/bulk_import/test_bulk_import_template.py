@@ -52,6 +52,7 @@ def test_get_template_unfccc(
                     "anyOf": [
                         {
                             "items": {
+                                "additionalProperties": True,
                                 "type": "object",
                             },
                             "type": "array",
