@@ -61,21 +61,18 @@ def get_family_geography_subquery(db: Session) -> Subquery:
     """
     empty_array = text("ARRAY[]::text[]")
 
-    family_base = db.query(Family.import_id).subquery()
-
     return (
         db.query(
-            family_base.c.import_id.label("family_import_id"),
+            FamilyGeography.family_import_id,
             func.coalesce(
-                func.array_agg(Geography.value).filter(Geography.value.isnot(None)),
+                func.array_agg(Geography.value)
+                .filter(Geography.value.isnot(None))
+                .over(partition_by=FamilyGeography.family_import_id),
                 empty_array,
             ).label("geography_values"),
         )
-        .outerjoin(
-            FamilyGeography, FamilyGeography.family_import_id == family_base.c.import_id
-        )
-        .outerjoin(Geography, Geography.id == FamilyGeography.geography_id)
-        .group_by(family_base.c.import_id)
+        .join(Geography, Geography.id == FamilyGeography.geography_id)
+        .group_by(FamilyGeography.family_import_id, Geography.value)
         .subquery()
     )
 
