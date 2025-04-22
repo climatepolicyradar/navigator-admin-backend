@@ -191,6 +191,9 @@ def _family_to_dto(
         corpus_type=cast(str, corpus.corpus_type_name),
         created=cast(datetime, fam.created),
         last_modified=cast(datetime, fam.last_modified),
+        concepts=(
+            [cast(dict, concepts) for concepts in fam.concepts] if fam.concepts else []
+        ),
     )
 
 
@@ -222,7 +225,9 @@ def _update_intention(
         update_title
         or original_family.description != family.summary
         or original_family.family_category != family.category
+        or original_family.concepts != family.concepts
     )
+
     existing_metadata = (
         db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == import_id)
@@ -414,6 +419,7 @@ def update(
                 title=new_values["title"],
                 description=new_values["summary"],
                 family_category=new_values["category"],
+                concepts=new_values["concepts"],
             )
         )
 

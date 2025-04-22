@@ -33,6 +33,7 @@ def test_search_geographies(
                 "last_updated_date": "2018-12-24T04:59:33Z",
                 "documents": ["D.0.0.1", "D.0.0.2"],
                 "collections": ["C.0.0.4"],
+                "concepts": [],
             },
             {
                 "import_id": "A.0.0.5",
@@ -53,6 +54,7 @@ def test_search_geographies(
                 "last_updated_date": "2018-12-24T04:59:33Z",
                 "documents": ["D.0.0.1", "D.0.0.2"],
                 "collections": ["C.0.0.4"],
+                "concepts": [],
             },
         ],
     )
