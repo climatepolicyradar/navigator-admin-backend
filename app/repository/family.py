@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
+import sqlalchemy
 from db_client.models.dfce.collection import CollectionFamily
 from db_client.models.dfce.family import (
     Concept,
@@ -22,10 +23,11 @@ from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.organisation.corpus import Corpus
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
-from sqlalchemy import Column
+from sqlalchemy import Column, String
 from sqlalchemy import delete as db_delete
 from sqlalchemy import desc, func, text
 from sqlalchemy import update as db_update
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session, lazyload
 from sqlalchemy.sql import Subquery
@@ -77,15 +79,19 @@ def _get_query(db: Session) -> Query:
 
     geography_subquery = get_family_geography_subquery(db)
 
+    empty_array = sqlalchemy.cast([], ARRAY(String))
+
     query = (
         db.query(
             Family,
-            geography_subquery.c.geography_values,
+            func.coalesce(geography_subquery.c.geography_values, empty_array).label(
+                "geography_values"
+            ),
             FamilyMetadata,
             Corpus,
             Organisation,
         )
-        .join(
+        .outerjoin(
             geography_subquery,
             geography_subquery.c.family_import_id == Family.import_id,
         )
@@ -101,13 +107,8 @@ def _get_query(db: Session) -> Query:
             Corpus.import_id,
             Organisation,
         )
-        .options(
-            # Disable any default eager loading as this was causing multiplicity due to
-            # implicit joins in relationships on the selected models.
-            lazyload("*")
-        )
+        .options(lazyload("*"))
     )
-
     return query
 
 
@@ -168,7 +169,7 @@ def _family_to_dto(
         import_id=str(fam.import_id),
         title=str(fam.title),
         summary=str(fam.description),
-        geography=str(geo_values[0]),
+        geography=str(geo_values[0]) if geo_values else None,
         geographies=[str(value) for value in geo_values],
         category=str(fam.family_category),
         status=str(fam.family_status),
