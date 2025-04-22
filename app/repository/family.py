@@ -53,19 +53,29 @@ FamilyGeoMetaOrg = Tuple[
 
 def get_family_geography_subquery(db: Session) -> Subquery:
     """
-    Creates a subquery to aggregate geography values for families, accomodating
+    Creates a subquery to aggregate geography values for families, accommodating
     those with multiple associated geographies.
 
     :param db Session: the database connection
     :return Query: A subquery containing family import IDs and their associated geography values
     """
+    empty_array = text("ARRAY[]::text[]")
+
+    family_base = db.query(Family.import_id).subquery()
+
     return (
         db.query(
-            FamilyGeography.family_import_id,
-            func.array_agg(Geography.value).label("geography_values"),
+            family_base.c.import_id.label("family_import_id"),
+            func.coalesce(
+                func.array_agg(Geography.value).filter(Geography.value.isnot(None)),
+                empty_array,
+            ).label("geography_values"),
         )
-        .join(Geography, Geography.id == FamilyGeography.geography_id)
-        .group_by(FamilyGeography.family_import_id)
+        .outerjoin(
+            FamilyGeography, FamilyGeography.family_import_id == family_base.c.import_id
+        )
+        .outerjoin(Geography, Geography.id == FamilyGeography.geography_id)
+        .group_by(family_base.c.import_id)
         .subquery()
     )
 
@@ -85,7 +95,7 @@ def _get_query(db: Session) -> Query:
             Corpus,
             Organisation,
         )
-        .join(
+        .outerjoin(
             geography_subquery,
             geography_subquery.c.family_import_id == Family.import_id,
         )
@@ -168,7 +178,7 @@ def _family_to_dto(
         import_id=str(fam.import_id),
         title=str(fam.title),
         summary=str(fam.description),
-        geography=str(geo_values[0]),
+        geography=str(geo_values[0]) if geo_values else None,
         geographies=[str(value) for value in geo_values],
         category=str(fam.family_category),
         status=str(fam.family_status),
