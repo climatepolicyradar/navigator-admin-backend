@@ -7,7 +7,10 @@ from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import Collection
 from db_client.models.dfce.collection import CollectionFamily, CollectionOrganisation
-from db_client.models.dfce.family import Family
+from db_client.models.dfce.family import (
+    Family,
+    Slug,
+)
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
@@ -25,7 +28,10 @@ from app.model.collection import (
     CollectionWriteDTO,
 )
 from app.model.general import Json
-from app.repository.helpers import generate_import_id
+from app.repository.helpers import (
+    generate_import_id,
+    generate_slug,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
@@ -216,6 +222,22 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         _LOGGER.error(msg)
         raise RepositoryError(msg)
 
+    if original_collection.title != new_values["title"]:
+        # Update the slug
+        slug_update = db.execute(
+            db_update(Slug)
+            .where(
+                Slug.collection_import_id == import_id,
+                Slug.family_import_id.is_(None),
+                Slug.family_document_import_id.is_(None),
+            )
+            .values(name=generate_slug(db, new_values["title"]))
+        )
+        if slug_update.row_count == 0:  # type: ignore
+            msg = f"Could not update slug for collection {collection}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
+
     return True
 
 
@@ -247,6 +269,17 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
         raise RepositoryError(
             f"Could not create the collection {collection.description}"
         )
+
+    # Add a slug
+    db.add(
+        Slug(
+            family_import_id=None,
+            collection_import_id=new_collection.import_id,
+            family_document_import_id=None,
+            name=generate_slug(db, collection.title),
+        )
+    )
+    db.flush()
 
     return cast(str, new_collection.import_id)
 
