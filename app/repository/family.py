@@ -727,7 +727,11 @@ def add_new_geographies(
 
     if len(cols_to_add) == 0:
         # we should never reach this state - but we are seeing data loss in this table, so this is trying to find that
+        # @see: https://linear.app/climate-policy-radar/issue/APP-538/data-loss-to-family-geography-table
         _LOGGER.error(
+            f"add_new_geographies received no geographies to add geo_ids: {geo_ids} original_geographies: {original_geographies} for {import_id}"
+        )
+        raise RepositoryError(
             f"add_new_geographies received no geographies to add geo_ids: {geo_ids} original_geographies: {original_geographies} for {import_id}"
         )
 
