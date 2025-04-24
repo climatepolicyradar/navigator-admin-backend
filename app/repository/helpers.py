@@ -5,14 +5,11 @@ from functools import cache
 from typing import Optional, Tuple, Union, cast
 from uuid import uuid4
 
-from db_client.models.dfce.family import FamilyGeography, Slug
+from db_client.models.dfce.family import Slug
 from db_client.models.organisation.counters import CountedEntity, EntityCounter
 from db_client.models.organisation.users import Organisation
 from slugify import slugify
-from sqlalchemy import delete as db_delete
 from sqlalchemy.orm import Session
-
-from app.errors import RepositoryError
 
 _LOGGER = logging.getLogger(__name__)
 
