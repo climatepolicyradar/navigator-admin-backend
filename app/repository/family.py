@@ -700,7 +700,10 @@ def remove_old_geographies(
     for col in cols_to_remove:
         try:
             db.execute(
-                db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
+                db_delete(FamilyGeography).where(
+                    FamilyGeography.geography_id == col,
+                    FamilyGeography.family_import_id == import_id,
+                )
             )
         except Exception as e:
             msg = f"Could not remove family {import_id} from geography {col}: {str(e)}"
@@ -724,16 +727,6 @@ def add_new_geographies(
     :raises RepositoryError: if fails to add a geography
     """
     cols_to_add = set(geo_ids) - set(original_geographies)
-
-    if len(cols_to_add) == 0:
-        # we should never reach this state - but we are seeing data loss in this table, so this is trying to find that
-        # @see: https://linear.app/climate-policy-radar/issue/APP-538/data-loss-to-family-geography-table
-        _LOGGER.error(
-            f"add_new_geographies received no geographies to add geo_ids: {geo_ids} original_geographies: {original_geographies} for {import_id}"
-        )
-        raise RepositoryError(
-            f"add_new_geographies received no geographies to add geo_ids: {geo_ids} original_geographies: {original_geographies} for {import_id}"
-        )
 
     for col in cols_to_add:
         try:
