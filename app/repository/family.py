@@ -725,6 +725,12 @@ def add_new_geographies(
     """
     cols_to_add = set(geo_ids) - set(original_geographies)
 
+    if len(cols_to_add) == 0:
+        # we should never reach this state - but we are seeing data loss in this table, so this is trying to find that
+        _LOGGER.error(
+            f"add_new_geographies received no geographies to add geo_ids: {geo_ids} original_geographies: {original_geographies} for {import_id}"
+        )
+
     for col in cols_to_add:
         try:
             new_geography = FamilyGeography(
