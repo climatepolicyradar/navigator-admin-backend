@@ -13,8 +13,9 @@ from db_client.models.dfce.family import (
 )
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
-from sqlalchemy import Column, and_, desc, or_
+from sqlalchemy import Column, and_
 from sqlalchemy import delete as db_delete
+from sqlalchemy import desc, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -305,6 +306,9 @@ def delete(db: Session, import_id: str) -> bool:
         ),
         db_delete(CollectionFamily).where(
             CollectionFamily.collection_import_id == import_id
+        ),
+        db_delete(Slug).where(
+            Slug.collection_import_id == import_id,
         ),
         db_delete(Collection).where(Collection.import_id == import_id),
     ]
