@@ -183,6 +183,7 @@ def search(
             .limit(search_params["max_results"])
             .all()
         )
+
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -210,6 +211,8 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         _LOGGER.error(f"Unable to find collection for update {collection}")
         return False
 
+    update_title = new_values["title"] != original_collection.title
+
     result = db.execute(
         db_update(Collection)
         .where(Collection.import_id == import_id)
@@ -230,18 +233,17 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         )
     ).one_or_none()
 
-    if original_collection.title != new_values["title"] or slug is None:
-        # Update the slug
+    if update_title or slug is None:
+        db.flush()
+        name = generate_slug(db, new_values["title"])
         slug_update = db.execute(
             db_update(Slug)
             .where(
                 Slug.collection_import_id == import_id,
-                Slug.family_import_id.is_(None),
-                Slug.family_document_import_id.is_(None),
             )
-            .values(name=generate_slug(db, new_values["title"]))
+            .values(name=name)
         )
-        if slug_update.row_count == 0:  # type: ignore
+        if slug_update.rowcount == 0:  # type: ignore
             msg = f"Could not update slug for collection {collection}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
