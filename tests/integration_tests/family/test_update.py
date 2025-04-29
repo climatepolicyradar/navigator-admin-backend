@@ -55,6 +55,52 @@ def test_update_family(client: TestClient, data_db: Session, user_header_token):
     assert db_collection[0].family_import_id == "A.0.0.1"
 
 
+def test_update_family_geographies(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+
+    family_1 = create_family_write_dto(
+        title="apple",
+        summary="just a test",
+        geographies=["USA", "GBR"],
+        category=FamilyCategory.UNFCCC,
+        collections=[],
+    )
+    family_2 = create_family_write_dto(
+        title="apple",
+        summary="just a test",
+        geographies=["USA", "AUS"],
+        category=FamilyCategory.UNFCCC,
+        collections=[],
+    )
+    response_1 = client.put(
+        "/api/v1/families/A.0.0.1",
+        json=family_1.model_dump(),
+        headers=user_header_token,
+    )
+    response_2 = client.put(
+        "/api/v1/families/A.0.0.2",
+        json=family_2.model_dump(),
+        headers=user_header_token,
+    )
+
+    assert response_1.status_code == status.HTTP_200_OK
+    assert response_2.status_code == status.HTTP_200_OK
+
+    update_response_1 = client.put(
+        "/api/v1/families/A.0.0.1",
+        json=family_1.model_copy(update={"geographies": ["GBR"]}).model_dump(),
+        headers=user_header_token,
+    )
+
+    assert update_response_1.status_code == status.HTTP_200_OK
+
+    db_family_2 = data_db.query(Family).filter(Family.import_id == "A.0.0.2").one()
+    family_2_geographies = [g.value for g in db_family_2.geographies]
+    assert set(family_2_geographies) == set(["USA", "AUS"])
+
+
 def test_update_family_concepts(
     client: TestClient, data_db: Session, user_header_token
 ):

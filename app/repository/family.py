@@ -700,7 +700,10 @@ def remove_old_geographies(
     for col in cols_to_remove:
         try:
             db.execute(
-                db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
+                db_delete(FamilyGeography).where(
+                    FamilyGeography.geography_id == col,
+                    FamilyGeography.family_import_id == import_id,
+                )
             )
         except Exception as e:
             msg = f"Could not remove family {import_id} from geography {col}: {str(e)}"
