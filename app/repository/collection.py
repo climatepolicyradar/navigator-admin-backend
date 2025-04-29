@@ -13,9 +13,8 @@ from db_client.models.dfce.family import (
 )
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
-from sqlalchemy import Column, and_
+from sqlalchemy import Column, and_, desc, or_
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -36,7 +35,7 @@ from app.repository.helpers import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
-CollectionOrg = Tuple[Collection, Organisation]
+CollectionOrg = Tuple[Collection, Organisation, Slug]
 
 
 def get_org_from_collection_id(db: Session, collection_import_id: str) -> Optional[int]:
@@ -66,17 +65,18 @@ def _get_query(db: Session) -> Query:
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
     return (
-        db.query(Collection, Organisation)
+        db.query(Collection, Organisation, Slug)
         .join(
             CollectionOrganisation,
             CollectionOrganisation.collection_import_id == Collection.import_id,
         )
         .join(Organisation, Organisation.id == CollectionOrganisation.organisation_id)
+        .outerjoin(Slug, Slug.collection_import_id == Collection.import_id)
     )
 
 
 def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
-    collection, org = co
+    collection, org, slug = co
     db_families = (
         db.query(Family.import_id)
         .join(CollectionFamily, CollectionFamily.family_import_id == Family.import_id)
@@ -94,6 +94,7 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         families=families,
         created=cast(datetime, collection.created),
         last_modified=cast(datetime, collection.last_modified),
+        slug=cast(str, slug.name) if slug else None,
     )
 
 
@@ -222,7 +223,13 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         _LOGGER.error(msg)
         raise RepositoryError(msg)
 
-    if original_collection.title != new_values["title"]:
+    slug = (
+        db.query(Slug).filter(
+            Slug.collection_import_id == import_id,
+        )
+    ).one_or_none()
+
+    if original_collection.title != new_values["title"] or slug is None:
         # Update the slug
         slug_update = db.execute(
             db_update(Slug)

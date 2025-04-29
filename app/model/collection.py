@@ -17,6 +17,7 @@ class CollectionReadDTO(BaseModel):
     organisation: str
     created: datetime
     last_modified: datetime
+    slug: str | None = None
 
 
 class CollectionWriteDTO(BaseModel):
