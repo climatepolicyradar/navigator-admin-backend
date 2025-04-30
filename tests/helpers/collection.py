@@ -19,6 +19,7 @@ def create_collection_read_dto(
         organisation="CCLW",
         created=datetime.now(),
         last_modified=datetime.now(),
+        slug="collection-slug",
     )
 
 

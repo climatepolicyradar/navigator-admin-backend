@@ -139,6 +139,7 @@ EXPECTED_COLLECTIONS = [
         "metadata": {"key": "value"},
         "families": [],
         "organisation": "Another org",
+        "slug": "collection-slug-1",
     },
     {
         "import_id": "C.0.0.2",
@@ -147,6 +148,7 @@ EXPECTED_COLLECTIONS = [
         "metadata": {"key": "value"},
         "families": ["A.0.0.1", "A.0.0.2"],
         "organisation": "CCLW",
+        "slug": "collection-slug-2",
     },
     {
         "import_id": "C.0.0.3",
@@ -155,6 +157,7 @@ EXPECTED_COLLECTIONS = [
         "metadata": {"key": "value"},
         "families": [],
         "organisation": "CCLW",
+        "slug": "collection-slug-3",
     },
     {
         "import_id": "C.0.0.4",
@@ -163,6 +166,7 @@ EXPECTED_COLLECTIONS = [
         "metadata": {"key": "value"},
         "families": ["A.0.0.3"],
         "organisation": "UNFCCC",
+        "slug": "collection-slug-4",
     },
 ]
 EXPECTED_NUM_COLLECTIONS = len(EXPECTED_COLLECTIONS)
@@ -533,6 +537,12 @@ def _setup_collection_data(
             CollectionOrganisation(
                 collection_import_id=data["import_id"],
                 organisation_id=_get_org_id_from_name(test_db, data["organisation"]),
+            )
+        )
+        test_db.add(
+            Slug(
+                name=data["slug"],
+                collection_import_id=data["import_id"],
             )
         )
 
