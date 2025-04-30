@@ -39,3 +39,6 @@ def get_database_dump() -> str:
     except subprocess.CalledProcessError as e:
         _LOGGER.error(f"Database dump failed: {e}")
         raise
+
+
+# TODO: Consider possible security implications associated with the subprocess module.
