@@ -130,4 +130,30 @@ def upload_bulk_import_json_to_s3(
     upload_json_to_s3(s3_client, context, data)
 
 
+def upload_sql_db_dump_to_s3(dump_file: str) -> None:
+    """
+    Upload the database dump to S3.
+
+    Args:
+        dump_file (str): Path to the dump file
+    """
+    s3_client = boto3.client("s3")
+    bucket_name = os.environ.get("DB_DUMP_BUCKET")
+
+    if not bucket_name:
+        raise Exception("Missing bucket in environment variables")
+
+    s3_key = f"db_dumps/{dump_file}"
+
+    try:
+        _LOGGER.info(f"Uploading {dump_file} to S3 bucket {bucket_name}")
+        with open(dump_file, "rb") as f:
+            s3_client.upload_fileobj(f, bucket_name, s3_key)
+
+        _LOGGER.info("🎉 Database Dump upload completed successfully")
+    except Exception as e:
+        _LOGGER.error(f"💥 Database Dump upload to S3 failed: {e}")
+        raise
+
+
 # TODO: add more s3 functions like listing and reading files here
