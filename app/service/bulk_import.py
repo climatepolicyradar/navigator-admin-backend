@@ -434,11 +434,7 @@ def import_data(
     )
     end_message = ""
 
-    import_uuid = uuid4()
-    upload_bulk_import_json_to_s3(f"{import_uuid}-request", corpus_import_id, data)
-
     _LOGGER.info("Getting DB session")
-
     db = db_session.get_db()
 
     collection_data = data["collections"] if "collections" in data else None
@@ -480,6 +476,10 @@ def import_data(
         db.commit()
 
         if any([collection_data, family_data, document_data, event_data]):
+            import_uuid = uuid4()
+            upload_bulk_import_json_to_s3(
+                f"{import_uuid}-request", corpus_import_id, data
+            )
             upload_bulk_import_json_to_s3(
                 f"{import_uuid}-result", corpus_import_id, result
             )
