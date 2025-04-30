@@ -21,6 +21,11 @@ def test_delete_collection_deletes_associated_slug(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
+    slug = (
+        data_db.query(Slug).filter(Slug.collection_import_id == "C.0.0.2").one_or_none()
+    )
+
+    assert slug is not None
     response = client.delete("/api/v1/collections/C.0.0.2", headers=user_header_token)
     assert response.status_code == status.HTTP_200_OK
     collection_slug = (

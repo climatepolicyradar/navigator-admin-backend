@@ -91,6 +91,12 @@ def test_update_collections_updates_associated_slug(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
+    slug = (
+        data_db.query(Slug).filter(Slug.collection_import_id == "C.0.0.2").one_or_none()
+    )
+    assert slug is not None
+    original_slug_name = slug.name
+
     new_collection = create_collection_write_dto(
         title="This is the updated title of this collection",
         description="just a test",
@@ -111,6 +117,7 @@ def test_update_collections_updates_associated_slug(
     assert slug is not None
 
     assert "this-is-the-updated-title-of-this-collection" in slug.name
+    assert slug.name != original_slug_name
 
 
 def test_update_collection_when_not_authorised(client: TestClient, data_db: Session):
