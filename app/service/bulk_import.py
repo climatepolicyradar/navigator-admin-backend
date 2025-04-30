@@ -6,6 +6,7 @@ import of data and other services for validation etc.
 """
 
 import logging
+import math
 import os
 import time
 from typing import Any, Optional
@@ -188,9 +189,20 @@ def save_collections(
                 total_collections_saved += 1
 
     _LOGGER.info(
-        f"⏱️ Saved {total_collections_saved} collections in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_collections_saved} collections in {_get_duration(start_time)} seconds"
     )
     return collection_import_ids
+
+
+def _get_duration(start_time: float) -> int:
+    """
+    Calculate duration in seconds from time passed in till now.
+
+    :param float start_time: The time to calculate duration from.
+    :return int: The duration from time passed in until now rounded up to the nearest second.
+    """
+
+    return math.ceil(time.time() - start_time)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -247,7 +259,7 @@ def save_families(
                 total_families_saved += 1
 
     _LOGGER.info(
-        f"⏱️ Saved {total_families_saved} families in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_families_saved} families in {_get_duration(start_time)} seconds"
     )
 
     return family_import_ids
@@ -310,7 +322,7 @@ def save_documents(
                     total_documents_saved += 1
 
     _LOGGER.info(
-        f"⏱️ Saved {total_documents_saved} documents in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_documents_saved} documents in {_get_duration(start_time)} seconds"
     )
     return document_import_ids
 
@@ -372,7 +384,7 @@ def save_events(
                 total_events_saved += 1
 
     _LOGGER.info(
-        f"⏱️ Saved {total_events_saved} events in {time.time() - start_time} seconds"
+        f"⏱️ Saved {total_events_saved} events in {_get_duration(start_time)} seconds"
     )
     return event_import_ids
 
@@ -474,7 +486,7 @@ def import_data(
         else:
             _LOGGER.info("🗒️ No data to import.")
 
-        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {time.time() - start_time} seconds."
+        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds."
     except Exception as e:
         _LOGGER.error(
             f"💥 Rolling back transaction due to the following error: {e}",
