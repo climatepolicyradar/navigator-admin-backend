@@ -286,6 +286,6 @@ def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) ->
         update_value = getattr(update_dto, key)
         current_value = getattr(current_dto, key)
         if update_value != current_value:
-            _LOGGER.debug(
+            _LOGGER.info(
                 f"🔀 Change detected in {key}: {current_value} => {update_value}"
             )
