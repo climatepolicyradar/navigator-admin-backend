@@ -113,6 +113,7 @@ def _create_backend_environment() -> dict[str, str]:
     rds_database = CONFIG.require("rds_database")
     secret_key = CONFIG.require("secret_key")
     bulk_import_bucket = CONFIG.require("bulk_import_bucket")
+    database_dump_bucket = CONFIG.require("database_dump_bucket")
     slack_webhook_url = CONFIG.require("slack_webhook_url")
     log_level = CONFIG.require("log_level")
 
@@ -132,6 +133,7 @@ def _create_backend_environment() -> dict[str, str]:
         "ADMIN_POSTGRES_DATABASE": rds_database,
         "SECRET_KEY": secret_key,
         "BULK_IMPORT_BUCKET": bulk_import_bucket,
+        "DATABASE_DUMP_BUCKET": database_dump_bucket,
         "SLACK_WEBHOOK_URL": slack_webhook_url,
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,
