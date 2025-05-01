@@ -4,8 +4,13 @@ config:
   admin_backend:apprunner_backend_min_instance_count: "2"
   admin_backend:bulk_import_bucket:
     secure: AAABABXH0sWOg9cQVYQHjLfnO4MFTPcXXm8B4kZwqZugZdMt0cL9VUdLif8K1+ysL8i6NrXYYM+j
+  admin_backend:database_dump_bucket:
+    secure: AAABAOvU+mcN3BcLeLCNUX+qvBcAx2HL5edrQw6KwpN1tqjPxLUryRdm3ypmkjrTfDQ=
+  admin_backend:db_subnet_group_name:
+    secure: AAABADb6ZUvU4vfpTX2C9ZSD/DWsHCDESMK0pk351sBOEWgdOqJGHu2yGkhl1eTn+npG/S8dZtGDF+Mlig==
   admin_backend:ecr_uri:
     secure: AAABADGDJp8NB1PMdF0xypW3Qqi+W0j2nvXCXTrwErXic9HTh6E8asjRIZI3mAEeXOnZB2TrJUpra0/l1nxSoEkiGTrygYmdgVEUEEjtjY+c+EHyWhs/zPpNiXv+VAR2r/hERg==
+  admin_backend:log_level: INFO
   admin_backend:rds_address:
     secure: AAABAEsgmuDMFhu4sztLZCAj0Be3kRfxzaDGhLie5Q8h5fASP/fupEjhFJwSkqyDizv/G/zjyQ7tMHKlyo9Mnnr7kCofm99i+mmywNjnANLeu6ncFuHJAdoQBlkqHuNiQalr3RcKcbx+ggim
   admin_backend:rds_database:
@@ -14,6 +19,8 @@ config:
     secure: AAABAFi+77knR/AsskglULgfcgs5ja+Nhg0RtMTW7WonnJj9k0i4I5VLwpcTq4Y19/XmecUhrA==
   admin_backend:rds_username:
     secure: AAABACkh3HYtHyETH8Y80kYCO3UwGxKGHX/oHIRe+QG27jrDRyPx1O74UEBvmuA=
+  admin_backend:rds_vpc_security_group_id:
+    secure: AAABANnqNhZ6/xyTcnxcRuFjLE+85OwqD7uhUUo/PkzUqOBSMUMxUOBH3LZrVlzKq2n3Ig==
   admin_backend:secret_key:
     secure: AAABAJ4tlIq+2Xgl9ZgyUhsA/7EB1zY2zI/kaxEaPIl0SdwS56NFzJ2Z2BAkVm1cqE3yxKiuE2jfkQm6pK1d/Dcz2G0=
   admin_backend:slack_webhook_url:
@@ -29,10 +36,5 @@ config:
   admin_backend:vpc_security_group_admin_backend:
     secure: AAABAL8JPKwI0Y3WZTTVvBZdhA4LvIL/CTK6Kf1AHRqkT2Om9LuYiYnFLXYhdYo0nVkUjQ==
   aws:region: eu-west-1
-  admin_backend:log_level: INFO
-  admin_backend:db_subnet_group_name:
-    secure: AAABADb6ZUvU4vfpTX2C9ZSD/DWsHCDESMK0pk351sBOEWgdOqJGHu2yGkhl1eTn+npG/S8dZtGDF+Mlig==
-  admin_backend:rds_vpc_security_group_id:
-    secure: AAABANnqNhZ6/xyTcnxcRuFjLE+85OwqD7uhUUo/PkzUqOBSMUMxUOBH3LZrVlzKq2n3Ig==
 environment:
   - admin_backend/production
