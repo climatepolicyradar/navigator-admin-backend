@@ -16,10 +16,13 @@ _LOGGER.setLevel(logging.INFO)
 
 def get_database_dump() -> str:
     """
-    Dump the PostgreSQL database to a file.
+    Dumps the PostgreSQL database to a local SQL file.
 
-    Returns:
-        str: Path to the dump file
+    Generates a timestamped `.sql` file using `pg_dump` and stores it
+    in the current working directory.
+
+    :raises subprocess.CalledProcessError: If the `pg_dump` command fails.
+    :return str: The path to the generated SQL dump file.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     dump_file = f"navigator_dump_{timestamp}.sql"
