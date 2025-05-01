@@ -44,7 +44,7 @@ def get_database_dump() -> str:
     env = {**os.environ, "PGPASSWORD": ADMIN_POSTGRES_PASSWORD}
 
     try:
-        _LOGGER.info(f"Starting database dump to {dump_file}")
+        _LOGGER.info(f"🚀 Starting database dump to {dump_file}")
         result = subprocess.run(
             cmd,
             check=True,
@@ -52,12 +52,12 @@ def get_database_dump() -> str:
             capture_output=True,
             text=True,
         )
-        _LOGGER.info("Database dump completed successfully")
+        _LOGGER.info("✅ Database dump completed successfully")
         _LOGGER.debug(f"pg_dump output: {result.stdout}")
         return dump_file
 
     except subprocess.CalledProcessError as e:
-        _LOGGER.error(f"Database dump failed: {e}")
+        _LOGGER.error(f"💥 Database dump failed: {e}")
         _LOGGER.error(f"stderr: {e.stderr}")
         raise
 

@@ -138,7 +138,7 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
         dump_file (str): Path to the dump file
     """
     s3_client = boto3.client("s3")
-    bucket_name = os.environ.get("DB_DUMP_BUCKET")
+    bucket_name = os.environ["DATABASE_DUMP_BUCKET"]
 
     if not bucket_name:
         raise Exception("Missing bucket in environment variables")
@@ -146,13 +146,13 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
     s3_key = f"db_dumps/{dump_file}"
 
     try:
-        _LOGGER.info(f"Uploading {dump_file} to S3 bucket {bucket_name}")
+        _LOGGER.info(f"🚀 Uploading {dump_file} to S3 bucket {bucket_name}")
         with open(dump_file, "rb") as f:
             s3_client.upload_fileobj(f, bucket_name, s3_key)
 
         _LOGGER.info("🎉 Database Dump upload completed successfully")
     except Exception as e:
-        _LOGGER.error(f"💥 Database Dump upload to S3 failed: {e}")
+        _LOGGER.error(f"💥 Database Dump upload to S3 bucket {bucket_name} failed: {e}")
         raise
 
 
