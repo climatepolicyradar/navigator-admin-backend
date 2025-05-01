@@ -30,6 +30,9 @@ services:
       SLACK_WEBHOOK_URL: skip
       BULK_IMPORT_BUCKET: bulk-import-bucket
 
+      # Db dump
+      DATABASE_DUMP_BUCKET: database-dump-bucket
+
       # localstack
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
@@ -63,6 +66,7 @@ services:
       DEBUG: ${DEBUG:-0}
       # These values are used by the init-s3.py script
       BULK_IMPORT_BUCKET: bulk-import-bucket
+      DATABASE_DUMP_BUCKET: database-dump-bucket
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_ENDPOINT_URL: http://localhost:4566
