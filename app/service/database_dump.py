@@ -1,8 +1,14 @@
 import logging
+import os
 import subprocess
 from datetime import datetime
 
-from app.config import ADMIN_POSTGRES_DATABASE, ADMIN_POSTGRES_HOST, ADMIN_POSTGRES_USER
+from app.config import (
+    ADMIN_POSTGRES_DATABASE,
+    ADMIN_POSTGRES_HOST,
+    ADMIN_POSTGRES_PASSWORD,
+    ADMIN_POSTGRES_USER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.INFO)
@@ -31,13 +37,25 @@ def get_database_dump() -> str:
         dump_file,
     ]
 
+    # Set environment with password
+    env = {**os.environ, "PGPASSWORD": ADMIN_POSTGRES_PASSWORD}
+
     try:
         _LOGGER.info(f"Starting database dump to {dump_file}")
-        subprocess.run(cmd, check=True)
+        result = subprocess.run(
+            cmd,
+            check=True,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
         _LOGGER.info("Database dump completed successfully")
+        _LOGGER.debug(f"pg_dump output: {result.stdout}")
         return dump_file
+
     except subprocess.CalledProcessError as e:
         _LOGGER.error(f"Database dump failed: {e}")
+        _LOGGER.error(f"stderr: {e.stderr}")
         raise
 
 
