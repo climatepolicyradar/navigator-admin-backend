@@ -1,7 +1,7 @@
 name: navigator-admin-backend-test
 services:
   webapp:
-    command: poetry run pytest --disable-warnings -vv ${TEST}
+    command: poetry run pytest --disable-warnings -vvv ${TEST}
     build:
       context: ./
       dockerfile: Dockerfile.webapp
