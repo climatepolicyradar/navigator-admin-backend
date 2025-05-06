@@ -38,7 +38,7 @@ def delete_local_file(file_path: str) -> None:
             _LOGGER.debug(f"Deleted local file: {file_path}")
     except Exception as e:
         _LOGGER.error(f"⚠️ Failed to delete file {file_path}: {e}")
-        raise
+        raise e
 
 
 def get_database_dump(timeout_secs: int = 300) -> str:
@@ -111,10 +111,10 @@ def get_database_dump(timeout_secs: int = 300) -> str:
             _LOGGER.error(f"stderr: {e.stderr}")
         if dump_file.exists():
             dump_file.unlink()
-        raise
+        raise e
 
     except Exception as e:
         _LOGGER.error(f"⚠️ Unexpected error during database dump: {e}")
         if dump_file.exists():
             dump_file.unlink()
-        raise
+        raise e
