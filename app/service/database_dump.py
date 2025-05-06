@@ -1,4 +1,5 @@
 import logging
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -14,14 +15,28 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.INFO)
 
 
+def validate_postgres_param(value: str) -> str:
+    """
+    Allow only alphanumeric, dots, underscores and hyphens in Postgres parameters.
+
+    :param value: The Postgres parameter to validate
+    returns str: The validated parameter
+    :raises ValueError: If the parameter is invalid
+    """
+    if value is None or not re.match(r"^[\w.-]+$", value):
+        raise ValueError(f"Invalid Postgres parameter: {value}")
+    return value
+
+
 def get_database_dump() -> str:
     """
     Dumps the PostgreSQL database to a local SQL file.
 
     Generates a timestamped `.sql` file using `pg_dump` and stores it
-    in the current working directory.
+    in the current working directory with secure permissions.
 
     :raises subprocess.CalledProcessError: If the `pg_dump` command fails.
+    :raises RuntimeError: If security checks fail or the operation times out.
     :return str: The path to the generated SQL dump file.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -30,16 +45,16 @@ def get_database_dump() -> str:
     if dump_file.exists():
         raise RuntimeError(f"Dump file already exists: {dump_file}")
 
-        # pg_dump command
+    # pg_dump command
     cmd = [
         "pg_dump",
         "--no-password",  # Force password to come from environment only
         "-h",
-        ADMIN_POSTGRES_HOST,
+        validate_postgres_param(ADMIN_POSTGRES_HOST),
         "-U",
-        ADMIN_POSTGRES_USER,
+        validate_postgres_param(ADMIN_POSTGRES_USER),
         "-d",
-        ADMIN_POSTGRES_DATABASE,
+        validate_postgres_param(ADMIN_POSTGRES_DATABASE),
         "-f",
         str(dump_file),
         "--no-privileges",
