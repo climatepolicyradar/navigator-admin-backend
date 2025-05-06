@@ -159,8 +159,8 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
         _LOGGER.info("🎉 Database Dump upload completed successfully")
 
     except Exception as e:
-        _LOGGER.error(f"💥 Upload failed: {e}")
-        raise
+        _LOGGER.exception(f"💥 Upload failed {e}")
+        raise e
 
 
 # TODO: add more s3 functions like listing and reading files here
