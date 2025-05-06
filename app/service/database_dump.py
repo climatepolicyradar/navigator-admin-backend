@@ -1,7 +1,7 @@
 import logging
-import os
 import subprocess
 from datetime import datetime
+from pathlib import Path
 
 from app.config import (
     ADMIN_POSTGRES_DATABASE,
@@ -25,11 +25,15 @@ def get_database_dump() -> str:
     :return str: The path to the generated SQL dump file.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    dump_file = f"navigator_dump_{timestamp}.sql"
+    dump_file = Path(f"navigator_dump_{timestamp}.sql")
 
-    # pg_dump command
+    if dump_file.exists():
+        raise RuntimeError(f"Dump file already exists: {dump_file}")
+
+        # pg_dump command
     cmd = [
         "pg_dump",
+        "--no-password",  # Force password to come from environment only
         "-h",
         ADMIN_POSTGRES_HOST,
         "-U",
@@ -37,29 +41,50 @@ def get_database_dump() -> str:
         "-d",
         ADMIN_POSTGRES_DATABASE,
         "-f",
-        dump_file,
+        str(dump_file),
+        "--no-privileges",
+        "--no-owner",
     ]
 
     # Set environment with password
-    env = {**os.environ, "PGPASSWORD": ADMIN_POSTGRES_PASSWORD}
+    env = {"PGPASSWORD": ADMIN_POSTGRES_PASSWORD}
 
     try:
         _LOGGER.info(f"🚀 Starting database dump to {dump_file}")
+
         result = subprocess.run(
             cmd,
             check=True,
             env=env,
             capture_output=True,
             text=True,
+            shell=False,
+            timeout=300,
         )
+
+        dump_file.chmod(0o600)
+
         _LOGGER.info("✅ Database dump completed successfully")
-        _LOGGER.debug(f"pg_dump output: {result.stdout}")
-        return dump_file
+        if result.stdout:
+            _LOGGER.debug(f"pg_dump output: {result.stdout}")
+        return str(dump_file)
+
+    except subprocess.TimeoutExpired:
+        _LOGGER.error("⌛ Database dump timed out")
+        if dump_file.exists():
+            dump_file.unlink()
+        raise RuntimeError("Database dump timed out after 5 minutes")
 
     except subprocess.CalledProcessError as e:
         _LOGGER.error(f"💥 Database dump failed: {e}")
-        _LOGGER.error(f"stderr: {e.stderr}")
+        if e.stderr:
+            _LOGGER.error(f"stderr: {e.stderr}")
+        if dump_file.exists():
+            dump_file.unlink()
         raise
 
-
-# TODO: Consider possible security implications associated with the subprocess module.
+    except Exception as e:
+        _LOGGER.error(f"⚠️ Unexpected error during database dump: {e}")
+        if dump_file.exists():
+            dump_file.unlink()
+        raise
