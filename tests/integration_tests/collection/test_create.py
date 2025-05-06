@@ -1,4 +1,7 @@
 from db_client.models.dfce.collection import Collection
+from db_client.models.dfce.family import (
+    Slug,
+)
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -105,3 +108,31 @@ def test_create_collection_when_db_error(
     data = response.json()
     assert data["detail"] == "Bad Repo"
     assert bad_collection_repo.create.call_count == 1
+
+
+def test_create_collection_creates_associated_slug(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_collection = create_collection_create_dto(
+        title="Title",
+        description="test test test",
+    )
+    response = client.post(
+        "/api/v1/collections",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data == "CCLW.collection.i00000002.n0000"
+    actual_collection = (
+        data_db.query(Collection).filter(Collection.import_id == data).one()
+    )
+    slug = (
+        data_db.query(Slug)
+        .filter(Slug.collection_import_id == actual_collection.import_id)
+        .one_or_none()
+    )
+
+    assert slug is not None
