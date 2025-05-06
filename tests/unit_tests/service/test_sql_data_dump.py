@@ -93,8 +93,6 @@ def test_get_database_dump_success(mock_path, mock_run, mock_validate, caplog):
         "test-db",
         "-f",
         "navigator_dump_20230101_120000.sql",
-        "--no-privileges",
-        "--no-owner",
     ]
     mock_run.assert_called_once_with(
         expected_cmd,
@@ -124,7 +122,9 @@ def test_get_database_dump_raises_error_when_dump_file_exists(mock_path):
 
 @patch("app.service.database_dump.subprocess.run")
 @patch("app.service.database_dump.Path")
-def test_get_database_dump_raises_timeout_error(mock_path, mock_run, caplog):
+def test_get_database_dump_times_out_after_timeout_period_set_in_the_function_call(
+    mock_path, mock_run, caplog
+):
     """Test timeout during database dump"""
 
     mock_file = MagicMock()
@@ -132,9 +132,45 @@ def test_get_database_dump_raises_timeout_error(mock_path, mock_run, caplog):
     mock_file.__str__ = MagicMock(return_value="test_dump_timeout_error.sql")
     mock_path.return_value = mock_file
 
-    mock_run.side_effect = subprocess.TimeoutExpired("pg_dump", timeout=300)
+    mock_timeout_seconds = 800
+    mock_run.side_effect = subprocess.TimeoutExpired(
+        "pg_dump", timeout=mock_timeout_seconds
+    )
 
-    with pytest.raises(RuntimeError, match="Database dump timed out after 5 minutes"):
+    with pytest.raises(
+        RuntimeError,
+        match=f"Database dump timed out after {mock_timeout_seconds} seconds",
+    ):
+        with caplog.at_level(logging.ERROR):
+            get_database_dump(mock_timeout_seconds)
+
+    mock_file.unlink.assert_called_once()
+    assert "⌛ Database dump timed out" in caplog.text
+
+
+@patch("app.service.database_dump.subprocess.run")
+@patch("app.service.database_dump.Path")
+def test_get_database_dump_raises_time_out_after_default_300_seconds(
+    mock_path, mock_run, caplog
+):
+    """Test timeout during database dump"""
+
+    mock_file = MagicMock()
+    mock_file.exists.side_effect = [False, True]  # First call: False, Second: True
+    mock_file.__str__ = MagicMock(return_value="test_dump_timeout_error.sql")
+    mock_path.return_value = mock_file
+
+    # Even though we are not passing the timeout parameter to the get_database_dump function,
+    #  it should still default to 300 seconds. The side effect just raises the error. The output should be the same.
+    mock_timeout_seconds = 800
+    mock_run.side_effect = subprocess.TimeoutExpired(
+        "pg_dump", timeout=mock_timeout_seconds
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Database dump timed out after 300 seconds",
+    ):
         with caplog.at_level(logging.ERROR):
             get_database_dump()
 
