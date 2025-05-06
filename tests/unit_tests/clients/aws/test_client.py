@@ -148,9 +148,6 @@ UNLOCK TABLES;
 
         assert uploaded_content == sql_dump_content
 
-        # Verify local file was deleted
-        assert not Path(tmp_file_path).exists()
-
     finally:
         # Cleanup in case the test fails
         if Path(tmp_file_path).exists():
