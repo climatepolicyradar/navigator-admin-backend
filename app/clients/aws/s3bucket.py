@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote_plus, urlsplit
 
@@ -132,7 +133,7 @@ def upload_bulk_import_json_to_s3(
 
 def upload_sql_db_dump_to_s3(dump_file: str) -> None:
     """
-    Upload the database dump to S3.
+    Upload the database dump to S3 and clean up local file.
 
     Args:
         dump_file (str): Path to the dump file
@@ -141,19 +142,33 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
     bucket_name = os.environ["DATABASE_DUMP_BUCKET"]
 
     if not bucket_name:
-        raise Exception("Missing bucket in environment variables")
+        raise ValueError("DATABASE_DUMP_BUCKET environment variable not set")
 
-    s3_key = f"db_dumps/{dump_file}"
+    s3_key = f"dumps/{os.path.basename(dump_file)}"
+    dump_path = Path(dump_file)
 
     try:
+        if not dump_path.exists():
+            raise FileNotFoundError(f"Dump file not found: {dump_file}")
+
         _LOGGER.info(f"🚀 Uploading {dump_file} to S3 bucket {bucket_name}")
-        with open(dump_file, "rb") as f:
+
+        with dump_path.open("rb") as f:
             s3_client.upload_fileobj(f, bucket_name, s3_key)
 
         _LOGGER.info("🎉 Database Dump upload completed successfully")
+
     except Exception as e:
-        _LOGGER.error(f"💥 Database Dump upload to S3 bucket {bucket_name} failed: {e}")
+        _LOGGER.error(f"💥 Upload failed: {e}")
         raise
+
+    finally:
+        try:
+            if dump_path.exists():
+                dump_path.unlink()
+                _LOGGER.debug(f"Deleted local dump file: {dump_file}")
+        except Exception as cleanup_error:
+            _LOGGER.error(f"⚠️ Failed to clean up local dump: {cleanup_error}")
 
 
 # TODO: add more s3 functions like listing and reading files here
