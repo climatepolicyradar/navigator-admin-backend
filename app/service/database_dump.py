@@ -41,12 +41,14 @@ def delete_local_file(file_path: str) -> None:
         raise
 
 
-def get_database_dump() -> str:
+def get_database_dump(timeout_secs: int = 300) -> str:
     """
     Dumps the PostgreSQL database to a local SQL file.
 
     Generates a timestamped `.sql` file using `pg_dump` and stores it
     in the current working directory with secure permissions.
+
+    :param timeout_secs int: Timeout for the pg_dump command in seconds (default is 300)
 
     :raises subprocess.CalledProcessError: If the `pg_dump` command fails.
     :raises RuntimeError: If security checks fail or the operation times out.
@@ -87,7 +89,7 @@ def get_database_dump() -> str:
             capture_output=True,
             text=True,
             shell=False,
-            timeout=300,
+            timeout=timeout_secs,
         )
 
         dump_file.chmod(0o600)
@@ -101,7 +103,7 @@ def get_database_dump() -> str:
         _LOGGER.error("⌛ Database dump timed out")
         if dump_file.exists():
             dump_file.unlink()
-        raise RuntimeError("Database dump timed out after 5 minutes")
+        raise RuntimeError(f"Database dump timed out after {timeout_secs} seconds")
 
     except subprocess.CalledProcessError as e:
         _LOGGER.error(f"💥 Database dump failed: {e}")
