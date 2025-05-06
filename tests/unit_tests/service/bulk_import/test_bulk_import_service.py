@@ -88,10 +88,12 @@ def test_slack_notification_sent_on_success(
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
 def test_slack_notification_sent_on_error(
-    caplog, basic_s3_client, validation_service_mock
+    mock_trigger_db_dump, caplog, basic_s3_client, validation_service_mock
 ):
     validation_service_mock.throw_validation_error = True
+    mock_trigger_db_dump.return_value = None
 
     test_data = {"collections": [{}]}
 
