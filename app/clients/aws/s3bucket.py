@@ -162,13 +162,5 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
         _LOGGER.error(f"💥 Upload failed: {e}")
         raise
 
-    finally:
-        try:
-            if dump_path.exists():
-                dump_path.unlink()
-                _LOGGER.debug(f"Deleted local dump file: {dump_file}")
-        except Exception as cleanup_error:
-            _LOGGER.error(f"⚠️ Failed to clean up local dump: {cleanup_error}")
-
 
 # TODO: add more s3 functions like listing and reading files here
