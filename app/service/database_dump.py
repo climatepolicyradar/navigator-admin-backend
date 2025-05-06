@@ -72,8 +72,6 @@ def get_database_dump(timeout_secs: int = 300) -> str:
         validate_postgres_param(ADMIN_POSTGRES_DATABASE),
         "-f",
         str(dump_file),
-        "--no-privileges",
-        "--no-owner",
     ]
 
     # Set environment with password
@@ -92,7 +90,9 @@ def get_database_dump(timeout_secs: int = 300) -> str:
             timeout=timeout_secs,
         )
 
-        dump_file.chmod(0o600)
+        # Set restrictive permissions on the dump file
+        file_permissions = 0o600
+        dump_file.chmod(file_permissions)
 
         _LOGGER.info("✅ Database dump completed successfully")
         if result.stdout:
