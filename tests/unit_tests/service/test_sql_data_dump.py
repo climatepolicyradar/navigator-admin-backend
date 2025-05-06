@@ -14,35 +14,35 @@ from app.service.database_dump import (
 )
 
 
-def test_validate_postgres_param_valid():
-    """Test that valid Postgres parameters pass validation"""
-
-    valid_params = [
+@pytest.mark.parametrize(
+    "param",
+    [
         "valid_name",
         "name_with_underscore_",
         "name-with-hyphen",
         "name.with.dot",
         "numbers123",
-    ]
+    ],
+)
+def test_validate_postgres_param_valid(param):
+    """Test that valid Postgres parameters pass validation"""
+    assert validate_postgres_param(param) == param
 
-    for param in valid_params:
-        assert validate_postgres_param(param) == param
 
-
-def test_validate_postgres_param_invalid():
-    """Test that invalid Postgres parameters raise ValueError"""
-
-    invalid_params = [
+@pytest.mark.parametrize(
+    "param",
+    [
         "invalid name",
         "invalid@name",
         "invalid/name",
         "",
         None,
-    ]
-
-    for param in invalid_params:
-        with pytest.raises(ValueError):
-            validate_postgres_param(param)
+    ],
+)
+def test_validate_postgres_param_invalid(param):
+    """Test that invalid Postgres parameters raise ValueError"""
+    with pytest.raises(ValueError):
+        validate_postgres_param(param)
 
 
 @patch("app.service.database_dump.validate_postgres_param")
