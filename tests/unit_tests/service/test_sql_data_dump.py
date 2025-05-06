@@ -1,10 +1,17 @@
 import logging
+import os
 import subprocess
+import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 import pytest
 
-from app.service.database_dump import get_database_dump, validate_postgres_param
+from app.service.database_dump import (
+    delete_local_file,
+    get_database_dump,
+    validate_postgres_param,
+)
 
 
 def test_validate_postgres_param_valid():
@@ -178,3 +185,44 @@ def test_get_database_dump_raises_unexpected_error(mock_path, mock_run, caplog):
 
     mock_file.unlink.assert_called_once()
     assert "⚠️ Unexpected error during database dump" in caplog.text
+
+
+def test_delete_local_file_removes_existing_file(caplog):
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_path = tmp_file.name
+
+    assert os.path.exists(tmp_path)
+    with caplog.at_level(logging.DEBUG):
+        delete_local_file(tmp_path)
+    assert not os.path.exists(tmp_path)
+
+
+def test_delete_local_file_handles_missing_file_gracefully(caplog):
+    fake_path = str(Path(tempfile.gettempdir()) / "nonexistent_file.txt")
+
+    if os.path.exists(fake_path):
+        os.remove(fake_path)
+
+    delete_local_file(fake_path)
+
+    assert "Deleted local file" not in caplog.text
+
+
+def test_delete_local_file_logs_and_raises_on_generic_exception(caplog):
+    import logging
+    from pathlib import Path
+
+    fake_path = "/tmp/fakefile.txt"
+
+    with (
+        patch.object(Path, "exists", return_value=True),
+        patch.object(Path, "unlink", side_effect=Exception("Something went wrong")),
+    ):
+        caplog.set_level(logging.ERROR)
+
+        with pytest.raises(Exception, match="Something went wrong"):
+            delete_local_file(fake_path)
+
+        assert (
+            f"⚠️ Failed to delete file {fake_path}: Something went wrong" in caplog.text
+        )

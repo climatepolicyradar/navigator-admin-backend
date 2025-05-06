@@ -28,6 +28,19 @@ def validate_postgres_param(value: str) -> str:
     return value
 
 
+def delete_local_file(file_path: str) -> None:
+    """Delete a local file safely, logging any issues."""
+    path = Path(file_path)
+
+    try:
+        if path.exists():
+            path.unlink()
+            _LOGGER.debug(f"Deleted local file: {file_path}")
+    except Exception as e:
+        _LOGGER.error(f"⚠️ Failed to delete file {file_path}: {e}")
+        raise
+
+
 def get_database_dump() -> str:
     """
     Dumps the PostgreSQL database to a local SQL file.
