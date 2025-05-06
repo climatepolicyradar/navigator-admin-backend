@@ -60,7 +60,10 @@ def get_database_dump(timeout_secs: int = 300) -> str:
     if dump_file.exists():
         raise RuntimeError(f"Dump file already exists: {dump_file}")
 
-    # pg_dump command
+    # Securely execute pg_dump with:
+    # - No shell interpolation (shell=False)
+    # - Credentials via environment variables only
+    # - Output to timestamped file with restrictive permissions (0o600)
     cmd = [
         "pg_dump",
         "--no-password",  # Force password to come from environment only
