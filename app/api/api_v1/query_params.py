@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Union, cast
+from typing import Union
 
 from fastapi import HTTPException, status
 
@@ -42,7 +42,7 @@ def validate_query_params(
 
     if not isinstance(query_params["max_results"], int):
         try:
-            query_params.update({"max_results": cast(int, query_params["max_results"])})
+            query_params["max_results"] = int(query_params["max_results"])
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

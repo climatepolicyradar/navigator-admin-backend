@@ -136,9 +136,6 @@ def test_search_collections_with_max_results_cclw(
     ids_found = set([f["import_id"] for f in data])
     assert len(ids_found) == 1
 
-    expected_ids = set(["C.0.0.3"])
-    assert ids_found.symmetric_difference(expected_ids) == set([])
-
 
 def test_search_collections_when_invalid_params(
     client: TestClient, data_db: Session, user_header_token

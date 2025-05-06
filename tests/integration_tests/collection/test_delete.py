@@ -1,4 +1,7 @@
 from db_client.models.dfce.collection import Collection
+from db_client.models.dfce.family import (
+    Slug,
+)
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -12,6 +15,23 @@ def test_delete_collection(client: TestClient, data_db: Session, user_header_tok
     assert response.status_code == status.HTTP_200_OK
     n = data_db.query(Collection).count()
     assert n == EXPECTED_NUM_COLLECTIONS - 1
+
+
+def test_delete_collection_deletes_associated_slug(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    slug = (
+        data_db.query(Slug).filter(Slug.collection_import_id == "C.0.0.2").one_or_none()
+    )
+
+    assert slug is not None
+    response = client.delete("/api/v1/collections/C.0.0.2", headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
+    collection_slug = (
+        data_db.query(Slug).filter(Slug.collection_import_id == "C.0.0.2").one_or_none()
+    )
+    assert collection_slug is None
 
 
 def test_delete_collection_when_not_authenticated(client: TestClient, data_db: Session):
