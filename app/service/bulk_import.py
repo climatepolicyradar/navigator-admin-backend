@@ -507,8 +507,5 @@ def import_data(
         db.rollback()
         end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
     finally:
-        try:
-            trigger_db_dump_upload_to_sql()
-        except Exception as e:
-            _LOGGER.error(f"⚠️ Failed to trigger DB dump upload: {e}", exc_info=True)
+        trigger_db_dump_upload_to_sql()
         notification_service.send_notification(end_message)
