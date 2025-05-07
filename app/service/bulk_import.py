@@ -27,7 +27,10 @@ import app.service.geography as geography
 import app.service.notification as notification_service
 import app.service.taxonomy as taxonomy
 import app.service.validation as validation
-from app.clients.aws.s3bucket import upload_bulk_import_json_to_s3
+from app.clients.aws.s3bucket import (
+    upload_bulk_import_json_to_s3,
+    upload_sql_db_dump_to_s3,
+)
 from app.errors import ValidationError
 from app.model.bulk_import import (
     BulkImportCollectionDTO,
@@ -36,6 +39,7 @@ from app.model.bulk_import import (
     BulkImportFamilyDTO,
 )
 from app.repository.helpers import generate_slug
+from app.service.database_dump import delete_local_file, get_database_dump
 from app.service.event import create_event_metadata_object
 
 # Any increase to this number should first be discussed with the Platform Team
@@ -43,6 +47,14 @@ DEFAULT_DOCUMENT_LIMIT = 1000
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
+
+
+def trigger_db_dump_upload_to_sql() -> None:
+    dump_file = get_database_dump()
+    try:
+        upload_sql_db_dump_to_s3(dump_file)
+    finally:
+        delete_local_file(dump_file)
 
 
 def get_collection_template(corpus_type: str) -> dict:
@@ -495,4 +507,5 @@ def import_data(
         db.rollback()
         end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
     finally:
+        trigger_db_dump_upload_to_sql()
         notification_service.send_notification(end_message)

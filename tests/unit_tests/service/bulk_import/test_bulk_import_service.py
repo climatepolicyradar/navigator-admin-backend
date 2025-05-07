@@ -16,9 +16,15 @@ from tests.helpers.bulk_import import (
 
 @patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
 def test_input_json_and_result_saved_to_s3_on_bulk_import(
-    basic_s3_client, validation_service_mock, corpus_repo_mock, collection_repo_mock
+    mock_trigger_db_dump,
+    basic_s3_client,
+    validation_service_mock,
+    corpus_repo_mock,
+    collection_repo_mock,
 ):
+    mock_trigger_db_dump.return_value = None
     bucket_name = "test_bucket"
     json_data = {
         "collections": [
@@ -46,12 +52,15 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
 def test_slack_notification_sent_on_success(
+    mock_trigger_db_dump,
     basic_s3_client,
     corpus_repo_mock,
     collection_repo_mock,
     validation_service_mock,
 ):
+    mock_trigger_db_dump.return_value = None
     test_data = {
         "collections": [
             {
@@ -79,10 +88,12 @@ def test_slack_notification_sent_on_success(
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
 def test_slack_notification_sent_on_error(
-    caplog, basic_s3_client, validation_service_mock
+    mock_trigger_db_dump, caplog, basic_s3_client, validation_service_mock
 ):
     validation_service_mock.throw_validation_error = True
+    mock_trigger_db_dump.return_value = None
 
     test_data = {"collections": [{}]}
 
@@ -112,7 +123,9 @@ def test_slack_notification_sent_on_error(
     ],
 )
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
 def test_import_data_when_metadata_contains_non_string_values(
+    mock_trigger_db_dump,
     test_data,
     family_repo_mock,
     document_repo_mock,
@@ -122,6 +135,7 @@ def test_import_data_when_metadata_contains_non_string_values(
     caplog,
     basic_s3_client,
 ):
+    mock_trigger_db_dump.return_value = None
     with caplog.at_level(logging.ERROR):
         bulk_import_service.import_data(test_data, "test")
 
@@ -129,7 +143,8 @@ def test_import_data_when_metadata_contains_non_string_values(
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-def test_import_data_when_data_invalid(caplog, basic_s3_client):
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
+def test_import_data_when_data_invalid(mock_trigger_db_dump, caplog, basic_s3_client):
     test_data = {
         "collections": [
             {
@@ -140,6 +155,8 @@ def test_import_data_when_data_invalid(caplog, basic_s3_client):
             }
         ]
     }
+
+    mock_trigger_db_dump.return_value = None
 
     with caplog.at_level(logging.ERROR):
         bulk_import_service.import_data(test_data, "test")
@@ -285,7 +302,6 @@ def test_save_families_skips_update_when_no_changes(
 def test_save_documents_skips_update_when_no_changes(
     document_repo_mock, corpus_repo_mock, validation_service_mock
 ):
-
     test_data = [
         {
             "import_id": "test.new.document.0",
@@ -312,7 +328,6 @@ def test_save_documents_skips_update_when_no_changes(
 def test_save_events_skips_update_when_no_changes(
     event_repo_mock, corpus_repo_mock, validation_service_mock
 ):
-
     test_data = [
         {
             "import_id": "test.new.collection.0",
