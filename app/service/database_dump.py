@@ -1,5 +1,7 @@
 import logging
 import re
+
+# trunk-ignore(bandit/B404)
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -89,7 +91,8 @@ def get_database_dump(timeout_secs: int = 300) -> str:
             env=env,
             capture_output=True,
             text=True,
-            shell=False,
+            # trunk-ignore(bandit/B603)
+            shell=False,  # Following best Practices for using subprocess.run
             timeout=timeout_secs,
         )
 
