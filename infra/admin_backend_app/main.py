@@ -13,10 +13,8 @@ _S3_ACCESS_POLICY = {
             "Resource": [
                 f"arn:aws:s3:::{CONFIG.require('bulk_import_bucket')}",
                 f"arn:aws:s3:::{CONFIG.require('bulk_import_bucket')}/*",
-                f"arn:aws:s3:::{CONFIG.require('cpr-staging-rds')}",
-                f"arn:aws:s3:::{CONFIG.require('cpr-staging-rds')}/*",
-                f"arn:aws:s3:::{CONFIG.require('cpr-production-rds')}",
-                f"arn:aws:s3:::{CONFIG.require('cpr-production-rds')}/*",
+                f"arn:aws:s3:::{CONFIG.require('database_dump_bucket')}",
+                f"arn:aws:s3:::{CONFIG.require('database_dump_bucket')}/*",
             ],
             "Effect": "Allow",
         },
