@@ -11,6 +11,7 @@ import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel
 
+import app.service.notification as notification_service
 from app.clients.aws.client import AWSClient
 from app.errors import RepositoryError
 
@@ -160,6 +161,7 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
 
     except Exception as e:
         _LOGGER.exception(f"💥 Upload failed {e}")
+        notification_service.send_notification("💥 Database Dump upload failed.")
         raise e
 
 
