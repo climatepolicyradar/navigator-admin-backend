@@ -531,5 +531,5 @@ def import_data(
         db.rollback()
         end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
     finally:
-        trigger_db_dump_upload_to_sql()
         notification_service.send_notification(end_message)
+        trigger_db_dump_upload_to_sql()
