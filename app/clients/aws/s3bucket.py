@@ -153,17 +153,11 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
             raise FileNotFoundError(f"Dump file not found: {dump_file}")
 
         _LOGGER.info(f"🚀 Uploading {dump_file} to S3 bucket {bucket_name}")
-        notification_service.send_notification(
-            f"🚀 Uploading {dump_file} to S3 bucket {bucket_name}"
-        )
 
         with dump_path.open("rb") as f:
             s3_client.upload_fileobj(f, bucket_name, s3_key)
 
         _LOGGER.info("🎉 Database Dump upload completed successfully")
-        notification_service.send_notification(
-            "🎉 Database Dump upload completed successfully."
-        )
 
     except Exception as e:
         _LOGGER.exception(f"💥 Upload failed {e}")
