@@ -44,7 +44,7 @@ ReadObj = Tuple[
 ]
 
 
-def get_query(db: Session) -> Query:
+def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of the query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
@@ -166,7 +166,7 @@ def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
     :param org_id int: the ID of the organisation the user belongs to
     :return Optional[DocumentResponse]: All of things
     """
-    query = get_query(db)
+    query = _get_query(db)
     if org_id is not None:
         query = query.filter(Organisation.id == org_id)
 
@@ -187,7 +187,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     :return Optional[DocumentResponse]: A single document or nothing
     """
     try:
-        result = get_query(db).filter(FamilyDocument.import_id == import_id).one()
+        result = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
     except NoResultFound as e:
         _LOGGER.debug("No result found for import_id %s: %s", import_id, e)
         return
@@ -223,7 +223,7 @@ def search(
 
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
-        query = get_query(db).filter(condition)
+        query = _get_query(db).filter(condition)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
         result = (
@@ -496,7 +496,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     :return Optional[int]: The number of documents in the repository or none.
     """
     try:
-        query = get_query(db)
+        query = _get_query(db)
         if org_id is not None:
             query = query.filter(Organisation.id == org_id)
         n_documents = query.count()
@@ -508,7 +508,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
 
 
 def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
-    result = get_query(db).filter(FamilyDocument.import_id == import_id).one_or_none()
+    result = _get_query(db).filter(FamilyDocument.import_id == import_id).one_or_none()
     if result is None:
         return None
     _, _, _, org, _, _ = result
