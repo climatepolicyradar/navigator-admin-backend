@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from unittest.mock import ANY, Mock, patch
 
 import pytest
@@ -81,8 +82,10 @@ def test_slack_notification_sent_on_success(
 
         assert 2 == mock_notification_service.call_count
         assert any(
-            "🎉 Bulk import for corpus: test_corpus_id successfully completed"
-            in call_args[0][0]
+            re.match(
+                r"🎉 Bulk import for corpus: test_corpus_id successfully completed in \d+ seconds\.\n🗒️ Saved\n 1 collections,\n 0 families,\n 0 documents,\n 0 events",
+                call_args[0][0],
+            )
             for call_args in mock_notification_service.call_args_list
         )
 
