@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from unittest.mock import ANY, Mock, patch
 
 import pytest
@@ -81,8 +82,10 @@ def test_slack_notification_sent_on_success(
 
         assert 2 == mock_notification_service.call_count
         assert any(
-            "🎉 Bulk import for corpus: test_corpus_id successfully completed"
-            in call_args[0][0]
+            re.match(
+                r"🎉 Bulk import for corpus: test_corpus_id successfully completed in \d+ seconds\.\n🗒️ Saved\n 1 collections,\n 0 families,\n 0 documents,\n 0 events",
+                call_args[0][0],
+            )
             for call_args in mock_notification_service.call_args_list
         )
 
@@ -344,3 +347,30 @@ def test_save_events_skips_update_when_no_changes(
 
     assert event_repo_mock.update.call_count == 0
     assert result == []
+
+
+def test_create_bulk_import_summary_when_data_to_import():
+    summary = bulk_import_service._create_summary(
+        {
+            "collections": [default_collection],
+            "families": [default_family, default_family],
+            "documents": [default_document, default_document, default_document],
+            "events": [],
+        }
+    )
+
+    assert summary == "🗒️ Saved\n 1 collections,\n 2 families,\n 3 documents,\n 0 events"
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        {},
+        {"collections": [], "families": [], "documents": [], "events": []},
+    ],
+)
+def test_create_bulk_import_summary_when_no_data_to_import(data):
+    summary = bulk_import_service._create_summary(data)
+
+    assert summary == "🗒️ No data to import."

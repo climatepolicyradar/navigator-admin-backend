@@ -425,6 +425,30 @@ def _filter_event_data(
     return filtered_event_data
 
 
+def _create_summary(data: dict[str, Any]) -> str:
+    """
+    Creates a summary of the bulk import.
+
+    :param dict[str, Any] data: The data that was imported.
+    :return str: A summary of the bulk import.
+    """
+    if not data:
+        return "🗒️ No data to import."
+
+    counts = {
+        "collections": len(data.get("collections", [])),
+        "families": len(data.get("families", [])),
+        "documents": len(data.get("documents", [])),
+        "events": len(data.get("events", [])),
+    }
+
+    if not any(counts.values()):
+        return "🗒️ No data to import."
+
+    summary_lines = [f" {count} {item}" for item, count in counts.items()]
+    return "🗒️ Saved\n" + ",\n".join(summary_lines)
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(
     data: dict[str, Any],
@@ -498,7 +522,7 @@ def import_data(
         else:
             _LOGGER.info("🗒️ No data to import.")
 
-        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds."
+        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(data)}"
     except Exception as e:
         _LOGGER.error(
             f"💥 Rolling back transaction due to the following error: {e}",
