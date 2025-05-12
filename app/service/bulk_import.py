@@ -432,19 +432,21 @@ def _create_summary(data: dict[str, Any]) -> str:
     :param dict[str, Any] data: The data that was imported.
     :return str: A summary of the bulk import.
     """
-    if data and any(
-        [
-            data.get("collections"),
-            data.get("families"),
-            data.get("documents"),
-            data.get("events"),
-        ]
-    ):
-        summary = f"🗒️ Saved\n {len(data['collections'])} collections,\n {len(data['families'])} families,\n {len(data['documents'])} documents,\n {len(data['events'])} events"
-    else:
-        summary = "🗒️ No data to import."
+    if not data:
+        return "🗒️ No data to import."
 
-    return summary
+    counts = {
+        "collections": len(data.get("collections", [])),
+        "families": len(data.get("families", [])),
+        "documents": len(data.get("documents", [])),
+        "events": len(data.get("events", [])),
+    }
+
+    if not any(counts.values()):
+        return "🗒️ No data to import."
+
+    summary_lines = [f" {count} {item}" for item, count in counts.items()]
+    return "🗒️ Saved\n" + ",\n".join(summary_lines)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
