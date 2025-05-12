@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -35,6 +36,7 @@ from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id, generate_slug
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
 ReadObj = Tuple[
@@ -187,7 +189,7 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     try:
         result = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _doc_to_dto(result)
@@ -231,13 +233,16 @@ def search(
     return [_doc_to_dto(doc) for doc in result]
 
 
-def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
+def update(
+    db: Session, import_id: str, document: DocumentWriteDTO, slug: Optional[str] = None
+) -> bool:
     """
     Updates a single entry with the new values passed.
 
-    :param db Session: the database connection
+    :param db Session: The database connection.
     :param str import_id: The document import id to change.
-    :param DocumentDTO document: The new values
+    :param DocumentDTO document: The new values.
+    :param Optional[str] slug: The document slug if already generated.
     :return bool: True if new values were set otherwise false.
     """
 
@@ -334,7 +339,7 @@ def update(db: Session, import_id: str, document: DocumentWriteDTO) -> bool:
         db.add(
             Slug(
                 family_document_import_id=original_fd.import_id,
-                name=generate_slug(db, new_values["title"]),
+                name=slug or generate_slug(db, new_values["title"]),
             )
         )
     return True
@@ -440,7 +445,7 @@ def create(
             )
         )
     except Exception as e:
-        _LOGGER.exception("Error when creating document!")
+        _LOGGER.exception(f"Error when creating document: {e}")
         raise RepositoryError(str(e))
 
     return cast(str, family_doc.import_id)
@@ -490,7 +495,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_documents = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_documents

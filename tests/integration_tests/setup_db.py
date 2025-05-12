@@ -1,4 +1,5 @@
-from typing import TypedDict, cast
+from datetime import datetime, timedelta, timezone
+from typing import Any, Optional, TypedDict, cast
 
 from db_client.models.dfce.collection import (
     Collection,
@@ -46,6 +47,7 @@ class DBEntry(TypedDict):
     last_updated_date: str | None
     documents: list[str]
     collections: list[str]
+    concepts: Optional[list[dict[str, Any]]]
 
 
 EXPECTED_FAMILIES: list[DBEntry] = [
@@ -75,6 +77,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "last_updated_date": "2020-12-24T04:59:31Z",
         "documents": [],
         "collections": ["C.0.0.2"],
+        "concepts": [],
     },
     {
         "import_id": "A.0.0.2",
@@ -102,6 +105,7 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "last_updated_date": None,
         "documents": ["D.0.0.3"],
         "collections": ["C.0.0.2"],
+        "concepts": [],
     },
     {
         "import_id": "A.0.0.3",
@@ -117,11 +121,12 @@ EXPECTED_FAMILIES: list[DBEntry] = [
         "corpus_title": "UNFCCC Submissions",
         "corpus_type": "Intl. agreements",
         "slug": "Slug3",
-        "events": ["E.0.0.3"],
+        "events": ["E.0.0.3", "E.0.0.4"],
         "published_date": "2018-12-24T04:59:33Z",
         "last_updated_date": "2018-12-24T04:59:33Z",
         "documents": ["D.0.0.1", "D.0.0.2"],
         "collections": ["C.0.0.4"],
+        "concepts": [],
     },
 ]
 EXPECTED_NUM_FAMILIES = len(EXPECTED_FAMILIES)
@@ -131,29 +136,37 @@ EXPECTED_COLLECTIONS = [
         "import_id": "C.0.0.1",
         "title": "Collection 1 a very big collection",
         "description": "description one",
+        "metadata": {"key": "value"},
         "families": [],
         "organisation": "Another org",
+        "slug": "collection-slug-1",
     },
     {
         "import_id": "C.0.0.2",
         "title": "Collection 2",
         "description": "description two",
+        "metadata": {"key": "value"},
         "families": ["A.0.0.1", "A.0.0.2"],
         "organisation": "CCLW",
+        "slug": "collection-slug-2",
     },
     {
         "import_id": "C.0.0.3",
         "title": "Collection 3",
         "description": "description three",
+        "metadata": {"key": "value"},
         "families": [],
         "organisation": "CCLW",
+        "slug": "collection-slug-3",
     },
     {
         "import_id": "C.0.0.4",
         "title": "Collection 4",
         "description": "description four",
+        "metadata": {"key": "value"},
         "families": ["A.0.0.3"],
         "organisation": "UNFCCC",
+        "slug": "collection-slug-4",
     },
 ]
 EXPECTED_NUM_COLLECTIONS = len(EXPECTED_COLLECTIONS)
@@ -240,6 +253,17 @@ EXPECTED_EVENTS = [
         "family_document_import_id": None,
         "event_status": EventStatus.OK,
     },
+    {
+        "import_id": "E.0.0.4",
+        "event_title": "Future Event",
+        "date": (datetime.now(tz=timezone.utc) + timedelta(days=365))
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "event_type_value": "Completed",
+        "family_import_id": "A.0.0.3",
+        "family_document_import_id": None,
+        "event_status": EventStatus.OK,
+    },
 ]
 EXPECTED_NUM_EVENTS = len(EXPECTED_EVENTS)
 
@@ -303,6 +327,22 @@ EXPECTED_CORPORA_KEYS = [
     "corpus_type_description",
     "metadata",
 ]
+
+EXPECTED_NUM_ORGS = 3
+EXPECTED_CCLW_ORG = {
+    "id": 1,
+    "internal_name": "CCLW",
+    "display_name": "CCLW",
+    "description": "LSE CCLW team",
+    "type": "Academic",
+}
+EXPECTED_UNFCCC_ORG = {
+    "id": 2,
+    "internal_name": "UNFCCC",
+    "display_name": "UNFCCC",
+    "description": "United Nations Framework Convention on Climate Change",
+    "type": "UN",
+}
 
 
 def add_data(test_db: Session, data: list[DBEntry]):
@@ -489,6 +529,7 @@ def _setup_collection_data(
                 import_id=data["import_id"],
                 title=data["title"],
                 description=data["description"],
+                valid_metadata=data["metadata"],
             )
         )
 
@@ -496,6 +537,12 @@ def _setup_collection_data(
             CollectionOrganisation(
                 collection_import_id=data["import_id"],
                 organisation_id=_get_org_id_from_name(test_db, data["organisation"]),
+            )
+        )
+        test_db.add(
+            Slug(
+                name=data["slug"],
+                collection_import_id=data["import_id"],
             )
         )
 

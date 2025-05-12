@@ -48,6 +48,7 @@ def test_bulk_import_template_when_ok(
                 "import_id": {"title": "Import Id", "type": "string"},
                 "title": {"title": "Title", "type": "string"},
                 "description": {"title": "Description", "type": "string"},
+                "metadata": {},
             }
         ],
         "families": [
@@ -63,40 +64,26 @@ def test_bulk_import_template_when_ok(
                 "category": {"title": "Category", "type": "string"},
                 "metadata": {
                     "test": {
-                        "allow_any": False,
                         "allow_blanks": False,
+                        "allow_any": False,
                         "allowed_values": [],
-                    },
+                    }
                 },
                 "collections": {
                     "items": {"type": "string"},
                     "title": "Collections",
                     "type": "array",
                 },
-            }
-        ],
-        "events": [
-            {
-                "import_id": {"title": "Import Id", "type": "string"},
-                "family_import_id": {"title": "Family Import Id", "type": "string"},
-                "family_document_import_id": {
-                    "title": "Family Document Import Id",
+                "concepts": {
                     "anyOf": [
-                        {"type": "string"},
+                        {
+                            "items": {"additionalProperties": True, "type": "object"},
+                            "type": "array",
+                        },
                         {"type": "null"},
                     ],
-                    "default": None,
-                },
-                "event_title": {"title": "Event Title", "type": "string"},
-                "date": {
-                    "format": "date-time",
-                    "title": "Date",
-                    "type": "string",
-                },
-                "event_type_value": {
-                    "allow_any": False,
-                    "allow_blanks": False,
-                    "allowed_values": [],
+                    "default": [],
+                    "title": "Concepts",
                 },
             }
         ],
@@ -111,10 +98,10 @@ def test_bulk_import_template_when_ok(
                 },
                 "metadata": {
                     "test": {
-                        "allow_any": False,
                         "allow_blanks": False,
+                        "allow_any": False,
                         "allowed_values": [],
-                    },
+                    }
                 },
                 "title": {"title": "Title", "type": "string"},
                 "source_url": {
@@ -127,8 +114,33 @@ def test_bulk_import_template_when_ok(
                 },
                 "user_language_name": {
                     "anyOf": [{"type": "string"}, {"type": "null"}],
-                    "title": "User Language Name",
                     "default": None,
+                    "title": "User Language Name",
+                },
+            }
+        ],
+        "events": [
+            {
+                "import_id": {"title": "Import Id", "type": "string"},
+                "family_import_id": {"title": "Family Import Id", "type": "string"},
+                "family_document_import_id": {
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                    "default": None,
+                    "title": "Family Document Import Id",
+                },
+                "event_title": {"title": "Event Title", "type": "string"},
+                "date": {"format": "date-time", "title": "Date", "type": "string"},
+                "event_type_value": {
+                    "allow_blanks": False,
+                    "allow_any": False,
+                    "allowed_values": [],
+                },
+                "metadata": {
+                    "event_type": {
+                        "allow_blanks": False,
+                        "allow_any": False,
+                        "allowed_values": [],
+                    }
                 },
             }
         ],

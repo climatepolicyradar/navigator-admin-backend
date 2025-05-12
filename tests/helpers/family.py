@@ -95,6 +95,7 @@ def create_family_write_dto(
     category: str = FamilyCategory.LEGISLATIVE.value,
     metadata: Optional[dict] = None,
     collections: Optional[list[str]] = None,
+    concepts: Optional[list[dict]] = None,
 ) -> FamilyWriteDTO:
     if metadata is None:
         metadata = {
@@ -115,4 +116,5 @@ def create_family_write_dto(
         category=category,
         metadata=metadata,
         collections=collections,
+        concepts=concepts,
     )

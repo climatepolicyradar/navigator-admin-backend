@@ -6,7 +6,7 @@ Service mocks should only be used for router tests.
 
 import os
 from typing import Dict
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import boto3
 import db_client.functions.corpus_helpers as db_client_corpus_helpers
@@ -76,6 +76,11 @@ def client():
     """Get a TestClient instance that reads/write to the test database."""
 
     yield TestClient(app)
+
+
+@pytest.fixture
+def db_session_mock():
+    return MagicMock()
 
 
 # ----- Mock repos

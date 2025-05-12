@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # We do not mind root users as this is a dev container
 # trunk-ignore(trivy/DS002)
@@ -9,14 +9,12 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl 
 WORKDIR /usr/src
 ENV PYTHONPATH=/usr/src
 
-RUN <<EOF
-apt-get update
-apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
-    postgresql-client
-rm -rf /var/lib/apt/lists/*
-EOF
+    postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir poetry==1.7.1
 COPY poetry.lock pyproject.toml ./

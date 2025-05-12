@@ -11,19 +11,19 @@ def mock_validation_service(validation_service, monkeypatch: MonkeyPatch, mocker
         if validation_service.throw_validation_error:
             raise ValidationError("Error")
 
-    def mock_validate_collection(_) -> None:
+    def mock_validate_collection(_, __, ___) -> None:
         maybe_throw()
 
-    def mock_validate_family(_, __) -> None:
+    def mock_validate_family(_, __, ___) -> None:
         maybe_throw()
 
     def mock_validate_families(_, __) -> None:
         maybe_throw()
 
-    def mock_validate_document(_, __) -> None:
+    def mock_validate_document(_, __, ___) -> None:
         maybe_throw()
 
-    def mock_validate_event(_, __) -> None:
+    def mock_validate_event(_, __, ___) -> None:
         maybe_throw()
 
     def mock_validate_events(_, __) -> None:

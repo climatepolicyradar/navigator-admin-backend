@@ -3,19 +3,22 @@ from db_client.models.dfce.collection import (
     CollectionFamily,
     CollectionOrganisation,
 )
+from db_client.models.dfce.family import Slug
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.model.collection import CollectionWriteDTO
 from tests.helpers.collection import create_collection_write_dto
 from tests.integration_tests.setup_db import EXPECTED_COLLECTIONS, setup_db
 
 
-def test_update_collection(client: TestClient, data_db: Session, user_header_token):
+def test_update_collection_no_metadata(
+    client: TestClient, data_db: Session, user_header_token
+):
     setup_db(data_db)
-    new_collection = create_collection_write_dto(
-        title="Updated Title",
-        description="just a test",
+    new_collection = CollectionWriteDTO(
+        title="Updated Title", description="just a test", organisation="CCLW"
     )
     response = client.put(
         "/api/v1/collections/C.0.0.2",
@@ -26,12 +29,15 @@ def test_update_collection(client: TestClient, data_db: Session, user_header_tok
     data = response.json()
     assert data["title"] == "Updated Title"
     assert data["description"] == "just a test"
+    assert data["metadata"] == {}
 
     db_collection: Collection = (
         data_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
     )
     assert db_collection.title == "Updated Title"
     assert db_collection.description == "just a test"
+    assert db_collection.valid_metadata == {}
+
     families = data_db.query(CollectionFamily).filter(
         CollectionFamily.collection_import_id == "C.0.0.2"
     )
@@ -42,6 +48,76 @@ def test_update_collection(client: TestClient, data_db: Session, user_header_tok
         .one()
     )
     assert org is not None
+
+
+def test_update_collection_with_metadata(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    new_collection = create_collection_write_dto(
+        title="Updated Title", description="just a test", metadata={"key": "value"}
+    )
+    response = client.put(
+        "/api/v1/collections/C.0.0.2",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["title"] == "Updated Title"
+    assert data["description"] == "just a test"
+    assert data["metadata"] == {"key": "value"}
+
+    db_collection: Collection = (
+        data_db.query(Collection).filter(Collection.import_id == "C.0.0.2").one()
+    )
+    assert db_collection.title == "Updated Title"
+    assert db_collection.description == "just a test"
+    assert db_collection.valid_metadata == {"key": "value"}
+
+    families = data_db.query(CollectionFamily).filter(
+        CollectionFamily.collection_import_id == "C.0.0.2"
+    )
+    assert families.count() == 2
+    org: CollectionOrganisation = (
+        data_db.query(CollectionOrganisation)
+        .filter(CollectionOrganisation.collection_import_id == "C.0.0.2")
+        .one()
+    )
+    assert org is not None
+
+
+def test_update_collections_updates_associated_slug(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    slug = (
+        data_db.query(Slug).filter(Slug.collection_import_id == "C.0.0.2").one_or_none()
+    )
+    assert slug is not None
+    original_slug_name = slug.name
+
+    new_collection = create_collection_write_dto(
+        title="This is the updated title of this collection",
+        description="just a test",
+    )
+    response = client.put(
+        "/api/v1/collections/C.0.0.2",
+        json=new_collection.model_dump(),
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["title"] == "This is the updated title of this collection"
+    assert data["description"] == "just a test"
+
+    slug = (
+        data_db.query(Slug).filter(Slug.collection_import_id == "C.0.0.2").one_or_none()
+    )
+    assert slug is not None
+
+    assert "this-is-the-updated-title-of-this-collection" in slug.name
+    assert slug.name != original_slug_name
 
 
 def test_update_collection_when_not_authorised(client: TestClient, data_db: Session):

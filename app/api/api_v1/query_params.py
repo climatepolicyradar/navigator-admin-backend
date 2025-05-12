@@ -1,9 +1,11 @@
 import logging
-from typing import Union, cast
+import os
+from typing import Union
 
 from fastapi import HTTPException, status
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 def get_query_params_as_dict(query_params) -> dict[str, Union[str, int]]:
@@ -40,7 +42,7 @@ def validate_query_params(
 
     if not isinstance(query_params["max_results"], int):
         try:
-            query_params.update({"max_results": cast(int, query_params["max_results"])})
+            query_params["max_results"] = int(query_params["max_results"])
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

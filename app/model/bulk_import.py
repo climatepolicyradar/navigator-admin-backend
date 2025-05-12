@@ -1,14 +1,18 @@
+import logging
+import os
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, RootModel
 
-from app.model.collection import CollectionCreateDTO
-from app.model.document import DocumentCreateDTO
-from app.model.event import EventCreateDTO
-from app.model.family import FamilyCreateDTO
+from app.model.collection import CollectionCreateDTO, CollectionWriteDTO
+from app.model.document import DocumentCreateDTO, DocumentWriteDTO
+from app.model.event import EventCreateDTO, EventWriteDTO
+from app.model.family import FamilyCreateDTO, FamilyWriteDTO
 
 Metadata = RootModel[Dict[str, Union[str, List[str]]]]
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 class BulkImportCollectionDTO(BaseModel):
@@ -17,6 +21,7 @@ class BulkImportCollectionDTO(BaseModel):
     import_id: str
     title: str
     description: str
+    metadata: Metadata
 
     def to_collection_create_dto(self) -> CollectionCreateDTO:
         """
@@ -28,7 +33,40 @@ class BulkImportCollectionDTO(BaseModel):
             import_id=self.import_id,
             title=self.title,
             description=self.description,
+            metadata=self.metadata.model_dump(),
         )
+
+    def to_collection_write_dto(self) -> CollectionWriteDTO:
+        """
+        Convert BulkImportCollectionDTO to CollectionWriteDTO.
+
+        :return CollectionWriteDTO: Converted CollectionWriteDTO instance.
+        """
+        return CollectionWriteDTO(
+            title=self.title,
+            description=self.description,
+            metadata=self.metadata.model_dump(),
+            organisation="",
+        )
+
+    def is_different_from(self, collection):
+        """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportCollectionDTO(
+            import_id=collection.import_id,
+            title=collection.title,
+            description=collection.description,
+            metadata=collection.metadata,
+        )
+
+        keys = set(self.model_fields.keys())
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
 
 
 class BulkImportFamilyDTO(BaseModel):
@@ -42,6 +80,7 @@ class BulkImportFamilyDTO(BaseModel):
     metadata: Metadata
     collections: list[str]
     corpus_import_id: str
+    concepts: Optional[list[dict[str, Any]]] = []
 
     def to_family_create_dto(self, corpus_import_id: str) -> FamilyCreateDTO:
         """
@@ -59,32 +98,51 @@ class BulkImportFamilyDTO(BaseModel):
             metadata=self.metadata.model_dump(),
             collections=self.collections,
             corpus_import_id=corpus_import_id,
+            concepts=self.concepts,
         )
 
-
-class BulkImportEventDTO(BaseModel):
-    """Representation of an event for bulk import."""
-
-    import_id: str
-    family_import_id: str
-    family_document_import_id: Optional[str] = None
-    event_title: str
-    date: datetime
-    event_type_value: str
-
-    def to_event_create_dto(self) -> EventCreateDTO:
+    def to_family_write_dto(self) -> FamilyWriteDTO:
         """
-        Convert BulkImportEventDTO to EventCreateDTO.
+        Convert BulkImportFamilyDTO to FamilyWriteDTO.
 
-        :return EventCreateDTO: Converted EventCreateDTO instance.
+        :return FamilyWriteDTO: Converted FamilyWriteDTO instance.
         """
-        return EventCreateDTO(
-            import_id=self.import_id,
-            family_import_id=self.family_import_id,
-            event_title=self.event_title,
-            date=self.date,
-            event_type_value=self.event_type_value,
+        return FamilyWriteDTO(
+            title=self.title,
+            summary=self.summary,
+            geographies=self.geographies,
+            category=self.category,
+            metadata=self.metadata.model_dump(),
+            collections=self.collections,
+            concepts=self.concepts,
         )
+
+    def is_different_from(self, family):
+        """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportFamilyDTO(
+            import_id=family.import_id,
+            title=family.title,
+            summary=family.summary,
+            geographies=sorted(family.geographies),
+            category=family.category,
+            metadata=family.metadata,
+            collections=sorted(family.collections),
+            corpus_import_id=family.corpus_import_id,
+            concepts=family.concepts,
+        )
+
+        self.collections = sorted(self.collections)
+        self.geographies = sorted(self.geographies)
+
+        keys = set(self.model_fields.keys())
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
 
 
 class BulkImportDocumentDTO(BaseModel):
@@ -114,3 +172,120 @@ class BulkImportDocumentDTO(BaseModel):
             source_url=self.source_url,
             user_language_name=self.user_language_name,
         )
+
+    def to_document_write_dto(self) -> DocumentWriteDTO:
+        """
+        Convert BulkImportDocumentDTO to DocumentWriteDTO.
+
+        :return DocumentWriteDTO: Converted DocumentWriteDTO instance.
+        """
+        return DocumentWriteDTO(
+            variant_name=self.variant_name,
+            metadata=self.metadata.model_dump(),
+            title=self.title,
+            source_url=self.source_url,
+            user_language_name=self.user_language_name,
+        )
+
+    def is_different_from(self, document):
+        """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportDocumentDTO(
+            import_id=document.import_id,
+            family_import_id=document.family_import_id,
+            title=document.title,
+            variant_name=document.variant_name,
+            metadata=document.metadata,
+            source_url=document.source_url,
+            user_language_name=document.user_language_name,
+        )
+
+        keys = set(self.model_fields.keys())
+        if self.user_language_name is None:
+            keys.remove("user_language_name")
+
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
+
+
+class BulkImportEventDTO(BaseModel):
+    """Representation of an event for bulk import."""
+
+    import_id: str
+    family_import_id: str
+    family_document_import_id: Optional[str] = None
+    event_title: str
+    date: datetime
+    event_type_value: str
+    metadata: Metadata
+
+    def to_event_create_dto(self) -> EventCreateDTO:
+        """
+        Convert BulkImportEventDTO to EventCreateDTO.
+
+        :return EventCreateDTO: Converted EventCreateDTO instance.
+        """
+        return EventCreateDTO(
+            import_id=self.import_id,
+            family_import_id=self.family_import_id,
+            family_document_import_id=self.family_document_import_id,
+            event_title=self.event_title,
+            date=self.date,
+            event_type_value=self.event_type_value,
+        )
+
+    def to_event_write_dto(self) -> EventWriteDTO:
+        """
+        Convert BulkImportEventDTO to EventWriteDTO.
+
+        :return EventWriteDTO: Converted EventWriteDTO instance.
+        """
+        return EventWriteDTO(
+            event_title=self.event_title,
+            date=self.date,
+            event_type_value=self.event_type_value,
+        )
+
+    def is_different_from(self, event, event_metadata):
+        """Check if this DTO is different from another DTO"""
+        comparison_dto = BulkImportEventDTO(
+            import_id=event.import_id,
+            family_import_id=event.family_import_id,
+            family_document_import_id=event.family_document_import_id,
+            event_title=event.event_title,
+            date=event.date.replace(tzinfo=None),
+            event_type_value=event.event_type_value,
+            metadata=event_metadata,
+        )
+
+        keys = set(self.model_fields.keys())
+        is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
+            include=keys
+        )
+
+        if is_different:
+            log_differences(self, comparison_dto, keys)
+
+        return is_different
+
+
+def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) -> None:
+    """
+    Log the differences between two DTOs.
+
+    :param BaseModel current_dto: The current DTO.
+    :param BaseModel comparison_dto: The DTO to compare with.
+    :param set keys: The keys to compare.
+    """
+    for key in keys:
+        update_value = getattr(update_dto, key)
+        current_value = getattr(current_dto, key)
+        if update_value != current_value:
+            _LOGGER.info(
+                f"🔀 Change detected in {key}: {current_value} => {update_value}"
+            )

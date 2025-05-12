@@ -17,6 +17,7 @@ def test_get_template_unfccc(
                 "import_id": {"title": "Import Id", "type": "string"},
                 "title": {"title": "Title", "type": "string"},
                 "description": {"title": "Description", "type": "string"},
+                "metadata": {},
             }
         ],
         "families": [
@@ -46,6 +47,22 @@ def test_get_template_unfccc(
                     "items": {"type": "string"},
                     "title": "Collections",
                     "type": "array",
+                },
+                "concepts": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "additionalProperties": True,
+                                "type": "object",
+                            },
+                            "type": "array",
+                        },
+                        {
+                            "type": "null",
+                        },
+                    ],
+                    "default": [],
+                    "title": "Concepts",
                 },
             }
         ],
@@ -89,6 +106,38 @@ def test_get_template_unfccc(
                         "Settled",
                         "Updated",
                     ],
+                },
+                "metadata": {
+                    "datetime_event_name": {
+                        "allow_any": False,
+                        "allow_blanks": False,
+                        "allowed_values": [
+                            "Passed/Approved",
+                        ],
+                    },
+                    "event_type": {
+                        "allow_any": False,
+                        "allow_blanks": True,
+                        "allowed_values": [
+                            "Amended",
+                            "Appealed",
+                            "Closed",
+                            "Declaration Of Climate Emergency",
+                            "Dismissed",
+                            "Entered Into Force",
+                            "Filing",
+                            "Granted",
+                            "Implementation Details",
+                            "International Agreement",
+                            "Net Zero Pledge",
+                            "Other",
+                            "Passed/Approved",
+                            "Repealed/Replaced",
+                            "Set",
+                            "Settled",
+                            "Updated",
+                        ],
+                    },
                 },
             }
         ],

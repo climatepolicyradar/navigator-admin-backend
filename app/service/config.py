@@ -24,6 +24,7 @@ def get(user: UserContext) -> ConfigReadDTO:
         with db_session.get_db() as db:
             return config_repo.get(db, user)
 
-    except exc.SQLAlchemyError:
-        _LOGGER.exception("Error while getting config")
-        raise RepositoryError("Could not get the config")
+    except exc.SQLAlchemyError as e:
+        msg = f"Error while getting config: {e}"
+        _LOGGER.exception(msg)
+        raise RepositoryError(msg)

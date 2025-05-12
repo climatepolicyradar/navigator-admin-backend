@@ -18,6 +18,7 @@ from fastapi_utils.timing import add_timing_middleware
 
 from app.api.api_v1.routers import (
     analytics_router,
+    app_token_router,
     auth_router,
     bulk_import_router,
     collections_router,
@@ -27,6 +28,7 @@ from app.api.api_v1.routers import (
     document_router,
     event_router,
     families_router,
+    organisations_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
@@ -43,6 +45,7 @@ _ALLOW_ORIGIN_REGEX = (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.INFO)
 
 
 @asynccontextmanager
@@ -58,7 +61,7 @@ app = FastAPI(
 )
 setup_json_logging(app)
 add_pagination(app)
-add_timing_middleware(app, record=_LOGGER.info)
+add_timing_middleware(app, record=_LOGGER.info, exclude="health")
 
 app.include_router(
     config_router,
@@ -122,6 +125,20 @@ app.include_router(
     corpus_types_router,
     prefix="/api/v1",
     tags=["corpus-types"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    organisations_router,
+    prefix="/api/v1",
+    tags=["organisations"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    app_token_router,
+    prefix="/api/v1",
+    tags=["app-token"],
     dependencies=[Depends(check_user_auth)],
 )
 

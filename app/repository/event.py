@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -24,6 +25,7 @@ from app.repository import family as family_repo
 from app.repository.helpers import generate_import_id
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 FamilyEventTuple = Tuple[FamilyEvent, Family, FamilyDocument, Organisation]
 
@@ -131,7 +133,7 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
             _get_query(db).filter(FamilyEvent.import_id == import_id).one()
         )
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
     return _event_to_dto(family_event_meta)
 
@@ -203,20 +205,26 @@ def create(
             )
 
         db.add(new_family_event)
-    except Exception:
-        _LOGGER.exception("Error trying to create Event")
-        raise
+    except Exception as e:
+        _LOGGER.exception(f"Error trying to create Event: {e}")
+        raise e
 
     return cast(str, new_family_event.import_id)
 
 
-def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
+def update(
+    db: Session,
+    import_id: str,
+    event: EventWriteDTO,
+    event_metadata: Optional[dict[str, list[str]]] = None,
+) -> bool:
     """
     Updates a single entry with the new values passed.
 
     :param db Session: the database connection
     :param str import_id: The event import id to change.
     :param EventWriteDTO event: The new values
+    :param Optional[dict[str, list[str]]] event_metadata: The event metadata.
     :return bool: True if new values were set otherwise false.
     """
     new_values = event.model_dump()
@@ -242,7 +250,7 @@ def update(db: Session, import_id: str, event: EventWriteDTO) -> bool:
             title=new_values["event_title"],
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
-            valid_metadata=metadata,
+            valid_metadata=event_metadata or metadata,
         )
     )
 
@@ -296,7 +304,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_events = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_events
@@ -308,3 +316,12 @@ def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
         return None
     _, _, _, org = result
     return org.id
+
+
+def get_event_metadata(db: Session, import_id: str):
+    return (
+        db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id == import_id)
+        .one()
+        .valid_metadata
+    )

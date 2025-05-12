@@ -1,15 +1,9 @@
 import json
 import logging
+import os
 from typing import Optional
 
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    HTTPException,
-    Request,
-    UploadFile,
-    status,
-)
+from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status
 
 from app.errors import ValidationError
 from app.model.general import Json
@@ -20,11 +14,12 @@ from app.service.bulk_import import (
     get_family_template,
     import_data,
 )
-from app.service.validation import validate_bulk_import_data
+from app.service.validation import validate_bulk_import_data, validate_corpus_exists
 
 bulk_import_router = r = APIRouter()
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 @r.get(
@@ -40,11 +35,9 @@ async def get_bulk_import_template(corpus_type: str) -> Json:
     :return Json: json representation of bulk import template.
     """
 
-    _LOGGER.info(f"Creating template for corpus type: {corpus_type}")
-
     try:
         return {
-            "collections": [get_collection_template()],
+            "collections": [get_collection_template(corpus_type)],
             "families": [get_family_template(corpus_type)],
             "documents": [get_document_template(corpus_type)],
             "events": [get_event_template(corpus_type)],
@@ -60,7 +53,6 @@ async def get_bulk_import_template(corpus_type: str) -> Json:
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def bulk_import(
-    request: Request,
     data: UploadFile,
     corpus_import_id: str,
     background_tasks: BackgroundTasks,
@@ -69,21 +61,23 @@ async def bulk_import(
     """
     Bulk import endpoint.
 
-    :param Request request: The request object containing all request data.
     :param UploadFile data: File containing json representation of data to import.
     :param str corpus_import_id: The ID of the corpus to import.
     :param BackgroundTasks background_tasks: Background tasks to be performed after the request is completed.
     :param Optional[int] document_limit: The max number of documents to be saved in this session or None.
     :return Json: json representation of the data to import.
     """
-    _LOGGER.info(
-        f"User {request.state.user} triggered bulk import for corpus: {corpus_import_id}"
-    )
-
     try:
         content = await data.read()
         data_dict = json.loads(content)
+
+        _LOGGER.info("🔍 Checking that corpus exists...")
+        validate_corpus_exists(corpus_import_id)
+
+        _LOGGER.info("🔍 Validating entity relationships in data...")
         validate_bulk_import_data(data_dict)
+
+        _LOGGER.info("✅ Validation successful")
 
         background_tasks.add_task(
             import_data, data_dict, corpus_import_id, document_limit
@@ -93,13 +87,13 @@ async def bulk_import(
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
         }
     except ValidationError as e:
-        _LOGGER.error(e.message, exc_info=True)
+        _LOGGER.exception(e.message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except HTTPException as e:
-        _LOGGER.error(e, exc_info=True)
+        _LOGGER.exception(e)
         raise e
     except Exception as e:
-        _LOGGER.error(e, exc_info=True)
+        _LOGGER.exception(e)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
         )

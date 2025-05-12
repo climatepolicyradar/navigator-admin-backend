@@ -1,12 +1,16 @@
 """Operations on the repository for the Collection entity."""
 
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce import Collection
 from db_client.models.dfce.collection import CollectionFamily, CollectionOrganisation
-from db_client.models.dfce.family import Family
+from db_client.models.dfce.family import (
+    Family,
+    Slug,
+)
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, and_
@@ -23,11 +27,16 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
-from app.repository.helpers import generate_import_id
+from app.model.general import Json
+from app.repository.helpers import (
+    generate_import_id,
+    generate_slug,
+)
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
-CollectionOrg = Tuple[Collection, Organisation]
+CollectionOrg = Tuple[Collection, Organisation, Slug]
 
 
 def get_org_from_collection_id(db: Session, collection_import_id: str) -> Optional[int]:
@@ -46,6 +55,7 @@ def _collection_org_from_dto(
             import_id=dto.import_id if dto.import_id else None,
             title=dto.title,
             description=dto.description,
+            valid_metadata=dto.metadata,
         ),
         CollectionOrganisation(collection_import_id="", organisation_id=org_id),
     )
@@ -56,17 +66,18 @@ def _get_query(db: Session) -> Query:
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
     return (
-        db.query(Collection, Organisation)
+        db.query(Collection, Organisation, Slug)
         .join(
             CollectionOrganisation,
             CollectionOrganisation.collection_import_id == Collection.import_id,
         )
         .join(Organisation, Organisation.id == CollectionOrganisation.organisation_id)
+        .outerjoin(Slug, Slug.collection_import_id == Collection.import_id)
     )
 
 
 def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
-    collection, org = co
+    collection, org, slug = co
     db_families = (
         db.query(Family.import_id)
         .join(CollectionFamily, CollectionFamily.family_import_id == Family.import_id)
@@ -74,14 +85,17 @@ def _collection_to_dto(db: Session, co: CollectionOrg) -> CollectionReadDTO:
         .all()
     )
     families = [cast(str, f[0]) for f in db_families]
+
     return CollectionReadDTO(
         import_id=str(collection.import_id),
         title=str(collection.title),
         description=str(collection.description),
+        metadata=cast(Json, collection.valid_metadata),
         organisation=cast(str, org.name),
         families=families,
         created=cast(datetime, collection.created),
         last_modified=cast(datetime, collection.last_modified),
+        slug=cast(str, slug.name) if slug else None,
     )
 
 
@@ -131,7 +145,7 @@ def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
     try:
         collection_org = _get_query(db).filter(Collection.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _collection_to_dto(db, collection_org)
@@ -169,6 +183,7 @@ def search(
             .limit(search_params["max_results"])
             .all()
         )
+
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
@@ -196,18 +211,42 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         _LOGGER.error(f"Unable to find collection for update {collection}")
         return False
 
+    update_title = new_values["title"] != original_collection.title
+
     result = db.execute(
         db_update(Collection)
         .where(Collection.import_id == import_id)
         .values(
             title=new_values["title"],
             description=new_values["description"],
+            valid_metadata=new_values["metadata"],
         )
     )
     if result.rowcount == 0:  # type: ignore
         msg = f"Could not update collection fields: {collection}"
         _LOGGER.error(msg)
         raise RepositoryError(msg)
+
+    slug = (
+        db.query(Slug).filter(
+            Slug.collection_import_id == import_id,
+        )
+    ).one_or_none()
+
+    if update_title or slug is None:
+        db.flush()
+        name = generate_slug(db, new_values["title"])
+        slug_update = db.execute(
+            db_update(Slug)
+            .where(
+                Slug.collection_import_id == import_id,
+            )
+            .values(name=name)
+        )
+        if slug_update.rowcount == 0:  # type: ignore
+            msg = f"Could not update slug for collection {collection}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
 
     return True
 
@@ -241,6 +280,17 @@ def create(db: Session, collection: CollectionCreateDTO, org_id: int) -> str:
             f"Could not create the collection {collection.description}"
         )
 
+    # Add a slug
+    db.add(
+        Slug(
+            family_import_id=None,
+            collection_import_id=new_collection.import_id,
+            family_document_import_id=None,
+            name=generate_slug(db, collection.title),
+        )
+    )
+    db.flush()
+
     return cast(str, new_collection.import_id)
 
 
@@ -258,6 +308,9 @@ def delete(db: Session, import_id: str) -> bool:
         ),
         db_delete(CollectionFamily).where(
             CollectionFamily.collection_import_id == import_id
+        ),
+        db_delete(Slug).where(
+            Slug.collection_import_id == import_id,
         ),
         db_delete(Collection).where(Collection.import_id == import_id),
     ]

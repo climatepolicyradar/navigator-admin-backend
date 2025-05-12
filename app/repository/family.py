@@ -1,11 +1,14 @@
 """Operations on the repository for the Family entity."""
 
 import logging
+import os
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
+import sqlalchemy
 from db_client.models.dfce.collection import CollectionFamily
 from db_client.models.dfce.family import (
+    Concept,
     DocumentStatus,
     Family,
     FamilyCorpus,
@@ -20,10 +23,11 @@ from db_client.models.dfce.metadata import FamilyMetadata
 from db_client.models.organisation.corpus import Corpus
 from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
-from sqlalchemy import Column, and_
+from sqlalchemy import Column, String
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func, text
 from sqlalchemy import update as db_update
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session, lazyload
 from sqlalchemy.sql import Subquery
@@ -31,9 +35,14 @@ from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
-from app.repository.helpers import generate_import_id, generate_slug
+from app.repository.helpers import (
+    construct_raw_sql_query_to_retrieve_all_families,
+    generate_import_id,
+    generate_slug,
+)
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 FamilyGeoMetaOrg = Tuple[
     Family,
@@ -70,15 +79,19 @@ def _get_query(db: Session) -> Query:
 
     geography_subquery = get_family_geography_subquery(db)
 
+    empty_array = sqlalchemy.cast([], ARRAY(String))
+
     query = (
         db.query(
             Family,
-            geography_subquery.c.geography_values,
+            func.coalesce(geography_subquery.c.geography_values, empty_array).label(
+                "geography_values"
+            ),
             FamilyMetadata,
             Corpus,
             Organisation,
         )
-        .join(
+        .outerjoin(
             geography_subquery,
             geography_subquery.c.family_import_id == Family.import_id,
         )
@@ -94,15 +107,48 @@ def _get_query(db: Session) -> Query:
             Corpus.import_id,
             Organisation,
         )
-        .options(
-            # Disable any default eager loading as this was causing multiplicity due to
-            # implicit joins in relationships on the selected models.
-            lazyload("*")
-        )
+        .options(lazyload("*"))
     )
-    _LOGGER.error(query)
-
     return query
+
+
+def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
+    family_import_id = family_row["family_import_id"]
+    metadata = cast(dict, family_row["value"])
+    org = cast(str, family_row["name"])
+    family_slugs = family_row["slugs"]
+    event_ids = family_row["event_ids"] if family_row["event_ids"] else []
+    document_ids = family_row["document_ids"] if family_row["document_ids"] else []
+
+    return FamilyReadDTO(
+        import_id=str(family_import_id),
+        title=str(family_row["family_title"]),
+        summary=str(family_row["description"]),
+        geography=str(
+            family_row["geography_values"][0] if family_row["geography_values"] else ""
+        ),
+        geographies=[str(value) for value in family_row["geography_values"]],
+        category=str(family_row["family_category"]),
+        status=str(family_row["family_status"]),
+        metadata=metadata,
+        slug=str(family_slugs[0] if len(family_slugs) > 0 else ""),
+        events=event_ids,
+        published_date=family_row["published_date"],
+        last_updated_date=family_row["last_updated_date"],
+        documents=document_ids,
+        collections=[
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                family_import_id == CollectionFamily.family_import_id
+            )
+        ],
+        organisation=org,
+        corpus_import_id=family_row["corpus_import_id"],
+        corpus_title=cast(str, family_row["title"]),
+        corpus_type=cast(str, family_row["corpus_type_name"]),
+        created=cast(datetime, family_row["created"]),
+        last_modified=cast(datetime, family_row["last_modified"]),
+    )
 
 
 def _family_to_dto(
@@ -123,7 +169,7 @@ def _family_to_dto(
         import_id=str(fam.import_id),
         title=str(fam.title),
         summary=str(fam.description),
-        geography=str(geo_values[0]),
+        geography=str(geo_values[0]) if geo_values else None,
         geographies=[str(value) for value in geo_values],
         category=str(fam.family_category),
         status=str(fam.family_status),
@@ -145,6 +191,9 @@ def _family_to_dto(
         corpus_type=cast(str, corpus.corpus_type_name),
         created=cast(datetime, fam.created),
         last_modified=cast(datetime, fam.last_modified),
+        concepts=(
+            [cast(dict, concepts) for concepts in fam.concepts] if fam.concepts else []
+        ),
     )
 
 
@@ -176,7 +225,9 @@ def _update_intention(
         update_title
         or original_family.description != family.summary
         or original_family.family_category != family.category
+        or original_family.concepts != family.concepts
     )
+
     existing_metadata = (
         db.query(FamilyMetadata)
         .filter(FamilyMetadata.family_import_id == import_id)
@@ -224,7 +275,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     try:
         fam_geo_meta = _get_query(db).filter(Family.import_id == import_id).one()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return _family_to_dto(db, fam_geo_meta)
@@ -249,46 +300,71 @@ def search(
     :return list[FamilyReadDTO]: A list of families matching the search
         terms.
     """
-    search = []
-    if "q" in search_params.keys():
-        term = f"%{escape_like(search_params['q'])}%"
-        search.append(or_(Family.title.ilike(term), Family.description.ilike(term)))
-    else:
-        if "title" in search_params.keys():
-            term = f"%{escape_like(search_params['title'])}%"
-            search.append(Family.title.ilike(term))
 
-        if "summary" in search_params.keys():
+    conditions = []
+    params: dict[str, Union[str, int, list[str]]] = {
+        "max_results": search_params["max_results"]
+    }
+    # We know that max_results will always have a value, so can set this when initialising, see query_params.py
+
+    # Add conditions based on parameters
+    if "q" in search_params:
+        term = f"%{escape_like(search_params['q'])}%"
+        conditions.append("(f.title ILIKE :q OR f.description ILIKE :q)")
+        params["q"] = term
+    else:
+        if "title" in search_params:
+            term = f"%{escape_like(search_params['title'])}%"
+            conditions.append("f.title ILIKE :title")
+            params["title"] = term
+
+        if "summary" in search_params:
             term = f"%{escape_like(search_params['summary'])}%"
-            search.append(Family.description.ilike(term))
+            conditions.append("f.description ILIKE :summary")
+            params["summary"] = term
 
     if geography is not None:
-        import_ids = _get_family_import_ids_by_geographies(db, geography)
-        search.append(Family.import_id.in_(import_ids))
+        family_geographies = _get_family_geographies_by_display_values(db, geography)
+        if family_geographies:
+            conditions.append("f.import_id = ANY(:import_ids_for_geographies)")
+            params["import_ids_for_geographies"] = [
+                str(geography.family_import_id) for geography in family_geographies
+            ]
 
-    if "status" in search_params.keys():
-        term = cast(str, search_params["status"])
-        search.append(Family.family_status == term.capitalize())
+    if "status" in search_params:
+        term = cast(str, search_params["status"]).upper()
+        conditions.append(
+            """
+            CASE
+                WHEN EXISTS (SELECT 1 FROM family_document fd WHERE fd.family_import_id = f.import_id AND fd.document_status = 'PUBLISHED') THEN 'PUBLISHED'
+                WHEN EXISTS (SELECT 1 FROM family_document fd WHERE fd.family_import_id = f.import_id AND fd.document_status = 'CREATED') THEN 'CREATED'
+                ELSE 'DELETED'
+            END = :family_status
+        """
+        )
+        params["family_status"] = term
 
-    condition = and_(*search) if len(search) > 1 else search[0]
+    # Combine conditions into a WHERE clause
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+
+    sql_query, query_params = construct_raw_sql_query_to_retrieve_all_families(
+        params,
+        org_id=org_id,
+        filters=where_clause,
+    )
 
     try:
-        query = _get_query(db).filter(condition)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
-
-        found = (
-            query.order_by(desc(Family.last_modified))
-            .limit(search_params["max_results"])
-            .all()
-        )
+        query = db.execute(text(sql_query), query_params)
+        query_results = query.mappings().fetchall()
 
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [_family_to_dto(db, f) for f in found]
+    results = [_family_to_dto_search_endpoint(db, row) for row in query_results]
+
+    return results
 
 
 def update(
@@ -310,7 +386,7 @@ def update(
         db.query(Family).filter(Family.import_id == import_id).one_or_none()
     )
 
-    if original_family is None:  # Not found the family to update
+    if original_family is None:
         _LOGGER.error(f"Unable to find family for update {family}")
         return False
 
@@ -343,12 +419,13 @@ def update(
                 title=new_values["title"],
                 description=new_values["summary"],
                 family_category=new_values["category"],
+                concepts=new_values["concepts"],
             )
         )
 
         updates += result.rowcount  # type: ignore
         if updates == 0:  # type: ignore
-            msg = "Could not update family fields: {family}"
+            msg = f"Could not update family fields: {family}"
             _LOGGER.error(msg)
             raise RepositoryError(msg)
 
@@ -444,6 +521,7 @@ def create(
             title=family.title,
             description=family.summary,
             family_category=family.category,
+            concepts=[Concept(**c) for c in (family.concepts or [])],
         )
         db.add(new_family)
 
@@ -463,7 +541,7 @@ def create(
 
         db.flush()
     except Exception as e:
-        _LOGGER.exception("Error trying to create Family")
+        _LOGGER.exception(f"Error trying to create Family: {e}")
         raise RepositoryError(e)
 
     # Add a slug
@@ -597,7 +675,7 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
             query = query.filter(Organisation.id == org_id)
         n_families = query.count()
     except NoResultFound as e:
-        _LOGGER.error(e)
+        _LOGGER.debug(e)
         return
 
     return n_families
@@ -622,7 +700,10 @@ def remove_old_geographies(
     for col in cols_to_remove:
         try:
             db.execute(
-                db_delete(FamilyGeography).where(FamilyGeography.geography_id == col)
+                db_delete(FamilyGeography).where(
+                    FamilyGeography.geography_id == col,
+                    FamilyGeography.family_import_id == import_id,
+                )
             )
         except Exception as e:
             msg = f"Could not remove family {import_id} from geography {col}: {str(e)}"
@@ -685,7 +766,9 @@ def perform_family_geographies_update(db: Session, import_id: str, geo_ids: list
     add_new_geographies(db, import_id, geo_ids, original_geographies)
 
 
-def _get_family_import_ids_by_geographies(db: Session, geographies: list[str]) -> Query:
+def _get_family_geographies_by_display_values(
+    db: Session, geographies: list[str]
+) -> Query:
     """
     Filters import IDs of families based on the provided geography values.
     :param db Session: the database connection
@@ -699,5 +782,4 @@ def _get_family_import_ids_by_geographies(db: Session, geographies: list[str]) -
         )
         .join(Geography, Geography.id == FamilyGeography.geography_id)
         .filter(Geography.display_value.in_(geographies))
-        .subquery()
     )

@@ -1,20 +1,20 @@
 """
 Bulk Import Service
 
-This layer uses the corpus, collection, family, document and event repos to handle bulk 
+This layer uses the corpus, collection, family, document and event repos to handle bulk
 import of data and other services for validation etc.
 """
 
 import logging
-from typing import Any, Optional, Type, TypeVar
+import math
+import os
+import time
+from typing import Any, Optional
 from uuid import uuid4
 
-from db_client.models.dfce.collection import Collection
-from db_client.models.dfce.family import Family, FamilyDocument, FamilyEvent
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
-from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -27,7 +27,10 @@ import app.service.geography as geography
 import app.service.notification as notification_service
 import app.service.taxonomy as taxonomy
 import app.service.validation as validation
-from app.clients.aws.s3bucket import upload_bulk_import_json_to_s3
+from app.clients.aws.s3bucket import (
+    upload_bulk_import_json_to_s3,
+    upload_sql_db_dump_to_s3,
+)
 from app.errors import ValidationError
 from app.model.bulk_import import (
     BulkImportCollectionDTO,
@@ -36,46 +39,36 @@ from app.model.bulk_import import (
     BulkImportFamilyDTO,
 )
 from app.repository.helpers import generate_slug
-from app.service.event import (
-    create_event_metadata_object,
-    get_datetime_event_name_for_corpus,
-)
+from app.service.database_dump import delete_local_file, get_database_dump
+from app.service.event import create_event_metadata_object
 
 # Any increase to this number should first be discussed with the Platform Team
 DEFAULT_DOCUMENT_LIMIT = 1000
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
+_LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
-class BaseModel(DeclarativeMeta):
-    import_id: str
+def trigger_db_dump_upload_to_sql() -> None:
+    dump_file = get_database_dump()
+    try:
+        upload_sql_db_dump_to_s3(dump_file)
+    finally:
+        delete_local_file(dump_file)
 
 
-T = TypeVar("T", bound=BaseModel)
-
-
-def _exists_in_db(entity: Type[T], import_id: str, db: Session) -> bool:
-    """
-    Check if a entity exists in the database by import_id.
-
-    :param Type[T] entity: The model of the entity to be looked up in the db.
-    :param str import_id: The import_id of the entity.
-    :param Session db: The database session.
-    :return bool: True if the entity exists, False otherwise.
-    """
-    entity_exists = db.query(entity).filter(entity.import_id == import_id).one_or_none()
-    return entity_exists is not None
-
-
-def get_collection_template() -> dict:
+def get_collection_template(corpus_type: str) -> dict:
     """
     Gets a collection template.
 
+    :param str corpus_type: The corpus_type to use to get the collection template.
     :return dict: The collection template.
     """
     collection_schema = BulkImportCollectionDTO.model_json_schema(mode="serialization")
     collection_template = collection_schema["properties"]
+    collection_template["metadata"] = get_metadata_template(
+        corpus_type, CountedEntity.Collection
+    )
 
     return collection_template
 
@@ -95,6 +88,7 @@ def get_event_template(corpus_type: str) -> dict:
     if "event_type" not in event_meta:
         raise ValidationError("Bad taxonomy in database")
     event_template["event_type_value"] = event_meta["event_type"]
+    event_template["metadata"] = event_meta
 
     return event_template
 
@@ -130,6 +124,12 @@ def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dic
         return metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
     elif metadata_type == CountedEntity.Event:
         return metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
+    elif metadata_type == CountedEntity.Collection:
+        return (
+            metadata.pop(EntitySpecificTaxonomyKeys.COLLECTION.value)
+            if metadata.get(EntitySpecificTaxonomyKeys.COLLECTION.value, None)
+            else {}
+        )
     elif metadata_type == CountedEntity.Family:
         metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
         metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
@@ -169,25 +169,52 @@ def save_collections(
     :param Optional[Session] db: The database session to use for saving collections or None.
     :return list[str]: The new import_ids for the saved collections.
     """
+    start_time = time.time()
     if db is None:
         db = db_session.get_db()
 
-    validation.validate_collections(collection_data)
+    _LOGGER.info("🔍 Validating collection data...")
+    validation.validate_collections(collection_data, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     collection_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
     total_collections_saved = 0
 
     for coll in collection_data:
-        if not _exists_in_db(Collection, coll["import_id"], db):
-            _LOGGER.info(f"Importing collection {coll['import_id']}")
-            dto = BulkImportCollectionDTO(**coll).to_collection_create_dto()
-            import_id = collection_repository.create(db, dto, org_id)
+        import_id = coll["import_id"]
+        existing_collection = collection_repository.get(db, import_id)
+        if not existing_collection:
+            _LOGGER.info(f"Importing collection {import_id}")
+            create_dto = BulkImportCollectionDTO(**coll).to_collection_create_dto()
+            collection_repository.create(db, create_dto, org_id)
             collection_import_ids.append(import_id)
             total_collections_saved += 1
+        else:
+            update_collection = BulkImportCollectionDTO(**coll)
+            if update_collection.is_different_from(existing_collection):
+                _LOGGER.info(f"Updating collection {import_id}")
+                collection_repository.update(
+                    db, import_id, update_collection.to_collection_write_dto()
+                )
+                collection_import_ids.append(import_id)
+                total_collections_saved += 1
 
-    _LOGGER.info(f"Saved {total_collections_saved} collections")
+    _LOGGER.info(
+        f"⏱️ Saved {total_collections_saved} collections in {_get_duration(start_time)} seconds"
+    )
     return collection_import_ids
+
+
+def _get_duration(start_time: float) -> int:
+    """
+    Calculate duration in seconds from time passed in till now.
+
+    :param float start_time: The time to calculate duration from.
+    :return int: The duration from time passed in until now rounded up to the nearest second.
+    """
+
+    return math.ceil(time.time() - start_time)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -204,30 +231,48 @@ def save_families(
     :param Optional[Session] db: The database session to use for saving families or None.
     :return list[str]: The new import_ids for the saved families.
     """
-
+    start_time = time.time()
     if db is None:
         db = db_session.get_db()
 
+    _LOGGER.info("🔍 Validating family data...")
     validation.validate_families(family_data, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     family_import_ids = []
     org_id = corpus.get_corpus_org_id(corpus_import_id)
     total_families_saved = 0
 
     for fam in family_data:
-        if not _exists_in_db(Family, fam["import_id"], db):
-            _LOGGER.info(f"Importing family {fam['import_id']}")
-            dto = BulkImportFamilyDTO(
+        import_id = fam["import_id"]
+        existing_family = family_repository.get(db, import_id)
+        if not existing_family:
+            _LOGGER.info(f"Importing family {import_id}")
+            create_dto = BulkImportFamilyDTO(
                 **fam, corpus_import_id=corpus_import_id
             ).to_family_create_dto(corpus_import_id)
-            geo_ids = []
-            for geo in dto.geography:
-                geo_ids.append(geography.get_id(db, geo))
-            import_id = family_repository.create(db, dto, geo_ids, org_id)
+            geo_ids = [geography.get_id(db, geo) for geo in create_dto.geographies]
+            family_repository.create(db, create_dto, geo_ids, org_id)
             family_import_ids.append(import_id)
             total_families_saved += 1
+        else:
+            update_family = BulkImportFamilyDTO(
+                **fam, corpus_import_id=corpus_import_id
+            )
+            if update_family.is_different_from(existing_family):
+                _LOGGER.info(f"Updating family {import_id}")
+                geo_ids = [
+                    geography.get_id(db, geo) for geo in update_family.geographies
+                ]
+                family_repository.update(
+                    db, import_id, update_family.to_family_write_dto(), geo_ids
+                )
+                family_import_ids.append(import_id)
+                total_families_saved += 1
 
-    _LOGGER.info(f"Saved {total_families_saved} families")
+    _LOGGER.info(
+        f"⏱️ Saved {total_families_saved} families in {_get_duration(start_time)} seconds"
+    )
 
     return family_import_ids
 
@@ -248,29 +293,49 @@ def save_documents(
     :param Optional[Session] db: The database session to use for saving documents or None.
     :return list[str]: The new import_ids for the saved documents.
     """
+    start_time = time.time()
     if db is None:
         db = db_session.get_db()
 
+    _LOGGER.info("🔍 Validating document data...")
     validation.validate_documents(document_data, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     document_import_ids = []
     document_slugs = set()
     total_documents_saved = 0
 
     for doc in document_data:
-        if (
-            not _exists_in_db(FamilyDocument, doc["import_id"], db)
-            and total_documents_saved < document_limit
-        ):
-            _LOGGER.info(f"Importing document {doc['import_id']}")
-            dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
-            slug = generate_slug(db=db, title=dto.title, created_slugs=document_slugs)
-            import_id = document_repository.create(db, dto, slug)
-            document_slugs.add(slug)
-            document_import_ids.append(import_id)
-            total_documents_saved += 1
+        import_id = doc["import_id"]
+        if total_documents_saved < document_limit:
+            existing_document = document_repository.get(db, import_id)
+            if not existing_document:
+                _LOGGER.info(f"Importing document {import_id}")
+                create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
+                slug = generate_slug(
+                    db=db, title=create_dto.title, created_slugs=document_slugs
+                )
+                document_repository.create(db, create_dto, slug)
+                document_slugs.add(slug)
+                document_import_ids.append(import_id)
+                total_documents_saved += 1
+            else:
+                update_document = BulkImportDocumentDTO(**doc)
+                if update_document.is_different_from(existing_document):
+                    _LOGGER.info(f"Updating document {import_id}")
+                    slug = generate_slug(
+                        db=db, title=update_document.title, created_slugs=document_slugs
+                    )
+                    document_repository.update(
+                        db, import_id, update_document.to_document_write_dto(), slug
+                    )
+                    document_slugs.add(slug)
+                    document_import_ids.append(import_id)
+                    total_documents_saved += 1
 
-    _LOGGER.info(f"Saved {total_documents_saved} documents")
+    _LOGGER.info(
+        f"⏱️ Saved {total_documents_saved} documents in {_get_duration(start_time)} seconds"
+    )
     return document_import_ids
 
 
@@ -288,28 +353,76 @@ def save_events(
     :param Optional[Session] db: The database session to use for saving events or None.
     :return list[str]: The new import_ids for the saved events.
     """
+    start_time = time.time()
     if db is None:
         db = db_session.get_db()
 
+    _LOGGER.info("🔍 Validating event data...")
     validation.validate_events(event_data, corpus_import_id)
-    datetime_event_name = get_datetime_event_name_for_corpus(db, corpus_import_id)
+    _LOGGER.info("✅ Validation successful")
 
     event_import_ids = []
     total_events_saved = 0
 
     for event in event_data:
-        if not _exists_in_db(FamilyEvent, event["import_id"], db):
-            _LOGGER.info(f"Importing event {event['import_id']}")
+        import_id = event["import_id"]
+        existing_event = event_repository.get(db, import_id)
+        if not existing_event:
+            _LOGGER.info(f"Importing event {import_id}")
             dto = BulkImportEventDTO(**event).to_event_create_dto()
-            event_metadata = create_event_metadata_object(
-                db, corpus_import_id, event["event_type_value"], datetime_event_name
-            )
-            import_id = event_repository.create(db, dto, event_metadata)
+            event_metadata = event.get("metadata")
+            # TODO: remove below when implementing APP-343
+            if not event_metadata:
+                event_metadata = create_event_metadata_object(
+                    db, corpus_import_id, event["event_type_value"]
+                )
+            event_repository.create(db, dto, event_metadata)
             event_import_ids.append(import_id)
             total_events_saved += 1
+        else:
+            update_event = BulkImportEventDTO(**event)
+            existing_event_metadata = event_repository.get_event_metadata(
+                db, event["import_id"]
+            )
+            if update_event.is_different_from(existing_event, existing_event_metadata):
+                _LOGGER.info(f"Updating event {import_id}")
+                event_repository.update(
+                    db,
+                    import_id,
+                    update_event.to_event_write_dto(),
+                    event.get("metadata"),
+                )
+                event_import_ids.append(import_id)
+                total_events_saved += 1
 
-    _LOGGER.info(f"Saved {total_events_saved} events")
+    _LOGGER.info(
+        f"⏱️ Saved {total_events_saved} events in {_get_duration(start_time)} seconds"
+    )
     return event_import_ids
+
+
+def _filter_event_data(
+    event_data: list[dict[str, Any]], saved_documents: list[str]
+) -> list[dict[str, Any]]:
+    """
+    Filters a list of event data based on the import ids of saved documents.
+    It returns a list of event data objects that either relate to a document that has already been saved
+    or are not linked to a document.
+
+    :param list[dict[str, Any]] event_data: The event data to be filtered.
+    :param list[str] saved_documents: The import ids of documents that have been saved.
+    :return list[dict[str, Any]]: A filtered list of event data.
+    """
+
+    saved_documents_set = set(saved_documents)
+    filtered_event_data = [
+        event
+        for event in event_data
+        if not event.get("family_document_import_id")
+        or event.get("family_document_import_id") in saved_documents_set
+    ]
+
+    return filtered_event_data
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -327,16 +440,13 @@ def import_data(
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
+    start_time = time.time()
     notification_service.send_notification(
         f"🚀 Bulk import for corpus: {corpus_import_id} has started."
     )
     end_message = ""
 
-    import_uuid = uuid4()
-    upload_bulk_import_json_to_s3(f"{import_uuid}-request", corpus_import_id, data)
-
     _LOGGER.info("Getting DB session")
-
     db = db_session.get_db()
 
     collection_data = data["collections"] if "collections" in data else None
@@ -348,36 +458,54 @@ def import_data(
 
     try:
         if collection_data:
-            _LOGGER.info("Saving collections")
+            _LOGGER.info("💾 Saving collections")
             result["collections"] = save_collections(
                 collection_data, corpus_import_id, db
             )
         if family_data:
-            _LOGGER.info("Saving families")
+            _LOGGER.info("💾 Saving families")
             result["families"] = save_families(family_data, corpus_import_id, db)
         if document_data:
-            _LOGGER.info("Saving documents")
+            _LOGGER.info("💾 Saving documents")
             result["documents"] = save_documents(
                 document_data,
                 corpus_import_id,
-                document_limit or DEFAULT_DOCUMENT_LIMIT,
+                (
+                    document_limit
+                    if document_limit is not None
+                    else DEFAULT_DOCUMENT_LIMIT
+                ),
                 db,
             )
         if event_data:
-            _LOGGER.info("Saving events")
-            result["events"] = save_events(event_data, corpus_import_id, db)
+            _LOGGER.info("💾 Saving events")
+            result["events"] = save_events(
+                _filter_event_data(event_data, result.get("documents", [])),
+                corpus_import_id,
+                db,
+            )
 
-        upload_bulk_import_json_to_s3(f"{import_uuid}-result", corpus_import_id, result)
-
-        end_message = (
-            f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed."
-        )
         db.commit()
+
+        if any([collection_data, family_data, document_data, event_data]):
+            import_uuid = uuid4()
+            upload_bulk_import_json_to_s3(
+                f"{import_uuid}-request", corpus_import_id, data
+            )
+            upload_bulk_import_json_to_s3(
+                f"{import_uuid}-result", corpus_import_id, result
+            )
+        else:
+            _LOGGER.info("🗒️ No data to import.")
+
+        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds."
     except Exception as e:
         _LOGGER.error(
-            f"Rolling back transaction due to the following error: {e}", exc_info=True
+            f"💥 Rolling back transaction due to the following error: {e}",
+            exc_info=True,
         )
         db.rollback()
         end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
     finally:
+        trigger_db_dump_upload_to_sql()
         notification_service.send_notification(end_message)
