@@ -356,4 +356,18 @@ def test_create_bulk_import_summary_when_data_to_import():
         }
     )
 
-    assert summary == "Saved\n 1 collections,\n 2 families,\n 3 documents,\n 0 events"
+    assert summary == "🗒️ Saved\n 1 collections,\n 2 families,\n 3 documents,\n 0 events"
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        {},
+        {"collections": [], "families": [], "documents": [], "events": []},
+    ],
+)
+def test_create_bulk_import_summary_when_no_data_to_import(data):
+    summary = bulk_import_service._create_summary(data)
+
+    assert summary == "🗒️ No data to import."

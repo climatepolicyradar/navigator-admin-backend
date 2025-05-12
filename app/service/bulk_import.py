@@ -429,10 +429,20 @@ def _create_summary(data: dict[str, Any]) -> str:
     """
     Creates a summary of the bulk import.
 
-    :param dict[str, Any] data: The data to be imported.
-    :return dict[str, Any]: A summary of the bulk import.
+    :param dict[str, Any] data: The data that was imported.
+    :return str: A summary of the bulk import.
     """
-    summary = f"Saved\n {len(data['collections'])} collections,\n {len(data['families'])} families,\n {len(data['documents'])} documents,\n {len(data['events'])} events"
+    if data and any(
+        [
+            data.get("collections"),
+            data.get("families"),
+            data.get("documents"),
+            data.get("events"),
+        ]
+    ):
+        summary = f"🗒️ Saved\n {len(data['collections'])} collections,\n {len(data['families'])} families,\n {len(data['documents'])} documents,\n {len(data['events'])} events"
+    else:
+        summary = "🗒️ No data to import."
 
     return summary
 
