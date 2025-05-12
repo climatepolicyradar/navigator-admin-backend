@@ -344,3 +344,16 @@ def test_save_events_skips_update_when_no_changes(
 
     assert event_repo_mock.update.call_count == 0
     assert result == []
+
+
+def test_create_bulk_import_summary_when_data_to_import():
+    summary = bulk_import_service._create_summary(
+        {
+            "collections": [default_collection],
+            "families": [default_family, default_family],
+            "documents": [default_document, default_document, default_document],
+            "events": [],
+        }
+    )
+
+    assert summary == "Saved\n 1 collections,\n 2 families,\n 3 documents,\n 0 events"
