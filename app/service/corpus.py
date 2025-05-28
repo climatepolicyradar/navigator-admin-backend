@@ -7,9 +7,16 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.corpus as corpus_repo
+import app.repository.document_file as file_repo
 import app.repository.organisation as org_repo
+from app.clients.aws.client import get_s3_client
 from app.errors import ConflictError, RepositoryError, ValidationError
-from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
+from app.model.corpus import (
+    CorpusCreateDTO,
+    CorpusLogoUploadDTO,
+    CorpusReadDTO,
+    CorpusWriteDTO,
+)
 from app.model.user import UserContext
 from app.service import app_user, id
 
@@ -244,3 +251,22 @@ def create(
         raise e
     finally:
         db.commit()
+
+
+def get_upload_url(corpus_id: str) -> CorpusLogoUploadDTO:
+    """Get a presigned URL for uploading a corpus logo.
+
+    :param corpus_id: The ID of the corpus to upload a logo for
+    :param user_context: The user context from the request
+    :return: Upload URLs for the logo
+    """
+    # Generate a key for the logo in S3
+    key = f"corpora/{corpus_id}/logo.png"
+
+    # Get the S3 client
+    client = get_s3_client()
+
+    # Get the upload URLs
+    presigned_url, cdn_url = file_repo.get_upload_details(client, key)
+
+    return CorpusLogoUploadDTO(presigned_upload_url=presigned_url, cdn_url=cdn_url)

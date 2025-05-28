@@ -13,7 +13,12 @@ from app.errors import (
     RepositoryError,
     ValidationError,
 )
-from app.model.corpus import CorpusCreateDTO, CorpusReadDTO, CorpusWriteDTO
+from app.model.corpus import (
+    CorpusCreateDTO,
+    CorpusLogoUploadDTO,
+    CorpusReadDTO,
+    CorpusWriteDTO,
+)
 from app.service import corpus as corpus_service
 
 corpora_router = r = APIRouter()
@@ -168,3 +173,25 @@ async def create_corpus(request: Request, new_corpus: CorpusCreateDTO) -> str:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=e.message)
 
     return corpus_id
+
+
+@r.post("{corpus_id}/upload-url", response_model=CorpusLogoUploadDTO)
+async def get_upload_url(corpus_id: str) -> CorpusLogoUploadDTO:
+    """Get a presigned URL for uploading a corpus logo.
+
+    :param corpus_id: The ID of the corpus to upload a logo for
+    :param user_context: The user context from the request
+    :return: Upload URLs for the logo
+    """
+    _LOGGER.info(f"Getting upload URL for corpus {corpus_id}")
+    try:
+        return corpus_service.get_upload_url(corpus_id)
+    except AuthorisationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except Exception as e:
+        _LOGGER.error(f"Error getting upload URL for corpus {corpus_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
