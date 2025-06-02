@@ -40,7 +40,7 @@ def get(import_id: str) -> Optional[DocumentReadDTO]:
     """
     validate_import_id(import_id)
     try:
-        with db_session.get_db() as db:
+        with db_session.get_db_session() as db:
             return document_repo.get(db, import_id)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
@@ -55,7 +55,7 @@ def all(user: UserContext) -> list[DocumentReadDTO]:
     :param UserContext user: The current user context.
     :return list[documentDTO]: The list of documents.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return document_repo.all(db, org_id)
 
@@ -76,7 +76,7 @@ def search(
     :return list[DocumentReadDTO]: The list of documents matching the
         given search terms.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return document_repo.search(db, search_params, org_id)
 

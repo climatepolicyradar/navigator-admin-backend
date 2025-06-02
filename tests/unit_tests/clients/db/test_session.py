@@ -16,7 +16,7 @@ def test_get_db_yields_and_closes_session(monkeypatch):
     monkeypatch.setattr(db_session, "SessionLocal", lambda: mock_session)
 
     assert not mock_session.closed
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         assert db is mock_session
         # the session should still be open
         assert getattr(db, "closed") is False
@@ -33,7 +33,7 @@ def test_get_db_closes_after_exception_is_thrown(monkeypatch):
     monkeypatch.setattr(db_session, "SessionLocal", lambda: mock_session)
 
     with pytest.raises(RuntimeError):
-        with db_session.get_db() as _:
+        with db_session.get_db_session() as _:
             raise RuntimeError("broken")
 
     # Even though an exception was thrown, the session should be closed

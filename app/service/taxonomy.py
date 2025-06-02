@@ -18,7 +18,7 @@ def get(corpus_type_name: str):
     :raises ValidationError: raised should the import_id be invalid.
     """
     try:
-        with db_session.get_db() as db:
+        with db_session.get_db_session() as db:
             return get_taxonomy_by_corpus_type_name(db, corpus_type_name)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
