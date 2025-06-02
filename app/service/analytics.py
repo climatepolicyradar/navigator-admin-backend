@@ -32,7 +32,7 @@ def summary(user: UserContext) -> SummaryDTO:
     :return SummaryDTO: The analytics summary found.
     """
     try:
-        with db_session.get_db() as db:
+        with db_session.get_db_session() as db:
             org_id = app_user_service.restrict_entities_to_user_org(user)
             n_collections = collection_repo.count(db, org_id)
             n_families = family_repo.count(db, org_id)

@@ -1,7 +1,8 @@
 import logging
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
 from app.errors import RepositoryError
@@ -20,7 +21,16 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_db() -> Session:
+@contextmanager
+def get_db_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def get_db():
     return SessionLocal()
 
 
@@ -36,10 +46,10 @@ def with_database():
     def inner(func):
         def wrapper(*args, **kwargs):
             context = f"{func.__module__}::{func.__name__}{args}"
-            db = get_db()
             try:
-                result = func(*args, **kwargs, db=db)
-                return result
+                with get_db_session() as db:
+                    result = func(*args, **kwargs, db=db)
+                    return result
             except exc.SQLAlchemyError as e:
                 msg = f"Error {str(e)} in {context}"
                 _LOGGER.error(
@@ -47,8 +57,6 @@ def with_database():
                     extra={"failing_module": func.__module__, "func": func.__name__},
                 )
                 raise RepositoryError(context) from e
-            finally:
-                db.close()
 
         return wrapper
 
