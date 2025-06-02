@@ -119,18 +119,15 @@ def create(
         user, entity_org_id, family.import_id
     )
 
-    event_metadata = create_event_metadata_object(
-        db, family.corpus_import_id, event.event_type_value
-    )
     metadata_service.validate_metadata(
         db,
         family.corpus_import_id,
-        event_metadata,
+        event.metadata.model_dump(),
         EntitySpecificTaxonomyKeys.EVENT.value,
     )
 
     try:
-        import_id = event_repo.create(db, event, event_metadata)
+        import_id = event_repo.create(db, event)
         if len(import_id) == 0:
             db.rollback()
         return import_id

@@ -5,6 +5,15 @@ from db_client.models.dfce.family import EventStatus
 from pydantic import BaseModel
 
 
+class EventMetadata(BaseModel):
+    """
+    JSON Representation of the event metadata.
+    """
+
+    event_type: list[str]
+    datetime_event_name: list[str]
+
+
 class EventReadDTO(BaseModel):
     """
     JSON Representation of the DTO for reading an event.
@@ -40,6 +49,7 @@ class EventCreateDTO(BaseModel):
     event_title: str
     date: datetime
     event_type_value: str
+    metadata: EventMetadata
 
     # From FamilyDocument
     family_import_id: str

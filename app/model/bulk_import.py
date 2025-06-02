@@ -237,6 +237,7 @@ class BulkImportEventDTO(BaseModel):
             event_title=self.event_title,
             date=self.date,
             event_type_value=self.event_type_value,
+            metadata=self.metadata.model_dump(),
         )
 
     def to_event_write_dto(self) -> EventWriteDTO:

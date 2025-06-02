@@ -7,12 +7,8 @@ from app.errors import AuthorisationError, RepositoryError, ValidationError
 from tests.helpers.event import create_event_create_dto
 
 
-@patch(
-    "app.service.event.get_datetime_event_name_for_corpus", return_value=["some_event"]
-)
 @patch("app.service.metadata.db_client_metadata.validate_metadata", return_value=None)
 def test_create(
-    mock_datetime_name,
     mock_validate_metadata,
     event_repo_mock,
     family_repo_mock,
@@ -25,15 +21,10 @@ def test_create(
     assert family_repo_mock.get_organisation.call_count == 1
     assert family_repo_mock.get.call_count == 1
     assert mock_validate_metadata.call_count == 1
-    assert mock_datetime_name.call_count == 1
 
 
-@patch(
-    "app.service.event.get_datetime_event_name_for_corpus", return_value=["some_event"]
-)
 @patch("app.service.metadata.db_client_metadata.validate_metadata", return_value=None)
 def test_create_when_db_fails(
-    mock_datetime_name,
     mock_validate_metadata,
     event_repo_mock,
     family_repo_mock,
@@ -48,7 +39,6 @@ def test_create_when_db_fails(
     assert family_repo_mock.get_organisation.call_count == 1
     assert family_repo_mock.get.call_count == 1
     assert mock_validate_metadata.call_count == 1
-    assert mock_datetime_name.call_count == 1
 
 
 def test_create_raises_when_invalid_family_id(
@@ -96,12 +86,8 @@ def test_create_raises_when_org_mismatch(
     assert event_repo_mock.create.call_count == 0
 
 
-@patch(
-    "app.service.event.get_datetime_event_name_for_corpus", return_value=["some_event"]
-)
 @patch("app.service.metadata.db_client_metadata.validate_metadata", return_value=None)
 def test_create_success_when_org_mismatch(
-    mock_datetime_name,
     mock_validate_metadata,
     event_repo_mock,
     family_repo_mock,
@@ -114,18 +100,13 @@ def test_create_success_when_org_mismatch(
     assert family_repo_mock.get_organisation.call_count == 1
     assert family_repo_mock.get.call_count == 1
     assert mock_validate_metadata.call_count == 1
-    assert mock_datetime_name.call_count == 1
 
 
-@patch(
-    "app.service.event.get_datetime_event_name_for_corpus", return_value=["some_event"]
-)
 @patch(
     "app.service.metadata.db_client_metadata.validate_metadata",
     return_value=["error1", "error2"],
 )
 def test_create_raises_when_invalid_metadata(
-    mock_datetime_name,
     mock_validate_metadata,
     event_repo_mock,
     family_repo_mock,
@@ -142,18 +123,13 @@ def test_create_raises_when_invalid_metadata(
     assert family_repo_mock.get_organisation.call_count == 1
     assert family_repo_mock.get.call_count == 1
     assert mock_validate_metadata.call_count == 1
-    assert mock_datetime_name.call_count == 1
     assert event_repo_mock.create.call_count == 0
 
 
 @patch(
-    "app.service.event.get_datetime_event_name_for_corpus", return_value=["some_event"]
-)
-@patch(
     "app.service.metadata.db_client_metadata.validate_metadata", side_effect=TypeError
 )
 def test_create_raises_type_error(
-    mock_datetime_name,
     mock_validate_metadata,
     event_repo_mock,
     family_repo_mock,
@@ -167,5 +143,4 @@ def test_create_raises_type_error(
     assert family_repo_mock.get_organisation.call_count == 1
     assert family_repo_mock.get.call_count == 1
     assert mock_validate_metadata.call_count == 1
-    assert mock_datetime_name.call_count == 1
     assert event_repo_mock.create.call_count == 0

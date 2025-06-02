@@ -70,11 +70,10 @@ def _event_to_dto(family_event_meta: FamilyEventTuple) -> EventReadDTO:
     )
 
 
-def _dto_to_event_dict(dto: EventCreateDTO, event_metadata) -> dict:
+def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
     """Convert our DTO object into a dict with the required field names.
 
     :param EventCreateDTO event: The values for the new event.
-    :param dict[str, list[str]] event_metadata: The event metadata.
     :return dict[str, Any]: A mapping of the event create DTO.
     """
     return {
@@ -85,18 +84,17 @@ def _dto_to_event_dict(dto: EventCreateDTO, event_metadata) -> dict:
         "title": dto.event_title,
         "event_type_name": dto.event_type_value,
         "status": EventStatus.OK,
-        "valid_metadata": event_metadata,  # TODO: Fix as part of PDCT-1622
+        "valid_metadata": dto.metadata.model_dump(),
     }
 
 
-def _event_from_dto(dto: EventCreateDTO, event_metadata) -> FamilyEvent:
+def _event_from_dto(dto: EventCreateDTO) -> FamilyEvent:
     """Create a FamilyEvent object from the event create DTO.
 
     :param EventCreateDTO event: The values for the new event.
-    :param dict[str, list[str]] event_metadata: The event metadata.
     :return FamilyEvent
     """
-    family_event = FamilyEvent(**_dto_to_event_dict(dto, event_metadata))
+    family_event = FamilyEvent(**_dto_to_event_dict(dto))
     return family_event
 
 
@@ -174,20 +172,17 @@ def search(
     return [_event_to_dto(f) for f in found]
 
 
-def create(
-    db: Session, event: EventCreateDTO, event_metadata: dict[str, list[str]]
-) -> str:
+def create(db: Session, event: EventCreateDTO) -> str:
     """
     Creates a new family event.
 
     :param db Session: The database connection.
     :param EventCreateDTO event: The values for the new event.
-    :param dict[str, list[str]] event_metadata: The event metadata.
     :return str: The import id of the newly created family event.
     """
 
     try:
-        new_family_event = _event_from_dto(event, event_metadata)
+        new_family_event = _event_from_dto(event)
 
         family_import_id = new_family_event.family_import_id
 
