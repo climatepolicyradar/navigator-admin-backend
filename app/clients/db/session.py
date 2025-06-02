@@ -22,12 +22,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @contextmanager
-def get_db():
+def get_db_session():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+def get_db():
+    return SessionLocal()
 
 
 def with_database():
@@ -43,7 +47,7 @@ def with_database():
         def wrapper(*args, **kwargs):
             context = f"{func.__module__}::{func.__name__}{args}"
             try:
-                with get_db() as db:
+                with get_db_session() as db:
                     result = func(*args, **kwargs, db=db)
                     return result
             except exc.SQLAlchemyError as e:
