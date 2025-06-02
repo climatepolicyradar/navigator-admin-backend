@@ -42,10 +42,10 @@ def with_database():
     def inner(func):
         def wrapper(*args, **kwargs):
             context = f"{func.__module__}::{func.__name__}{args}"
-            db = get_db()
             try:
-                result = func(*args, **kwargs, db=db)
-                return result
+                with get_db() as db:
+                    result = func(*args, **kwargs, db=db)
+                    return result
             except exc.SQLAlchemyError as e:
                 msg = f"Error {str(e)} in {context}"
                 _LOGGER.error(
@@ -53,8 +53,6 @@ def with_database():
                     extra={"failing_module": func.__module__, "func": func.__name__},
                 )
                 raise RepositoryError(context) from e
-            finally:
-                db.close()
 
         return wrapper
 
