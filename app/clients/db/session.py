@@ -1,7 +1,8 @@
 import logging
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
 from app.errors import RepositoryError
@@ -20,8 +21,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_db() -> Session:
-    return SessionLocal()
+@contextmanager
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def with_database():
