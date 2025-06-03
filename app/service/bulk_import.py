@@ -381,7 +381,6 @@ def save_events(
                     db,
                     import_id,
                     update_event.to_event_write_dto(),
-                    event.get("metadata"),
                 )
                 event_import_ids.append(import_id)
                 total_events_saved += 1

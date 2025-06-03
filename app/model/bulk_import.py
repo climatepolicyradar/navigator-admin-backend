@@ -58,7 +58,7 @@ class BulkImportCollectionDTO(BaseModel):
             metadata=collection.metadata,
         )
 
-        keys = set(self.model_fields.keys())
+        keys = set(self.__class__.model_fields.keys())
         is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
             include=keys
         )
@@ -134,7 +134,7 @@ class BulkImportFamilyDTO(BaseModel):
         self.collections = sorted(self.collections)
         self.geographies = sorted(self.geographies)
 
-        keys = set(self.model_fields.keys())
+        keys = set(self.__class__.model_fields.keys())
         is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
             include=keys
         )
@@ -199,7 +199,7 @@ class BulkImportDocumentDTO(BaseModel):
             user_language_name=document.user_language_name,
         )
 
-        keys = set(self.model_fields.keys())
+        keys = set(self.__class__.model_fields.keys())
         if self.user_language_name is None:
             keys.remove("user_language_name")
 
@@ -250,6 +250,7 @@ class BulkImportEventDTO(BaseModel):
             event_title=self.event_title,
             date=self.date,
             event_type_value=self.event_type_value,
+            metadata=self.metadata.model_dump(),
         )
 
     def is_different_from(self, event, event_metadata):
@@ -264,7 +265,7 @@ class BulkImportEventDTO(BaseModel):
             metadata=event_metadata,
         )
 
-        keys = set(self.model_fields.keys())
+        keys = set(self.__class__.model_fields.keys())
         is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
             include=keys
         )

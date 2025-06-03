@@ -60,21 +60,12 @@ def create(corpus_type: CorpusTypeCreateDTO, db: Optional[Session] = None) -> st
         any(
             [
                 required_key not in corpus_type.metadata
-                for required_key in ["_event", "_document", "event_type"]
+                for required_key in ["_event", "_document"]
             ]
         )
         or "datetime_event_name" not in corpus_type.metadata["_event"]
     ):
         raise ValidationError("Invalid schema")
-
-    if (
-        "event_type" in corpus_type.metadata
-        and "event_type" in corpus_type.metadata["_event"]
-    ) and (
-        corpus_type.metadata["_event"]["event_type"]
-        != corpus_type.metadata["event_type"]
-    ):
-        raise ValidationError("Event type mismatch")
 
     try:
         import_id = corpus_type_repo.create(db, corpus_type)

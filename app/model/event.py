@@ -12,6 +12,7 @@ class EventMetadata(BaseModel):
 
     event_type: list[str]
     datetime_event_name: list[str]
+    description: Optional[list[str]] = None
 
 
 class EventReadDTO(BaseModel):
@@ -70,3 +71,4 @@ class EventWriteDTO(BaseModel):
     event_title: str
     date: datetime
     event_type_value: str
+    metadata: EventMetadata

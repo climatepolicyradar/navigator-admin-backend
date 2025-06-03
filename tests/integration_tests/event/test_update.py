@@ -81,7 +81,14 @@ def test_update_event_idempotent(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
-    event = EXPECTED_EVENTS[1]
+    event = {
+        **EXPECTED_EVENTS[1],
+        "metadata": {
+            "event_type": ["Passed/Approved"],
+            "datetime_event_name": ["Passed/Approved"],
+        },
+    }
+
     response = client.put(
         f"/api/v1/events/{event['import_id']}",
         json=event,

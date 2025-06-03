@@ -84,7 +84,7 @@ def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
         "title": dto.event_title,
         "event_type_name": dto.event_type_value,
         "status": EventStatus.OK,
-        "valid_metadata": dto.metadata.model_dump(),
+        "valid_metadata": dto.metadata.model_dump(exclude_none=True),
     }
 
 
@@ -211,7 +211,6 @@ def update(
     db: Session,
     import_id: str,
     event: EventWriteDTO,
-    event_metadata: Optional[dict[str, list[str]]] = None,
 ) -> bool:
     """
     Updates a single entry with the new values passed.
@@ -219,7 +218,6 @@ def update(
     :param db Session: the database connection
     :param str import_id: The event import id to change.
     :param EventWriteDTO event: The new values
-    :param Optional[dict[str, list[str]]] event_metadata: The event metadata.
     :return bool: True if new values were set otherwise false.
     """
     new_values = event.model_dump()
@@ -245,7 +243,7 @@ def update(
             title=new_values["event_title"],
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
-            valid_metadata=event_metadata or metadata,
+            valid_metadata=event.metadata.model_dump() or metadata,
         )
     )
 

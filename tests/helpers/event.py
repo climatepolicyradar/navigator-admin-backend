@@ -40,10 +40,15 @@ def create_event_create_dto(
 def create_event_write_dto(
     title: str = "title",
     event_type_value: str = "Amended",
+    datetime_event_name: str = "Passed/Approved",
     date: datetime = datetime(2023, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc),
 ) -> EventWriteDTO:
     return EventWriteDTO(
         event_title=title,
         date=date,
         event_type_value=event_type_value,
+        metadata=EventMetadata(
+            event_type=[event_type_value],
+            datetime_event_name=[datetime_event_name],
+        ),
     )
