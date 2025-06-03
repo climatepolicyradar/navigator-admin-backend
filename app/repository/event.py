@@ -1,6 +1,5 @@
 """Operations on the repository for the Family entity."""
 
-import copy
 import logging
 import os
 from datetime import datetime
@@ -230,10 +229,6 @@ def update(
         _LOGGER.error(f"Unable to find event for update {import_id}")
         return False
 
-    metadata = original_fe.valid_metadata
-    if isinstance(metadata, dict):
-        metadata = copy.deepcopy(metadata)
-
     result = db.execute(
         db_update(FamilyEvent)
         .where(FamilyEvent.import_id == original_fe.import_id)
@@ -241,7 +236,7 @@ def update(
             title=new_values["event_title"],
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
-            valid_metadata=event.metadata or metadata,
+            valid_metadata=event.metadata,
         )
     )
 
