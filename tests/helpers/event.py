@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from db_client.models.dfce.family import EventStatus
 
-from app.model.event import EventCreateDTO, EventMetadata, EventReadDTO, EventWriteDTO
+from app.model.event import EventCreateDTO, EventReadDTO, EventWriteDTO
 
 
 def create_event_read_dto(
@@ -30,10 +30,10 @@ def create_event_create_dto(
         event_type_value="Passed/Approved",
         family_import_id=family_import_id,
         family_document_import_id=None,
-        metadata=EventMetadata(
-            event_type=["Passed/Approved"],
-            datetime_event_name=["Passed/Approved"],
-        ),
+        metadata={
+            "event_type": ["Passed/Approved"],
+            "datetime_event_name": ["Passed/Approved"],
+        },
     )
 
 
@@ -47,8 +47,8 @@ def create_event_write_dto(
         event_title=title,
         date=date,
         event_type_value=event_type_value,
-        metadata=EventMetadata(
-            event_type=[event_type_value],
-            datetime_event_name=[datetime_event_name],
-        ),
+        metadata={
+            "event_type": ["Passed/Approved"],
+            "datetime_event_name": ["Passed/Approved"],
+        },
     )

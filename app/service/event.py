@@ -118,7 +118,7 @@ def create(
     metadata_service.validate_metadata(
         db,
         family.corpus_import_id,
-        event.metadata.model_dump(exclude_none=True),
+        event.metadata,
         EntitySpecificTaxonomyKeys.EVENT.value,
     )
 
@@ -173,7 +173,7 @@ def update(
     metadata_service.validate_metadata(
         db,
         family.corpus_import_id,
-        event.metadata.model_dump(exclude_none=True),
+        event.metadata,
         EntitySpecificTaxonomyKeys.EVENT.value,
     )
 

@@ -4,15 +4,7 @@ from typing import Optional
 from db_client.models.dfce.family import EventStatus
 from pydantic import BaseModel
 
-
-class EventMetadata(BaseModel):
-    """
-    JSON Representation of the event metadata.
-    """
-
-    event_type: list[str]
-    datetime_event_name: list[str]
-    description: Optional[list[str]] = None
+from app.model.general import Json
 
 
 class EventReadDTO(BaseModel):
@@ -50,7 +42,7 @@ class EventCreateDTO(BaseModel):
     event_title: str
     date: datetime
     event_type_value: str
-    metadata: EventMetadata
+    metadata: Json
 
     # From FamilyDocument
     family_import_id: str
@@ -71,4 +63,4 @@ class EventWriteDTO(BaseModel):
     event_title: str
     date: datetime
     event_type_value: str
-    metadata: EventMetadata
+    metadata: Json

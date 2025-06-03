@@ -84,7 +84,7 @@ def _dto_to_event_dict(dto: EventCreateDTO) -> dict:
         "title": dto.event_title,
         "event_type_name": dto.event_type_value,
         "status": EventStatus.OK,
-        "valid_metadata": dto.metadata.model_dump(exclude_none=True),
+        "valid_metadata": dto.metadata,
     }
 
 
@@ -241,7 +241,7 @@ def update(
             title=new_values["event_title"],
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
-            valid_metadata=event.metadata.model_dump() or metadata,
+            valid_metadata=event.metadata or metadata,
         )
     )
 
