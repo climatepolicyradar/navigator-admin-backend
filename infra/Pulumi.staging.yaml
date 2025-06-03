@@ -36,5 +36,7 @@ config:
   admin_backend:vpc_security_group_admin_backend:
     secure: AAABANRx6DYMRpEv8Ei3OcHMSFf2fjDTrV6hSaKnMHJSR0qS0/c0Y60zwVw+paAdLqzmng==
   aws:region: eu-west-1
+  admin_backend:cache_bucket: cpr-staging-document-cache
+  admin_backend:cdn_url: https://cdn.dev.climatepolicyradar.org/
 environment:
   - admin_backend/staging

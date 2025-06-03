@@ -118,6 +118,8 @@ def _create_backend_environment() -> dict[str, str]:
     database_dump_bucket = CONFIG.require("database_dump_bucket")
     slack_webhook_url = CONFIG.require("slack_webhook_url")
     log_level = CONFIG.require("log_level")
+    cache_bucket = CONFIG.require("cache_bucket")
+    cdn_url = CONFIG.require("cdn_url")
 
     stack = pulumi.get_stack()
     backend_stack = pulumi.automation.select_stack(
@@ -136,7 +138,9 @@ def _create_backend_environment() -> dict[str, str]:
         "SECRET_KEY": secret_key,
         "BULK_IMPORT_BUCKET": bulk_import_bucket,
         "DATABASE_DUMP_BUCKET": database_dump_bucket,
+        "CACHE_BUCKET": cache_bucket,
         "SLACK_WEBHOOK_URL": slack_webhook_url,
+        "CDN_URL": cdn_url,
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,
         "LOG_LEVEL": log_level,
