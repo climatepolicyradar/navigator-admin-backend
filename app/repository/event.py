@@ -233,8 +233,6 @@ def update(
     metadata = original_fe.valid_metadata
     if isinstance(metadata, dict):
         metadata = copy.deepcopy(metadata)
-        if "event_type" in metadata:
-            metadata["event_type"] = new_values["event_type_value"]
 
     result = db.execute(
         db_update(FamilyEvent)
