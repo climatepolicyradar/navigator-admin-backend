@@ -146,6 +146,19 @@ def test_update_raises_when_invalid_metadata(
     assert mock_validate_metadata.call_count == 1
 
 
+def test_update_raises_when_datetime_event_name_has_multiple_values(
+    admin_user_context, family_repo_mock, event_repo_mock
+):
+    new_event = create_event_write_dto()
+    new_event.metadata["datetime_event_name"] = ["Passed/Approved", "Passed/Approved"]
+
+    with pytest.raises(ValidationError) as e:
+        event_service.update("a.b.c.d", new_event, admin_user_context)
+
+    expected_msg = "Metadata validation failed: Invalid value for metadata key 'datetime_event_name'. Expected 1 value, found: 2."
+    assert e.value.message == expected_msg
+
+
 @patch(
     "app.service.metadata.db_client_metadata.validate_metadata", side_effect=TypeError
 )

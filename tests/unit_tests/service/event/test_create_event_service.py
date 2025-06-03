@@ -135,7 +135,7 @@ def test_create_raises_when_datetime_event_name_has_multiple_values(
     with pytest.raises(ValidationError) as e:
         event_service.create(new_event, admin_user_context)
 
-    expected_msg = "Metadata validation failed: Invalid value for metadata key 'datetime_event_name'. Expected 1 value, found: 2"
+    expected_msg = "Metadata validation failed: Invalid value for metadata key 'datetime_event_name'. Expected 1 value, found: 2."
     assert e.value.message == expected_msg
 
 

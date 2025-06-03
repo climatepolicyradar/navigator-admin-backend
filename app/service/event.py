@@ -178,6 +178,13 @@ def update(
     entity_org_id = get_org_from_id(db, import_id)
     app_user.raise_if_unauthorised_to_make_changes(user, entity_org_id, import_id)
 
+    number_of_datetime_event_name_values = len(
+        event.metadata.get("datetime_event_name", [])
+    )
+    if number_of_datetime_event_name_values != 1:
+        raise ValidationError(
+            f"Metadata validation failed: Invalid value for metadata key 'datetime_event_name'. Expected 1 value, found: {number_of_datetime_event_name_values}."
+        )
     metadata_service.validate_metadata(
         db,
         family.corpus_import_id,
