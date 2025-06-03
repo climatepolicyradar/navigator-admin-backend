@@ -30,6 +30,7 @@ services:
 
       # Presigned URLs
       CACHE_BUCKET: cache-bucket
+      CDN_URL: https://cdn.test.com
 
       # localstack
       AWS_ACCESS_KEY_ID: test
@@ -69,7 +70,6 @@ services:
       # These values are used by the init-s3.py script
       BULK_IMPORT_BUCKET: bulk-import-bucket
       DATABASE_DUMP_BUCKET: database-dump-bucket
-      CACHE_BUCKET: cache-bucket
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_ENDPOINT_URL: http://localhost:4566
