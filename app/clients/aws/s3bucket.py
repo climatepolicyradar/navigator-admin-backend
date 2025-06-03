@@ -4,12 +4,12 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Tuple
 from urllib.parse import quote_plus, urlsplit
 
 import boto3
 from botocore.exceptions import ClientError
-from pydantic import BaseModel
+from pydantic import AnyHttpUrl, BaseModel
 
 import app.service.notification as notification_service
 from app.clients.aws.client import AWSClient
@@ -35,7 +35,7 @@ def _encode_characters_in_path(s3_path: str) -> str:
     return encoded_path
 
 
-def s3_to_cdn_url(s3_url: str, cdn_url: str) -> str:
+def s3_to_cdn_url(s3_url: AnyHttpUrl, cdn_url: AnyHttpUrl) -> AnyHttpUrl:
     """
     Converts an S3 url to a CDN url
 
@@ -43,14 +43,18 @@ def s3_to_cdn_url(s3_url: str, cdn_url: str) -> str:
     :param str cdn_url: CDN url prefix to use
     :return str: the resultant URL
     """
-    converted_cdn_url = re.sub(r"https:\/\/.*\.s3\..*\.amazonaws.com", cdn_url, s3_url)
+    converted_cdn_url = re.sub(
+        r"https:\/\/.*\.s3\..*\.amazonaws.com", str(cdn_url), str(s3_url)
+    )
     split_url = urlsplit(converted_cdn_url)
-    new_path = _encode_characters_in_path(split_url.path)
+    new_path = _encode_characters_in_path(split_url.path.lstrip("/"))
     # CDN URL should include only scheme, host & modified path
-    return f"{split_url.scheme}://{split_url.hostname}{new_path}"
+    return AnyHttpUrl(f"{split_url.scheme}://{split_url.hostname}{new_path}")
 
 
-def generate_pre_signed_url(client: AWSClient, bucket_name: str, key: str) -> str:
+def generate_pre_signed_url(
+    client: AWSClient, bucket_name: str, key: str
+) -> AnyHttpUrl:
     """
     Generate a pre-signed URL to an object for file uploads
 
@@ -64,13 +68,13 @@ def generate_pre_signed_url(client: AWSClient, bucket_name: str, key: str) -> st
                 "Key": key,
             },
         )
-        return url
+        return AnyHttpUrl(url)
     except ClientError:
         msg = f"Request to create pre-signed URL for {key} failed"
         raise RepositoryError(msg)
 
 
-def get_s3_url(region: str, bucket: str, key: str) -> str:
+def get_s3_url(region: str, bucket: str, key: str) -> AnyHttpUrl:
     """
     Formats up the s3 url from the parameters.
 
@@ -79,7 +83,7 @@ def get_s3_url(region: str, bucket: str, key: str) -> str:
     :param str key: AWS key for object in S3
     :return str: the s3 url
     """
-    return f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
+    return AnyHttpUrl(f"https://{bucket}.s3.{region}.amazonaws.com/{key}")
 
 
 def upload_json_to_s3(
@@ -163,6 +167,22 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
         _LOGGER.exception(f"💥 Upload failed {e}")
         notification_service.send_notification("💥 Database Dump upload failed.")
         raise e
+
+
+def _get_object_url_in_cdn(
+    client: AWSClient, key: str, bucket_name: str, cdn_url: AnyHttpUrl
+) -> AnyHttpUrl:
+    url = get_s3_url(client.meta.region_name, bucket_name, key)
+    return s3_to_cdn_url(url, cdn_url)
+
+
+def get_upload_details(
+    client: AWSClient, key: str, bucket_name: str, cdn_url: AnyHttpUrl
+) -> Tuple[AnyHttpUrl, AnyHttpUrl]:
+    return (
+        generate_pre_signed_url(client, bucket_name, key),
+        _get_object_url_in_cdn(client, key, bucket_name, cdn_url),
+    )
 
 
 # TODO: add more s3 functions like listing and reading files here

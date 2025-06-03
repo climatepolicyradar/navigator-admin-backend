@@ -1,14 +1,15 @@
 import logging
+import os
 from typing import Optional, Tuple, Union, cast
 
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
-from pydantic import ConfigDict, validate_call
+from pydantic import AnyHttpUrl, ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
+import app.clients.aws.s3bucket as file_repo
 import app.clients.db.session as db_session
 import app.repository.document as document_repo
-import app.repository.document_file as file_repo
 import app.repository.family as family_repo
 import app.service.family as family_service
 import app.service.metadata as metadata_service
@@ -21,11 +22,22 @@ from app.service import app_user, id
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_upload_details(filename: str, overwrite: Optional[bool]) -> Tuple[str, str]:
+def get_upload_details(
+    filename: str, overwrite: Optional[bool]
+) -> Tuple[AnyHttpUrl, AnyHttpUrl]:
     client = get_s3_client()
 
+    if "CDN_URL" not in os.environ:
+        raise ValueError("CDN_URL environment variable not set")
+
+    if "CACHE_BUCKET" not in os.environ:
+        raise ValueError("CACHE_BUCKET environment variable not set")
+
+    cdn_base_url = AnyHttpUrl(os.environ["CDN_URL"])
+    cache_bucket = os.environ["CACHE_BUCKET"]
+
     # TODO : Check if file pre-exists so we can use "overwrite"
-    return file_repo.get_upload_details(client, filename)
+    return file_repo.get_upload_details(client, filename, cache_bucket, cdn_base_url)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

@@ -1,15 +1,16 @@
 import logging
+import os
 from typing import Optional, Union
 
-from pydantic import ConfigDict, validate_call
+from pydantic import AnyHttpUrl, ConfigDict, validate_call
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 import app.repository.corpus as corpus_repo
-import app.repository.document_file as file_repo
 import app.repository.organisation as org_repo
 from app.clients.aws.client import get_s3_client
+from app.clients.aws.s3bucket import get_upload_details
 from app.errors import ConflictError, RepositoryError, ValidationError
 from app.model.corpus import (
     CorpusCreateDTO,
@@ -253,20 +254,34 @@ def create(
         db.commit()
 
 
-def get_upload_url(corpus_id: str) -> CorpusLogoUploadDTO:
+@db_session.with_database()
+def get_upload_url(corpus_id: str, db: Optional[Session] = None) -> CorpusLogoUploadDTO:
     """Get a presigned URL for uploading a corpus logo.
 
     :param corpus_id: The ID of the corpus to upload a logo for
     :param user_context: The user context from the request
     :return: Upload URLs for the logo
     """
+    if db is None:
+        db = db_session.get_db()
+
+    validate(db, corpus_id)
+
     # Generate a key for the logo in S3
+    if "CDN_URL" not in os.environ:
+        raise ValueError("CDN_URL environment variable not set")
+
+    if "CACHE_BUCKET" not in os.environ:
+        raise ValueError("CACHE_BUCKET environment variable not set")
+
+    cdn_base_url = AnyHttpUrl(os.environ["CDN_URL"])
+    cache_bucket = os.environ["CACHE_BUCKET"]
     key = f"corpora/{corpus_id}/logo.png"
 
-    # Get the S3 client
-    client = get_s3_client()
-
     # Get the upload URLs
-    presigned_url, cdn_url = file_repo.get_upload_details(client, key)
+    client = get_s3_client()
+    presigned_url, cdn_url = get_upload_details(client, key, cache_bucket, cdn_base_url)
 
-    return CorpusLogoUploadDTO(presigned_upload_url=presigned_url, cdn_url=cdn_url)
+    return CorpusLogoUploadDTO(
+        presigned_upload_url=presigned_url, object_cdn_url=cdn_url
+    )
