@@ -175,7 +175,7 @@ async def create_corpus(request: Request, new_corpus: CorpusCreateDTO) -> str:
     return corpus_id
 
 
-@r.post("{corpus_id}/upload-url", response_model=CorpusLogoUploadDTO)
+@r.post("/corpora/{corpus_id}/upload-url", response_model=CorpusLogoUploadDTO)
 async def get_upload_url(corpus_id: str) -> CorpusLogoUploadDTO:
     """Get a presigned URL for uploading a corpus logo.
 
