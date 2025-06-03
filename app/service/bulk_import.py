@@ -40,7 +40,6 @@ from app.model.bulk_import import (
 )
 from app.repository.helpers import generate_slug
 from app.service.database_dump import delete_local_file, get_database_dump
-from app.service.event import create_event_metadata_object
 
 # Any increase to this number should first be discussed with the Platform Team
 DEFAULT_DOCUMENT_LIMIT = 1000
@@ -84,7 +83,6 @@ def get_event_template(corpus_type: str) -> dict:
 
     event_meta = get_metadata_template(corpus_type, CountedEntity.Event)
 
-    # TODO: Replace with event_template["metadata"] in PDCT-1622
     if "event_type" not in event_meta:
         raise ValidationError("Bad taxonomy in database")
     event_template["event_type_value"] = event_meta["event_type"]
@@ -133,7 +131,6 @@ def get_metadata_template(corpus_type: str, metadata_type: CountedEntity) -> dic
     elif metadata_type == CountedEntity.Family:
         metadata.pop(EntitySpecificTaxonomyKeys.DOCUMENT.value)
         metadata.pop(EntitySpecificTaxonomyKeys.EVENT.value)
-        metadata.pop("event_type")  # TODO: Remove as part of PDCT-1622
     return metadata
 
 
@@ -370,13 +367,7 @@ def save_events(
         if not existing_event:
             _LOGGER.info(f"Importing event {import_id}")
             dto = BulkImportEventDTO(**event).to_event_create_dto()
-            event_metadata = event.get("metadata")
-            # TODO: remove below when implementing APP-343
-            if not event_metadata:
-                event_metadata = create_event_metadata_object(
-                    db, corpus_import_id, event["event_type_value"]
-                )
-            event_repository.create(db, dto, event_metadata)
+            event_repository.create(db, dto)
             event_import_ids.append(import_id)
             total_events_saved += 1
         else:
@@ -390,7 +381,6 @@ def save_events(
                     db,
                     import_id,
                     update_event.to_event_write_dto(),
-                    event.get("metadata"),
                 )
                 event_import_ids.append(import_id)
                 total_events_saved += 1

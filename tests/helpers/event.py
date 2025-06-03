@@ -30,16 +30,25 @@ def create_event_create_dto(
         event_type_value="Passed/Approved",
         family_import_id=family_import_id,
         family_document_import_id=None,
+        metadata={
+            "event_type": ["Passed/Approved"],
+            "datetime_event_name": ["Passed/Approved"],
+        },
     )
 
 
 def create_event_write_dto(
     title: str = "title",
     event_type_value: str = "Amended",
+    datetime_event_name: str = "Passed/Approved",
     date: datetime = datetime(2023, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc),
 ) -> EventWriteDTO:
     return EventWriteDTO(
         event_title=title,
         date=date,
         event_type_value=event_type_value,
+        metadata={
+            "event_type": ["Passed/Approved"],
+            "datetime_event_name": ["Passed/Approved"],
+        },
     )

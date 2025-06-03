@@ -15,7 +15,6 @@ def mock_corpus_helpers_db_client(taxonomy_service, monkeypatch: MonkeyPatch, mo
             TaxonomyData,
             {
                 "test": metadata,
-                "event_type": {"test": metadata},
                 "_document": {"test": metadata},
                 "_event": {"event_type": metadata},
             },
