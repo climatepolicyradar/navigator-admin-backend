@@ -15,9 +15,9 @@ def test_get_upload_url_success(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert "presigned_upload_url" in data
-    assert "cdn_url" in data
+    assert "object_cdn_url" in data
     assert data["presigned_upload_url"].startswith("https://")
-    assert data["cdn_url"].startswith("https://")
+    assert data["object_cdn_url"].startswith("https://")
 
 
 def test_get_upload_url_when_not_authenticated(client: TestClient):

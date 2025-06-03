@@ -50,4 +50,4 @@ class CorpusLogoUploadDTO(BaseModel):
     """Details required to upload a corpus logo"""
 
     presigned_upload_url: AnyHttpUrl
-    cdn_url: AnyHttpUrl
+    object_cdn_url: AnyHttpUrl
