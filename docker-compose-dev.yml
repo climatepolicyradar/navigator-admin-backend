@@ -28,6 +28,10 @@ services:
       # Db dump
       DATABASE_DUMP_BUCKET: database-dump-bucket
 
+      # Presigned URLs
+      CACHE_BUCKET: cache-bucket
+      CDN_URL: https://cdn.test.com
+
       # localstack
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test

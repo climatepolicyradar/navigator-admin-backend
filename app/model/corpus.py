@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import AnyHttpUrl, BaseModel
 
 from app.model.general import Json
 
@@ -44,3 +44,10 @@ class CorpusCreateDTO(BaseModel):
     corpus_image_url: Optional[str]
     organisation_id: int
     corpus_type_name: str
+
+
+class CorpusLogoUploadDTO(BaseModel):
+    """Details required to upload a corpus logo"""
+
+    presigned_upload_url: AnyHttpUrl
+    object_cdn_url: AnyHttpUrl
