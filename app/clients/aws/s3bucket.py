@@ -47,12 +47,10 @@ def s3_to_cdn_url(s3_url: AnyHttpUrl, cdn_url: AnyHttpUrl) -> AnyHttpUrl:
         r"https:\/\/.*\.s3\..*\.amazonaws.com", str(cdn_url), str(s3_url)
     )
     split_url = urlsplit(converted_cdn_url)
-    new_path = _encode_characters_in_path(
-        split_url.path.lstrip("/")
-        if split_url.path.startswith("//")
-        else "/" + split_url.path
-    )
-    # CDN URL should include only scheme, host & modified path
+    new_path = _encode_characters_in_path(split_url.path)
+
+    # Ensures the path starts with a single slash
+    new_path = "/" + new_path.lstrip("/")
     return AnyHttpUrl(f"{split_url.scheme}://{split_url.hostname}{new_path}")
 
 
