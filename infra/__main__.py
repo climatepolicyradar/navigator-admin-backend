@@ -14,7 +14,7 @@ RUNTIME = "python3.9"
 CONFIG = pulumi.Config()
 
 backend_service = create_admin_backend()
-
+pulumi.export("apprunner_service_url", backend_service.service_url)
 
 stack = pulumi.get_stack()
 account_id = aws.get_caller_identity().account_id
