@@ -50,7 +50,7 @@ def s3_to_cdn_url(s3_url: AnyHttpUrl, cdn_url: AnyHttpUrl) -> AnyHttpUrl:
     new_path = _encode_characters_in_path(
         split_url.path.lstrip("/")
         if split_url.path.startswith("//")
-        else split_url.path
+        else "/" + split_url.path
     )
     # CDN URL should include only scheme, host & modified path
     return AnyHttpUrl(f"{split_url.scheme}://{split_url.hostname}{new_path}")
