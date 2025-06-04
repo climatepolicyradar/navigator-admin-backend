@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 
 import app.service.validation as validation_service
@@ -12,14 +10,10 @@ def test_validate_event_when_ok(db_client_metadata_mock, db_session_mock):
         "import_id": "test.new.event.0",
         "family_import_id": "test.new.family.0",
         "event_type_value": event_metadata,
+        "metadata": event_metadata,
     }
 
-    with patch(
-        "app.service.validation.create_event_metadata_object",
-        return_value=event_metadata,
-    ) as mock_event_metadata:
-        validation_service.validate_event(db_session_mock, test_event, "test")
-    assert mock_event_metadata.call_count == 1
+    validation_service.validate_event(db_session_mock, test_event, "test")
 
 
 def test_validate_new_event_schema_when_ok(db_client_metadata_mock, db_session_mock):
@@ -66,21 +60,15 @@ def test_validate_event_when_event_metadata_has_invalid_type(
         "import_id": "test.new.event.0",
         "family_import_id": "test.new.family.0",
         "event_type_value": event_metadata,
+        "metadata": event_metadata,
     }
 
-    with (
-        patch(
-            "app.service.validation.create_event_metadata_object",
-            return_value=event_metadata,
-        ) as mock_event_metadata,
-        pytest.raises(ValidationError) as e,
-    ):
+    with (pytest.raises(ValidationError) as e,):
         validation_service.validate_event(db_session_mock, test_event, "test")
     assert (
         f"Metadata validation failed: Invalid value '{invalid_event_type}' "
         "for metadata key 'color' expected list." == e.value.message
     )
-    assert mock_event_metadata.call_count == 1
 
 
 def test_validate_event_when_event_not_in_allowed_event_types(
@@ -92,18 +80,12 @@ def test_validate_event_when_event_not_in_allowed_event_types(
         "import_id": "test.new.event.0",
         "family_import_id": "test.new.family.0",
         "event_type_value": event_metadata,
+        "metadata": event_metadata,
     }
 
-    with (
-        patch(
-            "app.service.validation.create_event_metadata_object",
-            return_value=event_metadata,
-        ) as mock_event_metadata,
-        pytest.raises(ValidationError) as e,
-    ):
+    with pytest.raises(ValidationError) as e:
         validation_service.validate_event(db_session_mock, test_event, "test")
     assert (
         f"Metadata validation failed: Invalid value '{invalid_event_type}' "
         "for metadata key 'color'" == e.value.message
     )
-    assert mock_event_metadata.call_count == 1
