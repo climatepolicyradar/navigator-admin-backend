@@ -1,7 +1,10 @@
 import app.service.document as doc_service
 
 
-def test_document_service_get_upload_details(test_s3_client):
+def test_document_service_get_upload_details(test_s3_client, monkeypatch):
+    monkeypatch.setenv("CDN_URL", "https://cdn.climatepolicyradar.org")
+    monkeypatch.setenv("CACHE_BUCKET", "test-document-bucket")
+
     result = doc_service.get_upload_details("path/file.ext", True)
     assert result is not None
     assert len(result) == 2
