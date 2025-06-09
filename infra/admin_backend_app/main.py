@@ -38,6 +38,20 @@ _ECR_ACCESS_POLICY = {
     ],
 }
 
+_SSM_ACCESS_POLICY = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": ["ssm:GetParameter", "ssm:GetParameters"],
+            "Resource": [
+                "arn:aws:ssm:eu-west-1:*:parameter/AdminBackend/AWS_ACCESS_KEY_ID",
+                "arn:aws:ssm:eu-west-1:*:parameter/AdminBackend/AWS_SECRET_ACCESS_KEY",
+            ],
+        }
+    ],
+}
+
 
 def _get_apprunner_instance_role() -> aws.iam.Role:
     apprunner_instance_role = aws.iam.Role(
@@ -68,6 +82,16 @@ def _get_apprunner_instance_role() -> aws.iam.Role:
         f"{NAME_PREFIX}-apprunner-role-policy-attach-s3-access-policy",
         role=apprunner_instance_role.name,
         policy_arn=s3_access_policy.arn,
+    )
+
+    ssm_access_policy = aws.iam.Policy(
+        f"{NAME_PREFIX}-apprunner-ssm-access-policy",
+        policy=json.dumps(_SSM_ACCESS_POLICY),
+    )
+    aws.iam.RolePolicyAttachment(
+        f"{NAME_PREFIX}-apprunner-role-policy-attach-ssm-access-policy",
+        role=apprunner_instance_role.name,
+        policy_arn=ssm_access_policy.arn,
     )
 
     return apprunner_instance_role
@@ -130,6 +154,14 @@ def _create_backend_environment() -> dict[str, str]:
         "backend_token_secret_key"
     ).value
 
+    # Create SSM parameter references
+    aws_access_key_parameter = aws.ssm.get_parameter(
+        name="/AdminBackend/AWS_ACCESS_KEY_ID", with_decryption=True
+    )
+    aws_secret_key_parameter = aws.ssm.get_parameter(
+        name="/AdminBackend/AWS_SECRET_ACCESS_KEY", with_decryption=True
+    )
+
     environment: dict[str, str] = {
         "ADMIN_POSTGRES_USER": rds_username,
         "ADMIN_POSTGRES_PASSWORD": rds_password,
@@ -144,6 +176,8 @@ def _create_backend_environment() -> dict[str, str]:
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,
         "LOG_LEVEL": log_level,
+        "AWS_ACCESS_KEY_ID": aws_access_key_parameter.value,
+        "AWS_SECRET_ACCESS_KEY": aws_secret_key_parameter.value,
     }
 
     return environment
