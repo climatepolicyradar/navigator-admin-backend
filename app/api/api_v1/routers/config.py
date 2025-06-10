@@ -3,8 +3,9 @@ from fastapi import APIRouter, HTTPException, Request, status
 import app.service.config as config_service
 from app.errors import RepositoryError
 from app.model.config import ConfigReadDTO
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-config_router = r = APIRouter()
+config_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 
 @r.get("/config", response_model=ConfigReadDTO)

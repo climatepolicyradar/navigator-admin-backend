@@ -5,8 +5,9 @@ from fastapi import APIRouter, HTTPException, status
 from app.errors import AuthorisationError, ValidationError
 from app.model.app_token import AppTokenCreateDTO
 from app.service.app_token import create_configuration_token
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-app_token_router = r = APIRouter()
+app_token_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__file__)
 

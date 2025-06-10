@@ -6,6 +6,7 @@ AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -34,6 +35,8 @@ from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.service.health import is_database_online
+from app.telemetry import Telemetry
+from app.telemetry_config import ServiceManifest, TelemetryConfig
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -44,8 +47,31 @@ _ALLOW_ORIGIN_REGEX = (
     r"https://.+\.climate-laws\.org|"
 )
 
+os.environ["OTEL_PYTHON_LOG_CORRELATION"] = "True"
+
+
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.INFO)
+
+env = os.getenv("ENV")
+try:
+    otel_config = TelemetryConfig.from_service_manifest(
+        ServiceManifest.from_file("./app/service-manifest.json"),
+        env if env else "local",
+        "0.1.0",
+    )
+except Exception as _:
+    _LOGGER.error("Failed to load service manifest, using defaults")
+    _LOGGER.error("Error: %s", _)
+    otel_config = TelemetryConfig(
+        service_name="navigator-admin-backend",
+        namespace_name="data-management",
+        service_version="0.0.0",
+        environment=env if env else "local",
+    )
+
+telemetry = Telemetry(otel_config)
+tracer = telemetry.get_tracer()
 
 
 @asynccontextmanager
@@ -159,6 +185,9 @@ app.add_api_route("/health", health([is_database_online]))
 async def root():
     return {"message": "CPR Navigator Admin API v1"}
 
+
+telemetry.instrument_fastapi(app)
+telemetry.setup_exception_hook()
 
 if __name__ == "__main__":
     uvicorn.run(

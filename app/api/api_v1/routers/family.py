@@ -20,8 +20,9 @@ from app.api.api_v1.query_params import (
 )
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-families_router = r = APIRouter()
+families_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__name__)
 

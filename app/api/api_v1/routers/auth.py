@@ -12,8 +12,9 @@ from app.errors import (
     TokenError,
 )
 from app.service.authentication import authenticate_user
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-auth_router = r = APIRouter()
+auth_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__file__)
 _LOGGER.setLevel(logging.INFO)

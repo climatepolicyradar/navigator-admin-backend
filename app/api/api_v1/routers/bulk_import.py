@@ -15,8 +15,9 @@ from app.service.bulk_import import (
     import_data,
 )
 from app.service.validation import validate_bulk_import_data, validate_corpus_exists
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-bulk_import_router = r = APIRouter()
+bulk_import_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())

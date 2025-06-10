@@ -20,8 +20,9 @@ from app.model.corpus import (
     CorpusWriteDTO,
 )
 from app.service import corpus as corpus_service
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-corpora_router = r = APIRouter()
+corpora_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__file__)
 

@@ -3,8 +3,9 @@ from fastapi import APIRouter, HTTPException, Request, status
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.corpus_type import CorpusTypeCreateDTO, CorpusTypeReadDTO
 from app.service import corpus_type as corpus_type_service
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-corpus_types_router = APIRouter()
+corpus_types_router = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 
 @corpus_types_router.get(

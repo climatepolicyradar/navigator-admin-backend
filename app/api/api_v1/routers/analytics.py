@@ -7,8 +7,9 @@ from fastapi import APIRouter, HTTPException, Request, status
 import app.service.analytics as analytics_service
 from app.errors import RepositoryError
 from app.model.analytics import SummaryDTO
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-analytics_router = r = APIRouter()
+analytics_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__name__)
 

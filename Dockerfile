@@ -20,7 +20,4 @@ RUN poetry config virtualenvs.create false && poetry install --no-directory --no
 COPY ./app ./app
 COPY ./tests ./tests
 
-# import service manifest for otel
-COPY service-manifest.json .
-
 CMD python app/main.py
