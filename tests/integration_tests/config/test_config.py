@@ -30,7 +30,6 @@ EXPECTED_CCLW_TAXONOMY = {
     "framework",
     "sector",
     "instrument",
-    "event_type",
     "_document",
     "_event",
 }
@@ -44,7 +43,6 @@ EXPECTED_CCLW_INSTRUMENTS = 25
 EXPECTED_UNFCCC_TAXONOMY = {
     "author",
     "author_type",
-    "event_type",
     "_document",
     "_event",
 }

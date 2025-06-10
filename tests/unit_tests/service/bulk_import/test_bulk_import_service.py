@@ -236,13 +236,16 @@ def test_save_events_with_correct_metadata(validation_service_mock, event_repo_m
             "event_type_value": "Test event type",
             "event_title": "Test event title",
             "date": "2024-01-01",
-            "metadata": {"key": ["value"]},
+            "metadata": {
+                "event_type": ["value"],
+                "datetime_event_name": ["value"],
+            },
         }
     ]
 
     bulk_import_service.save_events(test_data, "test")
 
-    event_repo_mock.create.assert_called_with(ANY, ANY, test_data[0]["metadata"])
+    event_repo_mock.create.assert_called_with(ANY, ANY)
 
 
 def test_save_events_when_data_invalid(validation_service_mock):

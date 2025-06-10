@@ -7,13 +7,18 @@ from sqlalchemy.orm import sessionmaker
 from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
 from app.errors import RepositoryError
 
+# TODO: better session handling - https://linear.app/climate-policy-radar/issue/APP-630/investigate-hypothesis-that-admin-service-backend-is-leaving-stray
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,
     # TODO: configure as part of scaling work: PDCT-650
     pool_size=10,
     max_overflow=240,
-    # echo="debug",
+    # recycle after 30 minutes - this kills unused, unclosed connections
+    # which we know exist because of methods calling get_db() explicity
+    pool_recycle=1800,
+    # wait up to 30s for a connection before error - this avoids a request hanging forever
+    pool_timeout=30,
     connect_args={"options": f"-c statement_timeout={STATEMENT_TIMEOUT}"},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
