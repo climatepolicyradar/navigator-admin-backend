@@ -22,7 +22,7 @@ def all() -> list[OrganisationReadDTO]:
 
     :return list[OrganisationReadDTO]: The list of organisations.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         return organisation_repo.all(db)
 
 

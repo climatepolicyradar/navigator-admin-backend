@@ -42,7 +42,7 @@ def get(import_id: str) -> Optional[FamilyReadDTO]:
     """
     validate_import_id(import_id)
     try:
-        with db_session.get_db() as db:
+        with db_session.get_db_session() as db:
             return family_repo.get(db, import_id)
     except exc.SQLAlchemyError as e:
         _LOGGER.error(e)
@@ -57,7 +57,7 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
     :param UserContext user: The current user context.
     :return list[FamilyDTO]: The list of families.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.all(db, org_id)
 
@@ -82,7 +82,7 @@ def search(
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.search(db, search_params, org_id, geography)
 
