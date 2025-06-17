@@ -26,6 +26,7 @@ from app.service import (
     metadata,
     organisation,
 )
+from app.telemetry import observe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ def get(import_id: str) -> Optional[FamilyReadDTO]:
         raise RepositoryError(str(e))
 
 
+@observe("db.get")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def all(user: UserContext) -> list[FamilyReadDTO]:
     """
@@ -62,6 +64,7 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
         return family_repo.all(db, org_id)
 
 
+@observe("db.search")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
     search_params: dict[str, Union[str, int]],

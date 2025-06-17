@@ -71,6 +71,7 @@ except Exception as _:
     )
 
 telemetry = Telemetry(otel_config)
+_LOGGER = telemetry.get_logger()
 tracer = telemetry.get_tracer()
 
 

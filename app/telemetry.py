@@ -1,6 +1,7 @@
 import functools
 import logging
 import logging.config
+import resource
 from contextlib import nullcontext
 from typing import Callable
 
@@ -23,6 +24,8 @@ from opentelemetry.trace import NonRecordingSpan
 
 from app.telemetry_config import TelemetryConfig
 from app.telemetry_exceptions import install_exception_hooks
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def convert_to_loggable_string(obj):
@@ -138,7 +141,13 @@ def observe(name: str) -> Callable:
                 span = trace.get_tracer(func.__module__).start_as_current_span(name)
 
             with span:
-                return func(*args, **kwargs)
+                before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                _LOGGER.info("Memory before: %s", before)
+                result = func(*args, **kwargs)
+                after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                _LOGGER.info("Memory after: %s", after)
+                _LOGGER.info("Memory used: %s", after - before)
+                return result
 
         return wraps
 

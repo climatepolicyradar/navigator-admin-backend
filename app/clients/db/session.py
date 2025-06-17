@@ -1,5 +1,6 @@
 import logging
 
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -20,6 +21,7 @@ engine = create_engine(
     pool_timeout=30,
     connect_args={"options": f"-c statement_timeout={STATEMENT_TIMEOUT}"},
 )
+SQLAlchemyInstrumentor().instrument(engine=engine)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 _LOGGER = logging.getLogger(__name__)

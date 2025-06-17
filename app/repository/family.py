@@ -40,6 +40,7 @@ from app.repository.helpers import (
     generate_import_id,
     generate_slug,
 )
+from app.telemetry import observe
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
@@ -243,6 +244,7 @@ def _update_intention(
     )
 
 
+@observe("db.get")
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     """
     Returns all the families.
@@ -281,6 +283,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
     return _family_to_dto(db, fam_geo_meta)
 
 
+@observe("db.search")
 def search(
     db: Session,
     search_params: dict[str, Union[str, int]],
@@ -356,6 +359,8 @@ def search(
     try:
         query = db.execute(text(sql_query), query_params)
         query_results = query.mappings().fetchall()
+        _LOGGER.info("Search query executed: %s %s", sql_query, query_params)
+        _LOGGER.info("Length of results: %d", len(query_results))
 
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):

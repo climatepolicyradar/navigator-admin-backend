@@ -3,6 +3,7 @@ from typing import Optional, Protocol, Union
 from sqlalchemy.orm import Session
 
 from app.model.family import FamilyCreateDTO, FamilyReadDTO, FamilyWriteDTO
+from app.telemetry import observe
 
 
 class FamilyRepo(Protocol):
