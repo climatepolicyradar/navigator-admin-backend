@@ -12,7 +12,6 @@ def tag_name():
 
 
 NAME_PREFIX = tag_name()
-AMAZON_OWNER_ID = "137112412989"
 DEFAULT_TAGS = {
     "CPR-Created-By": "pulumi",
     "CPR-Pulumi-Stack-Name": pulumi.get_stack(),
