@@ -38,7 +38,7 @@ def get(import_id: str) -> Optional[CollectionReadDTO]:
     """
     validate_import_id(import_id)
     try:
-        with db_session.get_db() as db:
+        with db_session.get_db_session() as db:
             return collection_repo.get(db, import_id)
     except exc.SQLAlchemyError as e:
         msg = f"Error when getting collection {import_id}: {e}"
@@ -55,7 +55,7 @@ def all(user: UserContext) -> list[CollectionReadDTO]:
     :return list[CollectionDTO]: The list of collections.
     """
     try:
-        with db_session.get_db() as db:
+        with db_session.get_db_session() as db:
             org_id = app_user.restrict_entities_to_user_org(user)
             return collection_repo.all(db, org_id)
     except exc.SQLAlchemyError as e:
@@ -81,7 +81,7 @@ def search(
     :return list[CollectionReadDTO]: The list of collections matching
         the given search terms.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return collection_repo.search(db, search_params, org_id)
 

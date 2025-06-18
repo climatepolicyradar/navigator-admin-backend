@@ -21,7 +21,7 @@ def get(user: UserContext) -> ConfigReadDTO:
     :return ConfigReadDTO: The config for the application
     """
     try:
-        with db_session.get_db() as db:
+        with db_session.get_db_session() as db:
             return config_repo.get(db, user)
 
     except exc.SQLAlchemyError as e:

@@ -19,7 +19,7 @@ def all(user: UserContext) -> list[CorpusTypeReadDTO]:
     :param UserContext user: The current user context.
     :return list[CorpusReadDTO]: The list of corpora.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return corpus_type_repo.all(db, org_id)
 
