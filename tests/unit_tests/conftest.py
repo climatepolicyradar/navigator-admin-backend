@@ -313,7 +313,7 @@ def s3_document_bucket_names() -> dict:
 @pytest.fixture
 def test_s3_client(s3_document_bucket_names):
     bucket_names = s3_document_bucket_names.values()
-    region = "eu-west-2"
+    region = "eu-west-1"
 
     with patch.dict(
         os.environ,

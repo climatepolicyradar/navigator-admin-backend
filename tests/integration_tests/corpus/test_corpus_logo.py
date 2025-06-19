@@ -38,7 +38,7 @@ def s3_client(s3_bucket_name):
             s3 = boto3.client("s3")
             s3.create_bucket(
                 Bucket=s3_bucket_name,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+                CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
             )
             yield s3
 
