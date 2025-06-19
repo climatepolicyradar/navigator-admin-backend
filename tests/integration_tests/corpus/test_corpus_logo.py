@@ -8,7 +8,7 @@ import boto3
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from moto import mock_s3
+from moto import mock_aws
 from sqlalchemy.orm import Session
 
 from tests.integration_tests.setup_db import setup_db
@@ -23,7 +23,7 @@ def s3_bucket_name():
 @pytest.fixture
 def s3_client(s3_bucket_name):
     """Fixture for mocked S3 client."""
-    with mock_s3():
+    with mock_aws():
         with patch.dict(
             os.environ,
             {
@@ -38,7 +38,7 @@ def s3_client(s3_bucket_name):
             s3 = boto3.client("s3")
             s3.create_bucket(
                 Bucket=s3_bucket_name,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+                CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
             )
             yield s3
 

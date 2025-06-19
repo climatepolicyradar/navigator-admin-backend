@@ -18,7 +18,7 @@ from app.clients.aws.s3bucket import (
 def test_upload_json_to_s3_when_ok(basic_s3_client):
     basic_s3_client.create_bucket(
         Bucket="my-bucket",
-        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
     )
     context = S3UploadContext(bucket_name="my-bucket", object_name="data.json")
     json_data = {"key": "value"}
