@@ -1,11 +1,19 @@
 """An AWS Python Pulumi program"""
 
 import json
+import sys
+from pathlib import Path
 
-import pulumi
-import pulumi_aws as aws
+import pulumi  # type: ignore
+import pulumi_aws as aws  # type: ignore
+
+sys.path.append(str(Path(__file__).parent.parent))
+
 from admin_backend_app import create_admin_backend
-from util.validate_aws_account import validate_aws_account, validate_stack_and_branch
+
+from resources.ecr_repository import ECRRepository, ECRRepositoryConfig, PolicyOptions
+from resources.github_actions_role import GitHubActionsRole
+from resources.util import validate_aws_account, validate_stack_and_branch
 
 validate_aws_account()
 validate_stack_and_branch()
@@ -13,10 +21,55 @@ validate_stack_and_branch()
 RUNTIME = "python3.9"
 CONFIG = pulumi.Config()
 
+stack = pulumi.get_stack()
+
 backend_service = create_admin_backend()
 pulumi.export("apprunner_service_url", backend_service.service_url)
 
-stack = pulumi.get_stack()
+
+########################################################################
+# Create ECR repo
+########################################################################
+
+# Create ECR repo in production account
+ecr_repo = ECRRepository(
+    "navigator-admin-backend",
+    config=ECRRepositoryConfig(
+        principal_service=PolicyOptions.APPRUNNER, image_scan_on_push=False
+    ),
+    opts=pulumi.ResourceOptions(
+        import_="navigator-admin-backend" if stack == "production" else None,
+    ),
+)
+
+# Export the repository URL for use in CI/CD pipelines
+pulumi.export("ecr_repository_url", ecr_repo.repository.repository_url)
+pulumi.export("ecr_repository_name", ecr_repo.repository.name)
+
+# Get the concrete repository URL value
+repository_url = ecr_repo.repository.repository_url.apply(lambda url: url)
+repository_url.apply(lambda url: pulumi.info(f"Repository URL: {url}"))
+docker_tag = CONFIG.require("docker_tag")
+pulumi.info(f"Docker tag: {docker_tag}")
+image_identifier = ecr_repo.repository.repository_url.apply(
+    lambda url: f"{url}:{docker_tag}"
+)
+image_identifier.apply(lambda id: pulumi.info(f"Final image identifier: {id}"))
+
+
+########################################################################
+# Create GitHub Actions role
+########################################################################
+
+github_actions_role = GitHubActionsRole(
+    name="navigator-admin-backend-github-actions",
+)
+
+########################################################################
+# Create RDS instances
+########################################################################
+
+
 account_id = aws.get_caller_identity().account_id
 
 
