@@ -31,132 +31,6 @@ stack = pulumi.get_stack()
 NAME_PREFIX = f"{stack}-{pulumi.get_project()}"
 
 
-_S3_ACCESS_POLICY = {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": ["s3:*"],
-            "Resource": [
-                f"arn:aws:s3:::{CONFIG.require('bulk_import_bucket')}",
-                f"arn:aws:s3:::{CONFIG.require('bulk_import_bucket')}/*",
-                f"arn:aws:s3:::{CONFIG.require('database_dump_bucket')}",
-                f"arn:aws:s3:::{CONFIG.require('database_dump_bucket')}/*",
-            ],
-            "Effect": "Allow",
-        },
-    ],
-}
-
-_ECR_ACCESS_POLICY = {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "ecr:DescribeImages",
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchCheckLayerAvailability",
-            ],
-            "Resource": "*",
-        }
-    ],
-}
-
-_SSM_ACCESS_POLICY = {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": ["ssm:GetParameter", "ssm:GetParameters"],
-            "Resource": [
-                "arn:aws:ssm:eu-west-1:*:parameter/AdminBackend/AWS_ACCESS_KEY_ID",
-                "arn:aws:ssm:eu-west-1:*:parameter/AdminBackend/AWS_SECRET_ACCESS_KEY",
-            ],
-        }
-    ],
-}
-
-
-def _get_apprunner_instance_role() -> aws.iam.Role:
-    apprunner_instance_role = aws.iam.Role(
-        f"{NAME_PREFIX}-apprunner-instance-role-old",
-        assume_role_policy=json.dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Action": "sts:AssumeRole",
-                        "Effect": "Allow",
-                        "Sid": "",
-                        "Principal": {
-                            "Service": "tasks.apprunner.amazonaws.com",
-                        },
-                    },
-                ],
-            }
-        ),
-        tags=DEFAULT_TAGS,
-    )
-
-    s3_access_policy = aws.iam.Policy(
-        f"{NAME_PREFIX}-apprunner-s3-access-policy-old",
-        policy=json.dumps(_S3_ACCESS_POLICY),
-    )
-    aws.iam.RolePolicyAttachment(
-        f"{NAME_PREFIX}-apprunner-role-policy-attach-s3-access-policy-old",
-        role=apprunner_instance_role.name,
-        policy_arn=s3_access_policy.arn,
-    )
-
-    ssm_access_policy = aws.iam.Policy(
-        f"{NAME_PREFIX}-apprunner-ssm-access-policy-old",
-        policy=json.dumps(_SSM_ACCESS_POLICY),
-    )
-    aws.iam.RolePolicyAttachment(
-        f"{NAME_PREFIX}-apprunner-role-policy-attach-ssm-access-policy-old",
-        role=apprunner_instance_role.name,
-        policy_arn=ssm_access_policy.arn,
-    )
-
-    return apprunner_instance_role
-
-
-def _get_apprunner_access_role() -> aws.iam.Role:
-    apprunner_access_role = aws.iam.Role(
-        f"{NAME_PREFIX}-apprunner-access-role-old",
-        assume_role_policy=json.dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Action": "sts:AssumeRole",
-                        "Effect": "Allow",
-                        "Sid": "",
-                        "Principal": {
-                            "Service": "build.apprunner.amazonaws.com",
-                        },
-                    },
-                ],
-            }
-        ),
-        tags=DEFAULT_TAGS,
-    )
-
-    ecr_access_policy = aws.iam.Policy(
-        f"{NAME_PREFIX}-apprunner-ecr-access-policy-old",
-        policy=json.dumps(_ECR_ACCESS_POLICY),
-    )
-    aws.iam.RolePolicyAttachment(
-        f"{NAME_PREFIX}-apprunner-role-policy-attach-ecr-access-policy-old",
-        role=apprunner_access_role.name,
-        policy_arn=ecr_access_policy.arn,
-    )
-
-    return apprunner_access_role
-
-
 def _create_backend_environment() -> dict[str, str]:
     # Create the environment config required for the backend service
     rds_username = CONFIG.require("rds_username")
@@ -209,33 +83,6 @@ def _create_backend_environment() -> dict[str, str]:
     return environment
 
 
-def _create_apprunner_config() -> aws.apprunner.ServiceSourceConfigurationArgs:
-    # Create the main config for the backend AppRunner service
-    image_identifier = f"{CONFIG.require('ecr_uri')}:{CONFIG.require('docker_tag')}"
-    env = _create_backend_environment()
-
-    image_config = (
-        aws.apprunner.ServiceSourceConfigurationImageRepositoryImageConfigurationArgs(
-            port="8888",
-            runtime_environment_variables=env,
-        )
-    )
-
-    ecr_repo = aws.apprunner.ServiceSourceConfigurationImageRepositoryArgs(
-        image_identifier=image_identifier,
-        image_repository_type="ECR",
-        image_configuration=image_config,
-    )
-
-    return aws.apprunner.ServiceSourceConfigurationArgs(
-        auto_deployments_enabled=False,
-        image_repository=ecr_repo,
-        authentication_configuration=aws.apprunner.ServiceSourceConfigurationAuthenticationConfigurationArgs(
-            access_role_arn=_get_apprunner_access_role().arn,
-        ),
-    )
-
-
 def _create_backend_vpc_connector() -> aws.apprunner.VpcConnector:
     # Create a VPC connector to allow AppRunner instances to access private services
     vpc_connector_tags = dict(DEFAULT_TAGS)
@@ -253,59 +100,6 @@ def _create_backend_vpc_connector() -> aws.apprunner.VpcConnector:
     )
 
     return vpc_connector
-
-
-def _create_backend_auto_scaling_config() -> (
-    aws.apprunner.AutoScalingConfigurationVersion
-):
-    # Create a scaling configuration based on config
-    scaling_config = aws.apprunner.AutoScalingConfigurationVersion(
-        f"{NAME_PREFIX}-scaling-cfg",
-        auto_scaling_configuration_name=f"{NAME_PREFIX}-scfg",
-        max_concurrency=int(CONFIG.require("apprunner_backend_max_concurrency")),
-        max_size=int(CONFIG.require("apprunner_backend_max_instance_count")),
-        min_size=int(CONFIG.require("apprunner_backend_min_instance_count")),
-        tags={
-            "Name": f"{NAME_PREFIX}-scaling-cfg",
-        },
-    )
-
-    return scaling_config
-
-
-def create_admin_backend(
-    vpc_connector: aws.apprunner.VpcConnector,
-) -> aws.apprunner.Service:
-    auto_scaling_config = _create_backend_auto_scaling_config()
-
-    # Create the backend AppRunner app instance
-    app_tags = dict(DEFAULT_TAGS)
-    app_tags["Name"] = f"{NAME_PREFIX}-app"
-    backend_app = aws.apprunner.Service(
-        resource_name=f"{NAME_PREFIX}-app",
-        service_name=f"{NAME_PREFIX}-app",
-        instance_configuration=aws.apprunner.ServiceInstanceConfigurationArgs(
-            cpu="2 vCPU",
-            memory="4 GB",
-            instance_role_arn=_get_apprunner_instance_role().arn,
-        ),
-        source_configuration=_create_apprunner_config(),
-        network_configuration=aws.apprunner.ServiceNetworkConfigurationArgs(
-            egress_configuration=aws.apprunner.ServiceNetworkConfigurationEgressConfigurationArgs(
-                egress_type="VPC",
-                vpc_connector_arn=vpc_connector.arn,
-            ),
-        ),
-        auto_scaling_configuration_arn=auto_scaling_config.arn,
-        health_check_configuration=aws.apprunner.ServiceHealthCheckConfigurationArgs(
-            path="/health",
-            protocol="HTTP",
-            interval=10,
-        ),
-        tags=app_tags,
-    )
-
-    return backend_app
 
 
 ########################################################################
@@ -340,8 +134,6 @@ image_identifier.apply(lambda id: pulumi.info(f"Final image identifier: {id}"))
 
 # Create old service
 vpc_connector = _create_backend_vpc_connector()
-backend_service = create_admin_backend(vpc_connector)
-pulumi.export("apprunner_service_url", backend_service.service_url)
 
 # Create new service
 # Create config for the new service
@@ -373,6 +165,8 @@ new_backend = AppRunnerService(
     image_identifier=image_identifier,
     env_vars=_create_backend_environment(),
 )
+pulumi.export("apprunner_service_url", new_backend.service.service_url)
+pulumi.export("new_apprunner_service_url", new_backend.service.service_url)
 
 
 ########################################################################
@@ -506,7 +300,7 @@ navigator_admin = aws.rds.Instance(
         "upgrade",
     ],
     engine="postgres",
-    engine_version="14.13",
+    engine_version="14.17",
     identifier=identifier,
     instance_class=rds_instance_class,
     iops=1000,
