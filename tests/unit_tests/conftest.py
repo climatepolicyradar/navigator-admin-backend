@@ -14,7 +14,7 @@ import db_client.functions.metadata as db_client_metadata
 import pytest
 from botocore.exceptions import ClientError
 from fastapi.testclient import TestClient
-from moto import mock_s3
+from moto import mock_aws
 
 import app.service.analytics as analytics_service
 import app.service.app_user as app_user_service
@@ -324,7 +324,7 @@ def test_s3_client(s3_document_bucket_names):
         },
         clear=True,
     ):
-        with mock_s3():
+        with mock_aws():
             s3_client = get_s3_client()
             for bucket in bucket_names:
                 s3_client.create_bucket(
@@ -345,7 +345,7 @@ def test_s3_client(s3_document_bucket_names):
 @pytest.fixture
 def basic_s3_client():
     bucket_name = "test_bucket"
-    with mock_s3():
+    with mock_aws():
         with patch.dict(
             os.environ,
             {
