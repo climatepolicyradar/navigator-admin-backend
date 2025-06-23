@@ -512,7 +512,7 @@ def import_data(
         else:
             _LOGGER.info("🗒️ No data to import.")
 
-        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(data)}"
+        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(result)}"
     except Exception as e:
         _LOGGER.error(
             f"💥 Rolling back transaction due to the following error: {e}",
