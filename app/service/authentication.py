@@ -47,7 +47,7 @@ def authenticate_user(email: str, password: str) -> str:
     """
 
     org_id = None
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         try:
             user = app_user_repo.get_user_by_email(db, email)
         except NoResultFound:
