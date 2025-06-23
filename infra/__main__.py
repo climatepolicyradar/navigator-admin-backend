@@ -54,14 +54,6 @@ def _create_backend_environment() -> dict[str, str]:
         "backend_token_secret_key"
     ).value
 
-    # Create SSM parameter references
-    aws_access_key_parameter = aws.ssm.get_parameter(
-        name="/AdminBackend/AWS_ACCESS_KEY_ID", with_decryption=True
-    )
-    aws_secret_key_parameter = aws.ssm.get_parameter(
-        name="/AdminBackend/AWS_SECRET_ACCESS_KEY", with_decryption=True
-    )
-
     environment: dict[str, str] = {
         "ADMIN_POSTGRES_USER": rds_username,
         "ADMIN_POSTGRES_PASSWORD": rds_password,
@@ -76,8 +68,6 @@ def _create_backend_environment() -> dict[str, str]:
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,
         "LOG_LEVEL": log_level,
-        "AWS_ACCESS_KEY_ID": aws_access_key_parameter.value,
-        "AWS_SECRET_ACCESS_KEY": aws_secret_key_parameter.value,
     }
 
     return environment
