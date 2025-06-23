@@ -119,9 +119,6 @@ def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadD
     family_slugs = family_row["slugs"]
     event_ids = family_row["event_ids"] if family_row["event_ids"] else []
     document_ids = family_row["document_ids"] if family_row["document_ids"] else []
-    collection_ids = (
-        family_row["collection_ids"] if family_row["collection_ids"] else []
-    )
 
     return FamilyReadDTO(
         import_id=str(family_import_id),
@@ -139,7 +136,12 @@ def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadD
         published_date=family_row["published_date"],
         last_updated_date=family_row["last_updated_date"],
         documents=document_ids,
-        collections=collection_ids,
+        collections=[
+            c.collection_import_id
+            for c in db.query(CollectionFamily).filter(
+                family_import_id == CollectionFamily.family_import_id
+            )
+        ],
         organisation=org,
         corpus_import_id=family_row["corpus_import_id"],
         corpus_title=cast(str, family_row["title"]),
