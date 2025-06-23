@@ -13,7 +13,6 @@ import app.service.corpus as corpus
 import app.service.metadata as metadata
 from app.errors import ValidationError
 from app.service.collection import validate_import_id
-from app.service.event import create_event_metadata_object
 
 
 class BulkImportEntityList(str, Enum):
@@ -140,12 +139,8 @@ def validate_event(db: Session, event: dict[str, Any], corpus_import_id: str) ->
     validate_import_id(event["import_id"])
     validate_import_id(event["family_import_id"])
 
-    event_metadata = event.get("metadata")
-    # TODO: remove below when implementing APP-343
-    if not event_metadata:
-        event_metadata = create_event_metadata_object(
-            db, corpus_import_id, event["event_type_value"]
-        )
+    event_metadata = event.get("metadata", {})
+
     metadata.validate_metadata(
         db,
         corpus_import_id,

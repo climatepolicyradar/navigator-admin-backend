@@ -38,7 +38,7 @@ from app.service.health import is_database_online
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
     r"https://.+\.climatepolicyradar\.org|"
-    r"https://.+\.dev.climatepolicyradar\.org|"
+    r"https://.+\.staging.climatepolicyradar\.org|"
     r"https://.+\.sandbox\.climatepolicyradar\.org|"
     r"https://climate-laws\.org|"
     r"https://.+\.climate-laws\.org|"

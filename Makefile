@@ -24,7 +24,7 @@ dev_rds_dump:
 	[ ! -f ./dumps/navigator.sql ] && aws --profile staging s3 cp s3://cpr-staging-rds/dumps/navigator.sql ./dumps/ || echo 0
 
 # this should only need to be run if there are significant schema changes
-# TODO: make this a little more inteligent
+# TODO: make this a little more intelligent
 dev_rds_dump_update:
 	aws --profile staging s3 cp s3://cpr-staging-rds/dumps/navigator.sql ./dumps/navigator.sql
 

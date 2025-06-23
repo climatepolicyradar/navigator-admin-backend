@@ -50,7 +50,7 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
             return [create_event_read_dto("search1")]
         return []
 
-    def mock_create(_, data: EventCreateDTO, meta: dict[str, list[str]]) -> str:
+    def mock_create(_, data: EventCreateDTO) -> str:
         maybe_throw()
         if event_repo.throw_repository_error:
             raise RepositoryError("Error trying to create Event")
