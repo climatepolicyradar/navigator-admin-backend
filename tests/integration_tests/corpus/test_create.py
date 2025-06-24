@@ -38,11 +38,11 @@ def test_create_corpus(client: TestClient, data_db: Session, superuser_header_to
     assert ct > 1
 
 
-def test_create_corpus_allows_none_corpus_text(
+def test_create_corpus_allows_none_corpus_description(
     client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
-    new_corpus = create_corpus_create_dto("Laws and Policies", corpus_text=None)
+    new_corpus = create_corpus_create_dto("Laws and Policies", description=None)
     response = client.post(
         "/api/v1/corpora",
         json=new_corpus.model_dump(),
@@ -56,8 +56,8 @@ def test_create_corpus_allows_none_corpus_text(
 
     assert actual_corpus.import_id == "CCLW.corpus.i00000002.n0000"
     assert actual_corpus.title == "title"
-    assert actual_corpus.description == "description"
-    assert actual_corpus.corpus_text is None
+    assert actual_corpus.description is None
+    assert actual_corpus.corpus_text == "corpus_text"
     assert actual_corpus.corpus_type_name == "Laws and Policies"
     assert actual_corpus.corpus_image_url == "some-picture.png"
     assert actual_corpus.organisation_id == 1

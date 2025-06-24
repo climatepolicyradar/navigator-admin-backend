@@ -10,8 +10,8 @@ class CorpusReadDTO(BaseModel):
 
     import_id: str
     title: str
-    description: str
-    corpus_text: Optional[str]
+    description: Optional[str] = None
+    corpus_text: str
     corpus_image_url: Optional[str] = None
     organisation_id: int
     organisation_name: str
@@ -27,8 +27,8 @@ class CorpusWriteDTO(BaseModel):
     """Representation of a Corpus."""
 
     title: str
-    description: str
-    corpus_text: Optional[str]
+    description: Optional[str]
+    corpus_text: str
     corpus_image_url: Optional[str]
 
     corpus_type_description: str
@@ -39,8 +39,8 @@ class CorpusCreateDTO(BaseModel):
 
     import_id: Optional[str] = None
     title: str
-    description: str
-    corpus_text: Optional[str]
+    description: Optional[str]
+    corpus_text: str
     corpus_image_url: Optional[str]
     organisation_id: int
     corpus_type_name: str

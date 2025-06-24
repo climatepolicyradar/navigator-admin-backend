@@ -101,14 +101,14 @@ def test_update_corpus_allows_none_corpus_image_url(
     assert ct.valid_metadata == old_ct.valid_metadata
 
 
-def test_update_corpus_allows_none_corpus_text(
+def test_update_corpus_allows_none_corpus_description(
     client: TestClient, data_db: Session, superuser_header_token
 ):
     setup_db(data_db)
     old_ct = (
         data_db.query(CorpusType).filter(CorpusType.name == "Laws and Policies").one()
     )
-    new_corpus = create_corpus_write_dto(corpus_text=None)
+    new_corpus = create_corpus_write_dto(description=None)
     response = client.put(
         "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
         json=new_corpus.model_dump(),
@@ -118,8 +118,8 @@ def test_update_corpus_allows_none_corpus_text(
     data = response.json()
     assert data["import_id"] == "CCLW.corpus.i00000001.n0000"
     assert data["title"] == "title"
-    assert data["description"] == "description"
-    assert data["corpus_text"] is None
+    assert data["description"] is None
+    assert data["corpus_text"] == "corpus_text"
     assert data["corpus_image_url"] == "some-picture.png"
     assert data["organisation_id"] == 1
     assert data["organisation_name"] == "CCLW"
@@ -135,8 +135,8 @@ def test_update_corpus_allows_none_corpus_text(
     )
     assert db_corpus.import_id == "CCLW.corpus.i00000001.n0000"
     assert db_corpus.title == "title"
-    assert db_corpus.description == "description"
-    assert db_corpus.corpus_text is None
+    assert db_corpus.description is None
+    assert db_corpus.corpus_text == "corpus_text"
     assert db_corpus.corpus_type_name == "Laws and Policies"
     assert db_corpus.corpus_image_url == "some-picture.png"
     assert db_corpus.organisation_id == 1
