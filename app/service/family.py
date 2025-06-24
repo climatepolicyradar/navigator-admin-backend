@@ -82,7 +82,7 @@ def search(
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
-    with db_session.get_db() as db:
+    with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.search(db, search_params, org_id, geography)
 

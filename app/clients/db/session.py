@@ -1,4 +1,5 @@
 import logging
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import Session, sessionmaker
@@ -23,6 +24,15 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@contextmanager
+def get_db_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def get_db() -> Session:
