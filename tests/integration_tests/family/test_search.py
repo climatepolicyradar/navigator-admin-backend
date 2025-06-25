@@ -1,10 +1,11 @@
 import logging
+from typing import cast
 
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from tests.integration_tests.setup_db import add_data, setup_db
+from tests.integration_tests.setup_db import DBEntry, add_data, setup_db
 
 
 def test_search_geographies(
@@ -290,3 +291,54 @@ def test_search_family_when_db_error(
     data = response.json()
     assert data["detail"] == "Bad Repo"
     assert bad_family_repo.search.call_count == 1
+
+
+def test_search_family_without_collections(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    # Add a family with no collections
+    family_without_collections = {
+        "import_id": "A.0.0.99",
+        "title": "no collection family",
+        "summary": "family without any collection",
+        "geography": "AFG",
+        "geographies": ["AFG"],
+        "category": "UNFCCC",
+        "status": "Created",
+        "metadata": {
+            "topic": [],
+            "hazard": [],
+            "sector": [],
+            "keyword": [],
+            "framework": [],
+            "instrument": [],
+        },
+        "organisation": "CCLW",
+        "corpus_import_id": "CCLW.corpus.i00000001.n0000",
+        "corpus_title": "CCLW national policies",
+        "corpus_type": "Laws and Policies",
+        "slug": "no-collection-slug",
+        "events": [],
+        "published_date": None,
+        "last_updated_date": None,
+        "documents": [],
+        "collections": [],
+        "concepts": [],
+    }
+    add_data(data_db, [cast(DBEntry, family_without_collections)])
+
+    # Search for all families
+    response = client.get(
+        "/api/v1/families/?q=",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    found = next((f for f in data if f["import_id"] == "A.0.0.99"), None)
+    assert found is not None, "Family without collections should be present in results"
+    assert "collections" in found
+    assert (
+        found["collections"] == []
+    ), "Collections field should be an empty list for families without collections"
