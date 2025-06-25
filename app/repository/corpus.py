@@ -38,11 +38,11 @@ def _corpus_to_dto(
     return CorpusReadDTO(
         import_id=cast(str, corpus.import_id),
         title=str(corpus.title),
-        description=str(corpus.description),
-        metadata=metadata,
-        corpus_text=(
-            cast(str, corpus.corpus_text) if corpus.corpus_text is not None else None
+        description=(
+            cast(str, corpus.description) if corpus.description is not None else None
         ),
+        metadata=metadata,
+        corpus_text=(str(corpus.corpus_text)),
         corpus_image_url=(
             cast(str, corpus.corpus_image_url)
             if corpus.corpus_image_url is not None and corpus.corpus_image_url != ""
@@ -289,7 +289,7 @@ def create(db: Session, corpus: CorpusCreateDTO) -> str:
         new_corpus = Corpus(
             import_id=import_id,
             title=corpus.title,
-            description=corpus.description or "TBD",
+            description=corpus.description,
             corpus_text=corpus.corpus_text,
             corpus_image_url=corpus.corpus_image_url,
             organisation_id=corpus.organisation_id,
