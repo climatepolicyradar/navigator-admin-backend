@@ -53,3 +53,8 @@ clean:
 	docker-compose -f docker-compose-dev.yml down
 	docker-compose -f docker-compose-test.yml down
 	rm ./dumps/navigator.sql
+
+run: 
+	docker compose -f docker-compose.yml up -d --remove-orphans
+
+start: build_dev run
