@@ -599,7 +599,7 @@ SQLAlchemy-Utils = "^0.38.2"
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
 reference = "v3.9.17"
-resolved_reference = "e41bf9dd2d8bffec052e0a647b0672461790c82d"
+resolved_reference = "c82b9c30a3e617b1a78a8059f31ff76b23b0ee92"
 
 [[package]]
 name = "dill"
