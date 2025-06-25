@@ -135,6 +135,7 @@ def construct_raw_sql_query_to_retrieve_all_families(
             c.import_id AS corpus_import_id,
             o.*,
             slug_subquery.slugs,
+            collection_subquery.collection_ids,
         CASE
             WHEN EXISTS (
                 SELECT 1
@@ -214,6 +215,17 @@ def construct_raw_sql_query_to_retrieve_all_families(
                     s.family_import_id
             ) AS slug_subquery
             ON slug_subquery.family_import_id = f.import_id
+        LEFT JOIN
+            (
+                SELECT
+                    cf.family_import_id,
+                    array_agg(cf.collection_import_id) AS collection_ids
+                FROM
+                    collection_family cf
+                GROUP BY
+                    cf.family_import_id
+            ) AS collection_subquery
+            ON collection_subquery.family_import_id = f.import_id
         JOIN
             family_metadata fm ON fm.family_import_id = f.import_id
         JOIN
@@ -246,7 +258,7 @@ def construct_raw_sql_query_to_retrieve_all_families(
     GROUP BY
         f.import_id, f.title, geography_subquery.geography_values,
         family_documents_subquery.document_ids, family_events_subquery.event_ids,
-        fm.family_import_id, c.import_id, o.id, slug_subquery.slugs
+        fm.family_import_id, c.import_id, o.id, slug_subquery.slugs, collection_subquery.collection_ids
     ORDER BY f.last_modified DESC
     LIMIT :max_results
     """
