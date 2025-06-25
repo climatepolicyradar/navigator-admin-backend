@@ -20,4 +20,6 @@ RUN poetry config virtualenvs.create false && poetry install --no-directory --no
 COPY ./app ./app
 COPY ./tests ./tests
 
+EXPOSE 8888
+
 CMD python app/main.py
