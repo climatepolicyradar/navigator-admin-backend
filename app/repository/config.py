@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Sequence
 
 from db_client.models.base import AnyModel
@@ -9,6 +10,8 @@ from sqlalchemy.orm import Query, Session
 
 from app.model.config import ConfigReadDTO, CorpusData, DocumentConfig
 from app.model.user import UserContext
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _tree_table_to_json(
@@ -38,6 +41,11 @@ def _tree_table_to_json(
 
 
 def _to_corpus_data(row) -> CorpusData:
+    """Convert database row to CorpusData model.
+
+    :param row: Database row containing corpus data
+    :return CorpusData: The converted corpus data model
+    """
     return CorpusData(
         corpus_import_id=row.corpus_import_id,
         title=row.title,
@@ -55,6 +63,12 @@ def _to_corpus_data(row) -> CorpusData:
 
 
 def get_corpora(db: Session, user: UserContext) -> Sequence[CorpusData]:
+    """Get corpora data for the given user.
+
+    :param Session db: Database session
+    :param UserContext user: User context for filtering
+    :return Sequence[CorpusData]: List of corpus data
+    """
     corpora = (
         db.query(
             Corpus.import_id.label("corpus_import_id"),
@@ -79,7 +93,19 @@ def get_corpora(db: Session, user: UserContext) -> Sequence[CorpusData]:
     else:
         corpora = corpora.filter(Organisation.id == user.org_id).all()
 
-    return [_to_corpus_data(row) for row in corpora]
+    corpus_data_list = []
+    for row in corpora:
+        try:
+            corpus_data = _to_corpus_data(row)
+            corpus_data_list.append(corpus_data)
+        except Exception as e:
+            _LOGGER.error(
+                f"❌ Failed to convert corpus data for {getattr(row, 'corpus_import_id', 'unknown')}: {e}"
+            )
+            # Continue processing other corpora rather than failing completely
+            continue
+
+    return corpus_data_list
 
 
 def get(db: Session, user: UserContext) -> ConfigReadDTO:
