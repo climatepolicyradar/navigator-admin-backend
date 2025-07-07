@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+from pprint import pformat
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, RootModel
@@ -289,5 +290,7 @@ def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) ->
         current_value = getattr(current_dto, key)
         if update_value != current_value:
             _LOGGER.info(
-                f"🔀 Change detected in {key}: {current_value} => {update_value}"
+                f"\033[94m🔀 Change detected in `{key}`:\033[0m\n"
+                f"🟡 Before:\n\033[91m{pformat(current_value)}\033[0m\n"
+                f"🟢 After:\n\033[92m{pformat(update_value)}\033[0m"
             )
