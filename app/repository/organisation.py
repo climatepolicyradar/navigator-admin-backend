@@ -2,12 +2,17 @@ import logging
 from typing import Optional, cast
 
 from db_client.models.organisation.users import Organisation
+from sqlalchemy import update as db_update
 from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import asc
 
 from app.errors import RepositoryError
-from app.model.organisation import OrganisationCreateDTO, OrganisationReadDTO
+from app.model.organisation import (
+    OrganisationCreateDTO,
+    OrganisationReadDTO,
+    OrganisationWriteDTO,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +47,7 @@ def _org_to_dto(org: Organisation) -> OrganisationReadDTO:
         display_name=str(org.display_name),
         description=str(org.description),
         type=str(org.organisation_type),
+        attribution_url=str(org.attribution_url),
     )
 
 
@@ -84,7 +90,7 @@ def create(db: Session, organisation: OrganisationCreateDTO) -> int:
     Creates a new organisation.
 
     :param db Session: The database connection.
-    :param OrganisationCreateDTO collection: the values for the new organisation to be created.
+    :param OrganisationCreateDTO collection: The values for the new organisation to be created.
     :raises RepositoryError: If an organisation could not be created.
     :return int: The id of the newly created organisation.
     """
@@ -100,3 +106,29 @@ def create(db: Session, organisation: OrganisationCreateDTO) -> int:
     db.flush()
 
     return int(getattr(new_organisation, "id"))
+
+
+def update(db: Session, id: int, organisation: OrganisationWriteDTO) -> bool:
+    """
+    Updates an existing organisation.
+
+    :param db Session: The database connection.
+    :param int id: The id of the existing organisation to be updated.
+    :param OrganisationWriteDTO collection: The values for updating an existing organisation.
+    :raises RepositoryError: If an organisation could not be created.
+    :return bool: True if new values were set otherwise false.
+    """
+
+    result = db.execute(
+        db_update(Organisation)
+        .where(Organisation.id == id)
+        .values(
+            name=organisation.internal_name,
+            display_name=organisation.display_name,
+            description=organisation.description,
+            organisation_type=organisation.type,
+            attribution_url=organisation.attribution_url,
+        )
+    )
+
+    return True if result.rowcount != 0 else False  # type: ignore

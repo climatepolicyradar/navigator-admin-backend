@@ -5,7 +5,11 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 from app.errors import ValidationError
-from app.model.organisation import OrganisationCreateDTO, OrganisationReadDTO
+from app.model.organisation import (
+    OrganisationCreateDTO,
+    OrganisationReadDTO,
+    OrganisationWriteDTO,
+)
 from app.repository import organisation as organisation_repo
 
 
@@ -61,3 +65,26 @@ def create(organisation: OrganisationCreateDTO, db: Optional[Session] = None) ->
         raise e
     finally:
         db.commit()
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def update(
+    id: int, organisation: OrganisationWriteDTO, db: Optional[Session] = None
+) -> Optional[OrganisationReadDTO]:
+    """
+    Updates an existing organisation with the values passed.
+
+    :param int id: The id of the existing organisation to be updated.
+    :param OrganisationWriteDTO organisation: The values for updating an existing organisation.
+    :raises RepositoryError: If there is an error during the update.
+    :return OrganisationReadDTO: The updated organisation.
+    """
+    if db is None:
+        db = db_session.get_db()
+
+    result = organisation_repo.update(db, id, organisation)
+
+    if result:
+        db.commit()
+
+    return get(id)
