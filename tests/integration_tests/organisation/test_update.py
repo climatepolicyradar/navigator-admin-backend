@@ -55,3 +55,26 @@ def test_successfully_updates_an_existing_organisation(
     assert saved_organisation.description == updated_organisation.description
     assert saved_organisation.organisation_type == updated_organisation.type
     assert saved_organisation.attribution_url == updated_organisation.attribution_url
+
+
+def test_returns_404_status_code_if_organisation_not_found(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    id = 100
+    updated_organisation = OrganisationWriteDTO(
+        internal_name="Test Organisation - Edited",
+        display_name="Test Organisation - Edited",
+        description="Test Description - Edited",
+        type="ORG - Edited",
+        attribution_url="test_org_attribution_url_edited.com",
+    )
+
+    response = client.put(
+        f"/api/v1/organisations/{id}",
+        headers=superuser_header_token,
+        json=updated_organisation.model_dump(),
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    data = response.json()
+    assert data["detail"] == f"Unable to find collection to update for id: {id}"

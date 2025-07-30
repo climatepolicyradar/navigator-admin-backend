@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, status
+from sqlalchemy.orm.exc import NoResultFound
 
 from app.errors import RepositoryError, ValidationError
 from app.model.organisation import (
@@ -113,6 +114,7 @@ async def update_organisation(
     updated_org = organisation_service.update(id, updated_organisation)
 
     if updated_org is None:
-        raise Exception
+        detail = f"Unable to find collection to update for id: {id}"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return updated_org

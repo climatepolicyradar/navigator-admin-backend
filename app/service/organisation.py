@@ -86,5 +86,7 @@ def update(
 
     if result:
         db.commit()
+    else:
+        db.rollback()
 
     return get(id)

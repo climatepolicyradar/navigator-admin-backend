@@ -118,6 +118,13 @@ def update(db: Session, id: int, organisation: OrganisationWriteDTO) -> bool:
     :raises RepositoryError: If an organisation could not be created.
     :return bool: True if new values were set otherwise false.
     """
+    original_organisation = (
+        db.query(Organisation).filter(Organisation.id == id).one_or_none()
+    )
+
+    if original_organisation is None:
+        _LOGGER.error(f"Unable to find organisation for update: {id}")
+        return False
 
     result = db.execute(
         db_update(Organisation)
