@@ -111,10 +111,16 @@ async def update_organisation(
     :raises HTTPException: If the organisation could not be updated.
     :return OrganisationReadDTO: The updated organisation.
     """
-    updated_org = organisation_service.update(id, updated_organisation)
+    try:
+        updated_org = organisation_service.update(id, updated_organisation)
 
-    if updated_org is None:
-        detail = f"Unable to find collection to update for id: {id}"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+        if updated_org is None:
+            detail = f"Unable to find collection to update for id: {id}"
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
-    return updated_org
+        return updated_org
+    except RepositoryError as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )

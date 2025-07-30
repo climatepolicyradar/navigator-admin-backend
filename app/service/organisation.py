@@ -76,17 +76,19 @@ def update(
 
     :param int id: The id of the existing organisation to be updated.
     :param OrganisationWriteDTO organisation: The values for updating an existing organisation.
-    :raises RepositoryError: If there is an error during the update.
+    :raises Exception: If there is an error during the update.
     :return OrganisationReadDTO: The updated organisation.
     """
     if db is None:
         db = db_session.get_db()
 
-    result = organisation_repo.update(db, id, organisation)
-
-    if result:
-        db.commit()
-    else:
+    try:
+        if organisation_repo.update(db, id, organisation):
+            db.commit()
+        else:
+            db.rollback()
+    except Exception as e:
         db.rollback()
+        raise e
 
     return get(id)
