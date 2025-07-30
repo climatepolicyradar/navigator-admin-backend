@@ -9,3 +9,13 @@ class OrganisationReadDTO(BaseModel):
     display_name: str
     description: str
     type: str
+
+
+class OrganisationCreateDTO(BaseModel):
+    """Representation of an Organisation for creating."""
+
+    internal_name: str
+    display_name: str
+    description: str
+    type: str
+    attribution_url: str

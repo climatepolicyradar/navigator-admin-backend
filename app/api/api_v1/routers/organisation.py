@@ -60,3 +60,14 @@ async def get_organisation(organisation_id: int) -> OrganisationReadDTO:
             detail=msg,
         )
     return org
+
+
+@organisations_router.post(
+    "/organisations",
+    response_model=str,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_organisation() -> str:
+    """Create an organisation."""
+
+    return ""
