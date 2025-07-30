@@ -78,3 +78,20 @@ def test_returns_404_status_code_if_organisation_not_found(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == f"Unable to find collection to update for id: {id}"
+
+
+def test_update_organisation_when_not_authorised(client: TestClient, data_db: Session):
+    id = 100
+    updated_organisation = OrganisationWriteDTO(
+        internal_name="Test Organisation - Edited",
+        display_name="Test Organisation - Edited",
+        description="Test Description - Edited",
+        type="ORG - Edited",
+        attribution_url="test_org_attribution_url_edited.com",
+    )
+
+    response = client.put(
+        f"/api/v1/organisations/{id}",
+        json=updated_organisation.model_dump(),
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
