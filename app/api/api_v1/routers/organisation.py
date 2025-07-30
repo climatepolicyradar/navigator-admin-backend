@@ -78,3 +78,8 @@ async def create_organisation(new_organisation: OrganisationCreateDTO) -> int:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
         )
+    except Exception as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )

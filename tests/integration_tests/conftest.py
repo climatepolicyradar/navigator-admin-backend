@@ -22,6 +22,7 @@ from app.repository import (
     document_repo,
     event_repo,
     family_repo,
+    organisation_repo,
 )
 from tests.mocks.repos.bad_collection_repo import (
     mock_bad_collection_repo,
@@ -42,6 +43,7 @@ from tests.mocks.repos.rollback_corpus_repo import mock_rollback_corpus_repo
 from tests.mocks.repos.rollback_document_repo import mock_rollback_document_repo
 from tests.mocks.repos.rollback_event_repo import mock_rollback_event_repo
 from tests.mocks.repos.rollback_family_repo import mock_rollback_family_repo
+from tests.mocks.repos.rollback_organisation_repo import mock_rollback_organisation_repo
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -221,6 +223,13 @@ def rollback_corpus_repo(monkeypatch, mocker):
     """Mocks the repository for a single test."""
     mock_rollback_corpus_repo(corpus_repo, monkeypatch, mocker)
     yield corpus_repo
+
+
+@pytest.fixture
+def rollback_organisation_repo(monkeypatch, mocker):
+    """Mocks the repository for a single test."""
+    mock_rollback_organisation_repo(organisation_repo, monkeypatch, mocker)
+    yield organisation_repo
 
 
 @pytest.fixture

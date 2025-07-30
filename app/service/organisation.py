@@ -54,4 +54,10 @@ def create(organisation: OrganisationCreateDTO, db: Optional[Session] = None) ->
     if db is None:
         db = db_session.get_db()
 
-    return organisation_repo.create(db, organisation)
+    try:
+        return organisation_repo.create(db, organisation)
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.commit()
