@@ -170,7 +170,7 @@ def test_does_not_update_organisation_on_error(
         json=updated_organisation.model_dump(),
     )
 
-    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     data = response.json()
     assert data["detail"] == f"Error updating organisation: {id}"
 

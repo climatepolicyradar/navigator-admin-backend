@@ -1,6 +1,5 @@
 from pytest import MonkeyPatch
 
-from app.errors import RepositoryError
 from app.model.organisation import OrganisationCreateDTO, OrganisationWriteDTO
 
 
@@ -16,7 +15,7 @@ def mock_rollback_organisation_repo(
 
     def mock_update_organisation(db, id: int, data: OrganisationWriteDTO) -> int:
         actual_update(db, id, data)
-        raise RepositoryError(f"Error updating organisation: {id}")
+        raise Exception(f"Error updating organisation: {id}")
 
     monkeypatch.setattr(organisation_repo, "create", mock_create_organisation)
     mocker.spy(organisation_repo, "create")
