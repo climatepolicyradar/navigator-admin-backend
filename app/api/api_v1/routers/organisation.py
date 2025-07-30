@@ -69,5 +69,12 @@ async def get_organisation(organisation_id: int) -> OrganisationReadDTO:
 )
 async def create_organisation(new_organisation: OrganisationCreateDTO) -> int:
     """Create an organisation."""
+    try:
+        created_org_id = organisation_service.create(new_organisation)
+        return created_org_id
 
-    return organisation_service.create(new_organisation)
+    except RepositoryError as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
