@@ -1,7 +1,6 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy.orm.exc import NoResultFound
 
 from app.errors import RepositoryError, ValidationError
 from app.model.organisation import (
