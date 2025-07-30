@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import asc
 
 from app.errors import RepositoryError
-from app.model.organisation import OrganisationReadDTO
+from app.model.organisation import OrganisationCreateDTO, OrganisationReadDTO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,3 +77,26 @@ def get_by_id(db: Session, org_id: int) -> Optional[OrganisationReadDTO]:
         raise RepositoryError(e)
 
     return _org_to_dto(org) if org is not None else None
+
+
+def create(db: Session, organisation: OrganisationCreateDTO) -> int:
+    """
+    Creates a new organisation.
+
+    :param db Session: The database connection.
+    :param OrganisationCreateDTO collection: the values for the new organisation to be created.
+    :raises RepositoryError: If an organisation could not be created.
+    :return int: The id of the newly created organisation.
+    """
+    new_organisation = Organisation(
+        name=organisation.internal_name,
+        display_name=organisation.display_name,
+        description=organisation.description,
+        organisation_type=organisation.type,
+        attribution_url=organisation.attribution_url,
+    )
+
+    db.add(new_organisation)
+    db.flush()
+
+    return int(getattr(new_organisation, "id"))

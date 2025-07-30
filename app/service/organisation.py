@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
 from app.errors import ValidationError
-from app.model.organisation import OrganisationReadDTO
+from app.model.organisation import OrganisationCreateDTO, OrganisationReadDTO
 from app.repository import organisation as organisation_repo
 
 
@@ -40,3 +40,18 @@ def get(
         db = db_session.get_db()
 
     return organisation_repo.get_by_id(db, organisation)
+
+
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
+def create(organisation: OrganisationCreateDTO, db: Optional[Session] = None) -> int:
+    """
+    Creates a new organisation with the values passed.
+
+    :param OrganisationCreateDTO organisation: The values for the new organisation to create.
+    :raises RepositoryError: If there is an error during creation.
+    :return int: The id of the newly created organisation.
+    """
+    if db is None:
+        db = db_session.get_db()
+
+    return organisation_repo.create(db, organisation)

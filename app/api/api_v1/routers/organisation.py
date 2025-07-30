@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 
 from app.errors import RepositoryError, ValidationError
-from app.model.organisation import OrganisationReadDTO
+from app.model.organisation import OrganisationCreateDTO, OrganisationReadDTO
 from app.service import organisation as organisation_service
 
 organisations_router = APIRouter()
@@ -64,10 +64,10 @@ async def get_organisation(organisation_id: int) -> OrganisationReadDTO:
 
 @organisations_router.post(
     "/organisations",
-    response_model=str,
+    response_model=int,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_organisation() -> str:
+async def create_organisation(new_organisation: OrganisationCreateDTO) -> int:
     """Create an organisation."""
 
-    return ""
+    return organisation_service.create(new_organisation)
