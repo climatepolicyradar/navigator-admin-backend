@@ -19,7 +19,7 @@ def test_successfully_updates_an_existing_organisation(
         attribution_url="test_org_attribution_url.com",
     )
     data_db.add(existing_organisation)
-    data_db.flush()
+    data_db.commit()
 
     updated_organisation = OrganisationWriteDTO(
         internal_name="Test Organisation - Edited",
