@@ -47,7 +47,7 @@ def get(
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
-def create(organisation: OrganisationCreateDTO, db: Optional[Session] = None) -> int:
+def create(organisation: OrganisationCreateDTO) -> int:
     """
     Creates a new organisation with the values passed.
 
@@ -55,21 +55,19 @@ def create(organisation: OrganisationCreateDTO, db: Optional[Session] = None) ->
     :raises RepositoryError: If there is an error during creation.
     :return int: The id of the newly created organisation.
     """
-    if db is None:
-        db = db_session.get_db()
-
-    try:
-        return organisation_repo.create(db, organisation)
-    except Exception as e:
-        db.rollback()
-        raise e
-    finally:
-        db.commit()
+    with db_session.get_db_session() as db:
+        try:
+            return organisation_repo.create(db, organisation)
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.commit()
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
-    id: int, organisation: OrganisationWriteDTO, db: Optional[Session] = None
+    id: int, organisation: OrganisationWriteDTO
 ) -> Optional[OrganisationReadDTO]:
     """
     Updates an existing organisation with the values passed.
@@ -79,16 +77,14 @@ def update(
     :raises Exception: If there is an error during the update.
     :return OrganisationReadDTO: The updated organisation.
     """
-    if db is None:
-        db = db_session.get_db()
-
-    try:
-        if organisation_repo.update(db, id, organisation):
-            db.commit()
-        else:
+    with db_session.get_db_session() as db:
+        try:
+            if organisation_repo.update(db, id, organisation):
+                db.commit()
+            else:
+                db.rollback()
+        except Exception as e:
             db.rollback()
-    except Exception as e:
-        db.rollback()
-        raise e
+            raise e
 
-    return get(id)
+        return get(id)

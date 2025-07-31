@@ -124,7 +124,7 @@ async def update_organisation(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
     if updated_org is None:
-        detail = f"Unable to find collection to update for id: {id}"
+        detail = f"Unable to find organisation to update for id: {id}"
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
     return updated_org
