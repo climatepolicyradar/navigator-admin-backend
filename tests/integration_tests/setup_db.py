@@ -335,6 +335,7 @@ EXPECTED_CCLW_ORG = {
     "display_name": "CCLW",
     "description": "LSE CCLW team",
     "type": "Academic",
+    "attribution_url": "None",
 }
 EXPECTED_UNFCCC_ORG = {
     "id": 2,
@@ -342,6 +343,7 @@ EXPECTED_UNFCCC_ORG = {
     "display_name": "UNFCCC",
     "description": "United Nations Framework Convention on Climate Change",
     "type": "UN",
+    "attribution_url": "None",
 }
 
 

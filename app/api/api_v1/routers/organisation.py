@@ -3,7 +3,11 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 
 from app.errors import RepositoryError, ValidationError
-from app.model.organisation import OrganisationReadDTO
+from app.model.organisation import (
+    OrganisationCreateDTO,
+    OrganisationReadDTO,
+    OrganisationWriteDTO,
+)
 from app.service import organisation as organisation_service
 
 organisations_router = APIRouter()
@@ -60,3 +64,67 @@ async def get_organisation(organisation_id: int) -> OrganisationReadDTO:
             detail=msg,
         )
     return org
+
+
+@organisations_router.post(
+    "/organisations",
+    response_model=int,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_organisation(new_organisation: OrganisationCreateDTO) -> int:
+    """
+    Create an organisation.
+
+    :param OrganisationCreateDTO new_organisation: The data of the organisation to be created.
+    :raises HTTPException: If the organisation could not be created.
+    :return int: The id of the newly created organisation.
+    """
+    try:
+        created_org_id = organisation_service.create(new_organisation)
+        return created_org_id
+
+    except RepositoryError as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+    except Exception as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+@organisations_router.put(
+    "/organisations/{id}",
+    response_model=OrganisationReadDTO,
+)
+async def update_organisation(
+    id: int, updated_organisation: OrganisationWriteDTO
+) -> OrganisationReadDTO:
+    """
+    Update an organisation.
+
+    :param OrganisationWriteDTO updated_organisation: The organisation data to be updated.
+    :param int id: The id of the organisation to be updated.
+    :raises HTTPException: If the organisation could not be updated.
+    :return OrganisationReadDTO: The updated organisation.
+    """
+    try:
+        updated_org = organisation_service.update(id, updated_organisation)
+
+    except RepositoryError as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+    except Exception as e:
+        _LOGGER.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+    if updated_org is None:
+        detail = f"Unable to find organisation to update for id: {id}"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+
+    return updated_org

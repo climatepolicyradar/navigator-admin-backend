@@ -83,6 +83,8 @@ AUTH_TABLE: AuthMap = {
     # Organisation
     AuthEndpoint.ORGANISATION: {
         AuthOperation.READ: AuthAccess.SUPER,
+        AuthOperation.CREATE: AuthAccess.SUPER,
+        AuthOperation.UPDATE: AuthAccess.SUPER,
     },
     # App token
     AuthEndpoint.APP_TOKEN: {

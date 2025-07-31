@@ -9,7 +9,14 @@ from tests.integration_tests.setup_db import (
     setup_db,
 )
 
-EXPECTED_ORG_KEYS = ["internal_name", "description", "display_name", "type", "id"]
+EXPECTED_ORG_KEYS = [
+    "internal_name",
+    "description",
+    "display_name",
+    "type",
+    "id",
+    "attribution_url",
+]
 
 
 @pytest.mark.parametrize(
