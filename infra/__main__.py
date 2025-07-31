@@ -274,7 +274,7 @@ identifier = (
     else "navigator-staging-rds-2023-03-27"
 )
 
-rds_instance_class = "db.x2g.4xlarge" if stack == "production" else "db.x2g.large"
+rds_instance_class = "db.x2g.4xlarge" if stack == "production" else "db.t4g.small"
 navigator_admin = aws.rds.Instance(
     "navigator-admin",
     allocated_storage=200,
