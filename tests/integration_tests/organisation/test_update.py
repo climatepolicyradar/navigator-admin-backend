@@ -118,7 +118,7 @@ def test_returns_404_status_code_if_organisation_not_found(
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
-    assert data["detail"] == f"Unable to find collection to update for id: {id}"
+    assert data["detail"] == f"Unable to find organisation to update for id: {id}"
 
 
 def test_update_organisation_when_not_authorised(client: TestClient, data_db: Session):
