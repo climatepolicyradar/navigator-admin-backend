@@ -126,10 +126,15 @@ Document findings and consider:
 
 To identify which service is spawning connections, identify the IP address source of the 'idle' or 'idle in transaction' connections from RDS (via the query in Step 3).
 
-Then run `aws ec2 describe-network-interfaces --filters "Name=addresses.private-ip-address,Values=IP_ADDRESS_FROM_RDS"` to identify what interfaces in AWS use that IP. Typically the security group will be named relevant to the service, e.g.:
+Then run `aws ec2 describe-network-interfaces --filters "Name=addresses.private-ip-address,Values=IP_ADDRESS_FROM_RDS"` to identify what interfaces in AWS use that IP.
 
-```
+Typically the security group will be named relevant to the service, e.g.:
+
+```bash
 aws ec2 describe-network-interfaces --filters "Name=addresses.private-ip-address,Values=10.0.155.110" --profile prod
+```
+
+```json
 {
     "NetworkInterfaces": [
         {
