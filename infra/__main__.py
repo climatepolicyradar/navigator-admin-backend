@@ -266,7 +266,7 @@ rds_kms_key = aws.kms.Key(
     opts=pulumi.ResourceOptions(protect=True),
 )
 # This doesn't have a reason bar the instances were originally provisioned through the console
-availability_zone = "eu-west-1c" if stack == "production" else "eu-west-1c"
+availability_zone = "eu-west-1b" if stack == "production" else "eu-west-1c"
 availability_zone_read_replica = "eu-west-1b" if stack == "production" else "eu-west-1c"
 identifier = (
     "navigator-production-rds-2023-10-17"
@@ -274,9 +274,10 @@ identifier = (
     else "navigator-staging-rds-2023-03-27"
 )
 
-rds_instance_class = "db.x2g.4xlarge" if stack == "production" else "db.t4g.small"
+rds_instance_class = "db.r6g.large" if stack == "production" else "db.t4g.small"
 navigator_admin = aws.rds.Instance(
     "navigator-admin",
+    apply_immediately=True,
     allocated_storage=200,
     availability_zone=availability_zone,
     backup_retention_period=7,
@@ -322,6 +323,7 @@ navigator_admin = aws.rds.Instance(
 
 navigator_admin_read_replica = aws.rds.Instance(
     "navigator-admin-read-replica",
+    apply_immediately=True,
     allocated_storage=200,
     availability_zone=availability_zone_read_replica,
     backup_window="22:22-22:52",
@@ -329,7 +331,7 @@ navigator_admin_read_replica = aws.rds.Instance(
     engine=navigator_admin.engine,
     engine_version=navigator_admin.engine_version,
     identifier=f"{identifier}-read-replica",
-    instance_class=rds_instance_class,
+    instance_class="db.t4g.small",
     iops=1000,
     kms_key_id=rds_kms_key.arn,
     license_model="postgresql-license",
