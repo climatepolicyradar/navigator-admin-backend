@@ -268,25 +268,6 @@ rds_kms_key = aws.kms.Key(
 )
 
 
-aws.ssm.Parameter(
-    "/navigator-admin-backend/rds/NAVIGATOR_DATABASE_PASSWORD",
-    name="/navigator-admin-backend/rds/NAVIGATOR_DATABASE_PASSWORD",
-    type=aws.ssm.ParameterType.SECURE_STRING,
-    value=rds_password,
-)
-aws.ssm.Parameter(
-    "/navigator-admin-backend/rds/NAVIGATOR_DATABASE_USERNAME",
-    name="/navigator-admin-backend/rds/NAVIGATOR_DATABASE_USERNAME",
-    type=aws.ssm.ParameterType.SECURE_STRING,
-    value=rds_username,
-)
-aws.ssm.Parameter(
-    "/navigator-admin-backend/rds/NAVIGATOR_DATABASE_HOST",
-    name="/navigator-admin-backend/rds/NAVIGATOR_DATABASE_HOST",
-    type=aws.ssm.ParameterType.SECURE_STRING,
-    value=CONFIG.require("rds_address"),
-)
-
 # This doesn't have a reason bar the instances were originally provisioned through the console
 availability_zone = "eu-west-1b" if stack == "production" else "eu-west-1b"
 availability_zone_read_replica = "eu-west-1b" if stack == "production" else "eu-west-1c"
@@ -376,6 +357,31 @@ navigator_admin_read_replica = aws.rds.Instance(
     vpc_security_group_ids=vpc_security_group_ids,
     opts=pulumi.ResourceOptions(retain_on_delete=True, protect=True),
 )
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_PASSWORD",
+    name="/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_PASSWORD",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=navigator_admin.password,
+)
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_USERNAME",
+    name="/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_USERNAME",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=navigator_admin.username,
+)
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_ENDPOINT",
+    name="/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_ENDPOINT",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=navigator_admin.endpoint,
+)
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
+    name="/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=navigator_admin.db_name,
+)
+
 pulumi.export(
     "navigator_admin_read_replica_endpoint", navigator_admin_read_replica.endpoint
 )
