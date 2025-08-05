@@ -192,6 +192,7 @@ pulumi.runtime.register_stack_transformation(protect_rds_instances)
 # and can't be changed post-launch, so we have to set it to nothing
 rds_database = None if stack == "staging" else CONFIG.require("rds_database")
 rds_username = CONFIG.require("rds_username")
+rds_password = CONFIG.require("rds_password")
 db_subnet_group_name = CONFIG.require("db_subnet_group_name")
 vpc_security_group_ids = [CONFIG.require("rds_vpc_security_group_id")]
 
@@ -265,8 +266,29 @@ rds_kms_key = aws.kms.Key(
     ),
     opts=pulumi.ResourceOptions(protect=True),
 )
+
+
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_DATABASE_PASSWORD",
+    name="/navigator-admin-backend/rds/NAVIGATOR_DATABASE_PASSWORD",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=rds_password,
+)
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_DATABASE_USERNAME",
+    name="/navigator-admin-backend/rds/NAVIGATOR_DATABASE_USERNAME",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=rds_username,
+)
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_DATABASE_HOST",
+    name="/navigator-admin-backend/rds/NAVIGATOR_DATABASE_HOST",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=CONFIG.require("rds_address"),
+)
+
 # This doesn't have a reason bar the instances were originally provisioned through the console
-availability_zone = "eu-west-1b" if stack == "production" else "eu-west-1c"
+availability_zone = "eu-west-1b" if stack == "production" else "eu-west-1b"
 availability_zone_read_replica = "eu-west-1b" if stack == "production" else "eu-west-1c"
 identifier = (
     "navigator-production-rds-2023-10-17"
@@ -317,6 +339,7 @@ navigator_admin = aws.rds.Instance(
     },
     username=rds_username,
     db_name=rds_database,
+    password=CONFIG.require("rds_password"),
     vpc_security_group_ids=vpc_security_group_ids,
     opts=pulumi.ResourceOptions(retain_on_delete=True, protect=True),
 )
