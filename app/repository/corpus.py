@@ -52,6 +52,7 @@ def _corpus_to_dto(
         corpus_type_description=cast(str, corpus_type.description),
         organisation_id=cast(int, org.id),
         organisation_name=cast(str, org.name),
+        attribution_url=cast(str, corpus_type.attribution_url),
         # TODO add created and last modified timestamps?
     )
 
@@ -212,6 +213,9 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
     title_has_changed = original_corpus.title != new_values["title"]
     description_has_changed = original_corpus.description != new_values["description"]
     corpus_text_has_changed = original_corpus.corpus_text != new_values["corpus_text"]
+    corpus_attribution_url_has_changed = (
+        original_corpus.attribution_url != new_values["attribution_url"]
+    )
     image_url_has_changed = original_corpus.corpus_image_url != cast(
         str, new_values["corpus_image_url"]
     )
@@ -223,6 +227,7 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
             description_has_changed,
             corpus_text_has_changed,
             image_url_has_changed,
+            corpus_attribution_url_has_changed,
         ]
     ):
         return True
@@ -245,6 +250,7 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
             title_has_changed,
             description_has_changed,
             image_url_has_changed,
+            corpus_attribution_url_has_changed,
         ]
     ):
         commands.append(
@@ -259,6 +265,7 @@ def update(db: Session, import_id: str, corpus: CorpusWriteDTO) -> bool:
                     else None
                 ),
                 corpus_text=new_values["corpus_text"],
+                attribution_url=new_values["attribution_url"],
             ),
         )
 
@@ -294,6 +301,7 @@ def create(db: Session, corpus: CorpusCreateDTO) -> str:
             corpus_image_url=corpus.corpus_image_url,
             organisation_id=corpus.organisation_id,
             corpus_type_name=corpus.corpus_type_name,
+            attribution_url=corpus.attribution_url,
         )
         db.add(new_corpus)
         db.flush()
