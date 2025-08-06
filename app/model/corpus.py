@@ -19,6 +19,7 @@ class CorpusReadDTO(BaseModel):
     corpus_type_name: str
     corpus_type_description: str
     metadata: Json
+    attribution_url: Optional[str] = None
 
     # TODO: Add create and last modified timestamps.
 
@@ -32,6 +33,7 @@ class CorpusWriteDTO(BaseModel):
     corpus_image_url: Optional[str]
 
     corpus_type_description: str
+    attribution_url: Optional[str]
 
 
 class CorpusCreateDTO(BaseModel):
@@ -44,6 +46,7 @@ class CorpusCreateDTO(BaseModel):
     corpus_image_url: Optional[str]
     organisation_id: int
     corpus_type_name: str
+    attribution_url: Optional[str]
 
 
 class CorpusLogoUploadDTO(BaseModel):
