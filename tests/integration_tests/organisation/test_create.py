@@ -39,6 +39,36 @@ def test_successfully_creates_an_organisation(
     assert created_organisation.attribution_url == new_organisation.attribution_url
 
 
+def test_successfully_creates_an_organisation_without_attribution_url(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    new_organisation = OrganisationCreateDTO(
+        internal_name="Test Organisation",
+        display_name="Test Organisation",
+        description="Test Description",
+        type="ORG",
+        attribution_url=None,
+    )
+
+    response = client.post(
+        "/api/v1/organisations",
+        headers=superuser_header_token,
+        json=new_organisation.model_dump(),
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    # check that the response contains an id of the created organisation
+    assert type(data) is int
+
+    created_organisation = (
+        data_db.query(Organisation).filter(Organisation.id == data).one()
+    )
+
+    assert created_organisation.name == new_organisation.internal_name
+    assert created_organisation.attribution_url == new_organisation.attribution_url
+
+
 def test_does_not_create_a_new_organisation_on_error(
     client: TestClient,
     data_db: Session,
