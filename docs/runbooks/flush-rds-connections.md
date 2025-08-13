@@ -124,6 +124,43 @@ Document findings and consider:
 - Adding transaction timeout configurations
 - Monitoring for uncommitted transactions
 
+To identify which service is spawning connections, identify the IP address
+source of the 'idle' or 'idle in transaction' connections from RDS
+(via the query in Step 3).
+
+Then run `aws ec2 describe-network-interfaces --filters "Name=addresses.private-ip-address,Values=IP_ADDRESS_FROM_RDS"`
+to identify what interfaces in AWS use that IP.
+
+Typically the security group will be named relevant to the service, e.g.:
+
+```bash
+aws ec2 describe-network-interfaces --filters "Name=addresses.private-ip-address,Values=10.0.155.110" --profile prod
+```
+
+```json
+{
+    "NetworkInterfaces": [
+        {
+            "Attachment": {
+                "AttachTime": "2025-08-04T09:41:27+00:00",
+                "AttachmentId": "eni-attach-0e55a528249bbfada",
+                "DeleteOnTermination": false,
+                "DeviceIndex": 2,
+                "NetworkCardIndex": 0,
+                "InstanceOwnerId": "323226177487",
+                "Status": "attached"
+            },
+            "AvailabilityZone": "eu-west-1b",
+            "Description": "6c6d84ff27e7447eb2f8bd304413ea82",
+            "Groups": [
+                {
+                    "GroupId": "sg-004a8d10280959143",
+                    "GroupName": "**NavigatorProd-admin-backend-security-group**"
+                }
+            ],
+...
+```
+
 ## Important Notes
 
 ⚠️ **Caution**: Terminating connections will abort any in-progress transactions.
@@ -151,5 +188,5 @@ If the issue persists or recurs frequently:
 
 ---
 
-**Last Updated**: 2025-06-17  
+**Last Updated**: 2025-08-04  
 **Maintained By**: Application Team
