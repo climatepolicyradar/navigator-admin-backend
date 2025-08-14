@@ -16,7 +16,7 @@ config:
   admin_backend:rds_database:
     secure: AAABADtDKziNnBpIMXQGI4iQE7/boXROQOf0zNeG2Kkci6S8GODmkXc=
   admin_backend:rds_password:
-    secure: AAABAFi+77knR/AsskglULgfcgs5ja+Nhg0RtMTW7WonnJj9k0i4I5VLwpcTq4Y19/XmecUhrA==
+    secure: AAABAN1pbHC9l52XExYaixJYo75fjXo2wpcYLY5CI77hmFo+kMBesmUxkeUc/PUrKVcqRCtVHQ==
   admin_backend:rds_username:
     secure: AAABACkh3HYtHyETH8Y80kYCO3UwGxKGHX/oHIRe+QG27jrDRyPx1O74UEBvmuA=
   admin_backend:rds_vpc_security_group_id:
