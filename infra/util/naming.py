@@ -17,5 +17,4 @@ DEFAULT_TAGS = {
     "CPR-Pulumi-Stack-Name": pulumi.get_stack(),
     "CPR-Pulumi-Project-Name": pulumi.get_project(),
     "CPR-Tag": NAME_PREFIX,
-    "map-migrated": "mig46666",
 }

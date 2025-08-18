@@ -315,9 +315,7 @@ navigator_admin = aws.rds.Instance(
     skip_final_snapshot=True,
     storage_encrypted=True,
     storage_type=aws.rds.StorageType.IO1,
-    tags={
-        "map-migrated": "mig46666",
-    },
+    tags={},
     username=rds_username,
     db_name=rds_database,
     password=CONFIG.require("rds_password"),
