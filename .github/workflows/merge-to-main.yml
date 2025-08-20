@@ -44,7 +44,7 @@ jobs:
       - name: Configure aws credentials (production)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PROD }}:role/navigator-admin-backend-github-actions
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PRODUCTION }}:role/navigator-admin-backend-github-actions
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: eu-west-1
 
@@ -55,7 +55,7 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR (production)
         id: build-image-prod
         env:
-          ECR_REGISTRY: ${{ secrets.DOCKER_REGISTRY_PROD }}
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID_PRODUCTION }}.dkr.ecr.eu-west-1.amazonaws.com
           IMAGE_TAG: ${{ github.sha }}
           AWS_REGION: eu-west-1
           ECR_REPOSITORY: navigator-admin-backend
