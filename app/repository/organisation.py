@@ -45,9 +45,9 @@ def _org_to_dto(org: Organisation) -> OrganisationReadDTO:
         id=cast(int, org.id),
         internal_name=str(org.name),
         display_name=str(org.display_name),
-        description=str(org.description),
+        description=str(org.description) if org.description else "",
         type=str(org.organisation_type),
-        attribution_url=str(org.attribution_url),
+        attribution_url=str(org.attribution_url) if org.attribution_url else None,
     )
 
 

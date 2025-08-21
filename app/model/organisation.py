@@ -9,7 +9,7 @@ class OrganisationReadDTO(BaseModel):
     display_name: str
     description: str
     type: str
-    attribution_url: str
+    attribution_url: str | None
 
 
 class OrganisationCreateDTO(BaseModel):
@@ -19,7 +19,7 @@ class OrganisationCreateDTO(BaseModel):
     display_name: str
     description: str
     type: str
-    attribution_url: str
+    attribution_url: str | None = None
 
 
 class OrganisationWriteDTO(BaseModel):
@@ -29,4 +29,4 @@ class OrganisationWriteDTO(BaseModel):
     display_name: str
     description: str
     type: str
-    attribution_url: str
+    attribution_url: str | None = None
