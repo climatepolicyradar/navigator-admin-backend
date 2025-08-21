@@ -9,7 +9,7 @@ packages = [{ include = "app" }, { include = "tests" }]
 python = "^3.11"
 fastapi = "^0.115.14"
 fastapi-health = "^0.4.0"
-fastapi-pagination = "^0.12.9"
+fastapi-pagination = "^0.13.3"
 python-slugify = "^6.1.2"
 requests = "^2.32"
 requests-toolbelt = "^1.0.0"
