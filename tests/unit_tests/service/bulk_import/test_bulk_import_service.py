@@ -2,9 +2,11 @@ import json
 import logging
 import os
 import re
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
+from db_client.models.dfce.family import FamilyDocument
+from sqlalchemy.orm import Session
 
 import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
@@ -336,7 +338,7 @@ def test_save_events_skips_update_when_no_changes(
 ):
     test_data = [
         {
-            "import_id": "test.new.collection.0",
+            "import_id": "test.new.event.0",
             "family_import_id": "test.family.1.0",
             "family_document_import_id": None,
             "event_title": "title",
@@ -377,3 +379,68 @@ def test_create_bulk_import_summary_when_no_data_to_import(data):
     summary = bulk_import_service._create_summary(data)
 
     assert summary == "🗒️ No data to import."
+
+
+def test_filter_event_data_returns_event_when_related_document_exists():
+    db_mock = MagicMock(spec=Session)
+    db_mock.query.return_value.filter.return_value.one_or_none.return_value = (
+        FamilyDocument(import_id="test.document.1.0")
+    )
+
+    event_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": "test.document.1.0",
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+            "metadata": {},
+        }
+    ]
+
+    result = bulk_import_service._filter_event_data(event_data, db_mock)
+
+    assert result == event_data
+
+
+def test_filter_event_data_returns_event_when_it_is_not_linked_to_a_document():
+    db_mock = MagicMock(spec=Session)
+
+    event_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": None,
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+            "metadata": {},
+        }
+    ]
+
+    result = bulk_import_service._filter_event_data(event_data, db_mock)
+
+    assert result == event_data
+
+
+def test_filter_event_data_does_not_return_event_when_related_document_does_not_exist():
+
+    db_mock = MagicMock(spec=Session)
+    db_mock.query.return_value.filter.return_value.one_or_none.return_value = None
+
+    event_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": "test.document.1.0",
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+            "metadata": {},
+        }
+    ]
+
+    result = bulk_import_service._filter_event_data(event_data, db_mock)
+
+    assert result == []

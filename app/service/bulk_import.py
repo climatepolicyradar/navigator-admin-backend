@@ -12,6 +12,7 @@ import time
 from typing import Any, Optional
 from uuid import uuid4
 
+from db_client.models.dfce.family import FamilyDocument
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
@@ -392,7 +393,7 @@ def save_events(
 
 
 def _filter_event_data(
-    event_data: list[dict[str, Any]], saved_documents: list[str]
+    event_data: list[dict[str, Any]], db: Session
 ) -> list[dict[str, Any]]:
     """
     Filters a list of event data based on the import ids of saved documents.
@@ -400,16 +401,16 @@ def _filter_event_data(
     or are not linked to a document.
 
     :param list[dict[str, Any]] event_data: The event data to be filtered.
-    :param list[str] saved_documents: The import ids of documents that have been saved.
+    :param Session db: The database session to use.
     :return list[dict[str, Any]]: A filtered list of event data.
     """
-
-    saved_documents_set = set(saved_documents)
     filtered_event_data = [
         event
         for event in event_data
         if not event.get("family_document_import_id")
-        or event.get("family_document_import_id") in saved_documents_set
+        or db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == event.get("family_document_import_id"))
+        .one_or_none()
     ]
 
     return filtered_event_data
@@ -494,7 +495,7 @@ def import_data(
         if event_data:
             _LOGGER.info("💾 Saving events")
             result["events"] = save_events(
-                _filter_event_data(event_data, result.get("documents", [])),
+                _filter_event_data(event_data, db),
                 corpus_import_id,
                 db,
             )
