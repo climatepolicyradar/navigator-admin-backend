@@ -194,38 +194,8 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
-        bulk_import_service.save_documents(test_data, "test", 1)
+        bulk_import_service.save_documents(test_data, "test")
     assert "Error" == e.value.message
-
-
-@patch("app.service.bulk_import.generate_slug", Mock(return_value="test-slug_1234"))
-def test_do_not_save_documents_over_bulk_import_limit(
-    validation_service_mock, document_repo_mock, monkeypatch
-):
-    document_repo_mock.return_empty = True
-    test_data = [
-        {
-            "import_id": "test.new.document.0",
-            "family_import_id": "test.new.family.0",
-            "variant_name": "Original Language",
-            "metadata": {"color": ["blue"]},
-            "title": "",
-            "source_url": None,
-            "user_language_name": "",
-        },
-        {
-            "import_id": "test.new.document.1",
-            "family_import_id": "test.new.family.1",
-            "variant_name": "Original Language",
-            "metadata": {"color": ["blue"]},
-            "title": "",
-            "source_url": None,
-            "user_language_name": "",
-        },
-    ]
-
-    saved_documents = bulk_import_service.save_documents(test_data, "test", 1)
-    assert ["test.new.document.0"] == saved_documents
 
 
 def test_save_events_with_correct_metadata(validation_service_mock, event_repo_mock):
@@ -321,9 +291,7 @@ def test_save_documents_skips_update_when_no_changes(
         }
     ]
 
-    result = bulk_import_service.save_documents(
-        test_data, "test_corpus_id", document_limit=1
-    )
+    result = bulk_import_service.save_documents(test_data, "test_corpus_id")
 
     assert document_repo_mock.update.call_count == 0
     assert result == []

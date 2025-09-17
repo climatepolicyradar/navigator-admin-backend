@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status
 
@@ -56,7 +55,6 @@ async def bulk_import(
     data: UploadFile,
     corpus_import_id: str,
     background_tasks: BackgroundTasks,
-    document_limit: Optional[int] = None,
 ) -> Json:
     """
     Bulk import endpoint.
@@ -64,7 +62,6 @@ async def bulk_import(
     :param UploadFile data: File containing json representation of data to import.
     :param str corpus_import_id: The ID of the corpus to import.
     :param BackgroundTasks background_tasks: Background tasks to be performed after the request is completed.
-    :param Optional[int] document_limit: The max number of documents to be saved in this session or None.
     :return Json: json representation of the data to import.
     """
     try:
@@ -79,9 +76,7 @@ async def bulk_import(
 
         _LOGGER.info("✅ Validation successful")
 
-        background_tasks.add_task(
-            import_data, data_dict, corpus_import_id, document_limit
-        )
+        background_tasks.add_task(import_data, data_dict, corpus_import_id)
 
         return {
             "message": "Bulk import request accepted. Check Cloudwatch logs for result."
