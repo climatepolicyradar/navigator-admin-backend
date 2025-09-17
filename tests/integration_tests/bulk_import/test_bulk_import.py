@@ -19,7 +19,6 @@ from app.model.corpus import CorpusCreateDTO
 from app.model.corpus_type import CorpusTypeCreateDTO
 from app.repository import corpus as corpus_repo
 from app.repository import corpus_type as corpus_type_repo
-from app.service.bulk_import import DEFAULT_DOCUMENT_LIMIT
 from tests.helpers.bulk_import import (
     build_json_file,
     default_collection,
@@ -594,161 +593,6 @@ def test_bulk_import_does_not_save_data_to_db_on_error(
 
 
 @pytest.mark.s3
-def test_bulk_import_only_saves_default_number_of_documents_if_no_limit_provided_in_request(
-    data_db: Session, client: TestClient, superuser_header_token
-):
-    input_json = build_json_file(
-        {
-            "collections": [default_collection],
-            "families": [default_family],
-            "documents": [
-                {**default_document, "import_id": f"test.new.document.{i}"}
-                for i in range(DEFAULT_DOCUMENT_LIMIT + 1)
-            ],
-            "events": [default_event],
-        }
-    )
-
-    response = client.post(
-        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
-        files={"data": input_json},
-        headers=superuser_header_token,
-    )
-
-    assert response.status_code == status.HTTP_202_ACCEPTED
-    assert response.json() == {
-        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-    }
-
-    assert (
-        "Created"
-        == data_db.query(FamilyDocument)
-        .filter(
-            FamilyDocument.import_id
-            == f"test.new.document.{DEFAULT_DOCUMENT_LIMIT - 1}"
-        )
-        .one_or_none()
-        .document_status
-    )
-
-    assert (
-        not data_db.query(FamilyDocument)
-        .filter(
-            FamilyDocument.import_id == f"test.new.document.{DEFAULT_DOCUMENT_LIMIT}"
-        )
-        .one_or_none()
-    )
-
-
-def test_bulk_import_only_updates_number_of_documents_within_provided_limit(
-    data_db: Session, client: TestClient, superuser_header_token
-):
-    original_data = {
-        "families": [{**default_family, "collections": []}],
-        "documents": [
-            default_document,
-            {**default_document, "import_id": "test.new.document.1"},
-        ],
-    }
-    original_input_json = build_json_file(original_data)
-
-    response = client.post(
-        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
-        files={"data": original_input_json},
-        headers=superuser_header_token,
-    )
-
-    assert response.status_code == status.HTTP_202_ACCEPTED
-
-    updated_title = "Updated"
-    updated_input_json = build_json_file(
-        {
-            **original_data,
-            "documents": [
-                {**original_data["documents"][0], "title": updated_title},
-                {**original_data["documents"][1], "title": updated_title},
-            ],
-        }
-    )
-
-    update_response = client.post(
-        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
-        files={"data": updated_input_json},
-        headers=superuser_header_token,
-        params={"document_limit": 1},
-    )
-
-    assert update_response.status_code == status.HTTP_202_ACCEPTED
-
-    saved_document_1_title = (
-        data_db.query(PhysicalDocument)
-        .join(
-            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
-        )
-        .filter(FamilyDocument.import_id == original_data["documents"][0]["import_id"])
-        .one_or_none()
-        .title
-    )
-
-    saved_document_2_title = (
-        data_db.query(PhysicalDocument)
-        .join(
-            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
-        )
-        .filter(FamilyDocument.import_id == original_data["documents"][1]["import_id"])
-        .one_or_none()
-        .title
-    )
-
-    assert updated_title == saved_document_1_title
-    assert original_data["documents"][1]["title"] == saved_document_2_title
-
-
-def test_bulk_import_skips_events_when_documents_where_skipped_due_to_limit(
-    data_db: Session, client: TestClient, superuser_header_token, caplog
-):
-    original_data = {
-        "families": [{**default_family, "collections": []}],
-        "documents": [
-            default_document,
-        ],
-        "events": [
-            {
-                **default_event,
-                "family_document_import_id": default_document["import_id"],
-            }
-        ],
-    }
-    original_input_json = build_json_file(original_data)
-
-    response = client.post(
-        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
-        files={"data": original_input_json},
-        headers=superuser_header_token,
-        params={"document_limit": 0},
-    )
-
-    assert response.status_code == status.HTTP_202_ACCEPTED
-
-    saved_document = (
-        data_db.query(PhysicalDocument)
-        .join(
-            FamilyDocument, FamilyDocument.physical_document_id == PhysicalDocument.id
-        )
-        .one_or_none()
-    )
-
-    saved_event = data_db.query(FamilyEvent).one_or_none()
-
-    assert (
-        "🎉 Bulk import for corpus: UNFCCC.corpus.i00000001.n0000 successfully completed"
-        in caplog.text
-    )
-    assert not saved_document
-    assert not saved_event
-
-
-@pytest.mark.s3
 def test_bulk_import_idempotency_on_create(
     caplog,
     data_db: Session,
@@ -761,7 +605,6 @@ def test_bulk_import_idempotency_on_create(
             "families": [default_family],
             "documents": [
                 default_document,
-                {**default_document, "import_id": "test.new.document.1"},
             ],
             "events": [default_event],
         }
@@ -771,7 +614,6 @@ def test_bulk_import_idempotency_on_create(
         first_response = client.post(
             "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
             files={"data": input_json},
-            params={"document_limit": 1},
             headers=superuser_header_token,
         )
 
@@ -788,12 +630,6 @@ def test_bulk_import_idempotency_on_create(
         .document_status
     )
 
-    assert (
-        not data_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "test.new.document.1")
-        .one_or_none()
-    )
-
     # simulating pipeline ingest
     data_db.execute(
         update(FamilyDocument)
@@ -805,7 +641,6 @@ def test_bulk_import_idempotency_on_create(
         second_response = client.post(
             "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
             files={"data": input_json},
-            params={"document_limit": 1},
             headers=superuser_header_token,
         )
 
@@ -819,14 +654,6 @@ def test_bulk_import_idempotency_on_create(
         "Published"
         == data_db.query(FamilyDocument)
         .filter(FamilyDocument.import_id == "test.new.document.0")
-        .one_or_none()
-        .document_status
-    )
-
-    assert (
-        "Created"
-        == data_db.query(FamilyDocument)
-        .filter(FamilyDocument.import_id == "test.new.document.1")
         .one_or_none()
         .document_status
     )

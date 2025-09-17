@@ -42,9 +42,6 @@ from app.model.bulk_import import (
 from app.repository.helpers import generate_slug
 from app.service.database_dump import delete_local_file, get_database_dump
 
-# Any increase to this number should first be discussed with the Platform Team
-DEFAULT_DOCUMENT_LIMIT = 1000
-
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
@@ -279,7 +276,6 @@ def save_families(
 def save_documents(
     document_data: list[dict[str, Any]],
     corpus_import_id: str,
-    document_limit: int,
     db: Optional[Session] = None,
 ) -> list[str]:
     """
@@ -287,7 +283,6 @@ def save_documents(
 
     :param list[dict[str, Any]] document_data: The data to use for creating documents.
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
-    :param int document_limit: The max number of documents to be saved in this session.
     :param Optional[Session] db: The database session to use for saving documents or None.
     :return list[str]: The new import_ids for the saved documents.
     """
@@ -305,31 +300,30 @@ def save_documents(
 
     for doc in document_data:
         import_id = doc["import_id"]
-        if total_documents_saved < document_limit:
-            existing_document = document_repository.get(db, import_id)
-            if not existing_document:
-                _LOGGER.info(f"Importing document {import_id}")
-                create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
+        existing_document = document_repository.get(db, import_id)
+        if not existing_document:
+            _LOGGER.info(f"Importing document {import_id}")
+            create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
+            slug = generate_slug(
+                db=db, title=create_dto.title, created_slugs=document_slugs
+            )
+            document_repository.create(db, create_dto, slug)
+            document_slugs.add(slug)
+            document_import_ids.append(import_id)
+            total_documents_saved += 1
+        else:
+            update_document = BulkImportDocumentDTO(**doc)
+            if update_document.is_different_from(existing_document):
+                _LOGGER.info(f"Updating document {import_id}")
                 slug = generate_slug(
-                    db=db, title=create_dto.title, created_slugs=document_slugs
+                    db=db, title=update_document.title, created_slugs=document_slugs
                 )
-                document_repository.create(db, create_dto, slug)
+                document_repository.update(
+                    db, import_id, update_document.to_document_write_dto(), slug
+                )
                 document_slugs.add(slug)
                 document_import_ids.append(import_id)
                 total_documents_saved += 1
-            else:
-                update_document = BulkImportDocumentDTO(**doc)
-                if update_document.is_different_from(existing_document):
-                    _LOGGER.info(f"Updating document {import_id}")
-                    slug = generate_slug(
-                        db=db, title=update_document.title, created_slugs=document_slugs
-                    )
-                    document_repository.update(
-                        db, import_id, update_document.to_document_write_dto(), slug
-                    )
-                    document_slugs.add(slug)
-                    document_import_ids.append(import_id)
-                    total_documents_saved += 1
 
     _LOGGER.info(
         f"⏱️ Saved {total_documents_saved} documents in {_get_duration(start_time)} seconds"
@@ -444,14 +438,12 @@ def _create_summary(data: dict[str, Any]) -> str:
 def import_data(
     data: dict[str, Any],
     corpus_import_id: str,
-    document_limit: Optional[int] = None,
 ) -> None:
     """
     Imports data for a given corpus_import_id.
 
     :param dict[str, Any] data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
-    :param Optional[int] document_limit: The max number of documents to be saved in this session or None.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
@@ -485,11 +477,6 @@ def import_data(
             result["documents"] = save_documents(
                 document_data,
                 corpus_import_id,
-                (
-                    document_limit
-                    if document_limit is not None
-                    else DEFAULT_DOCUMENT_LIMIT
-                ),
                 db,
             )
         if event_data:
