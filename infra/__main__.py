@@ -373,13 +373,13 @@ aws.ssm.Parameter(
     type=aws.ssm.ParameterType.SECURE_STRING,
     value=navigator_admin.endpoint,
 )
-if stack == "production":  # TODO: Fix me - we want this on staging too
-    aws.ssm.Parameter(
-        "/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
-        name="/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
-        type=aws.ssm.ParameterType.SECURE_STRING,
-        value=navigator_admin.db_name,
-    )
+
+aws.ssm.Parameter(
+    "/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
+    name="/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=navigator_admin.db_name,
+)
 
 pulumi.export(
     "navigator_admin_read_replica_endpoint", navigator_admin_read_replica.endpoint
