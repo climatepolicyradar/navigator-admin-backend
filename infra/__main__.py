@@ -188,8 +188,10 @@ def protect_rds_instances(
 
 pulumi.runtime.register_stack_transformation(protect_rds_instances)
 
+# GOTCHA: STAGING_DB_NAME
 # annoyingly the db_name wasn't set when provisioning staging
-# and can't be changed post-launch, so we have to set it to nothing
+# and can't be changed post-launch without replacing it,
+# we have to set it to nothing
 rds_database = None if stack == "staging" else CONFIG.require("rds_database")
 rds_username = CONFIG.require("rds_username")
 rds_password = CONFIG.require("rds_password")
@@ -378,7 +380,10 @@ aws.ssm.Parameter(
     "/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
     name="/navigator-admin-backend/rds/NAVIGATOR_ADMIN_DATABASE_DB_NAME",
     type=aws.ssm.ParameterType.SECURE_STRING,
-    value=navigator_admin.db_name,
+    # GOTCHA: STAGING_DB_NAME
+    # annoyingly the db_name wasn't set when provisioning staging
+    # so we just read the config value
+    value=CONFIG.require("rds_database"),
 )
 
 pulumi.export(
