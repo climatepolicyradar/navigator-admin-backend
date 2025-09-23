@@ -129,7 +129,9 @@ class BulkImportFamilyDTO(BaseModel):
             metadata=family.metadata,
             collections=sorted(family.collections),
             corpus_import_id=family.corpus_import_id,
-            concepts=family.concepts,
+            concepts=sorted(
+                family.concepts or [], key=lambda x: (x["relation"], x["id"])
+            ),
         )
 
         self.collections = sorted(self.collections)
