@@ -132,8 +132,8 @@ config = AppRunnerConfig(
     max_instances=int(CONFIG.require("apprunner_backend_max_instance_count")),
     min_instances=int(CONFIG.require("apprunner_backend_min_instance_count")),
     port=8888,
-    cpu="2 vCPU",
-    memory="4 GB",
+    cpu="4 vCPU",
+    memory="8 GB",
     vpc_config=VpcConfig(
         vpc_connector_arn=vpc_connector.arn,
     ),
@@ -271,7 +271,7 @@ rds_kms_key = aws.kms.Key(
 
 
 # This doesn't have a reason bar the instances were originally provisioned through the console
-availability_zone = "eu-west-1b" if stack == "production" else "eu-west-1b"
+availability_zone = "eu-west-1c" if stack == "production" else "eu-west-1b"
 availability_zone_read_replica = "eu-west-1b" if stack == "production" else "eu-west-1c"
 identifier = (
     "navigator-production-rds-2023-10-17"
@@ -335,7 +335,7 @@ navigator_admin_read_replica = aws.rds.Instance(
     engine=navigator_admin.engine,
     engine_version=navigator_admin.engine_version,
     identifier=f"{identifier}-read-replica",
-    instance_class="db.t4g.small",
+    instance_class=rds_instance_class,
     iops=1000,
     kms_key_id=rds_kms_key.arn,
     license_model="postgresql-license",
