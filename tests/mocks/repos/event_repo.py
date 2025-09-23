@@ -43,6 +43,11 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
             return None
         return create_event_read_dto(import_id)
 
+    def mock_get_single_event(_, import_id: str) -> Optional[EventReadDTO]:
+        if event_repo.return_empty:
+            return None
+        return create_event_read_dto(import_id)
+
     def mock_search(_, q: dict, org_id: Optional[int]) -> list[EventReadDTO]:
         maybe_throw()
         maybe_timeout()
@@ -89,6 +94,9 @@ def mock_event_repo(event_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(event_repo, "get", mock_get)
     mocker.spy(event_repo, "get")
+
+    monkeypatch.setattr(event_repo, "get_single_event", mock_get_single_event)
+    mocker.spy(event_repo, "get_single_event")
 
     monkeypatch.setattr(event_repo, "all", mock_get_all)
     mocker.spy(event_repo, "all")
