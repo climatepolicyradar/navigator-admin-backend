@@ -358,7 +358,7 @@ def save_events(
 
     for event in event_data:
         import_id = event["import_id"]
-        existing_event = event_repository.get(db, import_id)
+        existing_event = event_repository.get_single_event(db, import_id)
         if not existing_event:
             _LOGGER.info(f"Importing event {import_id}")
             dto = BulkImportEventDTO(**event).to_event_create_dto()

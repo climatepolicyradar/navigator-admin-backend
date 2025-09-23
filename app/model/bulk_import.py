@@ -134,6 +134,9 @@ class BulkImportFamilyDTO(BaseModel):
 
         self.collections = sorted(self.collections)
         self.geographies = sorted(self.geographies)
+        self.concepts = sorted(
+            self.concepts or [], key=lambda x: (x["relation"], x["id"])
+        )
 
         keys = set(self.__class__.model_fields.keys())
         is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
