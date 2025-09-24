@@ -507,3 +507,55 @@ def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
         return None
     _, _, _, org, _, _ = result
     return org.id
+
+
+def get_single_document(
+    db: Session, import_id: str, corpus_type_name: Optional[str]
+) -> Optional[DocumentReadDTO]:
+    family_document = db.query(FamilyDocument)
+
+    physical_document = db.query(PhysicalDocument)
+
+    if family_document:
+        return DocumentReadDTO(
+            import_id=str(family_document.import_id),
+            family_import_id=str(family_document.family_import_id),
+            corpus_type=corpus_type_name
+            or "",  # ?????????????????? should default to look in DB?
+            variant_name=(
+                str(family_document.variant_name)
+                if family_document.variant_name is not None
+                else None
+            ),
+            status=cast(DocumentStatus, family_document.document_status),
+            created=cast(datetime, family_document.created),
+            last_modified=cast(datetime, family_document.last_modified),
+            slug=str(
+                family_document.slugs[0].name if len(family_document.slugs) > 0 else ""
+            ),
+            metadata=cast(dict, family_document.valid_metadata),
+            physical_id=cast(int, physical_document.id),
+            title=str(physical_document.title),
+            md5_sum=(
+                str(physical_document.md5_sum)
+                if physical_document.md5_sum is not None
+                else None
+            ),
+            cdn_object=(
+                str(physical_document.cdn_object)
+                if physical_document.cdn_object is not None
+                else None
+            ),
+            source_url=(
+                cast(AnyHttpUrl, physical_document.source_url)
+                if physical_document.source_url is not None
+                else None
+            ),
+            content_type=(
+                str(physical_document.content_type)
+                if physical_document.content_type is not None
+                else None
+            ),
+            user_language_name=str(lang_user.name) if lang_user is not None else None,
+            calc_language_name=str(lang_model.name) if lang_model is not None else None,
+        )
