@@ -257,6 +257,7 @@ class BulkImportEventDTO(BaseModel):
             date=self.date,
             event_type_value=self.event_type_value,
             metadata=self.metadata.model_dump(),
+            family_document_import_id=self.family_document_import_id,
         )
 
     def is_different_from(self, event, event_metadata):

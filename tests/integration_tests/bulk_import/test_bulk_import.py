@@ -819,6 +819,76 @@ def test_bulk_import_event_with_link_to_a_document(
     assert saved_event.family_document_import_id == default_document["import_id"]
 
 
+@pytest.mark.s3
+def test_bulk_import_update_event_link_to_a_document(
+    caplog,
+    data_db: Session,
+    client: TestClient,
+    superuser_header_token,
+):
+    document_1 = default_document
+    document_2 = {**default_document, "import_id": "test.new.document.1"}
+    event = {
+        **default_event,
+        "family_document_import_id": document_1["import_id"],
+    }
+    data = {
+        "families": [{**default_family, "collections": []}],
+        "documents": [document_1, document_2],
+        "events": [event],
+    }
+    input_json = build_json_file(data)
+
+    response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": input_json},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.json() == {
+        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
+    }
+
+    saved_event = (
+        data_db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id == event["import_id"])
+        .scalar()
+    )
+
+    assert saved_event.family_document_import_id == document_1["import_id"]
+
+    event_with_link_to_different_doc = {
+        **event,
+        "family_document_import_id": document_2["import_id"],
+    }
+    updated_json = build_json_file(
+        {
+            **data,
+            "events": [event_with_link_to_different_doc],
+        }
+    )
+
+    update_response = client.post(
+        "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",
+        files={"data": updated_json},
+        headers=superuser_header_token,
+    )
+
+    assert update_response.status_code == status.HTTP_202_ACCEPTED
+    assert update_response.json() == {
+        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
+    }
+
+    saved_event = (
+        data_db.query(FamilyEvent)
+        .filter(FamilyEvent.import_id == event["import_id"])
+        .scalar()
+    )
+
+    assert saved_event.family_document_import_id == document_2["import_id"]
+
+
 def test_bulk_import_when_not_authorised(client: TestClient, data_db: Session):
     response = client.post(
         "/api/v1/bulk-import/UNFCCC.corpus.i00000001.n0000",

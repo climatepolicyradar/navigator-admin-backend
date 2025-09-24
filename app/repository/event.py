@@ -237,6 +237,7 @@ def update(
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
             valid_metadata=event.metadata,
+            family_document_import_id=event.family_document_import_id or None,
         )
     )
 
