@@ -277,6 +277,36 @@ def test_save_families_skips_update_when_no_changes(
     assert result == []
 
 
+@patch("app.service.bulk_import.family_repository.update")
+@patch("app.service.bulk_import.family_repository.get")
+def test_save_families_skips_update_when_no_changes_to_metadata_regardless_of_ordering(
+    mock_get,
+    mock_update,
+    corpus_repo_mock,
+    geography_repo_mock,
+    validation_service_mock,
+):
+    saved_metadata = {"A": [""], "B": [""], "C": [""]}
+    saved_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": saved_metadata,
+        "collections": [],
+    }
+    mock_get.return_value = saved_family
+
+    metadata_different_order = {"C": [], "A": [], "B": []}
+    new_family = {**saved_family, "metadata": metadata_different_order}
+
+    result = bulk_import_service.save_families([new_family], "test.corpus.0.n0000")
+
+    assert mock_update.call_count == 0
+    assert result == []
+
+
 def test_save_documents_skips_update_when_no_changes(
     document_repo_mock, corpus_repo_mock, validation_service_mock
 ):
