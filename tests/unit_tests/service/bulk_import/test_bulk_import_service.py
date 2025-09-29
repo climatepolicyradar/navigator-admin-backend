@@ -339,6 +339,79 @@ def test_save_families_skips_update_when_no_changes_to_metadata_regardless_of_or
     assert result == []
 
 
+@patch("app.service.bulk_import.family_repository.update")
+@patch("app.service.bulk_import.family_repository.get")
+def test_save_families_skips_update_when_no_changes_to_concepts_regardless_of_ordering(
+    mock_get,
+    mock_update,
+    corpus_repo_mock,
+    geography_repo_mock,
+    validation_service_mock,
+):
+    corpus_import_id = "test.corpus.0.n0000"
+    saved_concepts = [
+        {"id": "a", "relation": "1"},
+        {"id": "b", "relation": "2"},
+        {"id": "c", "relation": "2"},
+        {"id": "d", "relation": "3"},
+    ]
+    saved_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": {},
+        "collections": [],
+        "concepts": saved_concepts,
+    }
+
+    saved_family_dto = FamilyReadDTO(
+        import_id=saved_family["import_id"],
+        title=saved_family["title"],
+        summary=saved_family["summary"],
+        geographies=saved_family["geographies"],
+        category=saved_family["category"],
+        metadata={},
+        collections=saved_family["collections"],
+        status="",
+        slug="",
+        events=[],
+        documents=[],
+        published_date=None,
+        last_updated_date=None,
+        created=datetime.now(),
+        last_modified=datetime.now(),
+        organisation="",
+        corpus_import_id=corpus_import_id,
+        corpus_title="",
+        corpus_type="",
+        concepts=saved_concepts,
+    )
+    mock_get.return_value = saved_family_dto
+
+    concepts_different_order = [
+        {"id": "d", "relation": "3"},
+        {"id": "c", "relation": "2"},
+        {"id": "a", "relation": "1"},
+        {"id": "b", "relation": "2"},
+    ]
+    new_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": {},
+        "collections": [],
+        "concepts": concepts_different_order,
+    }
+    result = bulk_import_service.save_families([new_family], corpus_import_id)
+
+    assert mock_update.call_count == 0
+    assert result == []
+
+
 def test_save_documents_skips_update_when_no_changes(
     document_repo_mock, corpus_repo_mock, validation_service_mock
 ):
