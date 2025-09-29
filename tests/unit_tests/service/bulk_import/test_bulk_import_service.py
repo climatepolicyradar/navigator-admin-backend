@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from datetime import datetime
 from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session
 
 import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
+from app.model.family import FamilyReadDTO
 from tests.helpers.bulk_import import (
     default_collection,
     default_document,
@@ -286,7 +288,8 @@ def test_save_families_skips_update_when_no_changes_to_metadata_regardless_of_or
     geography_repo_mock,
     validation_service_mock,
 ):
-    saved_metadata = {"A": [""], "B": [""], "C": [""]}
+    corpus_import_id = "test.corpus.0.n0000"
+    saved_metadata = {"A": [], "B": ["1", "2", "3"], "C": []}
     saved_family = {
         "import_id": "test.new.family.1000",
         "title": "title",
@@ -296,12 +299,41 @@ def test_save_families_skips_update_when_no_changes_to_metadata_regardless_of_or
         "metadata": saved_metadata,
         "collections": [],
     }
-    mock_get.return_value = saved_family
 
-    metadata_different_order = {"C": [], "A": [], "B": []}
-    new_family = {**saved_family, "metadata": metadata_different_order}
+    saved_family_dto = FamilyReadDTO(
+        import_id=saved_family["import_id"],
+        title=saved_family["title"],
+        summary=saved_family["summary"],
+        geographies=saved_family["geographies"],
+        category=saved_family["category"],
+        metadata=saved_metadata,
+        collections=saved_family["collections"],
+        status="",
+        slug="",
+        events=[],
+        documents=[],
+        published_date=None,
+        last_updated_date=None,
+        created=datetime.now(),
+        last_modified=datetime.now(),
+        organisation="",
+        corpus_import_id=corpus_import_id,
+        corpus_title="",
+        corpus_type="",
+    )
+    mock_get.return_value = saved_family_dto
 
-    result = bulk_import_service.save_families([new_family], "test.corpus.0.n0000")
+    metadata_different_order = {"C": [], "A": [], "B": ["3", "1", "2"]}
+    new_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": metadata_different_order,
+        "collections": [],
+    }
+    result = bulk_import_service.save_families([new_family], corpus_import_id)
 
     assert mock_update.call_count == 0
     assert result == []
