@@ -17,17 +17,15 @@ _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 class Metadata(RootModel[dict[str, Union[str, list[str]]]]):
     @model_validator(mode="after")
-    def _normalize(self) -> "Metadata":
-        normalized: dict[str, Union[str, list[str]]] = {}
-        for key in sorted(
-            self.root.keys()
-        ):  # remove sorted(...) if you only care about equality
+    def _sort(self) -> "Metadata":
+        ordered: dict[str, Union[str, list[str]]] = {}
+        for key in self.root.keys():
             value = self.root[key]
             if isinstance(value, list):
-                normalized[key] = sorted(value)
+                ordered[key] = sorted(value)
             else:
-                normalized[key] = value
-        self.root = normalized
+                ordered[key] = value
+        self.root = ordered
         return self
 
 
