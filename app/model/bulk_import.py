@@ -2,18 +2,31 @@ import logging
 import os
 from datetime import datetime
 from pprint import pformat
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseModel, RootModel
+from pydantic import AnyHttpUrl, BaseModel, RootModel, model_validator
 
 from app.model.collection import CollectionCreateDTO, CollectionWriteDTO
 from app.model.document import DocumentCreateDTO, DocumentWriteDTO
 from app.model.event import EventCreateDTO, EventWriteDTO
 from app.model.family import FamilyCreateDTO, FamilyWriteDTO
 
-Metadata = RootModel[Dict[str, Union[str, List[str]]]]
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
+
+
+class Metadata(RootModel[dict[str, Union[str, list[str]]]]):
+    @model_validator(mode="after")
+    def _sort(self) -> "Metadata":
+        ordered: dict[str, Union[str, list[str]]] = {}
+        for key in self.root.keys():
+            value = self.root[key]
+            if isinstance(value, list):
+                ordered[key] = sorted(value)
+            else:
+                ordered[key] = value
+        self.root = ordered
+        return self
 
 
 class BulkImportCollectionDTO(BaseModel):
