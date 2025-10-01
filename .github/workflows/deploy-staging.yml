@@ -23,7 +23,7 @@ jobs:
           ref: main
 
       - name: Configure AWS credentials (staging)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/navigator-admin-backend-github-actions
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
