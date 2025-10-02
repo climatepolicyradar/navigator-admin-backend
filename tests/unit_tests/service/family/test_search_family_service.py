@@ -44,3 +44,40 @@ def test_search_missing(family_repo_mock, admin_user_context):
     assert result is not None
     assert len(result) == 0
     assert family_repo_mock.search.call_count == 1
+
+
+def test_search_with_corpus_filter(family_repo_mock, admin_user_context):
+    """Test that corpus filtering parameter is passed correctly to the repository."""
+    result = family_service.search(
+        {"q": "test"}, admin_user_context, geography=None, corpus=["corpus1", "corpus2"]
+    )
+    assert result is not None
+    assert family_repo_mock.search.call_count == 1
+
+    # Verify the repository was called with the correct parameters
+    call_args = family_repo_mock.search.call_args
+    assert call_args[0][0] is not None  # db session
+    assert call_args[0][1] == {"q": "test"}  # search_params
+    assert call_args[0][2] is not None  # org_id
+    assert call_args[0][3] is None  # geography
+    assert call_args[0][4] == ["corpus1", "corpus2"]  # corpus
+
+
+def test_search_with_geography_and_corpus_filters(family_repo_mock, admin_user_context):
+    """Test that both geography and corpus filtering work together."""
+    result = family_service.search(
+        {"q": "test"},
+        admin_user_context,
+        geography=["USA", "CAN"],
+        corpus=["corpus1", "corpus2"],
+    )
+    assert result is not None
+    assert family_repo_mock.search.call_count == 1
+
+    # Verify the repository was called with the correct parameters
+    call_args = family_repo_mock.search.call_args
+    assert call_args[0][0] is not None  # db session
+    assert call_args[0][1] == {"q": "test"}  # search_params
+    assert call_args[0][2] is not None  # org_id
+    assert call_args[0][3] == ["USA", "CAN"]  # geography
+    assert call_args[0][4] == ["corpus1", "corpus2"]  # corpus

@@ -67,6 +67,7 @@ def search(
     search_params: dict[str, Union[str, int]],
     user: UserContext,
     geography: Optional[list[str]] = None,
+    corpus: Optional[list[str]] = None,
 ) -> list[FamilyReadDTO]:
     """
     Searches for the search term against families on specified fields.
@@ -79,12 +80,13 @@ def search(
         fields, given as key value pairs in a dictionary.
     :param UserContext user: The current user context.
     :param Optional[list[str]] geography: geographies to filter on.
+    :param Optional[list[str]] corpus: corpus import IDs to filter on.
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
     with db_session.get_db_session() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
-        return family_repo.search(db, search_params, org_id, geography)
+        return family_repo.search(db, search_params, org_id, geography, corpus)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

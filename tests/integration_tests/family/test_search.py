@@ -1,6 +1,7 @@
 import logging
 from typing import cast
 
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -8,8 +9,20 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import DBEntry, add_data, setup_db
 
 
+@pytest.mark.parametrize(
+    ("geographies", "expected_families"),
+    [
+        (["Afghanistan"], ["A.0.0.1", "A.0.0.3"]),
+        (["Zimbabwe"], ["A.0.0.2"]),
+        (["Albania", "Zambia"], ["A.0.0.4", "A.0.0.5"]),
+    ],
+)
 def test_search_geographies(
-    client: TestClient, data_db: Session, superuser_header_token
+    client: TestClient,
+    data_db: Session,
+    superuser_header_token,
+    geographies: list[str],
+    expected_families: list[str],
 ):
     setup_db(data_db)
     add_data(
@@ -60,23 +73,50 @@ def test_search_geographies(
         ],
     )
 
-    tests_cases = [
-        (["Afghanistan"], ["A.0.0.1", "A.0.0.3"]),
-        (["Zimbabwe"], ["A.0.0.2"]),
-        (["Albania", "Zambia"], ["A.0.0.4", "A.0.0.5"]),
-    ]
+    geographies_query = "&".join([f"geography={country}" for country in geographies])
+    response = client.get(
+        f"/api/v1/families/?{geographies_query}",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    ids = [result["import_id"] for result in data]
+    assert isinstance(data, list)
+    assert ids == expected_families
 
-    for countries, expected_ids in tests_cases:
-        geographies_query = "&".join([f"geography={country}" for country in countries])
-        response = client.get(
-            f"/api/v1/families/?{geographies_query}",
-            headers=superuser_header_token,
-        )
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        ids = [result["import_id"] for result in data]
-        assert isinstance(data, list)
-        assert ids == expected_ids
+
+@pytest.mark.parametrize(
+    ("corpora", "expected_families"),
+    [
+        (["CCLW.corpus.i00000001.n0000"], ["A.0.0.1", "A.0.0.2"]),
+        (
+            ["CCLW.corpus.i00000001.n0000", "UNFCCC.corpus.i00000001.n0000"],
+            ["A.0.0.1", "A.0.0.2", "A.0.0.3"],
+        ),
+    ],
+)
+def test_search_corpus(
+    client: TestClient,
+    data_db: Session,
+    superuser_header_token,
+    corpora: list[str],
+    expected_families: list[str],
+):
+    """Test corpus filtering functionality with multiple corpus import IDs."""
+    setup_db(data_db)
+
+    corpus_query = "&".join([f"corpus={corpus_id}" for corpus_id in corpora])
+    response = client.get(
+        f"/api/v1/families/?{corpus_query}",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    ids = [result["import_id"] for result in data]
+    assert isinstance(data, list)
+    assert set(ids) == set(
+        expected_families
+    ), f"Expected {expected_families}, got {ids} for corpus filter {corpora}"
 
 
 def test_search_retrieves_families_with_multiple_geographies(

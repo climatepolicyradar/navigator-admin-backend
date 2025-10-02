@@ -35,7 +35,10 @@ def mock_family_service(family_service, monkeypatch: MonkeyPatch, mocker):
             return create_family_read_dto(import_id, collections=["x.y.z.1", "x.y.z.2"])
 
     def mock_search_families(
-        q_params: dict, user_email: str, geography: Optional[list[str]]
+        q_params: dict,
+        user_email: str,
+        geography: Optional[list[str]],
+        corpus: Optional[list[str]] = None,
     ) -> list[FamilyReadDTO]:
         if q_params["q"] == "empty":
             return []
