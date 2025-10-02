@@ -149,6 +149,63 @@ def test_update_corpus_allows_none_corpus_description(
     assert ct.valid_metadata == old_ct.valid_metadata
 
 
+def test_update_corpus_allows_none_attribution_url(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    old_ct = (
+        data_db.query(CorpusType).filter(CorpusType.name == "Laws and Policies").one()
+    )
+    new_corpus = create_corpus_write_dto(attribution_url=None)
+    response = client.put(
+        "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
+        json=new_corpus.model_dump(),
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["organisation_id"] == 1
+    assert data["organisation_name"] == "CCLW"
+    assert data["corpus_type_name"] == old_ct.name
+
+    db_corpus: Corpus = (
+        data_db.query(Corpus)
+        .filter(Corpus.import_id == "CCLW.corpus.i00000001.n0000")
+        .one()
+    )
+    assert db_corpus.attribution_url is None
+
+
+def test_updates_corpus_attribution_url(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    old_ct = (
+        data_db.query(CorpusType).filter(CorpusType.name == "Laws and Policies").one()
+    )
+    new_corpus = create_corpus_write_dto(
+        attribution_url="http://new-attribution-url.com"
+    )
+    response = client.put(
+        "/api/v1/corpora/CCLW.corpus.i00000001.n0000",
+        json=new_corpus.model_dump(),
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["organisation_id"] == 1
+    assert data["organisation_name"] == "CCLW"
+    assert data["corpus_type_name"] == old_ct.name
+    assert data["attribution_url"] == "http://new-attribution-url.com"
+
+    db_corpus: Corpus = (
+        data_db.query(Corpus)
+        .filter(Corpus.import_id == "CCLW.corpus.i00000001.n0000")
+        .one()
+    )
+    assert db_corpus.attribution_url == "http://new-attribution-url.com"
+
+
 def test_update_corpus_when_not_authorised(client: TestClient, data_db: Session):
     setup_db(data_db)
     new_corpus = create_corpus_write_dto()

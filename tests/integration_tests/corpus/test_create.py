@@ -102,6 +102,39 @@ def test_create_corpus_allows_none_corpus_image_url(
     assert ct > 1
 
 
+def test_create_corpus_allows_none_attribution_url(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    setup_db(data_db)
+    new_corpus = create_corpus_create_dto("Laws and Policies", attribution_url=None)
+    response = client.post(
+        "/api/v1/corpora",
+        json=new_corpus.model_dump(),
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+
+    data = response.json()
+    assert data == "CCLW.corpus.i00000002.n0000"
+    actual_corpus = data_db.query(Corpus).filter(Corpus.import_id == data).one()
+
+    assert actual_corpus.import_id == "CCLW.corpus.i00000002.n0000"
+    assert actual_corpus.title == "title"
+    assert actual_corpus.description == "description"
+    assert actual_corpus.corpus_text == "corpus_text"
+    assert actual_corpus.corpus_type_name == "Laws and Policies"
+    assert actual_corpus.corpus_image_url == "some-picture.png"
+    assert actual_corpus.attribution_url is None
+    assert actual_corpus.organisation_id == 1
+
+    ct: int = (
+        data_db.query(Corpus)
+        .filter(Corpus.corpus_type_name == "Laws and Policies")
+        .count()
+    )
+    assert ct > 1
+
+
 def test_create_corpus_when_corpus_type_not_exist(
     client: TestClient, data_db: Session, superuser_header_token
 ):
