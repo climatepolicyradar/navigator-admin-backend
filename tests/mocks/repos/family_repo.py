@@ -40,6 +40,7 @@ def search(
     search_params: dict[str, Union[str, int]],
     org_id: Optional[int],
     geography: Optional[list[str]],
+    corpus: Optional[list[str]] = None,
 ) -> list[FamilyReadDTO]:
     _maybe_throw()
     _maybe_timeout()

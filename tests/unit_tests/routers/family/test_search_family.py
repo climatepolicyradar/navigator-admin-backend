@@ -67,3 +67,24 @@ def test_search_when_not_found(
         "Families not found for terms: {'q': 'empty', 'max_results': 500}"
         in caplog.text
     )
+
+
+def test_search_with_corpus_filter(
+    client: TestClient, family_service_mock, user_header_token
+):
+    """Test that corpus filtering parameter is passed correctly to the service."""
+    response = client.get(
+        "/api/v1/families/?q=test&corpus=corpus1&corpus=corpus2",
+        headers=user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert family_service_mock.search.call_count == 1
+
+    # Verify the service was called with the correct parameters
+    call_args = family_service_mock.search.call_args
+    # The corpus parameter is included in query_params, not as a separate parameter
+    expected_query_params = {"q": "test", "max_results": 500, "corpus": "corpus2"}
+    assert call_args[0][0] == expected_query_params  # query_params
+    assert call_args[0][1] is not None  # user context
+    assert call_args[0][2] is None  # geography (not provided)
+    assert call_args[0][3] == ["corpus1", "corpus2"]  # corpus list

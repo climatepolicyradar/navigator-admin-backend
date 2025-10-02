@@ -284,6 +284,7 @@ def search(
     search_params: dict[str, Union[str, int]],
     org_id: Optional[int],
     geography: Optional[list[str]],
+    corpus: Optional[list[str]] = None,
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
@@ -292,6 +293,8 @@ def search(
     :param dict search_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
     :param org_id Optional[int]: the ID of the organisation the user belongs to
+    :param geography Optional[list[str]]: geographies to filter on
+    :param corpus Optional[list[str]]: corpus import IDs to filter on
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.
@@ -328,6 +331,10 @@ def search(
             params["import_ids_for_geographies"] = [
                 str(geography.family_import_id) for geography in family_geographies
             ]
+
+    if corpus is not None:
+        conditions.append("c.import_id = ANY(:import_ids_for_corpus)")
+        params["import_ids_for_corpus"] = corpus
 
     if "status" in search_params:
         term = cast(str, search_params["status"]).upper()
