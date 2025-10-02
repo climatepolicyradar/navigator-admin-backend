@@ -39,7 +39,7 @@ jobs:
         with:
           legacy: false
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run Unit Tests
         run: make test TEST=tests/unit_tests/
