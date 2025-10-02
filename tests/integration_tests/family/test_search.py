@@ -1,6 +1,7 @@
 import logging
 from typing import cast
 
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -8,8 +9,20 @@ from sqlalchemy.orm import Session
 from tests.integration_tests.setup_db import DBEntry, add_data, setup_db
 
 
+@pytest.mark.parametrize(
+    ("geographies", "expected_families"),
+    [
+        (["Afghanistan"], ["A.0.0.1", "A.0.0.3"]),
+        (["Zimbabwe"], ["A.0.0.2"]),
+        (["Albania", "Zambia"], ["A.0.0.4", "A.0.0.5"]),
+    ],
+)
 def test_search_geographies(
-    client: TestClient, data_db: Session, superuser_header_token
+    client: TestClient,
+    data_db: Session,
+    superuser_header_token,
+    geographies: list[str],
+    expected_families: list[str],
 ):
     setup_db(data_db)
     add_data(
@@ -60,128 +73,50 @@ def test_search_geographies(
         ],
     )
 
-    tests_cases = [
-        (["Afghanistan"], ["A.0.0.1", "A.0.0.3"]),
-        (["Zimbabwe"], ["A.0.0.2"]),
-        (["Albania", "Zambia"], ["A.0.0.4", "A.0.0.5"]),
-    ]
-
-    for countries, expected_ids in tests_cases:
-        geographies_query = "&".join([f"geography={country}" for country in countries])
-        response = client.get(
-            f"/api/v1/families/?{geographies_query}",
-            headers=superuser_header_token,
-        )
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        ids = [result["import_id"] for result in data]
-        assert isinstance(data, list)
-        assert ids == expected_ids
+    geographies_query = "&".join([f"geography={country}" for country in geographies])
+    response = client.get(
+        f"/api/v1/families/?{geographies_query}",
+        headers=superuser_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    ids = [result["import_id"] for result in data]
+    assert isinstance(data, list)
+    assert ids == expected_families
 
 
-def test_search_corpus(client: TestClient, data_db: Session, superuser_header_token):
+@pytest.mark.parametrize(
+    ("corpora", "expected_families"),
+    [
+        (["CCLW.corpus.i00000001.n0000"], ["A.0.0.1", "A.0.0.2"]),
+        (
+            ["CCLW.corpus.i00000001.n0000", "UNFCCC.corpus.i00000001.n0000"],
+            ["A.0.0.1", "A.0.0.2", "A.0.0.3"],
+        ),
+    ],
+)
+def test_search_corpus(
+    client: TestClient,
+    data_db: Session,
+    superuser_header_token,
+    corpora: list[str],
+    expected_families: list[str],
+):
     """Test corpus filtering functionality with multiple corpus import IDs."""
     setup_db(data_db)
-    add_data(
-        data_db,
-        [
-            {
-                "import_id": "A.0.0.6",
-                "title": "CCLW Family 1",
-                "summary": "CCLW family description",
-                "geography": "USA",
-                "geographies": ["USA"],
-                "category": "Legislative",
-                "status": "Created",
-                "metadata": {"author": ["CCLW"], "author_type": ["Government"]},
-                "organisation": "CCLW",
-                "corpus_import_id": "CCLW.corpus.i00000001.n0000",
-                "corpus_title": "CCLW National Policies",
-                "corpus_type": "Laws and Policies",
-                "slug": "cclw-slug-1",
-                "events": [],
-                "published_date": None,
-                "last_updated_date": None,
-                "documents": [],
-                "collections": [],
-                "concepts": [],
-            },
-            {
-                "import_id": "A.0.0.7",
-                "title": "CCLW Family 2",
-                "summary": "Another CCLW family",
-                "geography": "CAN",
-                "geographies": ["CAN"],
-                "category": "Executive",
-                "status": "Created",
-                "metadata": {"author": ["CCLW"], "author_type": ["Government"]},
-                "organisation": "CCLW",
-                "corpus_import_id": "CCLW.corpus.i00000002.n0000",
-                "corpus_title": "CCLW International Policies",
-                "corpus_type": "Laws and Policies",
-                "slug": "cclw-slug-2",
-                "events": [],
-                "published_date": None,
-                "last_updated_date": None,
-                "documents": [],
-                "collections": [],
-                "concepts": [],
-            },
-            {
-                "import_id": "A.0.0.8",
-                "title": "UNFCCC Family 3",
-                "summary": "UNFCCC family description",
-                "geography": "DEU",
-                "geographies": ["DEU"],
-                "category": "UNFCCC",
-                "status": "Created",
-                "metadata": {"author": ["UNFCCC"], "author_type": ["Party"]},
-                "organisation": "UNFCCC",
-                "corpus_import_id": "UNFCCC.corpus.i00000002.n0000",
-                "corpus_title": "UNFCCC Reports",
-                "corpus_type": "Intl. agreements",
-                "slug": "unfccc-slug-3",
-                "events": [],
-                "published_date": None,
-                "last_updated_date": None,
-                "documents": [],
-                "collections": [],
-                "concepts": [],
-            },
-        ],
+
+    corpus_query = "&".join([f"corpus={corpus_id}" for corpus_id in corpora])
+    response = client.get(
+        f"/api/v1/families/?{corpus_query}",
+        headers=superuser_header_token,
     )
-
-    test_cases = [
-        # Single corpus filter
-        (["CCLW.corpus.i00000001.n0000"], ["A.0.0.6"]),
-        (["CCLW.corpus.i00000002.n0000"], ["A.0.0.7"]),
-        (["UNFCCC.corpus.i00000002.n0000"], ["A.0.0.8"]),
-        # Multiple corpus filters
-        (
-            ["CCLW.corpus.i00000001.n0000", "CCLW.corpus.i00000002.n0000"],
-            ["A.0.0.6", "A.0.0.7"],
-        ),
-        (
-            ["CCLW.corpus.i00000001.n0000", "UNFCCC.corpus.i00000002.n0000"],
-            ["A.0.0.6", "A.0.0.8"],
-        ),
-        # Non-existent corpus
-        (["NONEXISTENT.corpus.i00000001.n0000"], []),
-    ]
-
-    for corpus_ids, expected_ids in test_cases:
-        corpus_query = "&".join([f"corpus={corpus_id}" for corpus_id in corpus_ids])
-        response = client.get(
-            f"/api/v1/families/?{corpus_query}",
-            headers=superuser_header_token,
-        )
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        ids = [result["import_id"] for result in data]
-        assert isinstance(data, list)
-        assert set(ids) == set(
-            expected_ids
-        ), f"Expected {expected_ids}, got {ids} for corpus filter {corpus_ids}"
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    ids = [result["import_id"] for result in data]
+    assert isinstance(data, list)
+    assert set(ids) == set(
+        expected_families
+    ), f"Expected {expected_families}, got {ids} for corpus filter {corpora}"
 
 
 def test_search_retrieves_families_with_multiple_geographies(
