@@ -196,9 +196,6 @@ def test_updates_corpus_attribution_url(
     assert data["organisation_id"] == 1
     assert data["organisation_name"] == "CCLW"
     assert data["corpus_type_name"] == old_ct.name
-
-    breakpoint()
-
     assert data["attribution_url"] == "http://new-attribution-url.com"
 
     db_corpus: Corpus = (
