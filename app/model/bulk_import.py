@@ -283,6 +283,15 @@ class BulkImportEventDTO(BaseModel):
         return is_different
 
 
+def serialize_value(value):
+    """Convert a value to a serializable format."""
+    if hasattr(value, "model_dump"):
+        return value.model_dump()
+    if hasattr(value, "dict"):
+        return value.dict()
+    return value
+
+
 def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) -> None:
     """
     Log the differences between two DTOs.
@@ -299,8 +308,8 @@ def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) ->
                 json.dumps(
                     {
                         "change_detected": key,
-                        "before": current_value,
-                        "after": update_value,
+                        "before": serialize_value(current_value),
+                        "after": serialize_value(update_value),
                     }
                 )
             )
