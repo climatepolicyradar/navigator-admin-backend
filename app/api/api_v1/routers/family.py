@@ -77,9 +77,10 @@ async def get_all_families(request: Request) -> list[FamilyReadDTO]:
 @r.get("/families/", response_model=list[FamilyReadDTO])
 async def search_family(
     request: Request,
-    # We have used the built in parsers here for geography specifically
+    # We have used the built in parsers here for geography and corpus specifically
     # so that we do not have to build our own
     geography: Annotated[list[str] | None, Query()] = None,
+    corpus: Annotated[list[str] | None, Query()] = None,
 ) -> list[FamilyReadDTO]:
     """
     Searches for families matching URL parameters ("q" by default).
@@ -98,11 +99,21 @@ async def search_family(
 
     query_params = set_default_query_params(query_params)
 
-    VALID_PARAMS = ["q", "title", "summary", "geography", "status", "max_results"]
+    VALID_PARAMS = [
+        "q",
+        "title",
+        "summary",
+        "corpus",
+        "geography",
+        "status",
+        "max_results",
+    ]
     validate_query_params(query_params, VALID_PARAMS)
 
     try:
-        families = family_service.search(query_params, request.state.user, geography)
+        families = family_service.search(
+            query_params, request.state.user, geography, corpus
+        )
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except RepositoryError as e:

@@ -32,6 +32,7 @@ class FamilyRepo(Protocol):
         search_params: dict[str, Union[str, int]],
         org_id: Optional[int],
         geography: Optional[list[str]],
+        corpus: Optional[list[str]] = None,
     ) -> list[FamilyReadDTO]:
         """Searches the families"""
         ...
