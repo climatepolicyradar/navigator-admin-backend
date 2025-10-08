@@ -323,6 +323,7 @@ def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) ->
                         "change_detected": key,
                         "before": serialize_value(current_value),
                         "after": serialize_value(update_value),
-                    }
+                    },
+                    default=str,
                 )
             )
