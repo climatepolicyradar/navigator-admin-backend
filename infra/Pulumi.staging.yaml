@@ -10,7 +10,7 @@ config:
     secure: AAABAPn7H3xVLbXVXsPF2jhtTWwB+zWa+MdGiA7TUeO/LdOltvSh6rVs8VjndCajmUyIsiwkH24p7XrHSg==
   admin_backend:ecr_uri:
     secure: AAABAJC89TGwi4joRyjuhull2xIYQDiMNCQX4B2HnwZpoUXTrswwJiMYhkIMuuYhMh6kXq67n3dPTd9QiDpqHOJQ1gWJpntv7UmDmC6pWXKLklLW87iX5z+by40ZZMJ0FOUoAg==
-  admin_backend:log_level: INFO
+  admin_backend:log_level: DEBUG
   admin_backend:rds_address:
     secure: AAABADe4vlk1LEh+750adXOQMX0BDaYadfPX8a3ErZmtBArLPMtdKfEoMy3ald8gyLbWhasn2qP0kY5zxBtHNtZhjwdDW7OnBsSLhvkZvVaiEP/CT9MAGLr4u8oCV27NgDUfNzGa3j/O
   admin_backend:rds_database:
