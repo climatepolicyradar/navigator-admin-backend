@@ -65,7 +65,7 @@ try:
 except Exception as _:
     _LOGGER.error("Failed to load service manifest, using defaults")
     otel_config = TelemetryConfig(
-        service_name="navigator-backend",
+        service_name="navigator-admin-backend",
         namespace_name="navigator",
         service_version="0.0.0",
         environment=config.ENV,
