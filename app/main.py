@@ -37,7 +37,6 @@ from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.service.health import is_database_online
 from app.telemetry import Telemetry
 from app.telemetry_config import ServiceManifest, TelemetryConfig
-from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -79,7 +78,6 @@ tracer = telemetry.get_tracer()
 app = FastAPI(
     title="navigator-admin",
     lifespan=lifespan,
-    route_class=ExceptionHandlingTelemetryRoute,
 )
 setup_json_logging(app)
 add_pagination(app)

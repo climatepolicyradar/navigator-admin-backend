@@ -12,8 +12,9 @@ from app.api.api_v1.query_params import (
 )
 from app.errors import AuthorisationError, RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-document_router = r = APIRouter()
+document_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__name__)
 

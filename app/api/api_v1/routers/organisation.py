@@ -9,8 +9,9 @@ from app.model.organisation import (
     OrganisationWriteDTO,
 )
 from app.service import organisation as organisation_service
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-organisations_router = APIRouter()
+organisations_router = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__name__)
 

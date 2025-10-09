@@ -1,0 +1,15 @@
+{
+  "service.name": "navigator-admin-backend",
+  "service.namespace": "data-management",
+  "team": "application",
+  "inputs": [
+    { "type": "service", "name": "db-client" },
+    { "type": "service", "name": "rds" },
+    { "type": "s3", "name": "cpr-production-bulkimport" },
+    { "type": "s3", "name": "cpr-production-document-cache" },
+    { "type": "s3", "name": "cpr-production-rds" },
+    { "type": "service", "name": "navigator-infra" }
+  ],
+  "outputs": [{ "type": "service", "name": "rds" }],
+  "repos": ["https://github.com/climatepolicyradar/navigator-admin-backend"]
+}
