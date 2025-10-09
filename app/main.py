@@ -16,6 +16,7 @@ from fastapi_health import health
 from fastapi_pagination import add_pagination
 from fastapi_utils.timing import add_timing_middleware
 
+from app import config
 from app.api.api_v1.routers import (
     analytics_router,
     app_token_router,
@@ -34,6 +35,9 @@ from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.service.health import is_database_online
+from app.telemetry import Telemetry
+from app.telemetry_config import ServiceManifest, TelemetryConfig
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -55,9 +59,27 @@ async def lifespan(app_: FastAPI):
     yield
 
 
+try:
+    otel_config = TelemetryConfig.from_service_manifest(
+        ServiceManifest.from_file("service-manifest.json"), config.ENV, "0.1.0"
+    )
+except Exception as _:
+    _LOGGER.error("Failed to load service manifest, using defaults")
+    otel_config = TelemetryConfig(
+        service_name="navigator-backend",
+        namespace_name="navigator",
+        service_version="0.0.0",
+        environment=config.ENV,
+    )
+
+telemetry = Telemetry(otel_config)
+tracer = telemetry.get_tracer()
+
+
 app = FastAPI(
     title="navigator-admin",
     lifespan=lifespan,
+    route_class=ExceptionHandlingTelemetryRoute,
 )
 setup_json_logging(app)
 add_pagination(app)
@@ -167,3 +189,7 @@ if __name__ == "__main__":
         port=8888,
         log_config=DEFAULT_LOGGING,
     )  # type: ignore
+
+
+telemetry.instrument_fastapi(app)
+telemetry.setup_exception_hook()
