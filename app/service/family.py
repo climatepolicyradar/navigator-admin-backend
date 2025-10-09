@@ -26,10 +26,12 @@ from app.service import (
     metadata,
     organisation,
 )
+from app.telemetry import observe
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@observe(name="get_family")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def get(import_id: str) -> Optional[FamilyReadDTO]:
     """
@@ -49,6 +51,7 @@ def get(import_id: str) -> Optional[FamilyReadDTO]:
         raise RepositoryError(str(e))
 
 
+@observe(name="get_all_families")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def all(user: UserContext) -> list[FamilyReadDTO]:
     """
@@ -62,6 +65,7 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
         return family_repo.all(db, org_id)
 
 
+@observe(name="search_families")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
     search_params: dict[str, Union[str, int]],
@@ -100,6 +104,7 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
+@observe(name="update_family")
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
@@ -173,6 +178,7 @@ def update(
     return get(import_id)
 
 
+@observe(name="create_family")
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
@@ -239,6 +245,7 @@ def create(
         db.commit()
 
 
+@observe(name="delete_family")
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(

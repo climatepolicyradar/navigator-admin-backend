@@ -18,6 +18,7 @@ from app.errors import RepositoryError, ValidationError
 from app.model.document import DocumentCreateDTO, DocumentReadDTO, DocumentWriteDTO
 from app.model.user import UserContext
 from app.service import app_user, id
+from app.telemetry import observe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ def get_upload_details(
     return file_repo.get_upload_details(client, filename, cache_bucket, cdn_base_url)
 
 
+@observe(name="get_document")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def get(import_id: str) -> Optional[DocumentReadDTO]:
     """
@@ -59,6 +61,7 @@ def get(import_id: str) -> Optional[DocumentReadDTO]:
         raise RepositoryError(str(e))
 
 
+@observe(name="get_all_documents")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def all(user: UserContext) -> list[DocumentReadDTO]:
     """
@@ -72,6 +75,7 @@ def all(user: UserContext) -> list[DocumentReadDTO]:
         return document_repo.all(db, org_id)
 
 
+@observe(name="search_documents")
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def search(
     search_params: dict[str, Union[str, int]], user: UserContext
@@ -104,6 +108,7 @@ def validate_import_id(import_id: str) -> None:
     id.validate(import_id)
 
 
+@observe(name="update_document")
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def update(
@@ -161,6 +166,7 @@ def update(
     return get(import_id)
 
 
+@observe(name="create_document")
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(
@@ -215,6 +221,7 @@ def create(
         raise e
 
 
+@observe(name="delete_document")
 @db_session.with_database()
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def delete(
