@@ -36,6 +36,10 @@ fastapi-cli = "^0.0.13"
 pytest-watch = "^4.2.0"
 fastapi-utils = { version = "0.8.0", extras = ["all"] }
 python-dateutil = "^2.9.0.post0"
+opentelemetry-instrumentation-fastapi = ">=0.54b0"
+opentelemetry-sdk = ">=1.33.0"
+opentelemetry-exporter-otlp = ">=1.33.0"
+opentelemetry-instrumentation-sqlalchemy = ">=0.54b0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^3.8.0"

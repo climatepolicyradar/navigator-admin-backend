@@ -16,8 +16,9 @@ from app.model.collection import (
     CollectionReadDTO,
     CollectionWriteDTO,
 )
+from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
-collections_router = r = APIRouter()
+collections_router = r = APIRouter(route_class=ExceptionHandlingTelemetryRoute)
 
 _LOGGER = logging.getLogger(__name__)
 
