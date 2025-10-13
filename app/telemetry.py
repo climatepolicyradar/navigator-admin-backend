@@ -104,7 +104,7 @@ class Telemetry:
         self.logger.setLevel(self.config.log_level)
 
         log_handler = LoggingHandler(
-            level=self.config.log_level,
+            level=self.config.log_level,  # type: ignore
             logger_provider=logger_provider,  # type: ignore
         )
 
