@@ -80,30 +80,36 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def with_database():
-    """Wraps a function and supplies the db session to it.
+    """
+    Decorator that wraps a function and supplies a db session to it.
 
-    This decorator is used to wrap functions that require a database session.
+    The session is automatically closed after the function executes.
 
     NOTE: Transaction management is handled by the service functions.
-    Don't be tempted to put them in here as they are unique to each service.
+    Don't be tempted to put them in here as they are unique to each
+    service.
+
+    :return: Decorated function with database session
+    :rtype: Callable
     """
 
     def inner(func):
         def wrapper(*args, **kwargs):
             context = f"{func.__module__}::{func.__name__}{args}"
-            db = get_db()
-            try:
-                result = func(*args, **kwargs, db=db)
-                return result
-            except exc.SQLAlchemyError as e:
-                msg = f"Error {str(e)} in {context}"
-                _LOGGER.error(
-                    msg,
-                    extra={"failing_module": func.__module__, "func": func.__name__},
-                )
-                raise RepositoryError(context) from e
-            finally:
-                db.close()  # type: ignore
+            with get_db() as db:
+                try:
+                    result = func(*args, **kwargs, db=db)
+                    return result
+                except exc.SQLAlchemyError as e:
+                    msg = f"Error {str(e)} in {context}"
+                    _LOGGER.error(
+                        msg,
+                        extra={
+                            "failing_module": func.__module__,
+                            "func": func.__name__,
+                        },
+                    )
+                    raise RepositoryError(context) from e
 
         return wrapper
 
