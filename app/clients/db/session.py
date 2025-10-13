@@ -1,42 +1,82 @@
+"""
+Code for DB session management.
+
+Notes from nav-backend: August 27th 2025.
+
+We have been trying to trace segfault issues for months. They're
+our white whale. We identified a hypothesis: the sqlalchemy engine
+and session were initialised on module import, before uvicorn
+spawned the worker processes. This meant that the engine and session
+were shared across all workers. Ruh roh. SQLALCHEMY ISNT THREAD SAFE.
+
+Update: October 2025.
+Hypothesis is that stray connection leaks are being caused by services calling get_db()
+without closing sessions via the defensive programming pattern below where cleanup
+wasn't implemented properly.
+
+if db is None:
+    db = db_session.get_db()
+...
+
+rather than
+
+if db is None:
+    with db_session.get_db() as session:
+        ...
+"""
+
 import logging
 from contextlib import contextmanager
+from typing import Generator
 
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import SQLALCHEMY_DATABASE_URI, STATEMENT_TIMEOUT
 from app.errors import RepositoryError
 
-# TODO: better session handling - https://linear.app/climate-policy-radar/issue/APP-630/investigate-hypothesis-that-admin-service-backend-is-leaving-stray
+_LOGGER = logging.getLogger(__name__)
+
+# Engine with connection pooling to prevent connection leaks
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
-    pool_pre_ping=True,
-    # TODO: configure as part of scaling work: PDCT-650
-    pool_size=10,
-    max_overflow=240,
-    # recycle after 30 minutes - this kills unused, unclosed connections
-    # which we know exist because of methods calling get_db() explicity
-    pool_recycle=1800,
-    # wait up to 30s for a connection before error - this avoids a request hanging forever
-    pool_timeout=30,
+    pool_pre_ping=True,  # Verify connections before use
+    pool_size=10,  # Base connection pool size
+    max_overflow=240,  # Additional connections when pool exhausted - TODO: TOO HIGH?
+    pool_recycle=1800,  # Recycle connections after 30 minutes
+    pool_timeout=30,  # Wait up to 30s for a connection before error
     connect_args={"options": f"-c statement_timeout={STATEMENT_TIMEOUT}"},
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-_LOGGER = logging.getLogger(__name__)
+# OpenTelemetry instrumentation
+SQLAlchemyInstrumentor().instrument(engine=engine)
+
+
+# Session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @contextmanager
-def get_db_session():
+def get_db() -> Generator[Session, None, None]:
+    """
+    Context manager for database sessions in service layer.
+
+    Ensures sessions are properly closed via context management.
+
+    Usage:
+        with get_db() as db:
+            # Use db here
+            ...
+
+    :return: Database session generator
+    :rtype: Generator[Session, None, None]
+    """
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-
-def get_db() -> Session:
-    return SessionLocal()
 
 
 def with_database():
@@ -63,7 +103,7 @@ def with_database():
                 )
                 raise RepositoryError(context) from e
             finally:
-                db.close()
+                db.close()  # type: ignore
 
         return wrapper
 
