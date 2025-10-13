@@ -7,6 +7,6 @@
     { "type": "service", "name": "rds" },
     { "type": "service", "name": "navigator-infra" }
   ],
-  "outputs": [{ "type": "service", "name": "rds" }],
+  "outputs": [],
   "repos": ["https://github.com/climatepolicyradar/navigator-admin-backend"]
 }
