@@ -68,6 +68,7 @@ def _create_backend_environment() -> dict[str, str]:
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,
         "LOG_LEVEL": log_level,
+        "ENV": pulumi.get_stack(),
     }
 
     return environment
