@@ -18,7 +18,6 @@ from fastapi_pagination import add_pagination
 from fastapi_utils.timing import add_timing_middleware
 
 from app import config
-from app import config
 from app.api.api_v1.routers import (
     analytics_router,
     app_token_router,
