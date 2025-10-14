@@ -133,8 +133,8 @@ config = AppRunnerConfig(
     max_instances=int(CONFIG.require("apprunner_backend_max_instance_count")),
     min_instances=int(CONFIG.require("apprunner_backend_min_instance_count")),
     port=8888,
-    cpu="4 vCPU",
-    memory="8 GB",
+    cpu="2 vCPU",
+    memory="4 GB",
     vpc_config=VpcConfig(
         vpc_connector_arn=vpc_connector.arn,
     ),
