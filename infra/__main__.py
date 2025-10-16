@@ -17,7 +17,7 @@ from resources.app_runner_service import (
     HealthCheckConfig,
     VpcConfig,
 )
-from resources.ecr_repository import ECRRepository, ECRRepositoryConfig, PolicyOptions
+from resources.ecr_repository import ECRRepository, ECRRepositoryConfig
 from resources.github_actions_role import GitHubActionsRole
 from resources.util import validate_aws_account, validate_stack_and_branch
 
@@ -97,12 +97,9 @@ def _create_backend_vpc_connector() -> aws.apprunner.VpcConnector:
 # Create ECR repo
 ########################################################################
 
-# Create ECR repo in production account
 ecr_repo = ECRRepository(
     "navigator-admin-backend",
-    config=ECRRepositoryConfig(
-        principal_service=PolicyOptions.APPRUNNER, image_scan_on_push=False
-    ),
+    config=ECRRepositoryConfig(image_scan_on_push=False),
 )
 
 # Export the repository URL for use in CI/CD pipelines
