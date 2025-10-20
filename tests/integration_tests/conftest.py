@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from typing import Dict
 
 import boto3
@@ -104,8 +105,9 @@ def data_db(monkeypatch):
         )
         test_session = test_session_maker()
 
+        @contextmanager
         def get_test_db():
-            return test_session
+            yield test_session
 
         monkeypatch.setattr(db_session, "get_db", get_test_db)
         # Run the tests
@@ -121,10 +123,14 @@ def data_db(monkeypatch):
 
 
 @pytest.fixture
-def client():
-    """Get a TestClient instance that reads/write to the test database."""
+def client(data_db):
+    """Get a TestClient instance that reads/write to the test database.
 
-    yield TestClient(app)
+    Depends on data_db to ensure database exists before client connects.
+    """
+
+    with TestClient(app) as test_client:
+        yield test_client
 
 
 @pytest.fixture
