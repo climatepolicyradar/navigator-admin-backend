@@ -6,6 +6,7 @@ AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -16,6 +17,7 @@ from fastapi_health import health
 from fastapi_pagination import add_pagination
 from fastapi_utils.timing import add_timing_middleware
 
+from app import config
 from app.api.api_v1.routers import (
     analytics_router,
     app_token_router,
@@ -34,6 +36,8 @@ from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.service.health import is_database_online
+from app.telemetry import Telemetry
+from app.telemetry_config import ServiceManifest, TelemetryConfig
 
 _ALLOW_ORIGIN_REGEX = (
     r"http://localhost:3000|"
@@ -47,12 +51,41 @@ _ALLOW_ORIGIN_REGEX = (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.INFO)
 
+app_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(app_dir)
+manifest_path = os.path.join(root_dir, "service-manifest.json")
+
 
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
     """Run startup and shutdown events."""
     run_migrations(engine)
     yield
+
+
+try:
+    otel_config = TelemetryConfig.from_service_manifest(
+        ServiceManifest.from_file(manifest_path), config.ENV, "0.1.0"
+    )
+except Exception as e:
+    _LOGGER.error(
+        f"Failed to load service manifest from {manifest_path}: {type(e).__name__}: {str(e)}",
+        exc_info=True,
+    )
+    otel_config = TelemetryConfig(
+        service_name="navigator-admin-backend",
+        namespace_name="navigator",
+        service_version="0.0.0",
+        environment=config.ENV,
+        otlp_endpoint=(
+            "https://otel.prod.climatepolicyradar.org"
+            if config.ENV == "production"
+            else "https://otel.staging.climatepolicyradar.org"
+        ),
+    )
+
+telemetry = Telemetry(otel_config)
+tracer = telemetry.get_tracer()
 
 
 app = FastAPI(
@@ -167,3 +200,7 @@ if __name__ == "__main__":
         port=8888,
         log_config=DEFAULT_LOGGING,
     )  # type: ignore
+
+
+telemetry.instrument_fastapi(app)
+telemetry.setup_exception_hook()

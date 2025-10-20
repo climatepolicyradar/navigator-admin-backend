@@ -18,6 +18,7 @@ def mock_bad_family_repo(repo, monkeypatch: MonkeyPatch, mocker):
         q: str,
         org_id: Optional[int],
         geography: Optional[list[str]],
+        corpus: Optional[list[str]],
     ) -> list[FamilyReadDTO]:
         raise RepositoryError("Bad Repo")
 

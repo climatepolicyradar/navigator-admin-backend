@@ -1,52 +1,56 @@
 [tool.poetry]
 name = "admin_backend"
-version = "2.21.2"
+version = "2.21.5"
 description = ""
 authors = ["CPR-dev-team <tech@climatepolicyradar.org>"]
 packages = [{ include = "app" }, { include = "tests" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.103.0"
+fastapi = "^0.118.0"
 fastapi-health = "^0.4.0"
-fastapi-pagination = "^0.12.9"
+fastapi-pagination = "^0.14.2"
 python-slugify = "^6.1.2"
 requests = "^2.32"
 requests-toolbelt = "^1.0.0"
 SQLAlchemy = "^1.4.53"
 SQLAlchemy-Utils = "^0.38.2"
-uvicorn = { extras = ["standard"], version = "^0.32.1" }
-json-logging = "^1.3.0"
-httpx = "^0.24.1"
+uvicorn = { extras = ["standard"], version = "^0.37.0" }
+json-logging = "^1.5.1"
+httpx = "^0.28.1"
 psycopg2-binary = "^2.9.3"
-pylint = "^3.2.7"
+pylint = "^3.3.8"
 pyjwt = "^2.8.0"
 passlib = "^1.7.4"
 python-multipart = "^0.0.20"
-pip = "^24.2"
+pip = "^25.2"
 poetry = "^1.6.1"
-boto3 = "^1.34.151"
-moto = "^5.1.5"
+boto3 = "^1.40.43"
+moto = "^5.1.13"
 types-sqlalchemy = "^1.4.53.38"
 urllib3 = "^2.5.0"
-db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.9.17" }
+db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.9.21" }
 navigator-notify = { git = "https://github.com/climatepolicyradar/navigator-notify.git", tag = "v0.0.2-beta" }
 bcrypt = "4.0.1"
-fastapi-cli = "^0.0.5"
+fastapi-cli = "^0.0.13"
 pytest-watch = "^4.2.0"
 fastapi-utils = { version = "0.8.0", extras = ["all"] }
 python-dateutil = "^2.9.0.post0"
+opentelemetry-instrumentation-fastapi = ">=0.54b0"
+opentelemetry-sdk = ">=1.33.0"
+opentelemetry-exporter-otlp = ">=1.33.0"
+opentelemetry-instrumentation-sqlalchemy = ">=0.54b0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^3.8.0"
 python-dotenv = "^1.1.0"
-pytest = "^8.3.2"
+pytest = "^8.4.2"
 pytest-dotenv = "^0.5.2"
-pytest-mock = "^3.7.0"
-black = "^24.4.2"
-pyright = "1.1.394"
+pytest-mock = "^3.15.1"
+black = "^25.9.0"
+pyright = "1.1.406"
 pytest-asyncio = "^0.24.0"
-ruff = "^0.7.3"
+ruff = "^0.13.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

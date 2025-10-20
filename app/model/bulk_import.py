@@ -1,18 +1,32 @@
+import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseModel, RootModel
+from pydantic import AnyHttpUrl, BaseModel, RootModel, model_validator
 
 from app.model.collection import CollectionCreateDTO, CollectionWriteDTO
 from app.model.document import DocumentCreateDTO, DocumentWriteDTO
 from app.model.event import EventCreateDTO, EventWriteDTO
 from app.model.family import FamilyCreateDTO, FamilyWriteDTO
 
-Metadata = RootModel[Dict[str, Union[str, List[str]]]]
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
+
+
+class Metadata(RootModel[dict[str, Union[str, list[str]]]]):
+    @model_validator(mode="after")
+    def _sort(self) -> "Metadata":
+        ordered: dict[str, Union[str, list[str]]] = {}
+        for key in self.root.keys():
+            value = self.root[key]
+            if isinstance(value, list):
+                ordered[key] = sorted(value)
+            else:
+                ordered[key] = value
+        self.root = ordered
+        return self
 
 
 class BulkImportCollectionDTO(BaseModel):
@@ -128,11 +142,16 @@ class BulkImportFamilyDTO(BaseModel):
             metadata=family.metadata,
             collections=sorted(family.collections),
             corpus_import_id=family.corpus_import_id,
-            concepts=family.concepts,
+            concepts=sorted(
+                family.concepts or [], key=lambda x: (x["relation"], x["id"])
+            ),
         )
 
         self.collections = sorted(self.collections)
         self.geographies = sorted(self.geographies)
+        self.concepts = sorted(
+            self.concepts or [], key=lambda x: (x["relation"], x["id"])
+        )
 
         keys = set(self.__class__.model_fields.keys())
         is_different = self.model_dump(include=keys) != comparison_dto.model_dump(
@@ -251,6 +270,7 @@ class BulkImportEventDTO(BaseModel):
             date=self.date,
             event_type_value=self.event_type_value,
             metadata=self.metadata.model_dump(),
+            family_document_import_id=self.family_document_import_id,
         )
 
     def is_different_from(self, event, event_metadata):
@@ -276,6 +296,15 @@ class BulkImportEventDTO(BaseModel):
         return is_different
 
 
+def serialize_value(value):
+    """Convert a value to a serializable format."""
+    if hasattr(value, "model_dump"):
+        return value.model_dump()
+    if hasattr(value, "dict"):
+        return value.dict()
+    return value
+
+
 def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) -> None:
     """
     Log the differences between two DTOs.
@@ -289,5 +318,12 @@ def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) ->
         current_value = getattr(current_dto, key)
         if update_value != current_value:
             _LOGGER.info(
-                f"🔀 Change detected in {key}: {current_value} => {update_value}"
+                json.dumps(
+                    {
+                        "change_detected": key,
+                        "before": serialize_value(current_value),
+                        "after": serialize_value(update_value),
+                    },
+                    default=str,
+                )
             )

@@ -16,3 +16,4 @@ os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URI
 STATEMENT_TIMEOUT = os.getenv("STATEMENT_TIMEOUT", 10000)  # ms
 
 TOKEN_SECRET_KEY = os.getenv("TOKEN_SECRET_KEY")
+ENV = os.getenv("ENV", "development")

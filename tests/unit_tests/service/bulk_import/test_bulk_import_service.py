@@ -2,12 +2,16 @@ import json
 import logging
 import os
 import re
-from unittest.mock import ANY, Mock, patch
+from datetime import datetime
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
+from db_client.models.dfce.family import FamilyDocument
+from sqlalchemy.orm import Session
 
 import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
+from app.model.family import FamilyReadDTO
 from tests.helpers.bulk_import import (
     default_collection,
     default_document,
@@ -192,38 +196,8 @@ def test_save_documents_when_data_invalid(validation_service_mock):
     test_data = [{"import_id": "invalid"}]
 
     with pytest.raises(ValidationError) as e:
-        bulk_import_service.save_documents(test_data, "test", 1)
+        bulk_import_service.save_documents(test_data, "test")
     assert "Error" == e.value.message
-
-
-@patch("app.service.bulk_import.generate_slug", Mock(return_value="test-slug_1234"))
-def test_do_not_save_documents_over_bulk_import_limit(
-    validation_service_mock, document_repo_mock, monkeypatch
-):
-    document_repo_mock.return_empty = True
-    test_data = [
-        {
-            "import_id": "test.new.document.0",
-            "family_import_id": "test.new.family.0",
-            "variant_name": "Original Language",
-            "metadata": {"color": ["blue"]},
-            "title": "",
-            "source_url": None,
-            "user_language_name": "",
-        },
-        {
-            "import_id": "test.new.document.1",
-            "family_import_id": "test.new.family.1",
-            "variant_name": "Original Language",
-            "metadata": {"color": ["blue"]},
-            "title": "",
-            "source_url": None,
-            "user_language_name": "",
-        },
-    ]
-
-    saved_documents = bulk_import_service.save_documents(test_data, "test", 1)
-    assert ["test.new.document.0"] == saved_documents
 
 
 def test_save_events_with_correct_metadata(validation_service_mock, event_repo_mock):
@@ -305,6 +279,139 @@ def test_save_families_skips_update_when_no_changes(
     assert result == []
 
 
+@patch("app.service.bulk_import.family_repository.update")
+@patch("app.service.bulk_import.family_repository.get")
+def test_save_families_skips_update_when_no_changes_to_metadata_regardless_of_ordering(
+    mock_get,
+    mock_update,
+    corpus_repo_mock,
+    geography_repo_mock,
+    validation_service_mock,
+):
+    corpus_import_id = "test.corpus.0.n0000"
+    saved_metadata = {"A": [], "B": ["1", "2", "3"], "C": []}
+    saved_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": saved_metadata,
+        "collections": [],
+    }
+
+    saved_family_dto = FamilyReadDTO(
+        import_id=saved_family["import_id"],
+        title=saved_family["title"],
+        summary=saved_family["summary"],
+        geographies=saved_family["geographies"],
+        category=saved_family["category"],
+        metadata=saved_metadata,
+        collections=saved_family["collections"],
+        status="",
+        slug="",
+        events=[],
+        documents=[],
+        published_date=None,
+        last_updated_date=None,
+        created=datetime.now(),
+        last_modified=datetime.now(),
+        organisation="",
+        corpus_import_id=corpus_import_id,
+        corpus_title="",
+        corpus_type="",
+    )
+    mock_get.return_value = saved_family_dto
+
+    metadata_different_order = {"C": [], "A": [], "B": ["3", "1", "2"]}
+    new_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": metadata_different_order,
+        "collections": [],
+    }
+    result = bulk_import_service.save_families([new_family], corpus_import_id)
+
+    assert mock_update.call_count == 0
+    assert result == []
+
+
+@patch("app.service.bulk_import.family_repository.update")
+@patch("app.service.bulk_import.family_repository.get")
+def test_save_families_skips_update_when_no_changes_to_concepts_regardless_of_ordering(
+    mock_get,
+    mock_update,
+    corpus_repo_mock,
+    geography_repo_mock,
+    validation_service_mock,
+):
+    corpus_import_id = "test.corpus.0.n0000"
+    saved_concepts = [
+        {"id": "a", "relation": "1"},
+        {"id": "b", "relation": "2"},
+        {"id": "c", "relation": "2"},
+        {"id": "d", "relation": "3"},
+    ]
+    saved_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": {},
+        "collections": [],
+        "concepts": saved_concepts,
+    }
+
+    saved_family_dto = FamilyReadDTO(
+        import_id=saved_family["import_id"],
+        title=saved_family["title"],
+        summary=saved_family["summary"],
+        geographies=saved_family["geographies"],
+        category=saved_family["category"],
+        metadata={},
+        collections=saved_family["collections"],
+        status="",
+        slug="",
+        events=[],
+        documents=[],
+        published_date=None,
+        last_updated_date=None,
+        created=datetime.now(),
+        last_modified=datetime.now(),
+        organisation="",
+        corpus_import_id=corpus_import_id,
+        corpus_title="",
+        corpus_type="",
+        concepts=saved_concepts,
+    )
+    mock_get.return_value = saved_family_dto
+
+    concepts_different_order = [
+        {"id": "d", "relation": "3"},
+        {"id": "c", "relation": "2"},
+        {"id": "a", "relation": "1"},
+        {"id": "b", "relation": "2"},
+    ]
+    new_family = {
+        "import_id": "test.new.family.1000",
+        "title": "title",
+        "summary": "summary",
+        "geographies": ["XAA"],
+        "category": "Test",
+        "metadata": {},
+        "collections": [],
+        "concepts": concepts_different_order,
+    }
+    result = bulk_import_service.save_families([new_family], corpus_import_id)
+
+    assert mock_update.call_count == 0
+    assert result == []
+
+
 def test_save_documents_skips_update_when_no_changes(
     document_repo_mock, corpus_repo_mock, validation_service_mock
 ):
@@ -319,9 +426,7 @@ def test_save_documents_skips_update_when_no_changes(
         }
     ]
 
-    result = bulk_import_service.save_documents(
-        test_data, "test_corpus_id", document_limit=1
-    )
+    result = bulk_import_service.save_documents(test_data, "test_corpus_id")
 
     assert document_repo_mock.update.call_count == 0
     assert result == []
@@ -336,7 +441,7 @@ def test_save_events_skips_update_when_no_changes(
 ):
     test_data = [
         {
-            "import_id": "test.new.collection.0",
+            "import_id": "test.new.event.0",
             "family_import_id": "test.family.1.0",
             "family_document_import_id": None,
             "event_title": "title",
@@ -377,3 +482,68 @@ def test_create_bulk_import_summary_when_no_data_to_import(data):
     summary = bulk_import_service._create_summary(data)
 
     assert summary == "🗒️ No data to import."
+
+
+def test_filter_event_data_returns_event_when_related_document_exists():
+    db_mock = MagicMock(spec=Session)
+    db_mock.query.return_value.filter.return_value.one_or_none.return_value = (
+        FamilyDocument(import_id="test.document.1.0")
+    )
+
+    event_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": "test.document.1.0",
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+            "metadata": {},
+        }
+    ]
+
+    result = bulk_import_service._filter_event_data(event_data, db_mock)
+
+    assert result == event_data
+
+
+def test_filter_event_data_returns_event_when_it_is_not_linked_to_a_document():
+    db_mock = MagicMock(spec=Session)
+
+    event_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": None,
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+            "metadata": {},
+        }
+    ]
+
+    result = bulk_import_service._filter_event_data(event_data, db_mock)
+
+    assert result == event_data
+
+
+def test_filter_event_data_does_not_return_event_when_related_document_does_not_exist():
+
+    db_mock = MagicMock(spec=Session)
+    db_mock.query.return_value.filter.return_value.one_or_none.return_value = None
+
+    event_data = [
+        {
+            "import_id": "test.new.event.0",
+            "family_import_id": "test.family.1.0",
+            "family_document_import_id": "test.document.1.0",
+            "event_title": "title",
+            "date": "2020-01-01",
+            "event_type_value": "Amended",
+            "metadata": {},
+        }
+    ]
+
+    result = bulk_import_service._filter_event_data(event_data, db_mock)
+
+    assert result == []

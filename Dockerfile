@@ -19,7 +19,9 @@ RUN poetry config virtualenvs.create false && poetry install --no-directory --no
 # Now code
 COPY ./app ./app
 COPY ./tests ./tests
+# required for telemetry metrics
+COPY service-manifest.json .
 
 EXPOSE 8888
 
-CMD python app/main.py
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8888"]

@@ -298,6 +298,7 @@ EXPECTED_CCLW_CORPUS = {
     "organisation_name": "CCLW",
     "corpus_type_name": "Laws and Policies",
     "corpus_type_description": "Laws and policies",
+    "attribution_url": None,
 }
 EXPECTED_UNFCCC_CORPUS = {
     "import_id": "UNFCCC.corpus.i00000001.n0000",
@@ -314,6 +315,7 @@ EXPECTED_UNFCCC_CORPUS = {
     "organisation_name": "UNFCCC",
     "corpus_type_name": "Intl. agreements",
     "corpus_type_description": "Intl. agreements",
+    "attribution_url": None,
 }
 EXPECTED_CORPORA_KEYS = [
     "import_id",
@@ -326,6 +328,7 @@ EXPECTED_CORPORA_KEYS = [
     "corpus_type_name",
     "corpus_type_description",
     "metadata",
+    "attribution_url",
 ]
 
 EXPECTED_NUM_ORGS = 3
@@ -335,6 +338,7 @@ EXPECTED_CCLW_ORG = {
     "display_name": "CCLW",
     "description": "LSE CCLW team",
     "type": "Academic",
+    "attribution_url": None,
 }
 EXPECTED_UNFCCC_ORG = {
     "id": 2,
@@ -342,6 +346,7 @@ EXPECTED_UNFCCC_ORG = {
     "display_name": "UNFCCC",
     "description": "United Nations Framework Convention on Climate Change",
     "type": "UN",
+    "attribution_url": None,
 }
 
 

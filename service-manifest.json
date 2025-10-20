@@ -1,0 +1,12 @@
+{
+  "service.name": "navigator-admin-backend",
+  "service.namespace": "data-management",
+  "team": "application",
+  "inputs": [
+    { "type": "service", "name": "db-client" },
+    { "type": "service", "name": "rds" },
+    { "type": "service", "name": "navigator-infra" }
+  ],
+  "outputs": [],
+  "repos": ["https://github.com/climatepolicyradar/navigator-admin-backend"]
+}

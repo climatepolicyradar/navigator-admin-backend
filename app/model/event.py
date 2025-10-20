@@ -64,3 +64,4 @@ class EventWriteDTO(BaseModel):
     date: datetime
     event_type_value: str
     metadata: Json
+    family_document_import_id: Optional[str] = None

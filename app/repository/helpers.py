@@ -245,8 +245,9 @@ def construct_raw_sql_query_to_retrieve_all_families(
 
     if filters:
         where_conditions.append(filters)
-        if filter_params:
-            query_params.update(filter_params)
+
+    if filter_params:
+        query_params.update(filter_params)
 
     # Combine WHERE conditions
     if where_conditions:

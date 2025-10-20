@@ -237,6 +237,7 @@ def update(
             event_type_name=new_values["event_type_value"],
             date=new_values["date"],
             valid_metadata=event.metadata,
+            family_document_import_id=event.family_document_import_id or None,
         )
     )
 
@@ -311,3 +312,28 @@ def get_event_metadata(db: Session, import_id: str):
         .one()
         .valid_metadata
     )
+
+
+def get_single_event(db: Session, import_id: str) -> Optional[EventReadDTO]:
+    """
+    Gets a single family event from the repository.
+
+    :param db Session: The database connection.
+    :param str import_id: The import_id of the event.
+    :return Optional[EventReadDTO]: A single family event or nothing.
+    """
+    family_event = (
+        db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
+    )
+    if family_event:
+        return EventReadDTO(
+            import_id=cast(str, family_event.import_id),
+            event_title=cast(str, family_event.title),
+            date=cast(datetime, family_event.date),
+            family_import_id=cast(str, family_event.family_import_id),
+            family_document_import_id=family_event.family_document_import_id,
+            event_type_value=cast(str, family_event.event_type_name),
+            event_status=cast(EventStatus, family_event.status),
+            created=cast(datetime, family_event.created),
+            last_modified=cast(datetime, family_event.last_modified),
+        )

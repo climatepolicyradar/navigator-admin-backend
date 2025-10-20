@@ -12,6 +12,7 @@ import time
 from typing import Any, Optional
 from uuid import uuid4
 
+from db_client.models.dfce.family import FamilyDocument
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
 from db_client.models.organisation.counters import CountedEntity
 from pydantic import ConfigDict, validate_call
@@ -40,9 +41,6 @@ from app.model.bulk_import import (
 )
 from app.repository.helpers import generate_slug
 from app.service.database_dump import delete_local_file, get_database_dump
-
-# Any increase to this number should first be discussed with the Platform Team
-DEFAULT_DOCUMENT_LIMIT = 1000
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
@@ -278,7 +276,6 @@ def save_families(
 def save_documents(
     document_data: list[dict[str, Any]],
     corpus_import_id: str,
-    document_limit: int,
     db: Optional[Session] = None,
 ) -> list[str]:
     """
@@ -286,7 +283,6 @@ def save_documents(
 
     :param list[dict[str, Any]] document_data: The data to use for creating documents.
     :param str corpus_import_id: The import_id of the corpus the documents belong to.
-    :param int document_limit: The max number of documents to be saved in this session.
     :param Optional[Session] db: The database session to use for saving documents or None.
     :return list[str]: The new import_ids for the saved documents.
     """
@@ -304,31 +300,30 @@ def save_documents(
 
     for doc in document_data:
         import_id = doc["import_id"]
-        if total_documents_saved < document_limit:
-            existing_document = document_repository.get(db, import_id)
-            if not existing_document:
-                _LOGGER.info(f"Importing document {import_id}")
-                create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
+        existing_document = document_repository.get(db, import_id)
+        if not existing_document:
+            _LOGGER.info(f"Importing document {import_id}")
+            create_dto = BulkImportDocumentDTO(**doc).to_document_create_dto()
+            slug = generate_slug(
+                db=db, title=create_dto.title, created_slugs=document_slugs
+            )
+            document_repository.create(db, create_dto, slug)
+            document_slugs.add(slug)
+            document_import_ids.append(import_id)
+            total_documents_saved += 1
+        else:
+            update_document = BulkImportDocumentDTO(**doc)
+            if update_document.is_different_from(existing_document):
+                _LOGGER.info(f"Updating document {import_id}")
                 slug = generate_slug(
-                    db=db, title=create_dto.title, created_slugs=document_slugs
+                    db=db, title=update_document.title, created_slugs=document_slugs
                 )
-                document_repository.create(db, create_dto, slug)
+                document_repository.update(
+                    db, import_id, update_document.to_document_write_dto(), slug
+                )
                 document_slugs.add(slug)
                 document_import_ids.append(import_id)
                 total_documents_saved += 1
-            else:
-                update_document = BulkImportDocumentDTO(**doc)
-                if update_document.is_different_from(existing_document):
-                    _LOGGER.info(f"Updating document {import_id}")
-                    slug = generate_slug(
-                        db=db, title=update_document.title, created_slugs=document_slugs
-                    )
-                    document_repository.update(
-                        db, import_id, update_document.to_document_write_dto(), slug
-                    )
-                    document_slugs.add(slug)
-                    document_import_ids.append(import_id)
-                    total_documents_saved += 1
 
     _LOGGER.info(
         f"⏱️ Saved {total_documents_saved} documents in {_get_duration(start_time)} seconds"
@@ -363,7 +358,7 @@ def save_events(
 
     for event in event_data:
         import_id = event["import_id"]
-        existing_event = event_repository.get(db, import_id)
+        existing_event = event_repository.get_single_event(db, import_id)
         if not existing_event:
             _LOGGER.info(f"Importing event {import_id}")
             dto = BulkImportEventDTO(**event).to_event_create_dto()
@@ -392,7 +387,7 @@ def save_events(
 
 
 def _filter_event_data(
-    event_data: list[dict[str, Any]], saved_documents: list[str]
+    event_data: list[dict[str, Any]], db: Session
 ) -> list[dict[str, Any]]:
     """
     Filters a list of event data based on the import ids of saved documents.
@@ -400,16 +395,16 @@ def _filter_event_data(
     or are not linked to a document.
 
     :param list[dict[str, Any]] event_data: The event data to be filtered.
-    :param list[str] saved_documents: The import ids of documents that have been saved.
+    :param Session db: The database session to use.
     :return list[dict[str, Any]]: A filtered list of event data.
     """
-
-    saved_documents_set = set(saved_documents)
     filtered_event_data = [
         event
         for event in event_data
         if not event.get("family_document_import_id")
-        or event.get("family_document_import_id") in saved_documents_set
+        or db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == event.get("family_document_import_id"))
+        .one_or_none()
     ]
 
     return filtered_event_data
@@ -443,14 +438,12 @@ def _create_summary(data: dict[str, Any]) -> str:
 def import_data(
     data: dict[str, Any],
     corpus_import_id: str,
-    document_limit: Optional[int] = None,
 ) -> None:
     """
     Imports data for a given corpus_import_id.
 
     :param dict[str, Any] data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
-    :param Optional[int] document_limit: The max number of documents to be saved in this session or None.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
@@ -484,17 +477,12 @@ def import_data(
             result["documents"] = save_documents(
                 document_data,
                 corpus_import_id,
-                (
-                    document_limit
-                    if document_limit is not None
-                    else DEFAULT_DOCUMENT_LIMIT
-                ),
                 db,
             )
         if event_data:
             _LOGGER.info("💾 Saving events")
             result["events"] = save_events(
-                _filter_event_data(event_data, result.get("documents", [])),
+                _filter_event_data(event_data, db),
                 corpus_import_id,
                 db,
             )
