@@ -27,6 +27,7 @@ jobs:
     uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator-without-version.yml@v21
     with:
       python-version: 3.11
+      poetry-version: 2.2
 
   test:
     if: |
