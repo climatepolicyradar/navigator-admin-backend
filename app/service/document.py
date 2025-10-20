@@ -127,11 +127,14 @@ def update(
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[documentDTO]: The updated document or None if not updated.
-    """
-    validate_import_id(import_id)
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return update(import_id, document, user, session)
+
+    validate_import_id(import_id)
 
     doc = get(import_id)
     if doc is None:
@@ -183,11 +186,14 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[documentDTO]: The new created document or
     None if unsuccessful.
-    """
-    id.validate(document.family_import_id)
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return create(document, user, session)
+
+    id.validate(document.family_import_id)
 
     if document.variant_name == "":
         raise ValidationError("Variant name is empty")
@@ -235,11 +241,14 @@ def delete(
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted None if not.
-    """
-    id.validate(import_id)
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return delete(import_id, user, session)
+
+    id.validate(import_id)
 
     doc = get(import_id)
     if doc is None:

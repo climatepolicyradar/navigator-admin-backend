@@ -41,7 +41,8 @@ def get(
     :raises RepositoryError: If there is an error during retrieval.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return get(organisation, session)
 
     return organisation_repo.get_by_id(db, organisation)
 
@@ -55,7 +56,7 @@ def create(organisation: OrganisationCreateDTO) -> int:
     :raises RepositoryError: If there is an error during creation.
     :return int: The id of the newly created organisation.
     """
-    with db_session.get_db_session() as db:
+    with db_session.get_db() as db:
         try:
             return organisation_repo.create(db, organisation)
         except Exception as e:
@@ -77,7 +78,7 @@ def update(
     :raises Exception: If there is an error during the update.
     :return OrganisationReadDTO: The updated organisation.
     """
-    with db_session.get_db_session() as db:
+    with db_session.get_db() as db:
         try:
             if organisation_repo.update(db, id, organisation):
                 db.commit()
@@ -87,4 +88,4 @@ def update(
             db.rollback()
             raise e
 
-        return get(id)
+        return get(id, db)

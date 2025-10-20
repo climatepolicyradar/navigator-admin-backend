@@ -117,7 +117,8 @@ def validate(import_ids: set[str], db: Optional[Session]) -> None:
     :raises ValidationError: raised if any of the import_ids don't exist.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return validate(import_ids, session)
 
     if collection_repo.validate(db, import_ids) is False:
         raise ValidationError("One or more of the collections to update does not exist")
@@ -138,10 +139,12 @@ def update(
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[CollectionDTO]: The updated collection or None if not updated.
-    """
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return update(import_id, collection, session)
 
     # TODO: implement changing of a collection's organisation
     # org_id = organisation.get_id_from_name(db, collection.organisation)
@@ -173,10 +176,12 @@ def create(
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return str: The new import_id for the collection.
-    """
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return create(collection, org_id, session)
 
     try:
         if collection.import_id:
@@ -203,11 +208,14 @@ def delete(import_id: str, db: Optional[Session] = None) -> bool:
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
-    """
-    id.validate(import_id)
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return delete(import_id, session)
+
+    id.validate(import_id)
 
     try:
         db.begin_nested()

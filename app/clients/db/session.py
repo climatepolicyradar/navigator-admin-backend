@@ -27,6 +27,7 @@ if db is None:
 
 import logging
 from contextlib import contextmanager
+from functools import wraps
 from typing import Generator
 
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
@@ -94,6 +95,9 @@ def with_database():
     """
 
     def inner(func):
+        """Create a decorator that takes a function & creates a wrapper"""
+
+        @wraps(func)
         def wrapper(*args, **kwargs):
             context = f"{func.__module__}::{func.__name__}{args}"
             with get_db() as db:

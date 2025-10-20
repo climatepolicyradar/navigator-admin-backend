@@ -31,6 +31,7 @@ def _contains_special_chars(input: str) -> bool:
     return False
 
 
+@db_session.with_database()
 def create_configuration_token(
     input: AppTokenCreateDTO,
     years: Optional[int] = None,
@@ -53,9 +54,31 @@ def create_configuration_token(
         _LOGGER.error("TOKEN_SECRET_KEY environment variable not set")
         raise ValidationError("TOKEN_SECRET_KEY is not set")
 
+    # If no db session provided, create one with proper cleanup
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return _create_token_with_db(input, years, session, token_secret)
+    else:
+        return _create_token_with_db(input, years, db, token_secret)
 
+
+def _create_token_with_db(
+    input: AppTokenCreateDTO,
+    years: Optional[int],
+    db: Session,
+    token_secret: str,
+) -> str:
+    """Internal helper to create token with a database session.
+
+    :param AppTokenCreateDTO input: A JSON representation of the
+        configurable options for a custom app.
+    :param Optional[int] years: Number of years until token expiry
+    :param Session db: A database session to query against
+    :param str token_secret: The secret key for encoding the token
+    :return str: A JWT token containing the encoded allowed corpora
+    :raises ValidationError: If theme contains special chars, corpora
+        don't exist, or config is invalid.
+    """
     if _contains_special_chars(input.theme):
         _LOGGER.error("Theme must not contain special characters, including spaces")
         raise ValidationError("Invalid subject provided")

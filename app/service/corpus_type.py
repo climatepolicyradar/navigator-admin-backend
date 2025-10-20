@@ -35,7 +35,8 @@ def get(
     :raises RepositoryError: If there is an error during retrieval.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return get(corpus_type_name, session)
 
     return corpus_type_repo.get(db, corpus_type_name)
 
@@ -49,9 +50,12 @@ def create(corpus_type: CorpusTypeCreateDTO, db: Optional[Session] = None) -> st
     :return CorpusTypeReadDTO: The created corpus type.
     :raises ValidationError: If the corpus type data is invalid.
     :raises RepositoryError: If there is an error during creation.
+
+    Note: db parameter is injected by @with_database() decorator.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return create(corpus_type, session)
 
     if corpus_type.name == "":
         raise ValidationError("Corpus type name cannot be empty.")

@@ -166,7 +166,8 @@ def save_collections(
     """
     start_time = time.time()
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return save_collections(collection_data, corpus_import_id, session)
 
     _LOGGER.info("🔍 Validating collection data...")
     validation.validate_collections(collection_data, corpus_import_id)
@@ -228,7 +229,8 @@ def save_families(
     """
     start_time = time.time()
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return save_families(family_data, corpus_import_id, session)
 
     _LOGGER.info("🔍 Validating family data...")
     validation.validate_families(family_data, corpus_import_id)
@@ -286,10 +288,11 @@ def save_documents(
     :param Optional[Session] db: The database session to use for saving documents or None.
     :return list[str]: The new import_ids for the saved documents.
     """
-    start_time = time.time()
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return save_documents(document_data, corpus_import_id, session)
 
+    start_time = time.time()
     _LOGGER.info("🔍 Validating document data...")
     validation.validate_documents(document_data, corpus_import_id)
     _LOGGER.info("✅ Validation successful")
@@ -345,9 +348,11 @@ def save_events(
     :param Optional[Session] db: The database session to use for saving events or None.
     :return list[str]: The new import_ids for the saved events.
     """
-    start_time = time.time()
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return save_events(event_data, corpus_import_id, session)
+
+    start_time = time.time()
 
     _LOGGER.info("🔍 Validating event data...")
     validation.validate_events(event_data, corpus_import_id)
@@ -454,60 +459,59 @@ def import_data(
     end_message = ""
 
     _LOGGER.info("Getting DB session")
-    db = db_session.get_db()
+    with db_session.get_db() as db:
+        collection_data = data["collections"] if "collections" in data else None
+        family_data = data["families"] if "families" in data else None
+        document_data = data["documents"] if "documents" in data else None
+        event_data = data["events"] if "events" in data else None
 
-    collection_data = data["collections"] if "collections" in data else None
-    family_data = data["families"] if "families" in data else None
-    document_data = data["documents"] if "documents" in data else None
-    event_data = data["events"] if "events" in data else None
+        result = {}
 
-    result = {}
+        try:
+            if collection_data:
+                _LOGGER.info("💾 Saving collections")
+                result["collections"] = save_collections(
+                    collection_data, corpus_import_id, db
+                )
+            if family_data:
+                _LOGGER.info("💾 Saving families")
+                result["families"] = save_families(family_data, corpus_import_id, db)
+            if document_data:
+                _LOGGER.info("💾 Saving documents")
+                result["documents"] = save_documents(
+                    document_data,
+                    corpus_import_id,
+                    db,
+                )
+            if event_data:
+                _LOGGER.info("💾 Saving events")
+                result["events"] = save_events(
+                    _filter_event_data(event_data, db),
+                    corpus_import_id,
+                    db,
+                )
 
-    try:
-        if collection_data:
-            _LOGGER.info("💾 Saving collections")
-            result["collections"] = save_collections(
-                collection_data, corpus_import_id, db
+            db.commit()
+
+            if any([collection_data, family_data, document_data, event_data]):
+                import_uuid = uuid4()
+                upload_bulk_import_json_to_s3(
+                    f"{import_uuid}-request", corpus_import_id, data
+                )
+                upload_bulk_import_json_to_s3(
+                    f"{import_uuid}-result", corpus_import_id, result
+                )
+            else:
+                _LOGGER.info("🗒️ No data to import.")
+
+            end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(result)}"
+        except Exception as e:
+            _LOGGER.error(
+                f"💥 Rolling back transaction due to the following error: {e}",
+                exc_info=True,
             )
-        if family_data:
-            _LOGGER.info("💾 Saving families")
-            result["families"] = save_families(family_data, corpus_import_id, db)
-        if document_data:
-            _LOGGER.info("💾 Saving documents")
-            result["documents"] = save_documents(
-                document_data,
-                corpus_import_id,
-                db,
-            )
-        if event_data:
-            _LOGGER.info("💾 Saving events")
-            result["events"] = save_events(
-                _filter_event_data(event_data, db),
-                corpus_import_id,
-                db,
-            )
-
-        db.commit()
-
-        if any([collection_data, family_data, document_data, event_data]):
-            import_uuid = uuid4()
-            upload_bulk_import_json_to_s3(
-                f"{import_uuid}-request", corpus_import_id, data
-            )
-            upload_bulk_import_json_to_s3(
-                f"{import_uuid}-result", corpus_import_id, result
-            )
-        else:
-            _LOGGER.info("🗒️ No data to import.")
-
-        end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(result)}"
-    except Exception as e:
-        _LOGGER.error(
-            f"💥 Rolling back transaction due to the following error: {e}",
-            exc_info=True,
-        )
-        db.rollback()
-        end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
-    finally:
-        notification_service.send_notification(end_message)
-        trigger_db_dump_upload_to_sql()
+            db.rollback()
+            end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
+        finally:
+            notification_service.send_notification(end_message)
+            trigger_db_dump_upload_to_sql()
