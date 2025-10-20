@@ -6,6 +6,7 @@ AuthEndpoint and the AUTH_TABLE in app/clients/db/models/app/authorisation.py.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -50,6 +51,10 @@ _ALLOW_ORIGIN_REGEX = (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.INFO)
 
+app_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(app_dir)
+manifest_path = os.path.join(root_dir, "service-manifest.json")
+
 
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
@@ -60,15 +65,23 @@ async def lifespan(app_: FastAPI):
 
 try:
     otel_config = TelemetryConfig.from_service_manifest(
-        ServiceManifest.from_file("service-manifest.json"), config.ENV, "0.1.0"
+        ServiceManifest.from_file(manifest_path), config.ENV, "0.1.0"
     )
-except Exception as _:
-    _LOGGER.error("Failed to load service manifest, using defaults")
+except Exception as e:
+    _LOGGER.error(
+        f"Failed to load service manifest from {manifest_path}: {type(e).__name__}: {str(e)}",
+        exc_info=True,
+    )
     otel_config = TelemetryConfig(
         service_name="navigator-admin-backend",
         namespace_name="navigator",
         service_version="0.0.0",
         environment=config.ENV,
+        otlp_endpoint=(
+            "https://otel.prod.climatepolicyradar.org"
+            if config.ENV == "production"
+            else "https://otel.staging.climatepolicyradar.org"
+        ),
     )
 
 telemetry = Telemetry(otel_config)

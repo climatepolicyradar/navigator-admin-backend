@@ -19,6 +19,8 @@ RUN poetry config virtualenvs.create false && poetry install --no-directory --no
 # Now code
 COPY ./app ./app
 COPY ./tests ./tests
+# required for telemetry metrics
+COPY service-manifest.json .
 
 EXPOSE 8888
 
