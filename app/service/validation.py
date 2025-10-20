@@ -56,10 +56,9 @@ def validate_collections(
     :param list[dict[str, Any]] collections: The list of collection objects to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the collection objects.
     """
-    db = db_session.get_db()
-
-    for coll in collections:
-        validate_collection(db, coll, corpus_import_id)
+    with db_session.get_db() as db:
+        for coll in collections:
+            validate_collection(db, coll, corpus_import_id)
 
 
 def validate_family(db: Session, family: dict[str, Any], corpus_import_id: str) -> None:
@@ -86,9 +85,9 @@ def validate_families(families: list[dict[str, Any]], corpus_import_id: str) -> 
     :param list[dict[str, Any]] families: The list of family objects to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the family objects.
     """
-    db = db_session.get_db()
-    for fam in families:
-        validate_family(db, fam, corpus_import_id)
+    with db_session.get_db() as db:
+        for fam in families:
+            validate_family(db, fam, corpus_import_id)
 
 
 def validate_document(
@@ -121,9 +120,9 @@ def validate_documents(documents: list[dict[str, Any]], corpus_import_id: str) -
     :param list[dict[str, Any]] documents: The list of document objects to be validated.
     :param str corpus_import_id: The corpus_import_id to be used for validating the document objects.
     """
-    db = db_session.get_db()
-    for doc in documents:
-        validate_document(db, doc, corpus_import_id)
+    with db_session.get_db() as db:
+        for doc in documents:
+            validate_document(db, doc, corpus_import_id)
 
 
 def validate_event(db: Session, event: dict[str, Any], corpus_import_id: str) -> None:
@@ -158,9 +157,9 @@ def validate_events(events: list[dict[str, Any]], corpus_import_id: str) -> None
     :param str corpus_import_id: The corpus_import_id to be used for
         validating the event objects.
     """
-    db = db_session.get_db()
-    for ev in events:
-        validate_event(db, ev, corpus_import_id)
+    with db_session.get_db() as db:
+        for ev in events:
+            validate_event(db, ev, corpus_import_id)
 
 
 def _collect_import_ids(
@@ -316,9 +315,9 @@ def validate_corpus_exists(corpus_import_id: str) -> None:
     :param str corpus_import_id: The import_id used to find a corpus in the database.
     :raises ValidationError: raised if corpus is not found for the given import_id.
     """
-    db = db_session.get_db()
-    corpus = corpus_repo.get(db, corpus_import_id)
+    with db_session.get_db() as db:
+        corpus = corpus_repo.get(db, corpus_import_id)
 
-    if corpus is None:
-        msg = f"No corpus found for import_id: {corpus_import_id}"
-        raise ValidationError(msg)
+        if corpus is None:
+            msg = f"No corpus found for import_id: {corpus_import_id}"
+            raise ValidationError(msg)

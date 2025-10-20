@@ -98,11 +98,14 @@ def create(
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[eventDTO]: The new created event or
     None if unsuccessful.
-    """
-    id.validate(event.family_import_id)
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return create(event, user, session)
+
+    id.validate(event.family_import_id)
 
     family = family_service.get(event.family_import_id)
     if family is None:
@@ -159,15 +162,18 @@ def update(
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[EventReadDTO]: The updated event or None if not updated.
+
+    Note: db parameter is injected by @with_database() decorator.
     """
+    if db is None:
+        with db_session.get_db() as session:
+            return update(import_id, event, user, session)
+
     validate_import_id(import_id)
 
     existing_event = get(import_id)
     if existing_event is None:
         return None
-
-    if db is None:
-        db = db_session.get_db()
 
     family = family_service.get(existing_event.family_import_id)
     if family is None:
@@ -214,11 +220,14 @@ def delete(import_id: str, user: UserContext, db: Optional[Session] = None) -> b
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
-    """
-    id.validate(import_id)
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return delete(import_id, user, session)
+
+    id.validate(import_id)
 
     event = get(import_id)
     if event is None:

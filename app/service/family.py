@@ -88,7 +88,7 @@ def search(
     :return list[FamilyDTO]: The list of families matching the given
         search terms.
     """
-    with db_session.get_db_session() as db:
+    with db_session.get_db() as db:
         org_id = app_user.restrict_entities_to_user_org(user)
         return family_repo.search(db, search_params, org_id, geography, corpus)
 
@@ -116,11 +116,19 @@ def update(
     """
     Updates a single Family with the values passed.
 
-    :param FamilyDTO family: The DTO with all the values to change (or keep).
+    :param str import_id: The import_id of the Family to update.
+    :param UserContext user: The current user context.
+    :param FamilyWriteDTO family_dto: The DTO with all the values to change (or keep).
+    :param Session db: The database session.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The updated Family or None if not updated.
+
+    Note: db parameter is injected by @with_database() decorator.
     """
+    if db is None:
+        with db_session.get_db() as session:
+            return update(import_id, user, family_dto, session)
 
     # Validate import_id
     validate_import_id(import_id)
@@ -132,9 +140,6 @@ def update(
 
     # Validate category
     category.validate(family_dto.category)
-
-    if db is None:
-        db = db_session.get_db()
 
     # Validate geographies
     geography_ids = geography.get_ids(db, family_dto.geographies)
@@ -191,13 +196,16 @@ def create(
 
     :param FamilyDTO family: The values for the new Family.
     :param UserContext user: The current user context.
+    :param Session db: The database session.
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[FamilyDTO]: The new created Family or None if unsuccessful.
-    """
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return create(family, user, session)
 
     # Validate geographies
     geo_ids = geography.get_ids(db, family.geographies)
@@ -256,19 +264,23 @@ def delete(
 
     :param str import_id: The import_id of the Family to delete.
     :param UserContext user: The current user context.
+    :param Session db: The database session.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return bool: True if deleted else False.
+
+    Note: db parameter is injected by @with_database() decorator.
     """
+    if db is None:
+        with db_session.get_db() as session:
+            return delete(import_id, user, session)
+
     id.validate(import_id)
 
     # Get family we're going to delete.
     family = get(import_id)
     if family is None:
         return None
-
-    if db is None:
-        db = db_session.get_db()
 
     # Validate family belongs to same org as current user.
     entity_org_id = organisation.get_id_from_name(db, family.organisation)

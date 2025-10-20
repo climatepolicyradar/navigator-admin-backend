@@ -34,7 +34,8 @@ def get_corpus_org_id(corpus_import_id: str, db: Optional[Session] = None) -> in
         belongs to or None.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return get_corpus_org_id(corpus_import_id, session)
 
     org_id = corpus_repo.get_corpus_org_id(db, corpus_import_id)
     if org_id is None:
@@ -101,7 +102,8 @@ def validate_import_id(import_id: str, db: Optional[Session] = None) -> None:
     :raises ValidationError: raised should the import_id be invalid.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return validate_import_id(import_id, session)
 
     id.validate(import_id)
 
@@ -126,7 +128,8 @@ def get(import_id: str, db: Optional[Session] = None) -> Optional[CorpusReadDTO]
     :return Optional[CorpusReadDTO]: The corpus found or None.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return get(import_id, session)
 
     validate_import_id(import_id, db)
     try:
@@ -188,11 +191,14 @@ def update(
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the import_id be invalid.
     :return Optional[CorpusReadDTO]: The updated corpus or None if not updated.
-    """
-    validate_import_id(import_id)
 
+    Note: db parameter is injected by @with_database() decorator.
+    """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return update(import_id, corpus, user, session)
+
+    validate_import_id(import_id)
 
     original_corpus = get(import_id)
     if original_corpus is None:
@@ -223,9 +229,12 @@ def create(
     :raises RepositoryError: raised on a database error
     :raises ValidationError: raised should the import_id be invalid.
     :return str: The new created Corpus or None if unsuccessful.
+
+    Note: db parameter is injected by @with_database() decorator.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return create(corpus, user, session)
 
     # Check the corpus type name exists in the database already.
     if not corpus_repo.is_corpus_type_name_valid(db, corpus.corpus_type_name):
@@ -261,9 +270,12 @@ def get_upload_url(corpus_id: str, db: Optional[Session] = None) -> CorpusLogoUp
     :param corpus_id: The ID of the corpus to upload a logo for
     :param user_context: The user context from the request
     :return: Upload URLs for the logo
+
+    Note: db parameter is injected by @with_database() decorator.
     """
     if db is None:
-        db = db_session.get_db()
+        with db_session.get_db() as session:
+            return get_upload_url(corpus_id, session)
 
     validate(db, corpus_id)
 
