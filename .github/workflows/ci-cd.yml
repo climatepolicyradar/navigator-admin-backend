@@ -27,8 +27,9 @@ jobs:
     uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator-without-version.yml@v21
     with:
       python-version: 3.11
+      poetry-version: 2.2
 
-  test:
+  unit-test:
     if: |
       ! cancelled() && always() &&
       ! startsWith(github.ref, 'refs/tags')
@@ -47,6 +48,19 @@ jobs:
           POSTGRES_USER: navigator_admin
           POSTGRES_PASSWORD: password
           POSTGRES_DB: navigator
+
+  integration-test:
+    if: |
+      ! cancelled() && always() &&
+      ! startsWith(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install latest Docker Compose
+        uses: ndeloof/install-compose-action@v0.0.1
+        with:
+          legacy: false
+
+      - uses: actions/checkout@v5
 
       - name: Run Integration Tests
         run: make test TEST=tests/integration_tests
