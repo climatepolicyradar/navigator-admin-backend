@@ -1,5 +1,5 @@
 # trunk-ignore-all
-FROM postgres:14
+FROM postgres:17
 
 # We do not mind root users as this is a dev container
 # trunk-ignore(trivy/DS002)
