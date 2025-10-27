@@ -44,9 +44,10 @@ engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,  # Verify connections before use
     pool_size=10,  # Base connection pool size
-    max_overflow=20,  # Additional connections when pool exhausted - TODO: TOO HIGH?
+    max_overflow=20,  # Additional connections when pool exhausted
     pool_recycle=1800,  # Recycle connections after 30 minutes
     pool_timeout=30,  # Wait up to 30s for a connection before error
+    pool_reset_on_return="rollback",  # Clear connection state on return to pool
     connect_args={"options": f"-c statement_timeout={STATEMENT_TIMEOUT}"},
 )
 
@@ -64,6 +65,7 @@ def get_db() -> Generator[Session, None, None]:
     Context manager for database sessions in service layer.
 
     Ensures sessions are properly closed via context management.
+    Clears the identity map to prevent memory accumulation.
 
     Usage:
         with get_db() as db:
@@ -77,6 +79,12 @@ def get_db() -> Generator[Session, None, None]:
     try:
         yield db
     finally:
+        # Clear identity map to prevent memory leaks.
+        #
+        # Every query loads ORM objects into the session's identity map (a dict).
+        # Without expunge_all(), these objects stay in memory until Python's garbage
+        # collector eventually catches them - so under load, they accumulate quickly.
+        db.expunge_all()
         db.close()
 
 

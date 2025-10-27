@@ -90,7 +90,7 @@ def do_cached_migrations(test_db_url: str):
 def data_db(monkeypatch):
     """Create a fresh test database for each test."""
 
-    test_db_url = SQLALCHEMY_DATABASE_URI  # Use the same db - cannot parrallelize tests
+    test_db_url = SQLALCHEMY_DATABASE_URI  # Use the same db - cannot parallelise tests
 
     test_engine = do_cached_migrations(test_db_url)
     test_session = None
