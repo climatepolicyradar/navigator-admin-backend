@@ -48,8 +48,6 @@ from app.repository.helpers import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
-# --- Projection-only helpers (no ORM entity materialization) -----------------
-
 
 def _get_query() -> sqlalchemy.sql.Select:
     """
@@ -267,7 +265,6 @@ def _row_to_dto(row: Mapping) -> FamilyReadDTO:
         corpus_type=str(row["corpus_type_name"]),
         created=cast(datetime, row["created"]),
         last_modified=cast(datetime, row["last_modified"]),
-        concepts=None,  # intentionally excluded; add via separate lightweight query if needed
     )
 
 
