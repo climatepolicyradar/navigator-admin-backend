@@ -66,11 +66,14 @@ def _get_query() -> sqlalchemy.sql.Select:
     )
 
     # Aggregate slugs per family
+    # Get most recent slug per family (ordered by created desc, take first)
+    # Use PostgreSQL-specific array_agg with ORDER BY clause
     slugs_subq = (
         select(
             Slug.family_import_id.label("fam_id"),
-            func.array_agg(Slug.name).label("slugs"),
+            func.array_agg(text("slug.name ORDER BY slug.created DESC")).label("slugs"),
         )
+        .select_from(Slug)
         .group_by(Slug.family_import_id)
         .subquery()
     )
@@ -108,19 +111,31 @@ def _get_query() -> sqlalchemy.sql.Select:
     )
 
     # Calculate published_date: MIN(date) where event_type_name matches datetime_event_name
-    # Use JSONB @> containment operator: array_column @> jsonb_build_array(value)
-    published_date_expr = (
+    # If no match found, fall back to MIN(date) of all events for that family
+    matching_event_date = (
         select(func.min(FamilyEvent.date))
         .where(
             sqlalchemy.and_(
                 FamilyEvent.family_import_id == Family.import_id,
-                FamilyEvent.valid_metadata["datetime_event_name"].op("@>")(  # type: ignore
-                    func.jsonb_build_array(FamilyEvent.event_type_name)
-                ),
+                FamilyEvent.valid_metadata["datetime_event_name"][  # type: ignore
+                    0
+                ].astext.cast(  # type: ignore
+                    sqlalchemy.Text
+                )
+                == FamilyEvent.event_type_name,
             )
         )
         .scalar_subquery()
-        .label("published_date")
+    )
+
+    fallback_min_date = (
+        select(func.min(FamilyEvent.date))
+        .where(FamilyEvent.family_import_id == Family.import_id)
+        .scalar_subquery()
+    )
+
+    published_date_expr = func.coalesce(matching_event_date, fallback_min_date).label(
+        "published_date"
     )
 
     # Calculate last_updated_date: MAX(date) where date <= current timestamp
@@ -193,6 +208,7 @@ def _get_query() -> sqlalchemy.sql.Select:
             last_updated_date_expr,
             Family.created.label("created"),
             Family.last_modified.label("last_modified"),
+            Family.concepts.label("concepts"),
             FamilyMetadata.value.label("metadata"),
             Corpus.import_id.label("corpus_import_id"),
             Corpus.title.label("corpus_title"),
@@ -222,6 +238,7 @@ def _get_query() -> sqlalchemy.sql.Select:
             Family.family_category,
             Family.created,
             Family.last_modified,
+            Family.concepts,
             FamilyMetadata.value,
             Corpus.import_id,
             Corpus.title,
@@ -244,6 +261,7 @@ def _row_to_dto(row: Mapping) -> FamilyReadDTO:
     """
     geos = [str(v) for v in (row["geography_values"] or [])]
     slugs = row["slugs"] or []
+    concepts = row.get("concepts") or []
     return FamilyReadDTO(
         import_id=str(row["import_id"]),
         title=str(row["family_title"]),
@@ -265,6 +283,7 @@ def _row_to_dto(row: Mapping) -> FamilyReadDTO:
         corpus_type=str(row["corpus_type_name"]),
         created=cast(datetime, row["created"]),
         last_modified=cast(datetime, row["last_modified"]),
+        concepts=concepts,
     )
 
 
