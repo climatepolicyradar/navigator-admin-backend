@@ -109,6 +109,78 @@ def _get_query() -> sqlalchemy.sql.Select:
         .subquery()
     )
 
+    # Calculate published_date: MIN(date) where event_type_name matches datetime_event_name
+    # Use JSONB @> containment operator: array_column @> jsonb_build_array(value)
+    published_date_expr = (
+        select(func.min(FamilyEvent.date))
+        .where(
+            sqlalchemy.and_(
+                FamilyEvent.family_import_id == Family.import_id,
+                FamilyEvent.valid_metadata["datetime_event_name"].op("@>")(  # type: ignore
+                    func.jsonb_build_array(FamilyEvent.event_type_name)
+                ),
+            )
+        )
+        .scalar_subquery()
+        .label("published_date")
+    )
+
+    # Calculate last_updated_date: MAX(date) where date <= current timestamp
+    last_updated_date_expr = (
+        select(func.max(FamilyEvent.date))
+        .where(
+            sqlalchemy.and_(
+                FamilyEvent.family_import_id == Family.import_id,
+                FamilyEvent.date <= func.current_timestamp(),
+            )
+        )
+        .scalar_subquery()
+        .label("last_updated_date")
+    )
+
+    # Calculate family_status based on document states
+    family_status_expr = (
+        sqlalchemy.case(
+            (
+                ~sqlalchemy.exists(
+                    select(sqlalchemy.literal(1)).where(
+                        FamilyDocument.family_import_id == Family.import_id
+                    )
+                ),
+                sqlalchemy.literal(FamilyStatus.CREATED.value),
+            ),
+            else_=sqlalchemy.case(
+                (
+                    sqlalchemy.exists(
+                        select(sqlalchemy.literal(1)).where(
+                            sqlalchemy.and_(
+                                FamilyDocument.family_import_id == Family.import_id,
+                                FamilyDocument.document_status
+                                == DocumentStatus.PUBLISHED,
+                            )
+                        )
+                    ),
+                    sqlalchemy.literal(FamilyStatus.PUBLISHED.value),
+                ),
+                else_=sqlalchemy.case(
+                    (
+                        sqlalchemy.exists(
+                            select(sqlalchemy.literal(1)).where(
+                                sqlalchemy.and_(
+                                    FamilyDocument.family_import_id == Family.import_id,
+                                    FamilyDocument.document_status
+                                    == DocumentStatus.CREATED,
+                                )
+                            )
+                        ),
+                        sqlalchemy.literal(FamilyStatus.CREATED.value),
+                    ),
+                    else_=sqlalchemy.literal(FamilyStatus.DELETED.value),
+                ),
+            ),
+        )
+    ).label("family_status")
+
     empty_arr = func.cast([], ARRAY(String))
 
     # Base projection: only scalar columns + aggregated arrays
@@ -118,9 +190,9 @@ def _get_query() -> sqlalchemy.sql.Select:
             Family.title.label("family_title"),
             Family.description.label("description"),
             Family.family_category.label("family_category"),
-            Family.family_status,
-            Family.published_date,
-            Family.last_updated_date,
+            family_status_expr,
+            published_date_expr,
+            last_updated_date_expr,
             Family.created.label("created"),
             Family.last_modified.label("last_modified"),
             FamilyMetadata.value.label("metadata"),
@@ -150,9 +222,6 @@ def _get_query() -> sqlalchemy.sql.Select:
             Family.title,
             Family.description,
             Family.family_category,
-            Family.family_status,
-            Family.published_date,
-            Family.last_updated_date,
             Family.created,
             Family.last_modified,
             FamilyMetadata.value,
