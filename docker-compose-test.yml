@@ -9,6 +9,7 @@ services:
     volumes:
       - ./tests:/usr/src/tests
       - ./app:/usr/src/app
+      - ./service-manifest.json:/usr/src/service-manifest.json
     environment:
       # This is for when people explicitly set the tests they want to run
       # It is used in the makefile
