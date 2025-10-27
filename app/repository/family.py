@@ -248,43 +248,6 @@ def _update_intention(
     )
 
 
-def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
-    family_import_id = family_row["family_import_id"]
-    metadata = cast(dict, family_row["value"])
-    org = cast(str, family_row["name"])
-    family_slugs = family_row["slugs"]
-    event_ids = family_row["event_ids"] if family_row["event_ids"] else []
-    document_ids = family_row["document_ids"] if family_row["document_ids"] else []
-    collection_ids = (
-        family_row["collection_ids"] if family_row["collection_ids"] else []
-    )
-
-    return FamilyReadDTO(
-        import_id=str(family_import_id),
-        title=str(family_row["family_title"]),
-        summary=str(family_row["description"]),
-        geography=str(
-            family_row["geography_values"][0] if family_row["geography_values"] else ""
-        ),
-        geographies=[str(value) for value in family_row["geography_values"]],
-        category=str(family_row["family_category"]),
-        status=str(family_row["family_status"]),
-        metadata=metadata,
-        slug=str(family_slugs[0] if len(family_slugs) > 0 else ""),
-        events=event_ids,
-        published_date=family_row["published_date"],
-        last_updated_date=family_row["last_updated_date"],
-        documents=document_ids,
-        collections=collection_ids,
-        organisation=org,
-        corpus_import_id=family_row["corpus_import_id"],
-        corpus_title=cast(str, family_row["title"]),
-        corpus_type=cast(str, family_row["corpus_type_name"]),
-        created=cast(datetime, family_row["created"]),
-        last_modified=cast(datetime, family_row["last_modified"]),
-    )
-
-
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
     """Return all families.
 
