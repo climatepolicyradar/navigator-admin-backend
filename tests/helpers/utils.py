@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 
 def remove_trigger_cols_from_result(
-    data: Union[dict, list]
+    data: Union[dict, list],
 ) -> Optional[Union[dict, list]]:
     """Remove created and last modified columns from test response data."""
 

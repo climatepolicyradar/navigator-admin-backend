@@ -1,9 +1,15 @@
-"""Operations on the repository for the Family entity."""
+"""Operations on the repository for the Family entity.
+
+This version removes ORM graph materialisation in read paths to avoid
+n+1 loads and large session identity map growth. It uses projection only
+SELECTs with SQL side aggregation for child collections and maps rows
+directly to DTOs.
+"""
 
 import logging
 import os
 from datetime import datetime
-from typing import Optional, Tuple, Union, cast
+from typing import Mapping, Optional, Union, cast
 
 import sqlalchemy
 from db_client.models.dfce.collection import CollectionFamily
@@ -25,12 +31,10 @@ from db_client.models.organisation.counters import CountedEntity
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import Column, String
 from sqlalchemy import delete as db_delete
-from sqlalchemy import desc, func, text
-from sqlalchemy import update as db_update
+from sqlalchemy import desc, func, select, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.exc import NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session, lazyload
-from sqlalchemy.sql import Subquery
+from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError
@@ -44,26 +48,18 @@ from app.repository.helpers import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
-FamilyGeoMetaOrg = Tuple[
-    Family,
-    list[str],
-    FamilyMetadata,
-    Corpus,
-    Organisation,
-]
+# --- Projection-only helpers (no ORM entity materialization) -----------------
 
 
-def get_family_geography_subquery(db: Session) -> Subquery:
+def _get_query() -> sqlalchemy.sql.Select:
     """
-    Creates a subquery to aggregate geography values for families, accomodating
-    those with multiple associated geographies.
-
-    :param db Session: the database connection
-    :return Query: A subquery containing family import IDs and their associated geography values
+    Build a projection-only SELECT for families with SQL-side aggregation of
+    child collections. This avoids loading ORM graphs and eliminates N+1s.
     """
-    return (
-        db.query(
-            FamilyGeography.family_import_id,
+    # Aggregate geographies per family
+    geo_subq = (
+        select(
+            FamilyGeography.family_import_id.label("fam_id"),
             func.array_agg(Geography.value).label("geography_values"),
         )
         .join(Geography, Geography.id == FamilyGeography.geography_id)
@@ -71,127 +67,138 @@ def get_family_geography_subquery(db: Session) -> Subquery:
         .subquery()
     )
 
+    # Aggregate slugs per family
+    slugs_subq = (
+        select(
+            Slug.family_import_id.label("fam_id"),
+            func.array_agg(Slug.name).label("slugs"),
+        )
+        .group_by(Slug.family_import_id)
+        .subquery()
+    )
 
-def _get_query(db: Session) -> Query:
-    # NOTE: SqlAlchemy will make a complete hash of query generation
-    #       if columns are used in the query() call. Therefore, entire
-    #       objects are returned.
+    # Aggregate events (import_ids) per family
+    events_subq = (
+        select(
+            FamilyEvent.family_import_id.label("fam_id"),
+            func.array_agg(FamilyEvent.import_id).label("event_ids"),
+        )
+        .group_by(FamilyEvent.family_import_id)
+        .subquery()
+    )
 
-    geography_subquery = get_family_geography_subquery(db)
+    # Aggregate documents (import_ids) per family
+    docs_subq = (
+        select(
+            FamilyDocument.family_import_id.label("fam_id"),
+            func.array_agg(FamilyDocument.import_id).label("document_ids"),
+        )
+        .group_by(FamilyDocument.family_import_id)
+        .subquery()
+    )
 
-    empty_array = sqlalchemy.cast([], ARRAY(String))
+    # Aggregate collections (import_ids) per family
+    cols_subq = (
+        select(
+            CollectionFamily.family_import_id.label("fam_id"),
+            func.array_agg(CollectionFamily.collection_import_id).label(
+                "collection_ids"
+            ),
+        )
+        .group_by(CollectionFamily.family_import_id)
+        .subquery()
+    )
 
-    query = (
-        db.query(
-            Family,
-            func.coalesce(geography_subquery.c.geography_values, empty_array).label(
+    empty_arr = func.cast([], ARRAY(String))
+
+    # Base projection: only scalar columns + aggregated arrays
+    stmt = (
+        select(
+            Family.import_id.label("import_id"),
+            Family.title.label("family_title"),
+            Family.description.label("description"),
+            Family.family_category.label("family_category"),
+            Family.family_status,
+            Family.published_date,
+            Family.last_updated_date,
+            Family.created.label("created"),
+            Family.last_modified.label("last_modified"),
+            FamilyMetadata.value.label("metadata"),
+            Corpus.import_id.label("corpus_import_id"),
+            Corpus.title.label("corpus_title"),
+            Corpus.corpus_type_name.label("corpus_type_name"),
+            Organisation.name.label("organisation"),
+            func.coalesce(geo_subq.c.geography_values, empty_arr).label(
                 "geography_values"
             ),
-            FamilyMetadata,
-            Corpus,
-            Organisation,
-        )
-        .outerjoin(
-            geography_subquery,
-            geography_subquery.c.family_import_id == Family.import_id,
+            func.coalesce(slugs_subq.c.slugs, empty_arr).label("slugs"),
+            func.coalesce(events_subq.c.event_ids, empty_arr).label("events"),
+            func.coalesce(docs_subq.c.document_ids, empty_arr).label("documents"),
+            func.coalesce(cols_subq.c.collection_ids, empty_arr).label("collections"),
         )
         .join(FamilyMetadata, FamilyMetadata.family_import_id == Family.import_id)
         .join(FamilyCorpus, FamilyCorpus.family_import_id == Family.import_id)
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
+        .outerjoin(geo_subq, geo_subq.c.fam_id == Family.import_id)
+        .outerjoin(slugs_subq, slugs_subq.c.fam_id == Family.import_id)
+        .outerjoin(events_subq, events_subq.c.fam_id == Family.import_id)
+        .outerjoin(docs_subq, docs_subq.c.fam_id == Family.import_id)
+        .outerjoin(cols_subq, cols_subq.c.fam_id == Family.import_id)
         .group_by(
             Family.import_id,
             Family.title,
-            geography_subquery.c.geography_values,
-            FamilyMetadata.family_import_id,
+            Family.description,
+            Family.family_category,
+            Family.family_status,
+            Family.published_date,
+            Family.last_updated_date,
+            Family.created,
+            Family.last_modified,
+            FamilyMetadata.value,
             Corpus.import_id,
-            Organisation,
+            Corpus.title,
+            Corpus.corpus_type_name,
+            Organisation.name,
+            geo_subq.c.geography_values,
+            slugs_subq.c.slugs,
+            events_subq.c.event_ids,
+            docs_subq.c.document_ids,
+            cols_subq.c.collection_ids,
         )
-        .options(lazyload("*"))
     )
-    return query
+    return stmt
 
 
-def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
-    family_import_id = family_row["family_import_id"]
-    metadata = cast(dict, family_row["value"])
-    org = cast(str, family_row["name"])
-    family_slugs = family_row["slugs"]
-    event_ids = family_row["event_ids"] if family_row["event_ids"] else []
-    document_ids = family_row["document_ids"] if family_row["document_ids"] else []
-    collection_ids = (
-        family_row["collection_ids"] if family_row["collection_ids"] else []
-    )
-
+def _row_to_dto(row: Mapping) -> FamilyReadDTO:
+    """
+    Map a projected row (dict-like) into FamilyReadDTO without touching ORM objects.
+    This keeps memory low and avoids holding references to ORM instances.
+    """
+    geos = [str(v) for v in (row["geography_values"] or [])]
+    slugs = row["slugs"] or []
     return FamilyReadDTO(
-        import_id=str(family_import_id),
-        title=str(family_row["family_title"]),
-        summary=str(family_row["description"]),
-        geography=str(
-            family_row["geography_values"][0] if family_row["geography_values"] else ""
-        ),
-        geographies=[str(value) for value in family_row["geography_values"]],
-        category=str(family_row["family_category"]),
-        status=str(family_row["family_status"]),
-        metadata=metadata,
-        slug=str(family_slugs[0] if len(family_slugs) > 0 else ""),
-        events=event_ids,
-        published_date=family_row["published_date"],
-        last_updated_date=family_row["last_updated_date"],
-        documents=document_ids,
-        collections=collection_ids,
-        organisation=org,
-        corpus_import_id=family_row["corpus_import_id"],
-        corpus_title=cast(str, family_row["title"]),
-        corpus_type=cast(str, family_row["corpus_type_name"]),
-        created=cast(datetime, family_row["created"]),
-        last_modified=cast(datetime, family_row["last_modified"]),
-    )
-
-
-def _family_to_dto(
-    db: Session, fam_geo_meta_corp_org: FamilyGeoMetaOrg
-) -> FamilyReadDTO:
-    (
-        fam,
-        geo_values,
-        meta,
-        corpus,
-        org,
-    ) = fam_geo_meta_corp_org
-
-    metadata = cast(dict, meta.value)
-    org = cast(str, org.name)
-
-    return FamilyReadDTO(
-        import_id=str(fam.import_id),
-        title=str(fam.title),
-        summary=str(fam.description),
-        geography=str(geo_values[0]) if geo_values else None,
-        geographies=[str(value) for value in geo_values],
-        category=str(fam.family_category),
-        status=str(fam.family_status),
-        metadata=metadata,
-        slug=str(fam.slugs[0].name if len(fam.slugs) > 0 else ""),
-        events=[str(e.import_id) for e in fam.events],
-        published_date=fam.published_date,
-        last_updated_date=fam.last_updated_date,
-        documents=[str(d.import_id) for d in fam.family_documents],
-        collections=[
-            c.collection_import_id
-            for c in db.query(CollectionFamily).filter(
-                fam.import_id == CollectionFamily.family_import_id
-            )
-        ],
-        organisation=org,
-        corpus_import_id=cast(str, corpus.import_id),
-        corpus_title=cast(str, corpus.title),
-        corpus_type=cast(str, corpus.corpus_type_name),
-        created=cast(datetime, fam.created),
-        last_modified=cast(datetime, fam.last_modified),
-        concepts=(
-            [cast(dict, concepts) for concepts in fam.concepts] if fam.concepts else []
-        ),
+        import_id=str(row["import_id"]),
+        title=str(row["family_title"]),
+        summary=str(row["description"]),
+        geography=str(geos[0]) if geos else None,
+        geographies=geos,
+        category=str(row["family_category"]),
+        status=str(row["family_status"]),
+        metadata=cast(dict, row["metadata"]),
+        slug=str(slugs[0]) if slugs else "",
+        events=[str(e) for e in (row["events"] or [])],
+        published_date=row["published_date"],
+        last_updated_date=row["last_updated_date"],
+        documents=[str(d) for d in (row["documents"] or [])],
+        collections=[str(c) for c in (row["collections"] or [])],
+        organisation=str(row["organisation"]),
+        corpus_import_id=str(row["corpus_import_id"]),
+        corpus_title=str(row["corpus_title"]),
+        corpus_type=str(row["corpus_type_name"]),
+        created=cast(datetime, row["created"]),
+        last_modified=cast(datetime, row["last_modified"]),
+        concepts=None,  # intentionally excluded; add via separate lightweight query if needed
     )
 
 
@@ -241,42 +248,72 @@ def _update_intention(
     )
 
 
+def _family_to_dto_search_endpoint(db: Session, family_row: dict) -> FamilyReadDTO:
+    family_import_id = family_row["family_import_id"]
+    metadata = cast(dict, family_row["value"])
+    org = cast(str, family_row["name"])
+    family_slugs = family_row["slugs"]
+    event_ids = family_row["event_ids"] if family_row["event_ids"] else []
+    document_ids = family_row["document_ids"] if family_row["document_ids"] else []
+    collection_ids = (
+        family_row["collection_ids"] if family_row["collection_ids"] else []
+    )
+
+    return FamilyReadDTO(
+        import_id=str(family_import_id),
+        title=str(family_row["family_title"]),
+        summary=str(family_row["description"]),
+        geography=str(
+            family_row["geography_values"][0] if family_row["geography_values"] else ""
+        ),
+        geographies=[str(value) for value in family_row["geography_values"]],
+        category=str(family_row["family_category"]),
+        status=str(family_row["family_status"]),
+        metadata=metadata,
+        slug=str(family_slugs[0] if len(family_slugs) > 0 else ""),
+        events=event_ids,
+        published_date=family_row["published_date"],
+        last_updated_date=family_row["last_updated_date"],
+        documents=document_ids,
+        collections=collection_ids,
+        organisation=org,
+        corpus_import_id=family_row["corpus_import_id"],
+        corpus_title=cast(str, family_row["title"]),
+        corpus_type=cast(str, family_row["corpus_type_name"]),
+        created=cast(datetime, family_row["created"]),
+        last_modified=cast(datetime, family_row["last_modified"]),
+    )
+
+
 def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
-    """
-    Returns all the families.
+    """Return all families.
+
+    Returns all the families as DTOs with a projection only query.
+    Avoids loading ORM graphs and eliminates N+1 queries.
 
     :param db Session: the database connection
     :param org_id int: the ID of the organisation the user belongs to
     :return Optional[FamilyResponse]: All of things
     """
-    query = _get_query(db)
+    stmt = _get_query()
     if org_id is not None:
-        query = query.filter(Organisation.id == org_id)
-    family_geo_metas = query.order_by(desc(Family.last_modified)).all()
-
-    if not family_geo_metas:
-        return []
-
-    result = [_family_to_dto(db, fgm) for fgm in family_geo_metas]
-
-    return result
+        stmt = stmt.where(Organisation.id == org_id)
+    rows = db.execute(stmt.order_by(desc(Family.last_modified))).mappings().fetchall()
+    return [_row_to_dto(r) for r in rows]
 
 
 def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
-    """
-    Gets a single family from the repository.
+    """Get a single family from the repository.
+
+    Get a single family as DTO using projection only query.
 
     :param db Session: the database connection
     :param str import_id: The import_id of the family
     :return Optional[FamilyResponse]: A single family or nothing
     """
-    try:
-        fam_geo_meta = _get_query(db).filter(Family.import_id == import_id).one()
-    except NoResultFound as e:
-        _LOGGER.debug(e)
-        return
-
-    return _family_to_dto(db, fam_geo_meta)
+    stmt = _get_query().where(Family.import_id == import_id)
+    row = db.execute(stmt).mappings().one_or_none()
+    return _row_to_dto(row) if row else None
 
 
 def search(
@@ -288,6 +325,9 @@ def search(
 ) -> list[FamilyReadDTO]:
     """
     Gets a list of families from the repository searching given fields.
+
+    Search families via existing raw SQL builder (already projection
+    like), then map rows to DTO without touching ORM relationships.
 
     :param db Session: the database connection
     :param dict search_params: Any search terms to filter on specified
@@ -367,8 +407,37 @@ def search(
             raise TimeoutError
         raise RepositoryError(e)
 
-    results = [_family_to_dto_search_endpoint(db, row) for row in query_results]
-
+    # Build DTOs from projected rows (no ORM traversal)
+    results: list[FamilyReadDTO] = []
+    for row in query_results:
+        # Row keys must match _row_to_dto expectations; raw SQL builder already
+        # returns projected columns and arrays. Map by name.
+        dto = FamilyReadDTO(
+            import_id=str(row["family_import_id"]),
+            title=str(row["family_title"]),
+            summary=str(row["description"]),
+            geography=str(
+                row["geography_values"][0] if row["geography_values"] else ""
+            ),
+            geographies=[str(value) for value in (row["geography_values"] or [])],
+            category=str(row["family_category"]),
+            status=str(row["family_status"]),
+            metadata=cast(dict, row["value"]),
+            slug=str(row["slugs"][0]) if row.get("slugs") else "",
+            events=[str(e) for e in (row.get("event_ids") or [])],
+            published_date=row["published_date"],
+            last_updated_date=row["last_updated_date"],
+            documents=[str(d) for d in (row.get("document_ids") or [])],
+            collections=[str(c) for c in (row.get("collection_ids") or [])],
+            organisation=str(row["name"]),
+            corpus_import_id=str(row["corpus_import_id"]),
+            corpus_title=str(row["title"]),
+            corpus_type=str(row["corpus_type_name"]),
+            created=cast(datetime, row["created"]),
+            last_modified=cast(datetime, row["last_modified"]),
+            concepts=[],  # intentionally excluded for search results too
+        )
+        results.append(dto)
     return results
 
 
@@ -414,11 +483,10 @@ def update(
     ):
         return True
 
-    # Update basic fields
     if update_basics:
         updates = 0
         result = db.execute(
-            db_update(Family)
+            sqlalchemy.update(Family)
             .where(Family.import_id == import_id)
             .values(
                 title=new_values["title"],
@@ -437,7 +505,7 @@ def update(
     # Update if metadata is changed
     if update_metadata:
         md_result = db.execute(
-            db_update(FamilyMetadata)
+            sqlalchemy.update(FamilyMetadata)
             .where(FamilyMetadata.family_import_id == import_id)
             .values(value=family.metadata)
         )
@@ -477,7 +545,7 @@ def update(
         cols_to_remove = set(original_collections) - set(family.collections)
         for col in cols_to_remove:
             result = db.execute(
-                db_delete(CollectionFamily).where(
+                sqlalchemy.delete(CollectionFamily).where(
                     CollectionFamily.collection_import_id == col
                 )
             )
@@ -675,15 +743,15 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
     :return Optional[int]: The number of families in the repository or none.
     """
     try:
-        query = _get_query(db)
+        stmt = _get_query()
         if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
-        n_families = query.count()
+            stmt = stmt.where(Organisation.id == org_id)
+        n_families = db.execute(select(func.count()).select_from(stmt)).scalar()
     except NoResultFound as e:
         _LOGGER.debug(e)
         return
 
-    return n_families
+    return n_families if n_families is not None else 0
 
 
 def remove_old_geographies(
@@ -705,7 +773,7 @@ def remove_old_geographies(
     for col in cols_to_remove:
         try:
             db.execute(
-                db_delete(FamilyGeography).where(
+                sqlalchemy.delete(FamilyGeography).where(
                     FamilyGeography.geography_id == col,
                     FamilyGeography.family_import_id == import_id,
                 )
@@ -782,9 +850,7 @@ def _get_family_geographies_by_display_values(
     """
 
     return (
-        db.query(
-            FamilyGeography.family_import_id,
-        )
+        db.query(FamilyGeography.family_import_id)
         .join(Geography, Geography.id == FamilyGeography.geography_id)
         .filter(Geography.display_value.in_(geographies))
     )
