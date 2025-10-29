@@ -113,6 +113,7 @@ def with_database():
                     result = func(*args, **kwargs, db=db)
                     return result
                 except exc.SQLAlchemyError as e:
+                    db.rollback()
                     msg = f"Error {str(e)} in {context}"
                     _LOGGER.error(
                         msg,
