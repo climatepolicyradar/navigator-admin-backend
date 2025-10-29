@@ -14,7 +14,7 @@ RUN apt-get update && \
 # Requirements
 RUN pip install --no-cache-dir poetry==2.2.1
 COPY poetry.lock pyproject.toml ./
-RUN poetry config virtualenvs.create false && poetry install --no-directory --no-root
+RUN poetry config virtualenvs.create false && poetry install --no-root
 
 # Now code
 COPY ./app ./app
