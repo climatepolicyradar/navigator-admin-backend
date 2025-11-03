@@ -595,8 +595,10 @@ def update(
         for col in cols_to_remove:
             result = db.execute(
                 sqlalchemy.delete(CollectionFamily).where(
-                    CollectionFamily.collection_import_id == col
-                    and CollectionFamily.family_import_id == import_id
+                    sqlalchemy.and_(
+                        CollectionFamily.collection_import_id == col,
+                        CollectionFamily.family_import_id == import_id,
+                    )
                 )
             )
 
