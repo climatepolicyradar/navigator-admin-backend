@@ -591,10 +591,12 @@ def update(
         # Remove any collections that were originally associated with the family but
         # now aren't.
         cols_to_remove = set(original_collections) - set(family.collections)
+        print(f"cols_to_remove: {cols_to_remove}")
         for col in cols_to_remove:
             result = db.execute(
                 sqlalchemy.delete(CollectionFamily).where(
                     CollectionFamily.collection_import_id == col
+                    and CollectionFamily.family_import_id == import_id
                 )
             )
 
