@@ -681,8 +681,8 @@ SQLAlchemy-Utils = "^0.38.2"
 [package.source]
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
-reference = "v3.10.2"
-resolved_reference = "234d8a2941c8cef55e468224a3e20cb8b8eb8b76"
+reference = "v3.10.3"
+resolved_reference = "5de48093a16101b5c0528e825ca6410b5e41786f"
 
 [[package]]
 name = "dill"
@@ -4173,4 +4173,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "f886eda7d961a866efc2e05465cc226d84ab4cdf7e86a0a1f3dc38784a4190c3"
+content-hash = "41081b890e55d125313af49552074db56834aa2755c3febfca913a975795a5d1"
