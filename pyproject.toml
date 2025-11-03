@@ -29,7 +29,7 @@ boto3 = "^1.40.43"
 moto = "^5.1.13"
 types-sqlalchemy = "^1.4.53.38"
 urllib3 = "^2.5.0"
-db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.9.21" }
+db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.10.0" }
 navigator-notify = { git = "https://github.com/climatepolicyradar/navigator-notify.git", tag = "v0.0.2-beta" }
 bcrypt = "4.0.1"
 fastapi-cli = "^0.0.13"
