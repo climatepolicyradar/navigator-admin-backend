@@ -603,6 +603,11 @@ def update(
             if result.rowcount == 0:  # type: ignore
                 msg = f"Could not remove family {import_id} from collection {col}"
                 _LOGGER.error(msg)
+                print(
+                    db.query(CollectionFamily)
+                    .filter(CollectionFamily.family_import_id == import_id)
+                    .all()
+                )
                 raise RepositoryError(msg)
 
         # Add any collections that weren't originally associated with the family.
