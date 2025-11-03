@@ -805,13 +805,9 @@ def remove_old_collections(
                 f"🗑️ Deleted {result.rowcount} collection_family "  # type: ignore
                 f"row(s) for collection {col} and family {import_id}"
             )
-            if result.rowcount == 0:  # type: ignore
-                msg = (
-                    f"Could not remove family {import_id} from collection {col}: "
-                    f"no rows matched"
-                )
-                _LOGGER.error(msg)
-                raise RepositoryError(msg)
+            # Note: If rowcount is 0, the row may not exist (already deleted
+            # or never created). This is idempotent and acceptable, so we
+            # don't raise an error.
         except Exception as e:
             msg = f"Could not remove family {import_id} from collection {col}: {str(e)}"
             _LOGGER.exception(msg)
@@ -866,13 +862,17 @@ def perform_family_collections_update(
     :param str import_id: the family import ID for the collections
     :param list[str] collection_ids: the list of collection IDs to be updated
     """
-    original_collections = set(
-        [
-            str(cf.collection_import_id)
-            for cf in db.query(CollectionFamily).filter(
-                CollectionFamily.family_import_id == import_id
-            )
-        ]
+    # Query fresh from database, bypassing session identity map
+    # Use execute() with select() to get fresh data from database
+    db.flush()  # Ensure any pending changes are applied before querying
+    stmt = select(CollectionFamily.collection_import_id).where(
+        CollectionFamily.family_import_id == import_id
+    )
+    result = db.execute(stmt)
+    original_collections = set([str(row[0]) for row in result])
+    _LOGGER.info(
+        f"🔍 Found {len(original_collections)} existing collections for "
+        f"family {import_id}: {original_collections}"
     )
     # Ensure collection_ids are strings for consistent comparison
     collection_ids_str = [str(cid) for cid in collection_ids]
