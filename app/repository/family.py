@@ -295,7 +295,7 @@ def _update_intention(
     original_family: Family,
 ):
     original_collections = [
-        str(c.collection_import_id)
+        c.collection_import_id
         for c in db.query(CollectionFamily).filter(
             CollectionFamily.family_import_id == original_family.import_id
         )
@@ -801,9 +801,6 @@ def remove_old_collections(
             msg = f"Could not remove family {import_id} from collection {col}: {str(e)}"
             _LOGGER.exception(msg)
             raise RepositoryError(msg)
-
-    if cols_to_remove:
-        db.flush()
 
 
 def add_new_collections(
