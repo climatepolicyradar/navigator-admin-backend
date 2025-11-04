@@ -316,6 +316,7 @@ def delete(db: Session, import_id: str) -> bool:
     ]
     for c in commands:
         result = db.execute(c)
+        db.flush()
 
     return result.rowcount > 0  # type: ignore
 

@@ -683,6 +683,7 @@ def hard_delete(db: Session, import_id: str):
 
     for c in commands:
         result = db.execute(c)
+        db.flush()
         # Keep this for debug.
         _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
 
