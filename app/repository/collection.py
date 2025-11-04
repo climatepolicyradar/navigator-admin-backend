@@ -302,12 +302,18 @@ def delete(db: Session, import_id: str) -> bool:
     :param str import_id: The collection import id to delete.
     :return bool: True if deleted False if not.
     """
+    # Delete CollectionFamily first to avoid foreign key constraint violation
+    db.execute(
+        db_delete(CollectionFamily).where(
+            CollectionFamily.collection_import_id == import_id
+        )
+    )
+    db.flush()
+
+    # Delete other related records
     commands = [
         db_delete(CollectionOrganisation).where(
             CollectionOrganisation.collection_import_id == import_id
-        ),
-        db_delete(CollectionFamily).where(
-            CollectionFamily.collection_import_id == import_id
         ),
         db_delete(Slug).where(
             Slug.collection_import_id == import_id,
