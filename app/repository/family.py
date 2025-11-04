@@ -789,33 +789,19 @@ def remove_old_collections(
     :raises RepositoryError: if a collection removal fails
     """
     cols_to_remove = set(original_collections) - set(collection_ids)
-    if cols_to_remove:
-        _LOGGER.info(f"🗑️ Removing collections {cols_to_remove} from family {import_id}")
     for col in cols_to_remove:
         try:
-            result = db.execute(
-                db_delete(CollectionFamily).where(
-                    sqlalchemy.and_(
-                        CollectionFamily.collection_import_id == col,
-                        CollectionFamily.family_import_id == import_id,
-                    )
+            db.execute(
+                sqlalchemy.delete(CollectionFamily).where(
+                    CollectionFamily.collection_import_id == col,
+                    CollectionFamily.family_import_id == import_id,
                 )
             )
-            _LOGGER.info(
-                f"🗑️ Deleted {result.rowcount} collection_family "  # type: ignore
-                f"row(s) for collection {col} and family {import_id}"
-            )
-            if result.rowcount == 0:  # type: ignore
-                msg = (
-                    f"Could not remove family {import_id} from collection {col}: "
-                    f"no rows matched"
-                )
-                _LOGGER.error(msg)
-                raise RepositoryError(msg)
         except Exception as e:
             msg = f"Could not remove family {import_id} from collection {col}: {str(e)}"
             _LOGGER.exception(msg)
             raise RepositoryError(msg)
+
     if cols_to_remove:
         db.flush()
 
@@ -864,7 +850,7 @@ def perform_family_collections_update(
 
     :param Session db: the database session
     :param str import_id: the family import ID for the collections
-    :param list[str] collection_ids: the list of collection IDs to be updated
+    :param list[int] collection_ids: the list of collection IDs to be updated
     """
     original_collections = set(
         [
@@ -874,11 +860,9 @@ def perform_family_collections_update(
             )
         ]
     )
-    # Ensure collection_ids are strings for consistent comparison
-    collection_ids_str = [str(cid) for cid in collection_ids]
 
-    remove_old_collections(db, import_id, collection_ids_str, original_collections)
-    add_new_collections(db, import_id, collection_ids_str, original_collections)
+    remove_old_collections(db, import_id, collection_ids, original_collections)
+    add_new_collections(db, import_id, collection_ids, original_collections)
 
 
 def remove_old_geographies(
