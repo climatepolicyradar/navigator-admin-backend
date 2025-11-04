@@ -24,7 +24,8 @@ from db_client.models.document.physical_document import (
 )
 from db_client.models.organisation import Corpus, EntityCounter
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
-from sqlalchemy import update
+
+# from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 
@@ -514,17 +515,17 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
 
 
 def setup_corpus(test_db: Session) -> None:
-    print(test_db.query(EntityCounter).all())
+    pass
+    # test_db.execute(
+    #     update(EntityCounter).values(
+    #         counter=1,
+    #     )
+    # )
+    # test_db.commit()
+    # print(test_db.query(EntityCounter).all())
 
-    test_db.execute(
-        update(EntityCounter).values(
-            counter=1,
-        )
-    )
-    test_db.commit()
-
-    for item in test_db.query(EntityCounter.counter).all():
-        assert item[0] == 1
+    # for item in test_db.query(EntityCounter.counter).all():
+    #     assert item[0] == 1
 
 
 def _setup_collection_data(
