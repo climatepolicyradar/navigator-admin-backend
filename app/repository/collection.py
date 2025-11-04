@@ -310,6 +310,17 @@ def delete(db: Session, import_id: str) -> bool:
     )
     db.flush()
 
+    # Verify CollectionFamily records are deleted before proceeding
+    remaining = (
+        db.query(CollectionFamily)
+        .filter(CollectionFamily.collection_import_id == import_id)
+        .count()
+    )
+    if remaining > 0:
+        msg = f"Failed to delete {remaining} CollectionFamily records for {import_id}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+
     # Delete other related records
     commands = [
         db_delete(CollectionOrganisation).where(
