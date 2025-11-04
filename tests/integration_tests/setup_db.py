@@ -368,20 +368,23 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     org_id, other_org_id = _setup_organisation(test_db)
     setup_corpus(test_db)
 
+    assert test_db.query(Collection).count() == 0
+    _setup_collection_data(test_db, configure_empty)
+    test_db.commit()
+    if configure_empty:
+        assert test_db.query(Collection).count() == 0
+    else:
+        assert test_db.query(Collection).count() != 0
+
     assert test_db.query(Family).count() == 0
     _setup_family_data(test_db, org_id, other_org_id)
     test_db.commit()
     assert test_db.query(Family).count() != 0
-
-    assert test_db.query(Collection).count() == 0
-    _setup_collection_data(test_db, configure_empty)
-    test_db.commit()
-    if configure_empty is False:
-        assert test_db.query(Collection).count() != 0
-        assert test_db.query(CollectionFamily).count() != 0
-    else:
-        assert test_db.query(Collection).count() == 0
-        assert test_db.query(CollectionFamily).count() == 0
+    assert test_db.query(FamilyGeography).count() != 0
+    assert test_db.query(FamilyCorpus).count() != 0
+    assert test_db.query(FamilyMetadata).count() != 0
+    assert test_db.query(Slug).count() != 0
+    assert test_db.query(CollectionFamily).count() != 0
 
     assert test_db.query(FamilyDocument).count() == 0
     _setup_document_data(test_db)
@@ -518,14 +521,13 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
 
 
 def setup_corpus(test_db: Session) -> None:
-    print(test_db.query(EntityCounter).all())
-
     test_db.execute(
         update(EntityCounter).values(
             counter=1,
         )
     )
     test_db.commit()
+    print(test_db.query(EntityCounter).all())
 
     for item in test_db.query(EntityCounter.counter).all():
         assert item[0] == 1
@@ -565,29 +567,6 @@ def _setup_collection_data(
     # Flush to ensure collections are in the database before creating links
     test_db.flush()
 
-    # Now create collection-family links
-    for collection in EXPECTED_COLLECTIONS:
-        collection_families = collection["families"]
-        for family_import_id in collection_families:
-            # Verify the family exists before creating the link
-            family_exists = (
-                test_db.query(Family)
-                .filter(Family.import_id == family_import_id)
-                .first()
-            )
-            if not family_exists:
-                raise ValueError(
-                    f"Family {family_import_id} does not exist when trying to "
-                    f"link it to collection {collection['import_id']}"
-                )
-
-            test_db.add(
-                CollectionFamily(
-                    collection_import_id=collection["import_id"],
-                    family_import_id=family_import_id,
-                )
-            )
-
 
 def _setup_family_data(
     test_db: Session,
@@ -599,9 +578,7 @@ def _setup_family_data(
     if configure_empty is True:
         return None
 
-    num_families = len(initial_data)
-    for index in range(num_families):
-        data = initial_data[index]
+    for data in initial_data:
         geographies = (
             test_db.query(Geography).filter(Geography.value.in_(data["geographies"]))
         ).all()
@@ -622,6 +599,22 @@ def _setup_family_data(
         ]
         test_db.add_all(family_geographies)
 
+        # Now create collection-family links
+        collections = (
+            test_db.query(Collection).filter(
+                Collection.import_id.in_(data["collections"])
+            )
+        ).all()
+        family_collections = [
+            CollectionFamily(
+                family_import_id=data["import_id"],
+                collection_import_id=collection.import_id,
+            )
+            for collection in collections
+        ]
+        test_db.add_all(family_collections)
+
+        # Link the families to the corpus
         corpus = (
             test_db.query(Corpus)
             .filter(
@@ -630,8 +623,6 @@ def _setup_family_data(
             )
             .one()
         )
-
-        # Link the families to the corpus
         test_db.add(
             FamilyCorpus(
                 family_import_id=data["import_id"],
@@ -639,9 +630,6 @@ def _setup_family_data(
             )
         )
 
-    # Now add the metadata onto the families
-    for index in range(num_families):
-        data = initial_data[index]
         test_db.add(
             FamilyMetadata(
                 family_import_id=data["import_id"],
