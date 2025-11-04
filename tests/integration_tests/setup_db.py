@@ -377,8 +377,12 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     assert test_db.query(Collection).count() == 0
     _setup_collection_data(test_db, configure_empty)
     test_db.commit()
-    assert test_db.query(Collection).count() != 0
-    assert test_db.query(CollectionFamily).count() != 0
+    if configure_empty is False:
+        assert test_db.query(Collection).count() != 0
+        assert test_db.query(CollectionFamily).count() != 0
+    else:
+        assert test_db.query(Collection).count() == 0
+        assert test_db.query(CollectionFamily).count() == 0
 
     assert test_db.query(FamilyDocument).count() == 0
     _setup_document_data(test_db)
