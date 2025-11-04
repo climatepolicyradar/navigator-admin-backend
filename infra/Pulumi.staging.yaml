@@ -24,7 +24,7 @@ config:
   admin_backend:secret_key:
     secure: AAABAIiumDXgeRR7pyApTU5C/76vSoVHKa+cpadeoIjPAbTDSTZ3nEN93yMSUFOPhwEcmB3YSKberEHPX9uX6ua9hcQ=
   admin_backend:slack_webhook_url:
-    secure: AAABAHAcHjcSLOSl+DjV1V5k3q7z/oXhT1sBUHLTrBIy2JPNmoslEYX/sqUrcj5A9+hkkyS8ae25gwRUuHHMHyPpkdmVxJChtyOgTwZyCCAn3XTyfbC4sZmWqh9SZS/767kgEiIOriro0lyitSKxTZw=
+    secure: AAABAAtQbHg3eWFSa5TVsrBUfszkhTz4QZFBetBaxCG7oQbae2LdnF0pF1Q33M73Orq3EXzjVa4xwtrRmchQb5OeKTO2NJh0gw8TkGaptwR8gfkHKHnL12ZKPmI/IDgrr09NPr3DS8hGnXfAMfBQDyY=
   admin_backend:validation_account_id:
     secure: AAABABLsojJHl5ZBeqjrwE/yzA9SksStylWPGSNe9rdzwHBmt0x0WoYo0kM=
   admin_backend:vpc_private_subnet_1_id:
