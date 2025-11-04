@@ -364,7 +364,9 @@ def setup_db(test_db: Session, configure_empty: bool = False):
 
 
 def setup_test_data(test_db: Session, configure_empty: bool = False):
+    print(test_db.query(EntityCounter).all())
     org_id, other_org_id = _setup_organisation(test_db)
+    setup_corpus(test_db)
 
     assert test_db.query(Family).count() == 0
     _setup_family_data(test_db, org_id, other_org_id)
@@ -386,8 +388,6 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     _setup_event_data(test_db)
     test_db.commit()
     assert test_db.query(FamilyEvent).count() != 0
-
-    setup_corpus(test_db)
 
 
 def _add_app_user(
@@ -514,6 +514,8 @@ def _setup_organisation(test_db: Session) -> tuple[int, int]:
 
 
 def setup_corpus(test_db: Session) -> None:
+    print(test_db.query(EntityCounter).all())
+
     test_db.execute(
         update(EntityCounter).values(
             counter=1,
