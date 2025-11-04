@@ -551,9 +551,25 @@ def _setup_collection_data(
             )
         )
 
+    # Flush to ensure collections are in the database before creating links
+    test_db.flush()
+
+    # Now create collection-family links
     for collection in EXPECTED_COLLECTIONS:
         collection_families = collection["families"]
         for family_import_id in collection_families:
+            # Verify the family exists before creating the link
+            family_exists = (
+                test_db.query(Family)
+                .filter(Family.import_id == family_import_id)
+                .first()
+            )
+            if not family_exists:
+                raise ValueError(
+                    f"Family {family_import_id} does not exist when trying to "
+                    f"link it to collection {collection['import_id']}"
+                )
+
             test_db.add(
                 CollectionFamily(
                     collection_import_id=collection["import_id"],
