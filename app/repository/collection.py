@@ -143,9 +143,7 @@ def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
     :return Optional[CollectionResponse]: A single collection or nothing
     """
     try:
-        collection_org = (
-            _get_query(db).filter(Collection.import_id == import_id).one_or_none()
-        )
+        collection_org = _get_query(db).filter(Collection.import_id == import_id).one()
     except NoResultFound as e:
         _LOGGER.debug(e)
         return
