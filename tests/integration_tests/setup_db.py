@@ -377,24 +377,38 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
         assert test_db.query(Collection).count() != 0
 
     assert test_db.query(Family).count() == 0
-    _setup_family_data(test_db, org_id, other_org_id)
+    _setup_family_data(test_db, org_id, other_org_id, configure_empty=configure_empty)
     test_db.commit()
-    assert test_db.query(Family).count() != 0
-    assert test_db.query(FamilyGeography).count() != 0
-    assert test_db.query(FamilyCorpus).count() != 0
-    assert test_db.query(FamilyMetadata).count() != 0
-    assert test_db.query(Slug).count() != 0
-    assert test_db.query(CollectionFamily).count() != 0
+    if configure_empty:
+        assert test_db.query(Family).count() == 0
+        assert test_db.query(FamilyGeography).count() == 0
+        assert test_db.query(FamilyCorpus).count() == 0
+        assert test_db.query(FamilyMetadata).count() == 0
+        assert test_db.query(Slug).count() == 0
+        assert test_db.query(CollectionFamily).count() == 0
+    else:
+        assert test_db.query(Family).count() != 0
+        assert test_db.query(FamilyGeography).count() != 0
+        assert test_db.query(FamilyCorpus).count() != 0
+        assert test_db.query(FamilyMetadata).count() != 0
+        assert test_db.query(Slug).count() != 0
+        assert test_db.query(CollectionFamily).count() != 0
 
     assert test_db.query(FamilyDocument).count() == 0
-    _setup_document_data(test_db)
+    _setup_document_data(test_db, configure_empty)
     test_db.commit()
-    assert test_db.query(FamilyDocument).count() != 0
+    if configure_empty:
+        assert test_db.query(FamilyDocument).count() == 0
+    else:
+        assert test_db.query(FamilyDocument).count() != 0
 
     assert test_db.query(FamilyEvent).count() == 0
-    _setup_event_data(test_db)
+    _setup_event_data(test_db, configure_empty)
     test_db.commit()
-    assert test_db.query(FamilyEvent).count() != 0
+    if configure_empty:
+        assert test_db.query(FamilyEvent).count() == 0
+    else:
+        assert test_db.query(FamilyEvent).count() != 0
 
 
 def _add_app_user(
