@@ -550,6 +550,8 @@ def _setup_collection_data(
                 valid_metadata=data["metadata"],
             )
         )
+        # Flush to ensure collection exists before creating foreign key relationships
+        test_db.flush()
 
         test_db.add(
             CollectionOrganisation(
@@ -563,9 +565,6 @@ def _setup_collection_data(
                 collection_import_id=data["import_id"],
             )
         )
-
-    # Flush to ensure collections are in the database before creating links
-    test_db.flush()
 
 
 def _setup_family_data(
@@ -591,6 +590,9 @@ def _setup_family_data(
                 family_category=data["category"],
             )
         )
+        # Flush to ensure family exists before creating foreign key relationships
+        test_db.flush()
+
         family_geographies = [
             FamilyGeography(
                 family_import_id=data["import_id"], geography_id=geography.id
@@ -598,8 +600,6 @@ def _setup_family_data(
             for geography in geographies
         ]
         test_db.add_all(family_geographies)
-        # Flush to ensure families are in the database before creating links
-        test_db.flush()
 
         # Now create collection-family links
         collections = (
