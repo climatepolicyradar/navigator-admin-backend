@@ -294,12 +294,13 @@ def _update_intention(
     geo_ids: list[int],
     original_family: Family,
 ):
-    original_collections = [
-        str(c.collection_import_id)
-        for c in db.query(CollectionFamily).filter(
-            CollectionFamily.family_import_id == original_family.import_id
-        )
-    ]
+    # Query fresh from database using execute() to avoid identity map issues
+    db.flush()  # Ensure any pending changes are applied before querying
+    stmt = select(CollectionFamily.collection_import_id).where(
+        CollectionFamily.family_import_id == original_family.import_id
+    )
+    result = db.execute(stmt)
+    original_collections = [str(row[0]) for row in result]
     update_collections = set(original_collections) != set(family.collections)
     update_title = cast(str, original_family.title) != family.title
 
