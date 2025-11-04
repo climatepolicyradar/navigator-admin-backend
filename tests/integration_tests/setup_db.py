@@ -598,6 +598,8 @@ def _setup_family_data(
             for geography in geographies
         ]
         test_db.add_all(family_geographies)
+        # Flush to ensure families are in the database before creating links
+        test_db.flush()
 
         # Now create collection-family links
         collections = (
