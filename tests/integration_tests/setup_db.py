@@ -410,6 +410,11 @@ def setup_test_data(test_db: Session, configure_empty: bool = False):
     else:
         assert test_db.query(FamilyEvent).count() != 0
 
+    print(test_db.query(CollectionFamily).all())
+    print(test_db.query(Collection).all())
+    print(test_db.query(Family).all())
+    print(test_db.query(FamilyEvent).all())
+
 
 def _add_app_user(
     test_db: Session,
