@@ -1,4 +1,4 @@
-from db_client.models.dfce.collection import Collection
+from db_client.models.dfce.collection import Collection, CollectionFamily
 from db_client.models.dfce.family import (
     Slug,
 )
@@ -15,6 +15,33 @@ def test_delete_collection(client: TestClient, data_db: Session, user_header_tok
     assert response.status_code == status.HTTP_200_OK
     n = data_db.query(Collection).count()
     assert n == EXPECTED_NUM_COLLECTIONS - 1
+
+
+def test_delete_collection_deletes_associated_family_links(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    family_collection_links = (
+        data_db.query(CollectionFamily.family_import_id)
+        .filter(CollectionFamily.collection_import_id == "C.0.0.2")
+        .all()
+    )
+
+    assert len(family_collection_links) > 0
+    response = client.delete("/api/v1/collections/C.0.0.2", headers=user_header_token)
+    assert response.status_code == status.HTTP_200_OK
+    family_collection_links = (
+        data_db.query(CollectionFamily.family_import_id)
+        .filter(CollectionFamily.collection_import_id == "C.0.0.2")
+        .all()
+    )
+    assert len(family_collection_links) == 0
+    assert (
+        data_db.query(Collection)
+        .filter(Collection.import_id == "C.0.0.2")
+        .one_or_none()
+        is None
+    )
 
 
 def test_delete_collection_deletes_associated_slug(

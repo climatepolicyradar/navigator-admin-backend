@@ -297,7 +297,7 @@ def _update_intention(
     original_collections = [
         c.collection_import_id
         for c in db.query(CollectionFamily).filter(
-            original_family.import_id == CollectionFamily.family_import_id
+            CollectionFamily.family_import_id == original_family.import_id
         )
     ]
     update_collections = set(original_collections) != set(family.collections)
@@ -579,39 +579,7 @@ def update(
 
     # Update collections if collections changed.
     if update_collections:
-        original_collections = set(
-            [
-                c.collection_import_id
-                for c in db.query(CollectionFamily).filter(
-                    original_family.import_id == CollectionFamily.family_import_id
-                )
-            ]
-        )
-
-        # Remove any collections that were originally associated with the family but
-        # now aren't.
-        cols_to_remove = set(original_collections) - set(family.collections)
-        for col in cols_to_remove:
-            result = db.execute(
-                sqlalchemy.delete(CollectionFamily).where(
-                    CollectionFamily.collection_import_id == col
-                )
-            )
-
-            if result.rowcount == 0:  # type: ignore
-                msg = f"Could not remove family {import_id} from collection {col}"
-                _LOGGER.error(msg)
-                raise RepositoryError(msg)
-
-        # Add any collections that weren't originally associated with the family.
-        cols_to_add = set(family.collections) - set(original_collections)
-        for col in cols_to_add:
-            db.flush()
-            new_collection = CollectionFamily(
-                family_import_id=import_id,
-                collection_import_id=col,
-            )
-            db.add(new_collection)
+        perform_family_collections_update(db, import_id, family.collections)
 
     # Update geographies if geographies have changed.
     if update_geographies:
@@ -715,6 +683,7 @@ def hard_delete(db: Session, import_id: str):
 
     for c in commands:
         result = db.execute(c)
+        db.flush()
         # Keep this for debug.
         _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
 
@@ -800,6 +769,98 @@ def count(db: Session, org_id: Optional[int]) -> Optional[int]:
         return
 
     return n_families if n_families is not None else 0
+
+
+def remove_old_collections(
+    db: Session,
+    import_id: str,
+    collection_ids: list[str],
+    original_collections: set[str],
+):
+    """
+    Removes collections that are no longer in collection_ids.
+
+    This function compares the original set of collections with the new collection_ids
+    and removes the collections that are no longer present.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the collections
+    :param list[str] collection_ids: the list of collection IDs to be kept
+    :param set[str] original_collections: the set of original collection IDs to be compared
+    :raises RepositoryError: if a collection removal fails
+    """
+    cols_to_remove = set(original_collections) - set(collection_ids)
+    for col in cols_to_remove:
+        try:
+            db.execute(
+                sqlalchemy.delete(CollectionFamily).where(
+                    CollectionFamily.collection_import_id == col,
+                    CollectionFamily.family_import_id == import_id,
+                )
+            )
+        except Exception as e:
+            msg = f"Could not remove family {import_id} from collection {col}: {str(e)}"
+            _LOGGER.exception(msg)
+            raise RepositoryError(msg)
+
+
+def add_new_collections(
+    db: Session,
+    import_id: str,
+    collection_ids: list[str],
+    original_collections: set[str],
+):
+    """
+    Adds new collections that are not already in the original collections.
+
+    This function identifies the collections that need to be added (i.e., those
+    that are in collection_ids but not in the original set) and adds them to the database.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the collections
+    :param list[str] collection_ids: the list of collection IDs to be added
+    :param set[str] original_collections: the set of original collection IDs to be compared
+    :raises RepositoryError: if a collection addition fails
+    """
+    cols_to_add = set(collection_ids) - set(original_collections)
+    for col in cols_to_add:
+        try:
+            new_collection = CollectionFamily(
+                family_import_id=import_id,
+                collection_import_id=col,
+            )
+            db.add(new_collection)
+            db.flush()
+        except Exception as e:
+            msg = f"Failed to add collection {col} to family {import_id}: {str(e)}"
+            _LOGGER.error(msg)
+            raise RepositoryError(msg)
+
+
+def perform_family_collections_update(
+    db: Session, import_id: str, collection_ids: list[str]
+):
+    """
+    Updates collections by removing old ones and adding new ones.
+
+    This function performs a complete update by removing collections that are no
+    longer in collection_ids and adding new collections that were not previously present.
+
+    :param Session db: the database session
+    :param str import_id: the family import ID for the collections
+    :param list[int] collection_ids: the list of collection IDs to be updated
+    """
+    original_collections = set(
+        [
+            str(cf.collection_import_id)
+            for cf in db.query(CollectionFamily).filter(
+                CollectionFamily.family_import_id == import_id
+            )
+        ]
+    )
+
+    remove_old_collections(db, import_id, collection_ids, original_collections)
+    add_new_collections(db, import_id, collection_ids, original_collections)
 
 
 def remove_old_geographies(

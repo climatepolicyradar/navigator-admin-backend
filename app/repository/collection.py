@@ -302,12 +302,29 @@ def delete(db: Session, import_id: str) -> bool:
     :param str import_id: The collection import id to delete.
     :return bool: True if deleted False if not.
     """
+    # Delete CollectionFamily first to avoid foreign key constraint violation
+    db.execute(
+        db_delete(CollectionFamily).where(
+            CollectionFamily.collection_import_id == import_id
+        )
+    )
+    db.flush()
+
+    # Verify CollectionFamily records are deleted before proceeding
+    remaining = (
+        db.query(CollectionFamily)
+        .filter(CollectionFamily.collection_import_id == import_id)
+        .count()
+    )
+    if remaining > 0:
+        msg = f"Failed to delete {remaining} CollectionFamily records for {import_id}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+
+    # Delete other related records
     commands = [
         db_delete(CollectionOrganisation).where(
             CollectionOrganisation.collection_import_id == import_id
-        ),
-        db_delete(CollectionFamily).where(
-            CollectionFamily.collection_import_id == import_id
         ),
         db_delete(Slug).where(
             Slug.collection_import_id == import_id,
@@ -316,6 +333,7 @@ def delete(db: Session, import_id: str) -> bool:
     ]
     for c in commands:
         result = db.execute(c)
+        db.flush()
 
     return result.rowcount > 0  # type: ignore
 
