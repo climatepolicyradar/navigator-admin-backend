@@ -201,5 +201,6 @@ if __name__ == "__main__":
         log_config=DEFAULT_LOGGING,
     )  # type: ignore
 
+
 telemetry.instrument_fastapi(app)
 telemetry.setup_exception_hook()
