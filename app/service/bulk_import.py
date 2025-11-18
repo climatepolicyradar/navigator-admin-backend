@@ -49,7 +49,11 @@ _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 def trigger_db_dump_upload_to_sql(thread_id: Optional[str]) -> None:
     dump_file = get_database_dump()
     try:
-        upload_sql_db_dump_to_s3(dump_file, thread_id)
+        upload_sql_db_dump_to_s3(dump_file)
+    except Exception:
+        notification_service.send_notification(
+            "💥 Database Dump upload failed.", thread_id
+        )
     finally:
         delete_local_file(dump_file)
 

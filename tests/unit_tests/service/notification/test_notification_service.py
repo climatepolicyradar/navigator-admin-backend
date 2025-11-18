@@ -5,7 +5,7 @@ from unittest.mock import patch
 from app.service.notification import send_notification
 
 
-@patch.dict(os.environ, {"SLACK_OAUTH_TOKEN": "test"})
+@patch.dict(os.environ, {"SLACK_OAUTH_TOKEN": "test", "SLACK_CHANNEL": "test"})
 def test_send_notification_success(caplog):
     notification = "Hello World!"
 
@@ -21,7 +21,7 @@ def test_send_notification_success(caplog):
 
         mock_client.assert_called_once_with(token="test")
         mock_instance.chat_postMessage.assert_called_once_with(
-            channel="updates-document-pipeline",
+            channel="test",
             text=notification,
             thread_ts=None,
         )
@@ -29,7 +29,7 @@ def test_send_notification_success(caplog):
         assert notification in caplog.text
 
 
-@patch.dict(os.environ, {"SLACK_OAUTH_TOKEN": "test"})
+@patch.dict(os.environ, {"SLACK_OAUTH_TOKEN": "test", "SLACK_CHANNEL": "test"})
 def test_send_notification_error(caplog):
 
     exception_message = "Test error"
@@ -49,7 +49,7 @@ def test_send_notification_error(caplog):
         )
 
 
-@patch.dict(os.environ, {"SLACK_OAUTH_TOKEN": "skip"})
+@patch.dict(os.environ, {"SLACK_OAUTH_TOKEN": "skip", "SLACK_CHANNEL": "test"})
 def test_do_not_send_notification_when_in_local_development(caplog):
     notification = "Hello World!"
 

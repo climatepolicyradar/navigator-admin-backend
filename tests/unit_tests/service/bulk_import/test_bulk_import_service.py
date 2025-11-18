@@ -110,11 +110,12 @@ def test_slack_notification_sent_on_error(
             "app.service.bulk_import.notification_service.send_notification"
         ) as mock_notification_service,
     ):
+        mock_notification_service.return_value = "1"
         bulk_import_service.import_data(test_data, "test")
 
     assert 2 == mock_notification_service.call_count
     mock_notification_service.assert_called_with(
-        "💥 Bulk import for corpus: test has failed."
+        "💥 Bulk import for corpus: test has failed.", "1"
     )
     assert "Rolling back transaction due to the following error:" in caplog.text
 
