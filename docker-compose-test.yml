@@ -30,7 +30,8 @@ services:
       # API_HOST: http://navigator-admin-backend:8888
 
       # Bulk import
-      SLACK_WEBHOOK_URL: skip
+      SLACK_OAUTH_TOKEN: skip
+      SLACK_CHANNEL: test
       BULK_IMPORT_BUCKET: bulk-import-bucket
 
       # Db dump
