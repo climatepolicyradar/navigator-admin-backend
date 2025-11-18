@@ -23,7 +23,7 @@ services:
 
       # Bulk import
       SLACK_OAUTH_TOKEN: skip
-      SLACK_CHANNEL: updates-document-pipeline
+      SLACK_CHANNEL: test
       BULK_IMPORT_BUCKET: bulk-import-bucket
 
       # Db dump
