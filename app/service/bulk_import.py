@@ -46,10 +46,10 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
-def trigger_db_dump_upload_to_sql() -> None:
+def trigger_db_dump_upload_to_sql(thread_id: Optional[str]) -> None:
     dump_file = get_database_dump()
     try:
-        upload_sql_db_dump_to_s3(dump_file)
+        upload_sql_db_dump_to_s3(dump_file, thread_id)
     finally:
         delete_local_file(dump_file)
 
@@ -453,7 +453,7 @@ def import_data(
     :raises ValidationError: raised should the data be invalid.
     """
     start_time = time.time()
-    notification_service.send_notification(
+    thread_id = notification_service.send_notification(
         f"🚀 Bulk import for corpus: {corpus_import_id} has started."
     )
     end_message = ""
@@ -513,5 +513,5 @@ def import_data(
             db.rollback()
             end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
         finally:
-            notification_service.send_notification(end_message)
-            trigger_db_dump_upload_to_sql()
+            notification_service.send_notification(end_message, thread_id)
+            trigger_db_dump_upload_to_sql(thread_id)

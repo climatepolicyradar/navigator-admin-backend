@@ -22,7 +22,8 @@ services:
       LOG_LEVEL: DEBUG
 
       # Bulk import
-      SLACK_WEBHOOK_URL: skip
+      SLACK_OAUTH_TOKEN: skip
+      SLACK_CHANNEL: updates-document-pipeline
       BULK_IMPORT_BUCKET: bulk-import-bucket
 
       # Db dump

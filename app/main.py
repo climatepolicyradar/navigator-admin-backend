@@ -84,8 +84,11 @@ except Exception as e:
         ),
     )
 
-telemetry = Telemetry(otel_config)
-tracer = telemetry.get_tracer()
+if os.getenv("DISABLE_OTEL", "false").lower() == "true":
+    telemetry = None
+else:
+    telemetry = Telemetry(otel_config)
+    tracer = telemetry.get_tracer()
 
 
 app = FastAPI(
@@ -201,6 +204,6 @@ if __name__ == "__main__":
         log_config=DEFAULT_LOGGING,
     )  # type: ignore
 
-
-telemetry.instrument_fastapi(app)
-telemetry.setup_exception_hook()
+if telemetry:
+    telemetry.instrument_fastapi(app)
+    telemetry.setup_exception_hook()

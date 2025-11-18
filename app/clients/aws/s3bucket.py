@@ -4,7 +4,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 from urllib.parse import quote_plus, urlsplit
 
 import boto3
@@ -138,12 +138,13 @@ def upload_bulk_import_json_to_s3(
     upload_json_to_s3(s3_client, context, data)
 
 
-def upload_sql_db_dump_to_s3(dump_file: str) -> None:
+def upload_sql_db_dump_to_s3(dump_file: str, thread_id: Optional[str]) -> None:
     """
     Upload the database dump to S3 and clean up local file.
 
     Args:
         dump_file (str): Path to the dump file
+        thread_id (Optional[str]): Id of the Slack thread to send notification message to.
     """
     s3_client = boto3.client("s3")
     bucket_name = os.environ.get("DATABASE_DUMP_BUCKET")
@@ -167,7 +168,9 @@ def upload_sql_db_dump_to_s3(dump_file: str) -> None:
 
     except Exception as e:
         _LOGGER.exception(f"💥 Upload failed {e}")
-        notification_service.send_notification("💥 Database Dump upload failed.")
+        notification_service.send_notification(
+            "💥 Database Dump upload failed.", thread_id
+        )
         raise e
 
 

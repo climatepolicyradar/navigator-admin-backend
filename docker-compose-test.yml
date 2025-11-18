@@ -25,6 +25,8 @@ services:
       PGDATABASE: navigator
       SECRET_KEY: ???
       LOG_LEVEL: DEBUG
+      # Disable OTEL when running tests
+      DISABLE_OTEL: true
       # API_HOST: http://navigator-admin-backend:8888
 
       # Bulk import
