@@ -19,7 +19,7 @@ uvicorn = { extras = ["standard"], version = "^0.37.0" }
 json-logging = "^1.5.1"
 httpx = "^0.28.1"
 psycopg2-binary = "^2.9.3"
-pylint = "^3.3.8"
+pylint = "^4.0.2"
 pyjwt = "^2.8.0"
 passlib = "^1.7.4"
 python-multipart = "^0.0.20"
