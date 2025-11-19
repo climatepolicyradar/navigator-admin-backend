@@ -40,7 +40,8 @@ def _create_backend_environment() -> dict[str, str]:
     secret_key = CONFIG.require("secret_key")
     bulk_import_bucket = CONFIG.require("bulk_import_bucket")
     database_dump_bucket = CONFIG.require("database_dump_bucket")
-    slack_webhook_url = CONFIG.require("slack_webhook_url")
+    slack_oauth_token = CONFIG.require("slack_oauth_token")
+    slack_channel = CONFIG.require("slack_channel")
     log_level = CONFIG.require("log_level")
     cache_bucket = CONFIG.require("cache_bucket")
     cdn_url = CONFIG.require("cdn_url")
@@ -63,7 +64,8 @@ def _create_backend_environment() -> dict[str, str]:
         "BULK_IMPORT_BUCKET": bulk_import_bucket,
         "DATABASE_DUMP_BUCKET": database_dump_bucket,
         "CACHE_BUCKET": cache_bucket,
-        "SLACK_WEBHOOK_URL": slack_webhook_url,
+        "SLACK_OAUTH_TOKEN": slack_oauth_token,
+        "SLACK_CHANNEL": slack_channel,
         "CDN_URL": cdn_url,
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,

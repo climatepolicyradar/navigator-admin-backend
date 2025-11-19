@@ -23,8 +23,6 @@ config:
     secure: AAABANnqNhZ6/xyTcnxcRuFjLE+85OwqD7uhUUo/PkzUqOBSMUMxUOBH3LZrVlzKq2n3Ig==
   admin_backend:secret_key:
     secure: AAABAJ4tlIq+2Xgl9ZgyUhsA/7EB1zY2zI/kaxEaPIl0SdwS56NFzJ2Z2BAkVm1cqE3yxKiuE2jfkQm6pK1d/Dcz2G0=
-  admin_backend:slack_webhook_url:
-    secure: AAABAMgq3YN6V0Ra+wFelw9uTskI8A0MlaNJRB7S1is4m/oDNWSQuBjJHJiisx5BjVzqdqJTWnWi4rP3KRK1NX3C9HClF5IvV9rfz+ixrWX7UZ4VHAfWYgPY9CpWPlwRmrXUphLgj8TYsCTCGhFCo24=
   admin_backend:validation_account_id:
     secure: AAABAA4bYO+O5RBLUdfRz8uOT9Fs+/sNcvElOWp3C7ThITE0o5GfGwVCyRw=
   admin_backend:vpc_private_subnet_1_id:
@@ -38,5 +36,8 @@ config:
   aws:region: eu-west-1
   admin_backend:cache_bucket: cpr-production-document-cache
   admin_backend:cdn_url: https://cdn.climatepolicyradar.org/
+  admin_backend:slack_oauth_token:
+    secure: AAABAPComJt03u0FvSk/1Yo8n+6SHWi14v7SlIsKjjQkYmSbrqkGPA3JCtn8A5ydkiR//27v1a8/gr0OuSpvn2iwf9DVgl9p+aVCT3QdNZOm0/I4A7851AE=
+  admin_backend:slack_channel: updates-document-pipeline
 environment:
   - admin_backend/production
