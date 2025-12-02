@@ -7,15 +7,15 @@ packages = [{ include = "app" }, { include = "tests" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.118.0"
+fastapi = "^0.123.0"
 fastapi-health = "^0.4.0"
-fastapi-pagination = "^0.14.2"
+fastapi-pagination = "^0.15.0"
 python-slugify = "^6.1.2"
 requests = "^2.32"
 requests-toolbelt = "^1.0.0"
 SQLAlchemy = "^1.4.53"
 SQLAlchemy-Utils = "^0.38.2"
-uvicorn = { extras = ["standard"], version = "^0.37.0" }
+uvicorn = { extras = ["standard"], version = "^0.38.0" }
 json-logging = "^1.5.1"
 httpx = "^0.28.1"
 psycopg2-binary = "^2.9.3"
@@ -25,14 +25,14 @@ passlib = "^1.7.4"
 python-multipart = "^0.0.20"
 pip = "^25.3"
 poetry = "^2.2.1"
-boto3 = "^1.40.43"
-moto = "^5.1.13"
+boto3 = "^1.42.0"
+moto = "^5.1.18"
 types-sqlalchemy = "^1.4.53.38"
 urllib3 = "^2.5.0"
 db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.9.21" }
 navigator-notify = { git = "https://github.com/climatepolicyradar/navigator-notify.git", tag = "v0.0.2-beta" }
 bcrypt = "4.0.1"
-fastapi-cli = "^0.0.13"
+fastapi-cli = "^0.0.16"
 pytest-watch = "^4.2.0"
 fastapi-utils = { version = "0.8.0", extras = ["all"] }
 python-dateutil = "^2.9.0.post0"
@@ -43,14 +43,14 @@ opentelemetry-instrumentation-sqlalchemy = ">=0.54b0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.8.0"
-python-dotenv = "^1.1.0"
+python-dotenv = "^1.2.1"
 pytest = "^8.4.2"
 pytest-dotenv = "^0.5.2"
 pytest-mock = "^3.15.1"
-black = "^25.9.0"
-pyright = "1.1.406"
+black = "^25.11.0"
+pyright = "1.1.407"
 pytest-asyncio = "^0.24.0"
-ruff = "^0.13.2"
+ruff = "^0.14.7"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
