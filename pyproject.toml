@@ -31,7 +31,7 @@ types-sqlalchemy = "^1.4.53.38"
 urllib3 = "^2.5.0"
 db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.9.21" }
 navigator-notify = { git = "https://github.com/climatepolicyradar/navigator-notify.git", tag = "v0.0.2-beta" }
-bcrypt = "4.0.1"
+bcrypt = "5.0.0"
 fastapi-cli = "^0.0.13"
 pytest-watch = "^4.2.0"
 fastapi-utils = { version = "0.8.0", extras = ["all"] }
