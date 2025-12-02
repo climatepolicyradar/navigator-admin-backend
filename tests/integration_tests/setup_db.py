@@ -364,25 +364,56 @@ def setup_db(test_db: Session, configure_empty: bool = False):
 
 
 def setup_test_data(test_db: Session, configure_empty: bool = False):
+    print(test_db.query(EntityCounter).all())
     org_id, other_org_id = _setup_organisation(test_db)
-
-    assert test_db.query(Family).count() == 0
-    _setup_family_data(test_db, org_id, other_org_id)
-    test_db.commit()
+    setup_corpus(test_db)
 
     assert test_db.query(Collection).count() == 0
     _setup_collection_data(test_db, configure_empty)
     test_db.commit()
+    if configure_empty:
+        assert test_db.query(Collection).count() == 0
+    else:
+        assert test_db.query(Collection).count() != 0
+
+    assert test_db.query(Family).count() == 0
+    _setup_family_data(test_db, org_id, other_org_id, configure_empty=configure_empty)
+    test_db.commit()
+    if configure_empty:
+        assert test_db.query(Family).count() == 0
+        assert test_db.query(FamilyGeography).count() == 0
+        assert test_db.query(FamilyCorpus).count() == 0
+        assert test_db.query(FamilyMetadata).count() == 0
+        assert test_db.query(Slug).count() == 0
+        assert test_db.query(CollectionFamily).count() == 0
+    else:
+        assert test_db.query(Family).count() != 0
+        assert test_db.query(FamilyGeography).count() != 0
+        assert test_db.query(FamilyCorpus).count() != 0
+        assert test_db.query(FamilyMetadata).count() != 0
+        assert test_db.query(Slug).count() != 0
+        assert test_db.query(CollectionFamily).count() != 0
 
     assert test_db.query(FamilyDocument).count() == 0
-    _setup_document_data(test_db)
+    _setup_document_data(test_db, configure_empty)
     test_db.commit()
+    if configure_empty:
+        assert test_db.query(FamilyDocument).count() == 0
+    else:
+        assert test_db.query(FamilyDocument).count() != 0
 
     assert test_db.query(FamilyEvent).count() == 0
-    _setup_event_data(test_db)
+    _setup_event_data(test_db, configure_empty)
     test_db.commit()
+    if configure_empty:
+        assert test_db.query(FamilyEvent).count() == 0
+    else:
+        assert test_db.query(FamilyEvent).count() != 0
 
-    setup_corpus(test_db)
+    print(test_db.query(CollectionFamily).all())
+    print(test_db.query(Collection).all())
+    print(test_db.query(Family).all())
+    print(test_db.query(FamilyEvent).all())
 
 
 def _add_app_user(
@@ -515,6 +546,7 @@ def setup_corpus(test_db: Session) -> None:
         )
     )
     test_db.commit()
+    print(test_db.query(EntityCounter).all())
 
     for item in test_db.query(EntityCounter.counter).all():
         assert item[0] == 1
@@ -537,6 +569,8 @@ def _setup_collection_data(
                 valid_metadata=data["metadata"],
             )
         )
+        # Flush to ensure collection exists before creating foreign key relationships
+        test_db.flush()
 
         test_db.add(
             CollectionOrganisation(
@@ -551,16 +585,6 @@ def _setup_collection_data(
             )
         )
 
-    for collection in EXPECTED_COLLECTIONS:
-        collection_families = collection["families"]
-        for family_import_id in collection_families:
-            test_db.add(
-                CollectionFamily(
-                    collection_import_id=collection["import_id"],
-                    family_import_id=family_import_id,
-                )
-            )
-
 
 def _setup_family_data(
     test_db: Session,
@@ -572,9 +596,7 @@ def _setup_family_data(
     if configure_empty is True:
         return None
 
-    num_families = len(initial_data)
-    for index in range(num_families):
-        data = initial_data[index]
+    for data in initial_data:
         geographies = (
             test_db.query(Geography).filter(Geography.value.in_(data["geographies"]))
         ).all()
@@ -587,6 +609,9 @@ def _setup_family_data(
                 family_category=data["category"],
             )
         )
+        # Flush to ensure family exists before creating foreign key relationships
+        test_db.flush()
+
         family_geographies = [
             FamilyGeography(
                 family_import_id=data["import_id"], geography_id=geography.id
@@ -595,6 +620,22 @@ def _setup_family_data(
         ]
         test_db.add_all(family_geographies)
 
+        # Now create collection-family links
+        collections = (
+            test_db.query(Collection).filter(
+                Collection.import_id.in_(data["collections"])
+            )
+        ).all()
+        family_collections = [
+            CollectionFamily(
+                family_import_id=data["import_id"],
+                collection_import_id=collection.import_id,
+            )
+            for collection in collections
+        ]
+        test_db.add_all(family_collections)
+
+        # Link the families to the corpus
         corpus = (
             test_db.query(Corpus)
             .filter(
@@ -603,8 +644,6 @@ def _setup_family_data(
             )
             .one()
         )
-
-        # Link the families to the corpus
         test_db.add(
             FamilyCorpus(
                 family_import_id=data["import_id"],
@@ -612,9 +651,6 @@ def _setup_family_data(
             )
         )
 
-    # Now add the metadata onto the families
-    for index in range(num_families):
-        data = initial_data[index]
         test_db.add(
             FamilyMetadata(
                 family_import_id=data["import_id"],
