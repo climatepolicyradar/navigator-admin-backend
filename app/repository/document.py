@@ -26,7 +26,7 @@ from sqlalchemy import delete as db_delete
 from sqlalchemy import desc
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound, OperationalError
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy_utils import escape_like
 
@@ -188,8 +188,12 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     """
     try:
         result = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
+    except MultipleResultsFound as e:
+        _LOGGER.error(f"Multiple documents found for import_id {import_id}: {e}")
+        return
     except NoResultFound as e:
         _LOGGER.debug(e)
+        _LOGGER.error(f"No document found for import_id {import_id} - {e}")
         return
 
     return _doc_to_dto(result)
