@@ -28,7 +28,7 @@ poetry = "^2.2.1"
 boto3 = "^1.42.0"
 moto = "^5.1.18"
 types-sqlalchemy = "^1.4.53.38"
-urllib3 = "^2.5.0"
+urllib3 = "^2.6.3"
 db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.9.21" }
 navigator-notify = { git = "https://github.com/climatepolicyradar/navigator-notify.git", tag = "v0.0.2-beta" }
 bcrypt = "4.0.1"
