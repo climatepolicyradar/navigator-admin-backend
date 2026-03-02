@@ -24,7 +24,7 @@ jobs:
       checks: write
       # For repo checkout
       contents: read
-    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator-without-version.yml@v21
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator-without-version.yml@v22
     with:
       python-version: 3.11
       poetry-version: 2.2
