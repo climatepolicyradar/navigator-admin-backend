@@ -12,7 +12,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Requirements
-RUN pip install --no-cache-dir poetry==2.0.1
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir poetry==2.0.1
 COPY poetry.lock pyproject.toml ./
 RUN poetry install --no-root
 
