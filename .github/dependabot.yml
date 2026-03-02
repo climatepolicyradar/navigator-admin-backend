@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: pip
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     groups:
       # Major updates will be raised as separate PRs by default
       minor-and-patch:
@@ -18,7 +18,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     ignore:
       - dependency-name: db-client
     target-branch: main
