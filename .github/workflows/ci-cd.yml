@@ -26,7 +26,7 @@ jobs:
       contents: read
     uses: climatepolicyradar/reusable-workflows/.github/workflows/python-precommit-validator-without-version.yml@v22
     with:
-      python-version: 3.12
+      python-version: 3.11
       poetry-version: 2.2
 
   unit-test:
