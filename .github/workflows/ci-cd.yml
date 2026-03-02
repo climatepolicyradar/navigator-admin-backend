@@ -68,3 +68,10 @@ jobs:
           POSTGRES_USER: navigator_admin
           POSTGRES_PASSWORD: password
           POSTGRES_DB: navigator
+
+  dependabot:
+    needs: [code-quality, unit-test, integration-test]
+    permissions:
+      pull-requests: write
+      contents: write
+    uses: climatepolicyradar/reusable-workflows/.github/workflows/dependabot-autopilot.yml@v22
