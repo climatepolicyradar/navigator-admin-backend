@@ -589,19 +589,42 @@ def update(
         )
 
         # Remove any collections that were originally associated with the family but
-        # now aren't.
+        # now are not.
         cols_to_remove = set(original_collections) - set(family.collections)
         for col in cols_to_remove:
+            existing_links = (
+                db.query(CollectionFamily)
+                .filter(
+                    CollectionFamily.collection_import_id == col,
+                    CollectionFamily.family_import_id == import_id,
+                )
+                .all()
+            )
+            _LOGGER.info(
+                "🕵️ About to remove collection_family links for "
+                "family_import_id=%s collection_import_id=%s; existing_count=%s",
+                import_id,
+                col,
+                len(existing_links),
+            )
+
             result = db.execute(
                 sqlalchemy.delete(CollectionFamily).where(
                     CollectionFamily.collection_import_id == col,
                     CollectionFamily.family_import_id == import_id,
                 )
             )
+            _LOGGER.info(
+                "🧨 Deleted collection_family links for "
+                "family_import_id=%s collection_import_id=%s; rowcount=%s",
+                import_id,
+                col,
+                result.rowcount,  # type: ignore
+            )
 
             if result.rowcount == 0:  # type: ignore
                 msg = f"Could not remove family {import_id} from collection {col}"
-                _LOGGER.error(msg)
+                _LOGGER.error("💥 %s", msg)
                 raise RepositoryError(msg)
 
         # Add any collections that weren't originally associated with the family.
@@ -715,9 +738,13 @@ def hard_delete(db: Session, import_id: str):
     ]
 
     for c in commands:
+        _LOGGER.info("🧹 Executing hard delete command for family %s: %s", import_id, c)
         result = db.execute(c)
-        # Keep this for debug.
-        _LOGGER.debug("%s, %s", str(c), result.rowcount)  # type: ignore
+        _LOGGER.info(
+            "💥 Hard delete command result for family %s: rowcount=%s",
+            import_id,
+            result.rowcount,  # type: ignore
+        )
 
     fam_deleted = db.query(Family).filter(Family.import_id == import_id).one_or_none()
     if fam_deleted is not None:

@@ -314,10 +314,18 @@ def delete(db: Session, import_id: str) -> bool:
         ),
         db_delete(Collection).where(Collection.import_id == import_id),
     ]
+    last_rowcount: int = 0
     for c in commands:
+        _LOGGER.info("🧹 Executing collection delete command for %s: %s", import_id, c)
         result = db.execute(c)
+        _LOGGER.info(
+            "💥 Collection delete command result for %s: rowcount=%s",
+            import_id,
+            result.rowcount,  # type: ignore
+        )
+        last_rowcount = int(result.rowcount or 0)  # type: ignore
 
-    return result.rowcount > 0  # type: ignore
+    return last_rowcount > 0
 
 
 def count(db: Session, org_id: Optional[int]) -> Optional[int]:

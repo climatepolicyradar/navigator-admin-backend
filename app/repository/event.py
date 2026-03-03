@@ -262,15 +262,21 @@ def delete(db: Session, import_id: str) -> bool:
         db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
     )
     if found is None:
-        _LOGGER.error(f"Event with id {import_id} not found")
+        _LOGGER.error("💥 Event with id %s not found", import_id)
         return False
 
+    _LOGGER.info("🧹 Deleting event with import_id=%s", import_id)
     result = db.execute(
         db_delete(FamilyEvent).where(FamilyEvent.import_id == import_id)
     )
+    _LOGGER.info(
+        "💥 Event delete result for import_id=%s: rowcount=%s",
+        import_id,
+        result.rowcount,  # type: ignore
+    )
     if result.rowcount == 0:  # type: ignore
         msg = f"Could not delete event : {import_id}"
-        _LOGGER.error(msg)
+        _LOGGER.error("💥 %s", msg)
         raise RepositoryError(msg)
 
     return True
