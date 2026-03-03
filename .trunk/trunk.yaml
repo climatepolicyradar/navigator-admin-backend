@@ -28,6 +28,7 @@ lint:
     # Hadolint seems to have excessive memory use on Mac.
     # Disable until we can investigate further.
     - hadolint
+    - trivy # Failing on install and not high priority to fix.
 
   definitions:
     - name: bandit
@@ -70,7 +71,6 @@ lint:
     - shfmt@3.6.0
     - taplo@0.9.3
     - terrascan@1.19.9
-    - trivy@0.63.0
     - trufflehog@3.88.35
     - yamllint@1.37.1
 

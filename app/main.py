@@ -10,7 +10,8 @@ import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from db_client import run_migrations
+
+# from db_client import run_migrations # TODO: Uncomment this after flattening has finished.
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_health import health
@@ -33,7 +34,8 @@ from app.api.api_v1.routers import (
     organisations_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
-from app.clients.db.session import engine
+
+# from app.clients.db.session import engine # TODO: Uncomment this after flattening has finished.
 from app.logging_config import DEFAULT_LOGGING, setup_json_logging
 from app.service.health import is_database_online
 from app.telemetry import Telemetry
@@ -59,7 +61,7 @@ manifest_path = os.path.join(root_dir, "service-manifest.json")
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
     """Run startup and shutdown events."""
-    run_migrations(engine)
+    # run_migrations(engine) # TODO: Uncomment this after flattening has finished.
     yield
 
 
