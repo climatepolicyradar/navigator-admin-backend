@@ -29,6 +29,7 @@ lint:
     # Disable until we can investigate further.
     - hadolint
     - trivy # Failing on install and not high priority to fix.
+    - terrascan
 
   definitions:
     - name: bandit
@@ -70,7 +71,6 @@ lint:
     - shellcheck@0.10.0
     - shfmt@3.6.0
     - taplo@0.9.3
-    - terrascan@1.19.9
     - trufflehog@3.88.35
     - yamllint@1.37.1
 

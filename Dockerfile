@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /usr/src
 ENV PYTHONPATH=/usr/src
@@ -12,7 +12,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Requirements
-RUN pip install --no-cache-dir poetry==2.0.1
+RUN pip install --no-cache-dir poetry==2.3.0
 COPY poetry.lock pyproject.toml ./
 RUN poetry config virtualenvs.create false && poetry install --no-root
 
