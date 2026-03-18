@@ -10,9 +10,7 @@ from db_client.models.dfce.family import FamilyCorpus
 from db_client.models.organisation import Organisation
 from db_client.models.organisation.corpus import Corpus
 from db_client.models.organisation.counters import CountedEntity
-from sqlalchemy import Column, and_
-from sqlalchemy import delete as db_delete
-from sqlalchemy import or_
+from sqlalchemy import Column, and_, or_
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Query, Session
@@ -262,15 +260,24 @@ def delete(db: Session, import_id: str) -> bool:
         db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
     )
     if found is None:
-        _LOGGER.error(f"Event with id {import_id} not found")
+        _LOGGER.error("💥 Event with id %s not found", import_id)
         return False
 
-    result = db.execute(
-        db_delete(FamilyEvent).where(FamilyEvent.import_id == import_id)
+    _LOGGER.info("🧹 Deleting event with import_id=%s via ORM", import_id)
+    db.delete(found)
+    db.flush()
+
+    remaining = (
+        db.query(FamilyEvent).filter(FamilyEvent.import_id == import_id).one_or_none()
     )
-    if result.rowcount == 0:  # type: ignore
+    _LOGGER.info(
+        "💥 Post-delete check for event import_id=%s; remaining=%s",
+        import_id,
+        bool(remaining),
+    )
+    if remaining is not None:
         msg = f"Could not delete event : {import_id}"
-        _LOGGER.error(msg)
+        _LOGGER.error("💥 %s", msg)
         raise RepositoryError(msg)
 
     return True

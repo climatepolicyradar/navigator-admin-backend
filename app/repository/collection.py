@@ -302,22 +302,44 @@ def delete(db: Session, import_id: str) -> bool:
     :param str import_id: The collection import id to delete.
     :return bool: True if deleted False if not.
     """
+    # Remove relationship rows via ORM first to avoid any issues with
+    # core DELETE statements and automapped composite primary keys.
+    cf_links = (
+        db.query(CollectionFamily)
+        .filter(CollectionFamily.collection_import_id == import_id)
+        .all()
+    )
+    _LOGGER.info(
+        "🧹 Found %s collection_family links for delete of collection %s",
+        len(cf_links),
+        import_id,
+    )
+    for link in cf_links:
+        db.delete(link)
+
+    db.flush()
+
     commands = [
         db_delete(CollectionOrganisation).where(
             CollectionOrganisation.collection_import_id == import_id
-        ),
-        db_delete(CollectionFamily).where(
-            CollectionFamily.collection_import_id == import_id
         ),
         db_delete(Slug).where(
             Slug.collection_import_id == import_id,
         ),
         db_delete(Collection).where(Collection.import_id == import_id),
     ]
+    last_rowcount: int = 0
     for c in commands:
+        _LOGGER.info("🧹 Executing collection delete command for %s: %s", import_id, c)
         result = db.execute(c)
+        _LOGGER.info(
+            "💥 Collection delete command result for %s: rowcount=%s",
+            import_id,
+            result.rowcount,  # type: ignore
+        )
+        last_rowcount = int(result.rowcount or 0)  # type: ignore
 
-    return result.rowcount > 0  # type: ignore
+    return last_rowcount > 0
 
 
 def count(db: Session, org_id: Optional[int]) -> Optional[int]:
