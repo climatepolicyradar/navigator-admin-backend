@@ -40,8 +40,6 @@ def _create_backend_environment() -> dict[str, str]:
     secret_key = CONFIG.require("secret_key")
     bulk_import_bucket = CONFIG.require("bulk_import_bucket")
     database_dump_bucket = CONFIG.require("database_dump_bucket")
-    slack_oauth_token = CONFIG.require("slack_oauth_token")
-    slack_channel = CONFIG.require("slack_channel")
     log_level = CONFIG.require("log_level")
     cache_bucket = CONFIG.require("cache_bucket")
     cdn_url = CONFIG.require("cdn_url")
@@ -64,14 +62,15 @@ def _create_backend_environment() -> dict[str, str]:
         "BULK_IMPORT_BUCKET": bulk_import_bucket,
         "DATABASE_DUMP_BUCKET": database_dump_bucket,
         "CACHE_BUCKET": cache_bucket,
-        "SLACK_OAUTH_TOKEN": slack_oauth_token,
-        "SLACK_CHANNEL": slack_channel,
         "CDN_URL": cdn_url,
         "AWS_REGION": "eu-west-1",
         "TOKEN_SECRET_KEY": backend_token_secret_key,
         "LOG_LEVEL": log_level,
         "ENV": pulumi.get_stack(),
     }
+    if stack == "production":
+        environment["SLACK_OAUTH_TOKEN"] = CONFIG.require("slack_oauth_token")
+        environment["SLACK_CHANNEL"] = CONFIG.require("slack_channel")
 
     return environment
 
@@ -393,7 +392,6 @@ pulumi.export(
 ########################################################################
 # Create S3 Buckets
 ########################################################################
-EU_WEST_1_HOSTED_ZONE_ID = "Z1BKCTXD74EZPE"
 if stack == "production":
     production_document_pdf_upload_store = aws.s3.Bucket(
         "production-document-pdf-upload-store",
@@ -413,7 +411,6 @@ if stack == "production":
                 "allowed_origins": ["*"],
             },
         ],
-        hosted_zone_id=EU_WEST_1_HOSTED_ZONE_ID,
         request_payer="BucketOwner",
         server_side_encryption_configuration={
             "rule": {
@@ -435,7 +432,6 @@ if stack == "production":
     production_rds_backups = aws.s3.Bucket(
         "production-rds-backups",
         bucket="cpr-production-rds",
-        hosted_zone_id=EU_WEST_1_HOSTED_ZONE_ID,
         lifecycle_rules=[
             {
                 "enabled": True,
