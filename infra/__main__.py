@@ -389,3 +389,71 @@ aws.ssm.Parameter(
 pulumi.export(
     "navigator_admin_read_replica_endpoint", navigator_admin_read_replica.endpoint
 )
+
+########################################################################
+# Create S3 Buckets
+########################################################################
+EU_WEST_1_HOSTED_ZONE_ID = "Z1BKCTXD74EZPE"
+if stack == "production":
+    production_document_pdf_upload_store = aws.s3.Bucket(
+        "production-document-pdf-upload-store",
+        bucket="cpr-prod-cclw-document-admin-store",
+        cors_rules=[
+            {
+                "allowed_headers": ["*"],
+                "allowed_methods": [
+                    "PUT",
+                    "POST",
+                    "DELETE",
+                ],
+                "allowed_origins": ["https://*.retool.com"],
+            },
+            {
+                "allowed_methods": ["GET"],
+                "allowed_origins": ["*"],
+            },
+        ],
+        hosted_zone_id=EU_WEST_1_HOSTED_ZONE_ID,
+        request_payer="BucketOwner",
+        server_side_encryption_configuration={
+            "rule": {
+                "apply_server_side_encryption_by_default": {
+                    "sse_algorithm": "AES256",
+                },
+                "bucket_key_enabled": True,
+            },
+        },
+        tags={
+            "map-migrated": "mig46666",
+        },
+        versioning={
+            "enabled": True,
+        },
+        opts=pulumi.ResourceOptions(protect=True),
+    )
+
+    production_rds_backups = aws.s3.Bucket(
+        "production-rds-backups",
+        bucket="cpr-production-rds",
+        hosted_zone_id=EU_WEST_1_HOSTED_ZONE_ID,
+        lifecycle_rules=[
+            {
+                "enabled": True,
+                "expiration": {
+                    "days": 21,
+                },
+                "id": "SQL-Dump-Retention-3weeks",
+                "prefix": "dumps/",
+            }
+        ],
+        request_payer="BucketOwner",
+        server_side_encryption_configuration={
+            "rule": {
+                "apply_server_side_encryption_by_default": {
+                    "sse_algorithm": "AES256",
+                },
+                "bucket_key_enabled": True,
+            },
+        },
+        opts=pulumi.ResourceOptions(protect=True),
+    )
