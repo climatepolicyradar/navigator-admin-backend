@@ -396,60 +396,74 @@ if stack == "production":
     production_document_pdf_upload_store = aws.s3.Bucket(
         "production-document-pdf-upload-store",
         bucket="cpr-prod-cclw-document-admin-store",
+        versioning=aws.s3.BucketVersioningArgs(enabled=True),
         cors_rules=[
-            {
-                "allowed_headers": ["*"],
-                "allowed_methods": [
+            aws.s3.BucketCorsRuleArgs(
+                allowed_headers=["*"],
+                allowed_methods=[
                     "PUT",
                     "POST",
                     "DELETE",
                 ],
-                "allowed_origins": ["https://*.retool.com"],
-            },
-            {
-                "allowed_methods": ["GET"],
-                "allowed_origins": ["*"],
-            },
+                allowed_origins=["https://*.retool.com"],
+            ),
+            aws.s3.BucketCorsRuleArgs(
+                allowed_methods=["GET"],
+                allowed_origins=["*"],
+            ),
         ],
         request_payer="BucketOwner",
-        server_side_encryption_configuration={
-            "rule": {
-                "apply_server_side_encryption_by_default": {
-                    "sse_algorithm": "AES256",
-                },
-                "bucket_key_enabled": True,
-            },
-        },
-        tags={
-            "map-migrated": "mig46666",
-        },
-        versioning={
-            "enabled": True,
-        },
+        server_side_encryption_configuration=aws.s3.BucketServerSideEncryptionConfigurationArgs(
+            rule=aws.s3.BucketServerSideEncryptionConfigurationRuleArgs(
+                apply_server_side_encryption_by_default=aws.s3.BucketServerSideEncryptionConfigurationRuleApplyServerSideEncryptionByDefaultArgs(
+                    sse_algorithm="AES256",
+                ),
+                bucket_key_enabled=True,
+            ),
+        ),
+        lifecycle_rules=[
+            aws.s3.BucketLifecycleRuleArgs(
+                enabled=True,
+                id="noncurrent-version-cleanup-90d",
+                noncurrent_version_expiration=aws.s3.BucketLifecycleRuleNoncurrentVersionExpirationArgs(
+                    days=90,
+                ),
+            ),
+        ],
+        tags=dict(DEFAULT_TAGS),
         opts=pulumi.ResourceOptions(protect=True),
     )
 
     production_rds_backups = aws.s3.Bucket(
         "production-rds-backups",
         bucket="cpr-production-rds",
+        versioning=aws.s3.BucketVersioningArgs(enabled=True),
         lifecycle_rules=[
-            {
-                "enabled": True,
-                "expiration": {
-                    "days": 21,
-                },
-                "id": "SQL-Dump-Retention-3weeks",
-                "prefix": "dumps/",
-            }
+            aws.s3.BucketLifecycleRuleArgs(
+                enabled=True,
+                id="noncurrent-version-cleanup-90d",
+                noncurrent_version_expiration=aws.s3.BucketLifecycleRuleNoncurrentVersionExpirationArgs(
+                    days=90,
+                ),
+            ),
+            aws.s3.BucketLifecycleRuleArgs(
+                enabled=True,
+                id="SQL-Dump-Retention-3weeks",
+                prefix="dumps/",
+                expiration=aws.s3.BucketLifecycleRuleExpirationArgs(
+                    days=21,
+                ),
+            ),
         ],
         request_payer="BucketOwner",
-        server_side_encryption_configuration={
-            "rule": {
-                "apply_server_side_encryption_by_default": {
-                    "sse_algorithm": "AES256",
-                },
-                "bucket_key_enabled": True,
-            },
-        },
+        server_side_encryption_configuration=aws.s3.BucketServerSideEncryptionConfigurationArgs(
+            rule=aws.s3.BucketServerSideEncryptionConfigurationRuleArgs(
+                apply_server_side_encryption_by_default=aws.s3.BucketServerSideEncryptionConfigurationRuleApplyServerSideEncryptionByDefaultArgs(
+                    sse_algorithm="AES256",
+                ),
+                bucket_key_enabled=True,
+            ),
+        ),
+        tags=dict(DEFAULT_TAGS),
         opts=pulumi.ResourceOptions(protect=True),
     )
