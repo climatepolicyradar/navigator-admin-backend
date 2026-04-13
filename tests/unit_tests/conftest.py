@@ -26,6 +26,7 @@ import app.service.corpus_type as corpus_type_service
 import app.service.document as document_service
 import app.service.event as event_service
 import app.service.family as family_service
+import app.service.organisation as organisation_service
 import app.service.taxonomy as taxonomy_service
 import app.service.token as token_service
 import app.service.validation as validation_service
@@ -66,6 +67,7 @@ from tests.mocks.services.corpus_type_service import mock_corpus_type_service
 from tests.mocks.services.document_service import mock_document_service
 from tests.mocks.services.event_service import mock_event_service
 from tests.mocks.services.family_service import mock_family_service
+from tests.mocks.services.organisation_service import mock_organisation_service
 from tests.mocks.services.validation_service import mock_validation_service
 
 ORG_ID = 1
@@ -256,6 +258,12 @@ def validation_service_mock(monkeypatch, mocker):
     """Mocks the service for a single test."""
     mock_validation_service(validation_service, monkeypatch, mocker)
     yield validation_service
+
+
+@pytest.fixture
+def organisation_service_mock(monkeypatch, mocker):
+    """Wired doubles for :mod:`app.service.organisation` unit tests."""
+    yield mock_organisation_service(organisation_service, monkeypatch, mocker)
 
 
 # ----- User tokens

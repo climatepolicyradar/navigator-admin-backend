@@ -38,7 +38,7 @@ def ensure_entity_counter_for_organisation(db: Session, org_internal_name: str) 
     )
     if existing is not None:
         _LOGGER.warning(
-            "🎰 Entity counter already exists for organisation prefix %r; "
+            "Entity counter already exists for organisation prefix %r; "
             "skipping insert",
             org_internal_name,
         )
@@ -53,7 +53,7 @@ def ensure_entity_counter_for_organisation(db: Session, org_internal_name: str) 
     )
     db.flush()
     _LOGGER.info(
-        "🧮 Created entity_counter row for organisation prefix %r",
+        "Created entity_counter row for organisation prefix %r",
         org_internal_name,
     )
 
