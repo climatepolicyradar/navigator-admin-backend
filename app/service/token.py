@@ -72,8 +72,8 @@ def decode(token: str) -> UserContext:
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except jwt.PyJWTError:
-        msg = "Error when decoding token"
+    except jwt.PyJWTError as e:
+        msg = f"Error when decoding token: {e}"
         _LOGGER.exception(msg)
         raise TokenError(msg)
 

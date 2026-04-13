@@ -84,7 +84,7 @@ def create(db: Session, corpus_type: CorpusTypeCreateDTO) -> str:
         db.add(new_corpus_type)
         db.commit()
     except Exception as e:
-        _LOGGER.exception("Error trying to create Corpus Type")
+        _LOGGER.exception(f"Error trying to create Corpus Type: {e}")
         raise RepositoryError(e)
 
     return cast(str, new_corpus_type.name)
