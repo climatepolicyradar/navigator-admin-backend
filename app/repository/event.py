@@ -200,7 +200,7 @@ def create(db: Session, event: EventCreateDTO) -> str:
 
         db.add(new_family_event)
     except Exception as e:
-        _LOGGER.exception(f"Error trying to create Event: {e}")
+        _LOGGER.exception("Error trying to create Event")
         raise e
 
     return cast(str, new_family_event.import_id)

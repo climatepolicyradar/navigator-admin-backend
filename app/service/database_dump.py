@@ -112,7 +112,7 @@ def get_database_dump(timeout_secs: int = 300) -> str:
         raise RuntimeError(f"Database dump timed out after {timeout_secs} seconds")
 
     except subprocess.CalledProcessError as e:
-        _LOGGER.exception(f"💥 Database dump failed: {e}")
+        _LOGGER.exception("💥 Database dump failed")
         if e.stderr:
             _LOGGER.error(f"stderr: {e.stderr}")
         if dump_file.exists():
@@ -120,7 +120,7 @@ def get_database_dump(timeout_secs: int = 300) -> str:
         raise e
 
     except Exception as e:
-        _LOGGER.exception(f"⚠️ Unexpected error during database dump: {e}")
+        _LOGGER.exception("⚠️ Unexpected error during database dump")
         if dump_file.exists():
             dump_file.unlink()
         raise e

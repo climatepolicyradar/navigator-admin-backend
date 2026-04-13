@@ -314,7 +314,7 @@ def create(db: Session, corpus: CorpusCreateDTO) -> str:
         db.add(new_corpus)
         db.flush()
     except Exception as e:
-        _LOGGER.exception(f"Error trying to create Corpus: {e}")
+        _LOGGER.exception("Error trying to create Corpus")
         raise RepositoryError(e)
 
     return cast(str, new_corpus.import_id)

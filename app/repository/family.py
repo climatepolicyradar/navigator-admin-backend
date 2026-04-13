@@ -664,7 +664,7 @@ def create(
     except RepositoryError:
         raise
     except Exception as e:
-        _LOGGER.exception("🧬 Error trying to create Family: %s", e)
+        _LOGGER.exception("🧬 Error trying to create Family")
         raise RepositoryError(str(e)) from e
 
     # Add a slug
