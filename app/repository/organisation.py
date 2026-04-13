@@ -49,6 +49,7 @@ def ensure_entity_counter_for_organisation(db: Session, org_internal_name: str) 
         EntityCounter(
             prefix=org_internal_name,
             description=description,
+            counter=0,
         )
     )
     db.flush()
