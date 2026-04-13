@@ -13,10 +13,18 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
-    postgresql-client && \
-    rm -rf /var/lib/apt/lists/*
+    postgresql-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir poetry==2.3.0
+# Install Poetry in its own prefix so `poetry install` into site-packages
+# never upgrades the running Poetry install (avoids broken virtualenv).
+ENV POETRY_VERSION=2.2.1 \
+    POETRY_HOME=/opt/poetry \
+    POETRY_NO_INTERACTION=1 \
+    PATH="/opt/poetry/bin:${PATH}"
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
 COPY poetry.lock pyproject.toml ./
 RUN poetry config virtualenvs.create false && poetry install --no-root
 
