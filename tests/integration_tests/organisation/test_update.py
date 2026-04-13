@@ -1,4 +1,4 @@
-from db_client.models.organisation import Organisation
+from db_client.models.organisation import EntityCounter, Organisation
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -56,6 +56,13 @@ def test_successfully_updates_an_existing_organisation(
     assert saved_organisation.organisation_type == updated_organisation.type
     assert saved_organisation.attribution_url == updated_organisation.attribution_url
 
+    counter = (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == updated_organisation.internal_name)
+        .one_or_none()
+    )
+    assert counter is not None
+
 
 def test_successfully_updates_an_existing_organisation_with_attribution_url(
     client: TestClient, data_db: Session, superuser_header_token
@@ -104,6 +111,13 @@ def test_successfully_updates_an_existing_organisation_with_attribution_url(
     assert saved_organisation.name == updated_organisation.internal_name
     assert saved_organisation.attribution_url == updated_organisation.attribution_url
 
+    counter = (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == updated_organisation.internal_name)
+        .one_or_none()
+    )
+    assert counter is not None
+
 
 def test_update_idempotency(
     client: TestClient, data_db: Session, superuser_header_token
@@ -145,6 +159,66 @@ def test_update_idempotency(
     assert saved_organisation.organisation_type == update_organisation["type"]
     assert saved_organisation.attribution_url == update_organisation["attribution_url"]
 
+    counter = (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == update_organisation["internal_name"])
+        .one_or_none()
+    )
+    assert counter is not None
+
+
+def test_update_backfills_entity_counter_when_org_had_none(
+    client: TestClient, data_db: Session, superuser_header_token
+):
+    """Organisation row without ``entity_counter`` gains one on PUT."""
+    org_id = 9_501
+    internal_name = "LegacyOrgNoCounter9501"
+    data_db.add(
+        Organisation(
+            id=org_id,
+            name=internal_name,
+            display_name="Legacy display",
+            description="Legacy",
+            organisation_type="ORG",
+            attribution_url=None,
+        )
+    )
+    data_db.flush()
+    data_db.query(EntityCounter).filter(EntityCounter.prefix == internal_name).delete(
+        synchronize_session=False
+    )
+    data_db.commit()
+
+    assert (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == internal_name)
+        .one_or_none()
+        is None
+    )
+
+    payload = OrganisationWriteDTO(
+        internal_name=internal_name,
+        display_name="Legacy display updated",
+        description="Legacy",
+        type="ORG",
+        attribution_url=None,
+    )
+
+    response = client.put(
+        f"/api/v1/organisations/{org_id}",
+        headers=superuser_header_token,
+        json=payload.model_dump(),
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    counter = (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == internal_name)
+        .one_or_none()
+    )
+    assert counter is not None
+
 
 def test_returns_404_status_code_if_organisation_not_found(
     client: TestClient, data_db: Session, superuser_header_token
@@ -167,6 +241,13 @@ def test_returns_404_status_code_if_organisation_not_found(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     data = response.json()
     assert data["detail"] == f"Unable to find organisation to update for id: {id}"
+
+    assert (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == updated_organisation.internal_name)
+        .one_or_none()
+        is None
+    )
 
 
 def test_update_organisation_when_not_authorised(client: TestClient, data_db: Session):

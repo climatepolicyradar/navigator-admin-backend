@@ -6,9 +6,17 @@ class ExceptionWithMessage(Exception):
         """
         Returns the message for the exception.
 
+        Coerces the first argument to ``str`` so HTTP layers never receive
+        a non-serialisable object (e.g. a wrapped ``NoResultFound``).
+
         :return str: The message string.
         """
-        return self.args[0] if len(self.args) > 0 else "<no message>"
+        if len(self.args) == 0:
+            return "<no message>"
+        first = self.args[0]
+        if isinstance(first, str):
+            return first
+        return str(first)
 
 
 class AuthenticationError(ExceptionWithMessage):

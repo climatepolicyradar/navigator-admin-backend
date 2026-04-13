@@ -50,15 +50,24 @@ def get(
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def create(organisation: OrganisationCreateDTO) -> int:
     """
-    Creates a new organisation with the values passed.
+    Create an organisation and ensure it has an ``entity_counter`` row.
 
-    :param OrganisationCreateDTO organisation: The values for the new organisation to create.
-    :raises RepositoryError: If there is an error during creation.
-    :return int: The id of the newly created organisation.
+    Import-id generation depends on that row; the service orchestrates
+    persistence after the core insert.
+
+    :param organisation: Payload for the new organisation.
+    :type organisation: OrganisationCreateDTO
+    :raises RepositoryError: If raised by lower layers (propagated).
+    :return: Database id of the new organisation row.
+    :rtype: int
     """
     with db_session.get_db() as db:
         try:
-            return organisation_repo.create(db, organisation)
+            org_id = organisation_repo.create(db, organisation)
+            organisation_repo.ensure_entity_counter_for_organisation(
+                db, organisation.internal_name
+            )
+            return org_id
         except Exception as e:
             db.rollback()
             raise e
@@ -71,19 +80,29 @@ def update(
     id: int, organisation: OrganisationWriteDTO
 ) -> Optional[OrganisationReadDTO]:
     """
-    Updates an existing organisation with the values passed.
+    Update an organisation; ensure ``entity_counter`` exists when found.
 
-    :param int id: The id of the existing organisation to be updated.
-    :param OrganisationWriteDTO organisation: The values for updating an existing organisation.
-    :raises Exception: If there is an error during the update.
-    :return OrganisationReadDTO: The updated organisation.
+    Backfills a missing counter even when the UPDATE is a no-op so legacy
+    rows are repaired on save.
+
+    :param id: Primary key of the organisation.
+    :type id: int
+    :param organisation: Replacement field values.
+    :type organisation: OrganisationWriteDTO
+    :raises Exception: Database or repository failures.
+    :return: The updated DTO, or ``None`` if the id does not exist.
+    :rtype: Optional[OrganisationReadDTO]
     """
     with db_session.get_db() as db:
         try:
-            if organisation_repo.update(db, id, organisation):
-                db.commit()
-            else:
+            outcome = organisation_repo.update(db, id, organisation)
+            if outcome is None:
                 db.rollback()
+            else:
+                organisation_repo.ensure_entity_counter_for_organisation(
+                    db, organisation.internal_name
+                )
+                db.commit()
         except Exception as e:
             db.rollback()
             raise e
