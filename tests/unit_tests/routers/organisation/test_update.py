@@ -27,3 +27,4 @@ def test_update_returns_503_on_repository_error(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Repository Error: Bad organisation repo"
+    assert organisation_repo_mock.ensure_entity_counter_for_organisation.call_count == 0

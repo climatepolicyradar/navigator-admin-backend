@@ -453,7 +453,7 @@ def search(
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
             raise TimeoutError
-        raise RepositoryError(e)
+        raise RepositoryError(str(e)) from e
 
     # Build DTOs from projected rows (no ORM traversal)
     results: list[FamilyReadDTO] = []
@@ -661,9 +661,11 @@ def create(
         )
 
         db.flush()
+    except RepositoryError:
+        raise
     except Exception as e:
-        _LOGGER.exception(f"Error trying to create Family: {e}")
-        raise RepositoryError(e)
+        _LOGGER.exception("🧬 Error trying to create Family: %s", e)
+        raise RepositoryError(str(e)) from e
 
     # Add a slug
     db.add(

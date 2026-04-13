@@ -11,6 +11,8 @@ from db_client.models.organisation.users import Organisation
 from slugify import slugify
 from sqlalchemy.orm import Session
 
+from app.errors import RepositoryError
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -89,24 +91,37 @@ def generate_import_id(
     """
     Generates an import_id given the parameters.
 
-    If the org id is supplied the name is queried for to find the counter.
+    If the org id is supplied the organisation name is resolved and used
+    to find the counter row.
 
     :param Session db: the database session
     :param CountedEntity entity_type: the entity to be counted
     :param Union[str, int] org: the organisation id or name.
+    :raises RepositoryError: If the organisation or entity counter row is
+        missing.
     :return str: the generated import_id
     """
 
     if isinstance(org, str):
         org_name = org
     else:
-        org_name = (
-            db.query(Organisation.name).filter(Organisation.id == org).scalar_subquery()
-        )
+        resolved = db.query(Organisation.name).filter(Organisation.id == org).scalar()
+        if resolved is None:
+            msg = f"No organisation found for id {org}"
+            _LOGGER.error("🗂️ %s", msg)
+            raise RepositoryError(msg)
+        org_name = cast(str, resolved)
 
-    counter: EntityCounter = (
-        db.query(EntityCounter).filter(EntityCounter.prefix == org_name).one()
+    counter = (
+        db.query(EntityCounter).filter(EntityCounter.prefix == org_name).one_or_none()
     )
+    if counter is None:
+        msg = (
+            f"No entity counter found for organisation prefix {org_name!r}; "
+            "cannot generate import id."
+        )
+        _LOGGER.error("🎲 %s", msg)
+        raise RepositoryError(msg)
     return counter.create_import_id(entity_type)
 
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pytest import MonkeyPatch
 
 from app.model.organisation import OrganisationCreateDTO, OrganisationWriteDTO
@@ -13,7 +15,9 @@ def mock_rollback_organisation_repo(
         actual_create(db, data)
         raise Exception("Error creating an organisation")
 
-    def mock_update_organisation(db, id: int, data: OrganisationWriteDTO) -> int:
+    def mock_update_organisation(
+        db, id: int, data: OrganisationWriteDTO
+    ) -> Optional[bool]:
         actual_update(db, id, data)
         raise Exception(f"Error updating organisation: {id}")
 

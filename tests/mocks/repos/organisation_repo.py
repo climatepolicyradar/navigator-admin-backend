@@ -1,4 +1,5 @@
 from typing import Optional
+from unittest.mock import MagicMock
 
 from pytest import MonkeyPatch
 
@@ -25,7 +26,7 @@ def mock_organisation_repo(organisation_repo, monkeypatch: MonkeyPatch, mocker):
         maybe_throw()
         return 1
 
-    def mock_update(_, id: int, data: OrganisationWriteDTO) -> bool:
+    def mock_update(_, id: int, data: OrganisationWriteDTO) -> Optional[bool]:
         maybe_throw()
         return True
 
@@ -37,3 +38,10 @@ def mock_organisation_repo(organisation_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(organisation_repo, "update", mock_update)
     mocker.spy(organisation_repo, "update")
+
+    ensure_entity_counter_mock = MagicMock(return_value=None)
+    monkeypatch.setattr(
+        organisation_repo,
+        "ensure_entity_counter_for_organisation",
+        ensure_entity_counter_mock,
+    )

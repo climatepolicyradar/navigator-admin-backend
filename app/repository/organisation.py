@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, cast
 
+from db_client.models.organisation.counters import EntityCounter
 from db_client.models.organisation.users import Organisation
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import MultipleResultsFound
@@ -15,6 +16,46 @@ from app.model.organisation import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def ensure_entity_counter_for_organisation(db: Session, org_internal_name: str) -> None:
+    """Persist an ``entity_counter`` row for ``organisation.name`` if absent.
+
+    Pure persistence; callers decide when this invariant must hold.
+
+    :param db: Active database session.
+    :type db: Session
+    :param org_internal_name: The organisation ``name`` (internal name).
+        The parent row must already be visible in this transaction.
+    :type org_internal_name: str
+    :return: Nothing.
+    :rtype: None
+    """
+    existing = (
+        db.query(EntityCounter)
+        .filter(EntityCounter.prefix == org_internal_name)
+        .one_or_none()
+    )
+    if existing is not None:
+        _LOGGER.warning(
+            "🎰 Entity counter already exists for organisation prefix %r; "
+            "skipping insert",
+            org_internal_name,
+        )
+        return
+
+    description = f"Counter for {org_internal_name} entities"
+    db.add(
+        EntityCounter(
+            prefix=org_internal_name,
+            description=description,
+        )
+    )
+    db.flush()
+    _LOGGER.info(
+        "🧮 Created entity_counter row for organisation prefix %r",
+        org_internal_name,
+    )
 
 
 def get_id_from_name(db: Session, org_name: str) -> Optional[int]:
@@ -87,12 +128,15 @@ def get_by_id(db: Session, org_id: int) -> Optional[OrganisationReadDTO]:
 
 def create(db: Session, organisation: OrganisationCreateDTO) -> int:
     """
-    Creates a new organisation.
+    Insert a new ``organisation`` row.
 
-    :param db Session: The database connection.
-    :param OrganisationCreateDTO collection: The values for the new organisation to be created.
+    :param db: The database connection.
+    :type db: Session
+    :param organisation: Values for the new organisation.
+    :type organisation: OrganisationCreateDTO
     :raises RepositoryError: If an organisation could not be created.
-    :return int: The id of the newly created organisation.
+    :return: The id of the newly created organisation.
+    :rtype: int
     """
     new_organisation = Organisation(
         name=organisation.internal_name,
@@ -108,15 +152,20 @@ def create(db: Session, organisation: OrganisationCreateDTO) -> int:
     return int(getattr(new_organisation, "id"))
 
 
-def update(db: Session, id: int, organisation: OrganisationWriteDTO) -> bool:
+def update(db: Session, id: int, organisation: OrganisationWriteDTO) -> Optional[bool]:
     """
-    Updates an existing organisation.
+    Update fields on an existing ``organisation`` row.
 
-    :param db Session: The database connection.
-    :param int id: The id of the existing organisation to be updated.
-    :param OrganisationWriteDTO collection: The values for updating an existing organisation.
-    :raises RepositoryError: If an organisation could not be created.
-    :return bool: True if new values were set otherwise false.
+    :param db: The database connection.
+    :type db: Session
+    :param id: The id of the organisation to update.
+    :type id: int
+    :param organisation: New field values.
+    :type organisation: OrganisationWriteDTO
+    :return: ``None`` if no row matched ``id``; else ``True`` if at least
+        one column changed, ``False`` if the row matched but was
+        unchanged.
+    :rtype: Optional[bool]
     """
     original_organisation = (
         db.query(Organisation).filter(Organisation.id == id).one_or_none()
@@ -124,7 +173,7 @@ def update(db: Session, id: int, organisation: OrganisationWriteDTO) -> bool:
 
     if original_organisation is None:
         _LOGGER.error(f"Unable to find organisation for update: {id}")
-        return False
+        return None
 
     result = db.execute(
         db_update(Organisation)

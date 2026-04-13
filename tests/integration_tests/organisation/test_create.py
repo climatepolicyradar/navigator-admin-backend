@@ -1,4 +1,4 @@
-from db_client.models.organisation import Organisation
+from db_client.models.organisation import EntityCounter, Organisation
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -38,6 +38,14 @@ def test_successfully_creates_an_organisation(
     assert created_organisation.organisation_type == new_organisation.type
     assert created_organisation.attribution_url == new_organisation.attribution_url
 
+    counter = (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == new_organisation.internal_name)
+        .one_or_none()
+    )
+    assert counter is not None
+    assert counter.prefix == new_organisation.internal_name
+
 
 def test_successfully_creates_an_organisation_without_attribution_url(
     client: TestClient, data_db: Session, superuser_header_token
@@ -67,6 +75,13 @@ def test_successfully_creates_an_organisation_without_attribution_url(
 
     assert created_organisation.name == new_organisation.internal_name
     assert created_organisation.attribution_url == new_organisation.attribution_url
+
+    counter = (
+        data_db.query(EntityCounter)
+        .filter(EntityCounter.prefix == new_organisation.internal_name)
+        .one_or_none()
+    )
+    assert counter is not None
 
 
 def test_does_not_create_a_new_organisation_on_error(
