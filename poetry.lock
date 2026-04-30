@@ -2478,6 +2478,21 @@ files = [
 ]
 
 [[package]]
+name = "slack-sdk"
+version = "3.41.0"
+description = "The Slack API Platform SDK for Python"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "slack_sdk-3.41.0-py2.py3-none-any.whl", hash = "sha256:bb18dcdfff1413ec448e759cf807ec3324090993d8ab9111c74081623b692a89"},
+    {file = "slack_sdk-3.41.0.tar.gz", hash = "sha256:eb61eb12a65bebeca9cb5d36b3f799e836ed2be21b456d15df2627cfe34076ca"},
+]
+
+[package.extras]
+optional = ["SQLAlchemy (>=1.4,<3)", "aiodns (>1.0)", "aiohttp (>=3.7.3,<4)", "boto3 (<=2)", "websocket-client (>=1,<2)", "websockets (>=9.1,<16)"]
+
+[[package]]
 name = "sqlalchemy"
 version = "1.4.54"
 description = "Database Abstraction Library"
@@ -3143,4 +3158,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "80080cde760b8f6f1338691829c99b79a2a50bbbd743775f083f17d4f828eb11"
+content-hash = "2693debd504ebfe191200b3f5a6483ef5de4d335cdbd72e7d78728ff77b45032"

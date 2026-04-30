@@ -36,6 +36,7 @@ opentelemetry-instrumentation-fastapi = ">=0.54b0"
 opentelemetry-sdk = ">=1.33.0"
 opentelemetry-exporter-otlp = ">=1.33.0"
 opentelemetry-instrumentation-sqlalchemy = ">=0.54b0"
+slack-sdk = "^3.41.0"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.2.2"
