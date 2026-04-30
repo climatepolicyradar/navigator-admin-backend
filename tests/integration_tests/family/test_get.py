@@ -1,3 +1,7 @@
+from datetime import datetime, timezone
+
+from db_client.models.dfce import EventStatus, FamilyDocument, FamilyEvent
+from db_client.models.dfce.family import DocumentStatus
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -106,3 +110,43 @@ def test_search_retrieves_families_without_geographies(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data is not None
+
+
+def test_get_family_excludes_deleted_documents_and_their_events(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+
+    deleted_doc = (
+        data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "D.0.0.1")
+        .one()
+    )
+    deleted_doc.document_status = DocumentStatus.DELETED
+    data_db.add(deleted_doc)
+    data_db.add(
+        FamilyEvent(
+            import_id="E.0.0.99",
+            title="Deleted document event",
+            date=datetime(2018, 12, 25, tzinfo=timezone.utc),
+            event_type_name="Deleted Doc Event",
+            family_import_id=deleted_doc.family_import_id,
+            family_document_import_id=deleted_doc.import_id,
+            status=EventStatus.OK,
+            valid_metadata={
+                "event_type": ["Deleted Doc Event"],
+                "datetime_event_name": ["Deleted Doc Event"],
+            },
+        )
+    )
+    data_db.commit()
+
+    response = client.get(
+        "/api/v1/families/A.0.0.1",
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert "D.0.0.1" not in data["documents"]
+    assert "E.0.0.99" not in data["events"]

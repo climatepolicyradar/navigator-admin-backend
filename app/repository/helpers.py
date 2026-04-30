@@ -204,6 +204,8 @@ def construct_raw_sql_query_to_retrieve_all_families(
                     array_agg(fd.import_id) AS document_ids
                 FROM
                     family_document fd
+                WHERE
+                    fd.document_status != 'DELETED'
                 GROUP BY
                     fd.family_import_id
             ) AS family_documents_subquery
@@ -215,6 +217,11 @@ def construct_raw_sql_query_to_retrieve_all_families(
                     array_agg(fe.import_id) AS event_ids
                 FROM
                     family_event fe
+                LEFT JOIN
+                    family_document fd ON fd.import_id = fe.family_document_import_id
+                WHERE
+                    fe.family_document_import_id IS NULL
+                    OR fd.document_status != 'DELETED'
                 GROUP BY
                     fe.family_import_id
             ) AS family_events_subquery
