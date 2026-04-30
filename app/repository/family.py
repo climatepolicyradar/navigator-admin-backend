@@ -78,22 +78,13 @@ def _get_query() -> sqlalchemy.sql.Select:
         .subquery()
     )
 
-    # Aggregate events (import_ids) per family
-    events_subq = (
-        select(
-            FamilyEvent.family_import_id.label("fam_id"),
-            func.array_agg(FamilyEvent.import_id).label("event_ids"),
-        )
-        .group_by(FamilyEvent.family_import_id)
-        .subquery()
-    )
-
     # Aggregate documents (import_ids) per family
     docs_subq = (
         select(
             FamilyDocument.family_import_id.label("fam_id"),
             func.array_agg(FamilyDocument.import_id).label("document_ids"),
         )
+        .where(FamilyDocument.document_status != DocumentStatus.DELETED)
         .group_by(FamilyDocument.family_import_id)
         .subquery()
     )
@@ -107,6 +98,26 @@ def _get_query() -> sqlalchemy.sql.Select:
             ),
         )
         .group_by(CollectionFamily.family_import_id)
+        .subquery()
+    )
+
+    # Aggregate events, excluding those linked to deleted documents.
+    events_subq = (
+        select(
+            FamilyEvent.family_import_id.label("fam_id"),
+            func.array_agg(FamilyEvent.import_id).label("event_ids"),
+        )
+        .outerjoin(
+            FamilyDocument,
+            FamilyDocument.import_id == FamilyEvent.family_document_import_id,
+        )
+        .where(
+            sqlalchemy.or_(
+                FamilyEvent.family_document_import_id.is_(None),
+                FamilyDocument.document_status != DocumentStatus.DELETED,
+            )
+        )
+        .group_by(FamilyEvent.family_import_id)
         .subquery()
     )
 

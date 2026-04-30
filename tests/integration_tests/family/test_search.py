@@ -1,7 +1,10 @@
 import logging
+from datetime import datetime, timezone
 from typing import cast
 
 import pytest
+from db_client.models.dfce import EventStatus, FamilyDocument, FamilyEvent
+from db_client.models.dfce.family import DocumentStatus
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -382,3 +385,45 @@ def test_search_family_without_collections(
     assert (
         found["collections"] == []
     ), "Collections field should be an empty list for families without collections"
+
+
+def test_search_excludes_deleted_documents_and_their_events(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+
+    deleted_doc = (
+        data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "D.0.0.1")
+        .one()
+    )
+    deleted_doc.document_status = DocumentStatus.DELETED
+    data_db.add(deleted_doc)
+    data_db.add(
+        FamilyEvent(
+            import_id="E.0.0.98",
+            title="Deleted document search event",
+            date=datetime(2018, 12, 26, tzinfo=timezone.utc),
+            event_type_name="Deleted Doc Search Event",
+            family_import_id=deleted_doc.family_import_id,
+            family_document_import_id=deleted_doc.import_id,
+            status=EventStatus.OK,
+            valid_metadata={
+                "event_type": ["Deleted Doc Search Event"],
+                "datetime_event_name": ["Deleted Doc Search Event"],
+            },
+        )
+    )
+    data_db.commit()
+
+    response = client.get(
+        "/api/v1/families/?q=",
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    target_family = next((f for f in data if f["import_id"] == "A.0.0.1"), None)
+    assert target_family is not None
+    assert "D.0.0.1" not in target_family["documents"]
+    assert "E.0.0.98" not in target_family["events"]
