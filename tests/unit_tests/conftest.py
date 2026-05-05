@@ -16,6 +16,9 @@ from botocore.exceptions import ClientError
 from fastapi.testclient import TestClient
 from moto import mock_aws
 
+# Ensure token service imports do not fail during test collection.
+os.environ.setdefault("SECRET_KEY", "unit-test-secret-key")
+
 import app.service.analytics as analytics_service
 import app.service.app_user as app_user_service
 import app.service.bulk_import as bulk_import_service
