@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from db_client.models.dfce import DocumentStatus
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import AnyHttpUrl, BaseModel, Field
 
 from app.model.general import Json
 
@@ -29,6 +29,8 @@ class DocumentReadDTO(BaseModel):
     content_type: Optional[str]
     user_language_name: Optional[str]
     calc_language_name: Optional[str]
+    user_language_names: list[str] = Field(default_factory=list)
+    calc_language_names: list[str] = Field(default_factory=list)
 
 
 class DocumentWriteDTO(BaseModel):
