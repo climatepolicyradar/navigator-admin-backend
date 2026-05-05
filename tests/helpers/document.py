@@ -81,6 +81,8 @@ def create_document_read_dto(
         content_type="content_type",
         user_language_name="Ghotuo",
         calc_language_name=None,
+        user_language_names=["Ghotuo"],
+        calc_language_names=[],
         created=datetime.now(),
         last_modified=datetime.now(),
     )

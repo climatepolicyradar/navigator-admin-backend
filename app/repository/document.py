@@ -1,5 +1,6 @@
 import logging
 import os
+from collections import defaultdict
 from datetime import datetime
 from typing import Optional, Tuple, Union, cast
 
@@ -27,7 +28,7 @@ from sqlalchemy import desc
 from sqlalchemy import insert as db_insert
 from sqlalchemy import update as db_update
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound, OperationalError
-from sqlalchemy.orm import Query, Session, aliased
+from sqlalchemy.orm import Query, Session
 from sqlalchemy_utils import escape_like
 
 from app.errors import RepositoryError, ValidationError
@@ -39,28 +40,19 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 CreateObjects = Tuple[PhysicalDocumentLanguage, FamilyDocument, PhysicalDocument]
-ReadObj = Tuple[
-    FamilyDocument, PhysicalDocument, CorpusType, Organisation, Language, Language
-]
+ReadObj = Tuple[FamilyDocument, PhysicalDocument, CorpusType, Organisation]
 
 
 def _get_query(db: Session) -> Query:
     # NOTE: SqlAlchemy will make a complete hash of the query generation
     #       if columns are used in the query() call. Therefore, entire
     #       objects are returned.
-    lang_model = aliased(Language)
-    lang_user = aliased(Language)
-    pdl_model = aliased(PhysicalDocumentLanguage)
-    pdl_user = aliased(PhysicalDocumentLanguage)
-
     return (
         db.query(
             FamilyDocument,
             PhysicalDocument,
             CorpusType,
             Organisation,
-            lang_user,
-            lang_model,
         )
         .filter(FamilyDocument.family_import_id == Family.import_id)
         .join(Family, FamilyDocument.family_import_id == Family.import_id)
@@ -73,32 +65,6 @@ def _get_query(db: Session) -> Query:
         .join(Corpus, Corpus.import_id == FamilyCorpus.corpus_import_id)
         .join(CorpusType, Corpus.corpus_type_name == CorpusType.name)
         .join(Organisation, Corpus.organisation_id == Organisation.id)
-        .join(
-            pdl_user,
-            and_(
-                PhysicalDocument.id == pdl_user.document_id,
-                pdl_user.source == LanguageSource.USER,
-            ),
-            isouter=True,
-        )
-        .join(
-            lang_user,
-            lang_user.id == pdl_user.language_id,
-            isouter=True,
-        )
-        .join(
-            pdl_model,
-            and_(
-                PhysicalDocument.id == pdl_model.document_id,
-                pdl_model.source == LanguageSource.MODEL,
-            ),
-            isouter=True,
-        )
-        .join(
-            lang_model,
-            lang_model.id == pdl_model.language_id,
-            isouter=True,
-        )
     )
 
 
@@ -133,8 +99,12 @@ def _document_tuple_from_create_dto(
     return language, fam_doc, phys_doc
 
 
-def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
-    fdoc, pdoc, corpus_type, org, lang_user, lang_model = doc_query_return
+def _doc_to_dto(
+    doc_query_return: ReadObj,
+    user_language_names: list[str],
+    calc_language_names: list[str],
+) -> DocumentReadDTO:
+    fdoc, pdoc, corpus_type, _ = doc_query_return
     return DocumentReadDTO(
         import_id=str(fdoc.import_id),
         family_import_id=str(fdoc.family_import_id),
@@ -153,9 +123,60 @@ def _doc_to_dto(doc_query_return: ReadObj) -> DocumentReadDTO:
             cast(AnyHttpUrl, pdoc.source_url) if pdoc.source_url is not None else None
         ),
         content_type=str(pdoc.content_type) if pdoc.content_type is not None else None,
-        user_language_name=str(lang_user.name) if lang_user is not None else None,
-        calc_language_name=str(lang_model.name) if lang_model is not None else None,
+        user_language_name=user_language_names[0] if user_language_names else None,
+        calc_language_name=calc_language_names[0] if calc_language_names else None,
+        user_language_names=user_language_names,
+        calc_language_names=calc_language_names,
     )
+
+
+def _get_language_names_by_document_id(
+    db: Session, physical_document_ids: list[int]
+) -> dict[int, dict[LanguageSource, list[str]]]:
+    if not physical_document_ids:
+        return {}
+
+    rows = (
+        db.query(
+            PhysicalDocumentLanguage.document_id,
+            PhysicalDocumentLanguage.source,
+            Language.name,
+        )
+        .join(Language, Language.id == PhysicalDocumentLanguage.language_id)
+        .filter(PhysicalDocumentLanguage.document_id.in_(physical_document_ids))
+        .order_by(
+            PhysicalDocumentLanguage.document_id.asc(),
+            PhysicalDocumentLanguage.source.asc(),
+            PhysicalDocumentLanguage.visible.desc(),
+            Language.name.asc(),
+        )
+        .all()
+    )
+    language_map: dict[int, dict[LanguageSource, list[str]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
+    for document_id, source, language_name in rows:
+        if language_name is None:
+            continue
+        if language_name not in language_map[document_id][source]:
+            language_map[document_id][source].append(str(language_name))
+    return language_map
+
+
+def _rows_to_dtos(db: Session, rows: list[ReadObj]) -> list[DocumentReadDTO]:
+    if not rows:
+        return []
+
+    physical_document_ids = [cast(int, row[1].id) for row in rows]
+    language_map = _get_language_names_by_document_id(db, physical_document_ids)
+    return [
+        _doc_to_dto(
+            row,
+            language_map.get(cast(int, row[1].id), {}).get(LanguageSource.USER, []),
+            language_map.get(cast(int, row[1].id), {}).get(LanguageSource.MODEL, []),
+        )
+        for row in rows
+    ]
 
 
 def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
@@ -175,7 +196,7 @@ def all(db: Session, org_id: Optional[int]) -> list[DocumentReadDTO]:
     if not result:
         return []
 
-    return [_doc_to_dto(doc) for doc in result]
+    return _rows_to_dtos(db, result)
 
 
 def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
@@ -187,16 +208,15 @@ def get(db: Session, import_id: str) -> Optional[DocumentReadDTO]:
     :return Optional[DocumentResponse]: A single document or nothing
     """
     try:
-        result = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
+        row = _get_query(db).filter(FamilyDocument.import_id == import_id).one()
     except MultipleResultsFound as e:
-        _LOGGER.error(f"Multiple documents found for import_id {import_id}: {e}")
+        msg = f"Multiple documents found for import_id {import_id}: {e}"
+        _LOGGER.error(msg)
+        raise RepositoryError(msg)
+    except NoResultFound:
+        _LOGGER.error(f"No document found for import_id {import_id}")
         return
-    except NoResultFound as e:
-        _LOGGER.debug(e)
-        _LOGGER.error(f"No document found for import_id {import_id} - {e}")
-        return
-
-    return _doc_to_dto(result)
+    return _rows_to_dtos(db, [row])[0]
 
 
 def search(
@@ -234,7 +254,7 @@ def search(
             raise TimeoutError
         raise RepositoryError(e)
 
-    return [_doc_to_dto(doc) for doc in result]
+    return _rows_to_dtos(db, result)
 
 
 def update(
@@ -509,5 +529,5 @@ def get_org_from_import_id(db: Session, import_id: str) -> Optional[int]:
     result = _get_query(db).filter(FamilyDocument.import_id == import_id).one_or_none()
     if result is None:
         return None
-    _, _, _, org, _, _ = result
+    _, _, _, org = result
     return org.id

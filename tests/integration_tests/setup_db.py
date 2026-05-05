@@ -188,6 +188,8 @@ EXPECTED_DOCUMENTS = [
         "content_type": "application/pdf",
         "user_language_name": "English",
         "calc_language_name": "Spanish",
+        "user_language_names": ["English"],
+        "calc_language_names": ["Spanish"],
     },
     {
         "import_id": "D.0.0.2",
@@ -204,6 +206,8 @@ EXPECTED_DOCUMENTS = [
         "content_type": "application/pdf",
         "user_language_name": None,
         "calc_language_name": None,
+        "user_language_names": [],
+        "calc_language_names": [],
     },
     {
         "import_id": "D.0.0.3",
@@ -220,6 +224,8 @@ EXPECTED_DOCUMENTS = [
         "content_type": "application/pdf",
         "user_language_name": None,
         "calc_language_name": None,
+        "user_language_names": [],
+        "calc_language_names": [],
     },
 ]
 EXPECTED_NUM_DOCUMENTS = len(EXPECTED_DOCUMENTS)

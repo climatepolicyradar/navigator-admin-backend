@@ -1,3 +1,8 @@
+from db_client.models.dfce.family import FamilyDocument
+from db_client.models.document.physical_document import (
+    LanguageSource,
+    PhysicalDocumentLanguage,
+)
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -14,6 +19,8 @@ def test_get_document(client: TestClient, data_db: Session, user_header_token):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
+    assert len(data["calc_language_names"]) == 1
+    assert "Spanish" in data["calc_language_names"]
 
     assert all(field in data for field in ("created", "last_modified"))
     actual_data = {
@@ -70,3 +77,31 @@ def test_get_document_when_db_error(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     data = response.json()
     assert data["detail"] == "Bad Repo"
+
+
+def test_get_document_with_duplicate_model_languages(
+    client: TestClient, data_db: Session, user_header_token
+):
+    setup_db(data_db)
+    family_document = (
+        data_db.query(FamilyDocument)
+        .filter(FamilyDocument.import_id == "D.0.0.1")
+        .one()
+    )
+    duplicate_model_language = PhysicalDocumentLanguage(
+        document_id=family_document.physical_document_id,
+        language_id=1,
+        source=LanguageSource.MODEL,
+        visible=True,
+    )
+    data_db.add(duplicate_model_language)
+    data_db.commit()
+
+    response = client.get(
+        "/api/v1/documents/D.0.0.1",
+        headers=user_header_token,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.1"
