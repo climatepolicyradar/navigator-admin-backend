@@ -19,7 +19,7 @@ def test_get_document(client: TestClient, data_db: Session, user_header_token):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["import_id"] == "D.0.0.1"
-    assert len(data["calc_language_names"]) == 2
+    assert len(data["calc_language_names"]) == 1
     assert "Spanish" in data["calc_language_names"]
 
     assert all(field in data for field in ("created", "last_modified"))
