@@ -30,15 +30,27 @@ dev_rds_dump_update:
 
 
 # --- Test --- #
-# If you'd like to run more specific, you can run e.g.
-# - `make test TEST=tests/integration_tests`
-# - `make test TEST=tests/unit_tests`
-# - `make test TEST=tests/integration_tests/ingest/test_ingest.py::test_ingest_when_ok`
-#
-# We've left it specifically unprefixed so autocomplete works in the terminal
-override TEST ?=
+# Run only unit tests (without Docker):
+# - `make unit_tests`
+# - `make unit_tests UNIT_TEST=tests/unit_tests/routers/ingest/test_bulk_ingest.py`
+# - `make unit_tests UNIT_TEST='tests/unit_tests -k bulk_ingest'`
+UNIT_TEST ?=tests/unit_tests/
+
+# Run only integration tests (with Docker):
+# - `make integration_tests`
+# - `make integration_tests INTEGRATION_TEST=tests/integration_tests/collection`
+# - `make integration_tests INTEGRATION_TEST='tests/integration_tests -k update'`
+INTEGRATION_TEST ?=tests/integration_tests
+
 test:
-	TEST=$(TEST) docker-compose -f docker-compose-test.yml run --rm webapp
+	$(MAKE) unit_tests UNIT_TEST="$(UNIT_TEST)"
+	$(MAKE) integration_tests INTEGRATION_TEST="$(INTEGRATION_TEST)"
+
+unit_tests:
+	poetry run pytest --disable-warnings -vvv $(UNIT_TEST)
+
+integration_tests:
+	TEST="$(INTEGRATION_TEST)" docker-compose -f docker-compose-test.yml run --rm webapp
 
 # --- CI --- #
 build:

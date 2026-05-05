@@ -31,23 +31,34 @@ To get a running version of the API on
     make dev
 ```
 
-To run the test suite run:
+To run the full test suite run:
 
 ```shell
     make test
 ```
 
-To run a specific test suite run:
+To run unit tests without Docker run:
 
 ```shell
-    # a specific suite
-    make test TEST=tests/unit_tests/
+    make unit_tests
 
-    # a spcific file
-    make test TEST=tests/unit_tests/routers/ingest/test_bulk_ingest.py
+    # a specific file
+    make unit_tests UNIT_TEST=tests/unit_tests/routers/ingest/test_bulk_ingest.py
 
-    # a specific function
-    make test TEST=tests/unit_tests/routers/ingest/test_bulk_ingest.py::test_bulk_ingest
+    # a specific function / expression
+    make unit_tests UNIT_TEST='tests/unit_tests/routers/ingest/test_bulk_ingest.py::test_bulk_ingest -k bulk_ingest'
+```
+
+To run integration tests (Docker) run:
+
+```shell
+    make integration_tests
+
+    # a specific suite/file
+    make integration_tests INTEGRATION_TEST=tests/integration_tests/collection
+
+    # a specific function / expression
+    make integration_tests INTEGRATION_TEST='tests/integration_tests/collection/test_update.py::test_update_collection -k update'
 ```
 
 ## Background
