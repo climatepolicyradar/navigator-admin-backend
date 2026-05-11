@@ -71,6 +71,9 @@ def _create_backend_environment() -> dict[str, str]:
     if stack == "production":
         environment["SLACK_OAUTH_TOKEN"] = CONFIG.require("slack_oauth_token")
         environment["SLACK_CHANNEL"] = CONFIG.require("slack_channel")
+        environment["SLACK_GROUP_ID_APPLICATION_ENGINEERS"] = CONFIG.require(
+            "application_engineers_slack_group_id"
+        )
 
     return environment
 

@@ -39,5 +39,7 @@ config:
   admin_backend:slack_oauth_token:
     secure: AAABAPComJt03u0FvSk/1Yo8n+6SHWi14v7SlIsKjjQkYmSbrqkGPA3JCtn8A5ydkiR//27v1a8/gr0OuSpvn2iwf9DVgl9p+aVCT3QdNZOm0/I4A7851AE=
   admin_backend:slack_channel: updates-document-pipeline
+  admin_backend:application_engineers_slack_group_id:
+    secure: AAABAMo/6TWzeb7IdQsaXJ+dzVFggujmLjqUb/iPMzyfqy03H13Fgc+9Sw==
 environment:
   - admin_backend/production
