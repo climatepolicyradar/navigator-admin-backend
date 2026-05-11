@@ -515,7 +515,11 @@ def import_data(
                 exc_info=True,
             )
             db.rollback()
-            end_message = f"💥 Bulk import for corpus: {corpus_import_id} has failed."
+            group_id = os.environ["SLACK_GROUP_ID_APPLICATION_ENGINEERS"].strip()
+            end_message = (
+                f"<!subteam^{group_id}> 💥 Bulk import for corpus: "
+                f"{corpus_import_id} has failed."
+            )
         finally:
             notification_service.send_notification(end_message, thread_id)
             trigger_db_dump_upload_to_sql(thread_id)
