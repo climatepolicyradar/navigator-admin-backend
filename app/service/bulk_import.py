@@ -515,10 +515,12 @@ def import_data(
                 exc_info=True,
             )
             db.rollback()
-            group_id = os.environ["SLACK_GROUP_ID_APPLICATION_ENGINEERS"].strip()
+            group_id = os.environ.get(
+                "SLACK_GROUP_ID_APPLICATION_ENGINEERS", ""
+            ).strip()
+            mention = f"<!subteam^{group_id}> " if group_id else ""
             end_message = (
-                f"<!subteam^{group_id}> 💥 Bulk import for corpus: "
-                f"{corpus_import_id} has failed."
+                f"{mention}💥 Bulk import for corpus: {corpus_import_id} has failed."
             )
         finally:
             notification_service.send_notification(end_message, thread_id)
