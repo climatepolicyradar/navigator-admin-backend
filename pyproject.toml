@@ -7,7 +7,7 @@ packages = [{ include = "app" }, { include = "tests" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastapi = ">=0.135.3,<0.137.0"
+fastapi = { version = ">=0.135.3,<0.137.0", extras = ["standard"] }
 fastapi-health = "^0.4.0"
 fastapi-pagination = "^0.15.12"
 python-slugify = "^6.1.2"
@@ -39,6 +39,8 @@ opentelemetry-instrumentation-sqlalchemy = ">=0.54b0"
 slack-sdk = "^3.41.0"
 
 [tool.poetry.group.dev.dependencies]
+pulumi = ">=3.220.0"
+pulumi-aws = ">=6.73.0"
 python-dotenv = "^1.2.2"
 pytest = ">=8.4.2,<10.0.0"
 pytest-dotenv = "^0.5.2"

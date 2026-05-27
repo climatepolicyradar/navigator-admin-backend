@@ -1,0 +1,52 @@
+config:
+  admin_backend:apprunner_backend_max_concurrency: "10"
+  admin_backend:apprunner_backend_max_instance_count: "5"
+  admin_backend:apprunner_backend_min_instance_count: "2"
+  admin_backend:bulk_import_bucket:
+    secure: AAABACSGUs327WYnFemIJ2/mWs5G91qC40akg6j/n/+n/YRedtLYNzJRVw2uj+gUMFP7kq7T
+  admin_backend:database_dump_bucket:
+    secure: AAABAP5C2qzmaX2DpE0bDmcgEvEGXqaPGk/3fNR3hIkoNHrucDrCeeAWEj9GFtw=
+  admin_backend:db_subnet_group_name:
+    secure: AAABAPn7H3xVLbXVXsPF2jhtTWwB+zWa+MdGiA7TUeO/LdOltvSh6rVs8VjndCajmUyIsiwkH24p7XrHSg==
+  admin_backend:ecr_uri:
+    secure: AAABAJC89TGwi4joRyjuhull2xIYQDiMNCQX4B2HnwZpoUXTrswwJiMYhkIMuuYhMh6kXq67n3dPTd9QiDpqHOJQ1gWJpntv7UmDmC6pWXKLklLW87iX5z+by40ZZMJ0FOUoAg==
+  admin_backend:log_level: DEBUG
+  admin_backend:rds_address:
+    secure: AAABADe4vlk1LEh+750adXOQMX0BDaYadfPX8a3ErZmtBArLPMtdKfEoMy3ald8gyLbWhasn2qP0kY5zxBtHNtZhjwdDW7OnBsSLhvkZvVaiEP/CT9MAGLr4u8oCV27NgDUfNzGa3j/O
+  admin_backend:rds_database:
+    secure: AAABAJAQXdJN7sjK0iA9SryJm8OXbqrMkNry7HCcT/P9OzI4q6Ez4LgoT3IvbqQGDc2FKA==
+  admin_backend:rds_password:
+    secure: AAABAOwFf4lvFB18jXVr7+dow0PiA9VaK+nQCu0LtyoF84pr4RaOqHQNjBNupkZDPjleQSs=
+  admin_backend:rds_username:
+    secure: AAABAA5ksIyhZpxyOnXXuix11W9tcT0m9hcqV5BG7JGzhuQrNNjoeB/uhejx+sY=
+  admin_backend:rds_vpc_security_group_id:
+    secure: AAABAAAvpVIxVCDwoTiLTzWdfMaYtroMGxUJ3y9qo2VayR5OCUi5H8pWS+ohef5nD5pVGQ==
+  admin_backend:secret_key:
+    secure: AAABAIiumDXgeRR7pyApTU5C/76vSoVHKa+cpadeoIjPAbTDSTZ3nEN93yMSUFOPhwEcmB3YSKberEHPX9uX6ua9hcQ=
+  admin_backend:slack_webhook_url:
+    secure: AAABAAtQbHg3eWFSa5TVsrBUfszkhTz4QZFBetBaxCG7oQbae2LdnF0pF1Q33M73Orq3EXzjVa4xwtrRmchQb5OeKTO2NJh0gw8TkGaptwR8gfkHKHnL12ZKPmI/IDgrr09NPr3DS8hGnXfAMfBQDyY=
+  admin_backend:validation_account_id:
+    secure: AAABABLsojJHl5ZBeqjrwE/yzA9SksStylWPGSNe9rdzwHBmt0x0WoYo0kM=
+  admin_backend:vpc_private_subnet_1_id:
+    secure: AAABAMiOyhC74L8Ks04X8GEKFsmtAx6V/1cf+pbBTWH8GePxo34mNAL5ErHBtexFw78bMc6faQY=
+  admin_backend:vpc_private_subnet_2_id:
+    secure: AAABAI9iNTL5HXupVDrybwOqA7Iofa2vJhu+jjXovTp92xeTmWuWRDQpMFpedZurztGqsH7py5w=
+  admin_backend:vpc_private_subnet_3_id:
+    secure: AAABANjUGwo4GYw6symNZmsk0/wGqwIRPkMCXRvhxY7lkIT53u2Udn7F6pPrq3oyIx7m6cxe6Y4=
+  admin_backend:vpc_security_group_admin_backend:
+    secure: AAABANRx6DYMRpEv8Ei3OcHMSFf2fjDTrV6hSaKnMHJSR0qS0/c0Y60zwVw+paAdLqzmng==
+  aws:region: eu-west-1
+  admin_backend:cache_bucket: cpr-staging-document-cache
+  admin_backend:cdn_url: https://cdn.dev.climatepolicyradar.org/
+  admin_backend:vpc_id:
+    secure: AAABAHq5vMTt+el5+j/nu5arn71ebAL4Thl58WDuAH67n3FebsYVWa2cs3hTi93rueb8Drs=
+  admin_backend:vpc_public_subnet_1_id:
+    secure: AAABAEdWuZHgklwLuw+3gJqJZLd/CqfYI1CJ8ChKxU+VmfsXzLXS1qdkfymyKtjbhGSRcFD3Y04=
+  admin_backend:vpc_public_subnet_2_id:
+    secure: AAABANkMaY+S8aa3hgLZH/p0xPEvXSZkwS2J6WhFvlmWurL9fJfxM7JUgtV1QFGW/+IvrAUwi90=
+  admin_backend:vpc_public_subnet_3_id:
+    secure: AAABAD0SBcZsgzj0npiJ/NlaqPP8si6wqvTsoR1eAdpf0CSzezK2bBZbsyate1lXyyV/tIkc2rA=
+  admin_backend:cloudfront_origin_prefix_list_id:
+    secure: AAABAJiNP/1WalejvWtIdv+BuNE4JnR2hWrr5tGTwl7OiEZ1wqcNCivzvA==
+environment:
+  - admin_backend/staging

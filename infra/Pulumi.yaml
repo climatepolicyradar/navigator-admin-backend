@@ -1,0 +1,6 @@
+name: admin_backend
+description: Admin Backend API
+runtime:
+  name: python
+  options:
+    toolchain: poetry
