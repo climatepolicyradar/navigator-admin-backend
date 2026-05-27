@@ -41,5 +41,15 @@ config:
   admin_backend:slack_channel: updates-document-pipeline
   admin_backend:application_engineers_slack_group_id:
     secure: AAABAMo/6TWzeb7IdQsaXJ+dzVFggujmLjqUb/iPMzyfqy03H13Fgc+9Sw==
+  admin_backend:cloudfront_origin_prefix_list_id:
+    secure: AAABAPKr1/jPITT4649ne5mWABG1AhYMFBWfmnVUn6GQFm6h9UmR/ffvag==
+  admin_backend:vpc_public_subnet_1_id:
+    secure: AAABAErtARtXjbxXTSKtdPSBg4GDqlAiubRZmF7d4OGv/BCnijTbN+UIQQJk6oqyDaMQ8GXPDiw=
+  admin_backend:vpc_public_subnet_2_id:
+    secure: AAABAGCB+yawMCF3NkpMepZ3vhCFuPx75tFNbNWcugDB5IpoTuArPS/AvyQkVkn4nTzyAf9OJI0=
+  admin_backend:vpc_public_subnet_3_id:
+    secure: AAABAFghn7ER4wHh6u6kYEbrTBcgU5REulynCzUY00bBfRsaVr7Mp9mGyYHzVxdp0nCjvMxwgQQ=
+  admin_backend:vpc_id:
+    secure: AAABAEd6lfpyqiu4gdkQ62rxsAVha4oYurWog1/kkO2pJL5pemnDjDqDl0RPcsMMjUanRAI=
 environment:
   - admin_backend/production
