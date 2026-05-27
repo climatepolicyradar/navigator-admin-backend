@@ -1,4 +1,23 @@
-"""An AWS Python Pulumi program"""
+"""
+                    .--.
+                   (o  o)
+                   /    \
+                  /|    |\
+                  ^^    ^^
+
+    🚧 migration in progress 🚧
+
+    App Runner → ECS Express
+    STATUS
+  → ECS Express is live behind CloudFront
+  → Cleanup and refactor work to be completed, with the infra code moved to the infra
+    directory in the service
+
+    Roadmap
+  → Remove old App Runner service and related resources
+
+    This file is temporary and mid-refactor.
+"""
 
 import json
 import sys
@@ -9,6 +28,14 @@ import pulumi_aws as aws  # type: ignore
 
 sys.path.append(str(Path(__file__).parent.parent))
 
+from pulumi_aws import ecs, get_caller_identity, iam
+from pulumi_aws.ecs.express_gateway_service import (
+    ExpressGatewayService,
+    ExpressGatewayServiceNetworkConfigurationArgs,
+    ExpressGatewayServicePrimaryContainerArgs,
+    ExpressGatewayServicePrimaryContainerEnvironmentArgs,
+    ExpressGatewayServiceScalingTargetArgs,
+)
 from util.naming import DEFAULT_TAGS
 
 from resources.app_runner_service import (
@@ -28,6 +55,7 @@ RUNTIME = "python3.9"
 CONFIG = pulumi.Config()
 
 stack = pulumi.get_stack()
+name = "admin-backend"
 NAME_PREFIX = f"{stack}-{pulumi.get_project()}"
 
 
@@ -395,6 +423,49 @@ pulumi.export(
 ########################################################################
 # Create S3 Buckets
 ########################################################################
+rds_backups = aws.s3.Bucket(
+    f"{stack}-rds-backups",
+    bucket=f"cpr-{stack}-rds",
+    versioning=aws.s3.BucketVersioningArgs(enabled=True),
+    lifecycle_rules=[
+        aws.s3.BucketLifecycleRuleArgs(
+            enabled=True,
+            id="noncurrent-version-cleanup-90d",
+            noncurrent_version_expiration=aws.s3.BucketLifecycleRuleNoncurrentVersionExpirationArgs(
+                days=90,
+            ),
+        ),
+        aws.s3.BucketLifecycleRuleArgs(
+            enabled=True,
+            id="SQL-Dump-Retention-3weeks",
+            prefix="dumps/",
+            expiration=aws.s3.BucketLifecycleRuleExpirationArgs(
+                days=21,
+            ),
+        ),
+    ],
+    request_payer="BucketOwner",
+    server_side_encryption_configuration=aws.s3.BucketServerSideEncryptionConfigurationArgs(
+        rule=aws.s3.BucketServerSideEncryptionConfigurationRuleArgs(
+            apply_server_side_encryption_by_default=aws.s3.BucketServerSideEncryptionConfigurationRuleApplyServerSideEncryptionByDefaultArgs(
+                sse_algorithm="AES256",
+            ),
+            bucket_key_enabled=True,
+        ),
+    ),
+    tags=dict(DEFAULT_TAGS),
+    opts=pulumi.ResourceOptions(protect=True),
+)
+
+bulk_import_bucket = aws.s3.get_bucket(bucket=f"cpr-{stack}-bulkimport")
+cpr_document_cache_bucket = aws.s3.get_bucket(bucket=f"cpr-{stack}-document-cache")
+
+s3_bucket_arns = [
+    rds_backups.arn,
+    cpr_document_cache_bucket.arn,
+    bulk_import_bucket.arn,
+]
+
 if stack == "production":
     production_document_pdf_upload_store = aws.s3.Bucket(
         "production-document-pdf-upload-store",
@@ -437,36 +508,248 @@ if stack == "production":
         opts=pulumi.ResourceOptions(protect=True),
     )
 
-    production_rds_backups = aws.s3.Bucket(
-        "production-rds-backups",
-        bucket="cpr-production-rds",
-        versioning=aws.s3.BucketVersioningArgs(enabled=True),
-        lifecycle_rules=[
-            aws.s3.BucketLifecycleRuleArgs(
-                enabled=True,
-                id="noncurrent-version-cleanup-90d",
-                noncurrent_version_expiration=aws.s3.BucketLifecycleRuleNoncurrentVersionExpirationArgs(
-                    days=90,
-                ),
+    s3_bucket_arns.extend([production_document_pdf_upload_store.arn, rds_backups.arn])
+
+
+# pulumi config
+caller_identity = get_caller_identity()
+
+tags = {
+    "CPR-Created-By": "pulumi",
+    "CPR-Pulumi-Stack-Name": stack,
+    "CPR-Pulumi-Project-Name": pulumi.get_project(),
+    "CPR-Tag": NAME_PREFIX,
+    "Environment": stack,
+}
+
+
+# -----
+# ECS Express Mode
+# -----
+
+ecs_write_s3_policy = iam.Policy(
+    f"{name}-write-s3-policy",
+    name=f"{name}-write-s3-policy",
+    description="Policy to allow reading and writing data files from/to S3",
+    policy=pulumi.Output.json_dumps(
+        (
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:ListBucket",
+                            "s3:PutObject",
+                            "s3:DeleteObject",
+                        ],
+                        "Resource": [
+                            *s3_bucket_arns,
+                            *[
+                                pulumi.Output.from_input(arn).apply(lambda a: f"{a}/*")
+                                for arn in s3_bucket_arns
+                            ],
+                        ],
+                    }
+                ],
+            }
+        )
+    ),
+)
+
+# Task role: runtime permissions (S3 read) — reuses the same policy as AppRunner
+ecs_task_role = iam.Role(
+    f"{name}-ecs-task-role",
+    name=f"{name}-ecs-task-role",
+    assume_role_policy=iam.get_policy_document(
+        statements=[
+            iam.GetPolicyDocumentStatementArgs(
+                effect="Allow",
+                principals=[
+                    iam.GetPolicyDocumentStatementPrincipalArgs(
+                        type="Service",
+                        identifiers=["ecs-tasks.amazonaws.com"],
+                    )
+                ],
+                actions=["sts:AssumeRole"],
+            )
+        ]
+    ).json,
+)
+iam.RolePolicyAttachment(
+    f"{name}-ecs-task-reads3-policy-attachment",
+    role=ecs_task_role.name,
+    policy_arn=ecs_write_s3_policy.arn,
+)
+
+
+# Execution role: pulls the image and injects secrets at container startup
+ecs_task_execution_role = iam.Role(
+    f"{name}-{stack}-ecs-task-execution-role",
+    name=f"{name}-{stack}-ecs-task-execution-role",
+    assume_role_policy=iam.get_policy_document(
+        statements=[
+            iam.GetPolicyDocumentStatementArgs(
+                effect="Allow",
+                principals=[
+                    iam.GetPolicyDocumentStatementPrincipalArgs(
+                        type="Service",
+                        identifiers=["ecs-tasks.amazonaws.com"],
+                    )
+                ],
+                actions=["sts:AssumeRole"],
             ),
-            aws.s3.BucketLifecycleRuleArgs(
-                enabled=True,
-                id="SQL-Dump-Retention-3weeks",
-                prefix="dumps/",
-                expiration=aws.s3.BucketLifecycleRuleExpirationArgs(
-                    days=21,
-                ),
+            iam.GetPolicyDocumentStatementArgs(
+                effect="Allow",
+                principals=[
+                    iam.GetPolicyDocumentStatementPrincipalArgs(
+                        type="AWS",
+                        identifiers=[
+                            f"arn:aws:iam::{account_id}:role/{github_actions_role.name}"
+                        ],
+                    )
+                ],
+                actions=["sts:AssumeRole"],
             ),
-        ],
-        request_payer="BucketOwner",
-        server_side_encryption_configuration=aws.s3.BucketServerSideEncryptionConfigurationArgs(
-            rule=aws.s3.BucketServerSideEncryptionConfigurationRuleArgs(
-                apply_server_side_encryption_by_default=aws.s3.BucketServerSideEncryptionConfigurationRuleApplyServerSideEncryptionByDefaultArgs(
-                    sse_algorithm="AES256",
-                ),
-                bucket_key_enabled=True,
+        ]
+    ).json,
+    managed_policy_arns=[
+        "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+    ],
+)
+
+
+# Infrastructure role: manages the ALB, target groups, and security groups
+ecs_infrastructure_role = iam.Role(
+    f"{name}-{stack}-ecs-infrastructure-role",
+    name=f"{name}-{stack}-ecs-infrastructure-role",
+    assume_role_policy=iam.get_policy_document(
+        statements=[
+            iam.GetPolicyDocumentStatementArgs(
+                effect="Allow",
+                principals=[
+                    iam.GetPolicyDocumentStatementPrincipalArgs(
+                        type="Service",
+                        identifiers=["ecs.amazonaws.com"],
+                    )
+                ],
+                actions=["sts:AssumeRole"],
             ),
+            iam.GetPolicyDocumentStatementArgs(
+                effect="Allow",
+                principals=[
+                    iam.GetPolicyDocumentStatementPrincipalArgs(
+                        type="AWS",
+                        identifiers=[
+                            f"arn:aws:iam::{account_id}:role/{github_actions_role.name}"
+                        ],
+                    )
+                ],
+                actions=["sts:AssumeRole"],
+            ),
+        ]
+    ).json,
+    managed_policy_arns=[
+        "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices",
+    ],
+)
+
+ecs_cluster = ecs.Cluster(
+    f"{name}-{stack}-ecs-cluster",
+    name=f"{name}-{stack}",
+    settings=[
+        ecs.ClusterSettingArgs(
+            name="containerInsights",
+            value="enabled",
+        )
+    ],
+)
+
+env_vars = _create_backend_environment()
+
+# -----
+# ECS networking — public-facing ALB, locked to CloudFront
+# -----
+
+ecs_alb_security_group = aws.ec2.SecurityGroup(
+    f"{name}-{stack}-ecs-alb-sg",
+    name=f"{name}-{stack}-ecs-alb-sg",
+    description="Allows inbound HTTP from CloudFront to the Express Gateway ALB",
+    vpc_id=CONFIG.require("vpc_id"),
+    ingress=[
+        aws.ec2.SecurityGroupIngressArgs(
+            description="HTTP from CloudFront edge locations",
+            from_port=80,
+            to_port=80,
+            protocol="tcp",
+            prefix_list_ids=[CONFIG.require("cloudfront_origin_prefix_list_id")],
         ),
-        tags=dict(DEFAULT_TAGS),
-        opts=pulumi.ResourceOptions(protect=True),
-    )
+    ],
+    egress=[
+        aws.ec2.SecurityGroupEgressArgs(
+            from_port=0,
+            to_port=0,
+            protocol="-1",
+            cidr_blocks=["0.0.0.0/0"],
+        ),
+    ],
+    tags=dict(DEFAULT_TAGS),
+)
+
+aws.ec2.SecurityGroupRule(
+    f"{name}-{stack}-rds-ingress-from-ecs",
+    type="ingress",
+    from_port=5432,
+    to_port=5432,
+    protocol="tcp",
+    security_group_id=CONFIG.require("rds_vpc_security_group_id"),
+    source_security_group_id=ecs_alb_security_group.id,
+    description="Allow ECS Express tasks to reach Postgres",
+)
+
+primary_container = ExpressGatewayServicePrimaryContainerArgs(
+    image=ecr_repo.repository.repository_url.apply(lambda url: f"{url}:latest"),
+    container_port=8888,
+    environments=[
+        ExpressGatewayServicePrimaryContainerEnvironmentArgs(name=k, value=v)
+        for k, v in env_vars.items()
+    ],
+)
+
+ecs_express_service = ExpressGatewayService(
+    f"{name}-{stack}-ecs-express-service",
+    service_name=f"{name}-{stack}",
+    cluster=ecs_cluster.arn,
+    execution_role_arn=ecs_task_execution_role.arn,
+    infrastructure_role_arn=ecs_infrastructure_role.arn,
+    task_role_arn=ecs_task_role.arn,
+    primary_container=primary_container,
+    health_check_path="/health",
+    cpu="1024",
+    memory="2048",
+    scaling_targets=[
+        ExpressGatewayServiceScalingTargetArgs(
+            auto_scaling_metric="AVERAGE_CPU",
+            auto_scaling_target_value=70,
+            min_task_count=1,
+            max_task_count=4,
+        ),
+    ],
+    network_configurations=[
+        ExpressGatewayServiceNetworkConfigurationArgs(
+            security_groups=[ecs_alb_security_group.id],
+            subnets=[
+                CONFIG.require("vpc_public_subnet_1_id"),
+                CONFIG.require("vpc_public_subnet_2_id"),
+                CONFIG.require("vpc_public_subnet_3_id"),
+            ],
+        )
+    ],
+)
+pulumi.export(
+    "ecs_express_service_url",
+    ecs_express_service.ingress_paths.apply(
+        lambda paths: paths[0].endpoint if paths else None
+    ),
+)

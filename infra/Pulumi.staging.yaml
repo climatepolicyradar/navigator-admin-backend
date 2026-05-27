@@ -38,5 +38,15 @@ config:
   aws:region: eu-west-1
   admin_backend:cache_bucket: cpr-staging-document-cache
   admin_backend:cdn_url: https://cdn.dev.climatepolicyradar.org/
+  admin_backend:vpc_id:
+    secure: AAABAHq5vMTt+el5+j/nu5arn71ebAL4Thl58WDuAH67n3FebsYVWa2cs3hTi93rueb8Drs=
+  admin_backend:vpc_public_subnet_1_id:
+    secure: AAABAEdWuZHgklwLuw+3gJqJZLd/CqfYI1CJ8ChKxU+VmfsXzLXS1qdkfymyKtjbhGSRcFD3Y04=
+  admin_backend:vpc_public_subnet_2_id:
+    secure: AAABANkMaY+S8aa3hgLZH/p0xPEvXSZkwS2J6WhFvlmWurL9fJfxM7JUgtV1QFGW/+IvrAUwi90=
+  admin_backend:vpc_public_subnet_3_id:
+    secure: AAABAD0SBcZsgzj0npiJ/NlaqPP8si6wqvTsoR1eAdpf0CSzezK2bBZbsyate1lXyyV/tIkc2rA=
+  admin_backend:cloudfront_origin_prefix_list_id:
+    secure: AAABAJiNP/1WalejvWtIdv+BuNE4JnR2hWrr5tGTwl7OiEZ1wqcNCivzvA==
 environment:
   - admin_backend/staging
