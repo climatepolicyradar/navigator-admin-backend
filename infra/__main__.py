@@ -36,16 +36,17 @@ from pulumi_aws.ecs.express_gateway_service import (
     ExpressGatewayServicePrimaryContainerEnvironmentArgs,
     ExpressGatewayServiceScalingTargetArgs,
 )
-from resources.ecr_repository import ECRRepository, ECRRepositoryConfig
-from resources.github_actions_role import GitHubActionsRole
-from resources.util import validate_aws_account, validate_stack_and_branch
 
-from infra.app_runner_service import (
+from infra.resources.app_runner_service import (
     AppRunnerConfig,
     AppRunnerService,
     HealthCheckConfig,
     VpcConfig,
 )
+from infra.resources.ecr_repository import ECRRepository, ECRRepositoryConfig
+from infra.resources.github_actions_role import GitHubActionsRole
+from infra.resources.naming import DEFAULT_TAGS
+from infra.resources.util import validate_aws_account, validate_stack_and_branch
 
 validate_aws_account()
 validate_stack_and_branch()
