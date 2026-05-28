@@ -16,7 +16,6 @@
     Roadmap
   → Remove old App Runner service and related resources
 
-    This file is temporary and mid-refactor.
 """
 
 import json

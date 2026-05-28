@@ -1,11 +1,8 @@
 name: Deploy to staging
+
 on:
-  workflow_run:
-    workflows: [Merge to main]
-    types:
-      - completed
-    branches:
-      - main
+  workflow_dispatch:
+  workflow_call:
 
 permissions:
   id-token: write
@@ -13,7 +10,6 @@ permissions:
 
 jobs:
   deploy-staging:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -33,15 +29,54 @@ jobs:
         id: login-ecr-staging
         uses: aws-actions/amazon-ecr-login@d63b14614fe5d7fc5e5e52c523dea4e876816cc4
 
-      - name: Build, tag, and push to ECR with 'latest' tag
+      - name: Build, tag, and push to ECR (:latest and :sha)
         id: build-image
         env:
           ECR_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-          IMAGE_TAG: latest
-          AWS_REGION: eu-west-1
           ECR_REPOSITORY: navigator-admin-backend
+          SHA_TAG: ${{ github.sha }}
         run: |
           make build
-          docker tag navigator-admin-backend $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker tag navigator-admin-backend $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker tag navigator-admin-backend $ECR_REGISTRY/$ECR_REPOSITORY:$SHA_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHA_TAG
+
+      - name: Deploy to ECS Express (staging)
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-express-service@v1
+        with:
+          cluster: admin-backend-staging
+          service-name: admin-backend-staging
+          image: ${{ secrets.DOCKER_REGISTRY }}/navigator-admin-backend:${{ github.sha }}
+          execution-role-arn: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/admin-backend-staging-ecs-task-execution-role
+          infrastructure-role-arn: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/admin-backend-staging-ecs-infrastructure-role
+
+      - name: Verify deployment outcome
+        env:
+          SERVICE_ARN: ${{ steps.deploy.outputs.service-arn }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SERVICE_ARN}" ]]; then
+            echo "::error::deploy step did not emit a service-arn output"
+            exit 1
+          fi
+          echo "Looking up most recent deployment for ${SERVICE_ARN}"
+          DEPLOY_ARN=$(aws ecs list-service-deployments \
+            --cluster admin-backend-staging \
+            --service "${SERVICE_ARN}" \
+            --query 'serviceDeployments[0].serviceDeploymentArn' \
+            --output text)
+          if [[ -z "${DEPLOY_ARN}" || "${DEPLOY_ARN}" == "None" ]]; then
+            echo "::error::Could not find a service deployment for ${SERVICE_ARN}"
+            exit 1
+          fi
+          STATUS=$(aws ecs describe-service-deployments \
+            --service-deployment-arns "${DEPLOY_ARN}" \
+            --query 'serviceDeployments[0].status' \
+            --output text)
+          echo "Deployment ${DEPLOY_ARN} final status: ${STATUS}"
+          if [[ "${STATUS}" != "SUCCESSFUL" ]]; then
+            echo "::error::Deployment did not succeed (status=${STATUS})"
+            exit 1
+          fi
