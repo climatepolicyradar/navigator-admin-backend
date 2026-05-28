@@ -712,7 +712,7 @@ aws.ec2.SecurityGroupRule(
 )
 
 primary_container = ExpressGatewayServicePrimaryContainerArgs(
-    image=ecr_repo.repository.repository_url.apply(lambda url: f"{url}:latest"),
+    image=image_identifier,
     container_port=8888,
     environments=[
         ExpressGatewayServicePrimaryContainerEnvironmentArgs(name=k, value=v)
