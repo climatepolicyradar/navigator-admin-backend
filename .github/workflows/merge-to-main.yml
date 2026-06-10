@@ -12,9 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # build
       - run: make build
 
+      # Staging
       # release
       # most of this is taken from
       # https://docs.github.com/en/actions/use-cases-and-examples/deploying/deploying-to-amazon-elastic-container-service#creating-the-workflow
@@ -41,7 +41,46 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Configure aws credentials (production)
+      - name: Deploy to ECS (staging)
+        id: deploy-staging
+        uses: aws-actions/amazon-ecs-deploy-express-service@v1
+        with:
+          cluster: admin-backend-staging
+          service-name: admin-backend-staging
+          image: ${{ secrets.DOCKER_REGISTRY_STAGING }}/navigator-admin-backend:${{ github.sha }}
+          execution-role-arn: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_STAGING }}:role/admin-backend-staging-ecs-task-execution-role
+          infrastructure-role-arn: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_STAGING }}:role/admin-backend-staging-ecs-infrastructure-role
+
+      - name: Verify staging deployment outcome
+        env:
+          SERVICE_ARN: ${{ steps.deploy-staging.outputs.service-arn }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SERVICE_ARN}" ]]; then
+            echo "::error::deploy step did not emit a service-arn output"
+            exit 1
+          fi
+          DEPLOY_ARN=$(aws ecs list-service-deployments \
+            --cluster admin-backend-staging \
+            --service "${SERVICE_ARN}" \
+            --query 'serviceDeployments[0].serviceDeploymentArn' \
+            --output text)
+          if [[ -z "${DEPLOY_ARN}" || "${DEPLOY_ARN}" == "None" ]]; then
+            echo "::error::Could not find a service deployment for ${SERVICE_ARN}"
+            exit 1
+          fi
+          STATUS=$(aws ecs describe-service-deployments \
+            --service-deployment-arns "${DEPLOY_ARN}" \
+            --query 'serviceDeployments[0].status' \
+            --output text)
+          echo "Deployment ${DEPLOY_ARN} final status: ${STATUS}"
+          if [[ "${STATUS}" != "SUCCESSFUL" ]]; then
+            echo "::error::Deployment did not succeed (status=${STATUS})"
+            exit 1
+          fi
+
+      # Production
+      - name: Configure AWS credentials (production)
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PROD }}:role/navigator-admin-backend-github-actions
@@ -63,3 +102,41 @@ jobs:
           docker tag navigator-admin-backend $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy to ECS (production)
+        id: deploy-production
+        uses: aws-actions/amazon-ecs-deploy-express-service@v1
+        with:
+          cluster: admin-backend-production
+          service-name: admin-backend-production
+          image: ${{ secrets.DOCKER_REGISTRY_PROD }}/navigator-admin-backend:${{ github.sha }}
+          execution-role-arn: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PROD }}:role/admin-backend-production-ecs-task-execution-role
+          infrastructure-role-arn: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PROD }}:role/admin-backend-production-ecs-infrastructure-role
+
+      - name: Verify production deployment outcome
+        env:
+          SERVICE_ARN: ${{ steps.deploy-production.outputs.service-arn }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SERVICE_ARN}" ]]; then
+            echo "::error::deploy step did not emit a service-arn output"
+            exit 1
+          fi
+          DEPLOY_ARN=$(aws ecs list-service-deployments \
+            --cluster admin-backend-production \
+            --service "${SERVICE_ARN}" \
+            --query 'serviceDeployments[0].serviceDeploymentArn' \
+            --output text)
+          if [[ -z "${DEPLOY_ARN}" || "${DEPLOY_ARN}" == "None" ]]; then
+            echo "::error::Could not find a service deployment for ${SERVICE_ARN}"
+            exit 1
+          fi
+          STATUS=$(aws ecs describe-service-deployments \
+            --service-deployment-arns "${DEPLOY_ARN}" \
+            --query 'serviceDeployments[0].status' \
+            --output text)
+          echo "Deployment ${DEPLOY_ARN} final status: ${STATUS}"
+          if [[ "${STATUS}" != "SUCCESSFUL" ]]; then
+            echo "::error::Deployment did not succeed (status=${STATUS})"
+            exit 1
+          fi

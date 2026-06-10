@@ -1,5 +1,5 @@
 class ExceptionWithMessage(Exception):
-    """A base class for all errors with a message"""
+    """A base class for all errors with a message."""
 
     @property
     def message(self) -> str:
