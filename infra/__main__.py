@@ -326,7 +326,7 @@ navigator_admin = aws.rds.Instance(
         "upgrade",
     ],
     engine="postgres",
-    engine_version="14.17",
+    engine_version="14.22",
     identifier=identifier,
     instance_class=rds_instance_class,
     iops=1000,
@@ -747,9 +747,10 @@ ecs_express_service = ExpressGatewayService(
         )
     ],
 )
+
 pulumi.export(
     "ecs_express_service_url",
     ecs_express_service.ingress_paths.apply(
-        lambda paths: paths[0].endpoint if paths else None
+        lambda paths: paths[0].endpoint.removeprefix("https://") if paths else None
     ),
 )
