@@ -1,7 +1,7 @@
 name: Deploy admin backend to production
 on:
   workflow_dispatch: {}
-  # Mon-Thur 09:00 & 12:00
+  # Mon-Thur 11:30
   schedule:
     - cron: 30 11 * * 1-4
 permissions:
