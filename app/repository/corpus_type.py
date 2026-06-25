@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, cast
 
-from db_client.models.organisation import CorpusType, Organisation
+from db_client.models.organisation import Corpus, CorpusType, Organisation
 from sqlalchemy import asc
 from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import Session
@@ -25,17 +25,22 @@ def _corpus_type_to_dto(corpus_type: CorpusType) -> CorpusTypeReadDTO:
     )
 
 
-def all(db: Session, org_id: Optional[int]) -> list[CorpusTypeReadDTO]:
+def all(db: Session, org_ids: Optional[list[int]]) -> list[CorpusTypeReadDTO]:
     """Get a list of all corpus types in the database.
 
     :param db Session: The database connection.
-    :param org_id int: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :return CorpusTypeReadDTO: The requested corpus type.
     :raises RepositoryError: If the corpus type is not found.
     """
     query = db.query(CorpusType)
-    if org_id is not None:
-        query = query.filter(Organisation.id == org_id)
+    if org_ids is not None:
+        query = (
+            query.join(Corpus, Corpus.corpus_type_name == CorpusType.name)
+            .join(Organisation, Organisation.id == Corpus.organisation_id)
+            .filter(Organisation.id.in_(org_ids))
+            .distinct()
+        )
 
     result = query.order_by(asc(CorpusType.name)).all()
 

@@ -10,6 +10,7 @@ from app.api.api_v1.routers.document import document_router
 from app.api.api_v1.routers.event import event_router
 from app.api.api_v1.routers.family import families_router
 from app.api.api_v1.routers.organisation import organisations_router
+from app.api.api_v1.routers.user import user_router
 
 __all__ = (
     "analytics_router",
@@ -24,4 +25,5 @@ __all__ = (
     "families_router",
     "organisations_router",
     "bulk_import_router",
+    "user_router",
 )

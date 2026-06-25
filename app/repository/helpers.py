@@ -127,7 +127,7 @@ def generate_import_id(
 
 def construct_raw_sql_query_to_retrieve_all_families(
     filter_params: dict[str, Union[str, int, list[str]]],
-    org_id: Optional[int] = None,
+    org_ids: Optional[list[int]] = None,
     filters: Optional[str] = None,
 ) -> Tuple[str, dict[str, Union[str, int]]]:
     """
@@ -261,9 +261,9 @@ def construct_raw_sql_query_to_retrieve_all_families(
     where_conditions = []
     query_params = {}
 
-    if org_id is not None:
-        where_conditions.append("o.id = :org_id")
-        query_params["org_id"] = org_id
+    if org_ids is not None:
+        where_conditions.append("o.id = ANY(:org_ids)")
+        query_params["org_ids"] = org_ids
 
     if filters:
         where_conditions.append(filters)

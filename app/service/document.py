@@ -71,8 +71,8 @@ def all(user: UserContext) -> list[DocumentReadDTO]:
     :return list[documentDTO]: The list of documents.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return document_repo.all(db, org_id)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return document_repo.all(db, org_ids)
 
 
 @observe(name="search_documents")
@@ -93,8 +93,8 @@ def search(
         given search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return document_repo.search(db, search_params, org_id)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return document_repo.search(db, search_params, org_ids)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

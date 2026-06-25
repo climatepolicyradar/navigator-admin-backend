@@ -61,8 +61,8 @@ def all(user: UserContext) -> list[FamilyReadDTO]:
     :return list[FamilyDTO]: The list of families.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return family_repo.all(db, org_id)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return family_repo.all(db, org_ids)
 
 
 @observe(name="search_families")
@@ -89,8 +89,8 @@ def search(
         search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return family_repo.search(db, search_params, org_id, geography, corpus)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return family_repo.search(db, search_params, org_ids, geography, corpus)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

@@ -20,8 +20,8 @@ def all(user: UserContext) -> list[CorpusTypeReadDTO]:
     :return list[CorpusReadDTO]: The list of corpora.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return corpus_type_repo.all(db, org_id)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return corpus_type_repo.all(db, org_ids)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

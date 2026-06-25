@@ -21,6 +21,7 @@ def encode(
     is_superuser: bool,
     authorisation: dict,
     minutes: Optional[int] = None,
+    org_ids: Optional[list[int]] = None,
 ) -> str:
     """
     Encodes the user's data into a JWT token.
@@ -52,6 +53,7 @@ def encode(
         "is_superuser": is_superuser,
         "authorisation": authorisation,
         "org_id": org_id,
+        "org_ids": org_ids if org_ids is not None else [org_id],
     }
     expiry_minutes = minutes or ACCESS_TOKEN_EXPIRE_MINUTES
     expire = datetime.utcnow() + timedelta(minutes=expiry_minutes)
@@ -87,9 +89,12 @@ def decode(token: str) -> UserContext:
     if org_id is None or not isinstance(org_id, int):
         raise TokenError("Token did not contain an organisation_id")
 
+    org_ids: list[int] = payload.get("org_ids") or [org_id]
+
     jwt_user = UserContext(
         email=email,
         org_id=org_id,
+        org_ids=org_ids,
         is_superuser=payload.get("is_superuser", False),
         authorisation=authorisation,
     )
