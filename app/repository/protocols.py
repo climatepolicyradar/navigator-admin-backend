@@ -17,7 +17,7 @@ class FamilyRepo(Protocol):
     no_org: bool = False
 
     @staticmethod
-    def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
+    def all(db: Session, org_ids: Optional[list[int]]) -> list[FamilyReadDTO]:
         """Returns all the families"""
         ...
 
