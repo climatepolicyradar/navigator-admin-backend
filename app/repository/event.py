@@ -97,17 +97,17 @@ def _event_from_dto(dto: EventCreateDTO) -> FamilyEvent:
     return family_event
 
 
-def all(db: Session, org_id: Optional[int]) -> list[EventReadDTO]:
+def all(db: Session, org_ids: Optional[list[int]]) -> list[EventReadDTO]:
     """
     Returns all family events.
 
     :param db Session: The database connection.
-    :param org_id int: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :return Optional[EventReadDTO]: All family events in the database.
     """
     query = _get_query(db)
-    if org_id is not None:
-        query = query.filter(Organisation.id == org_id)
+    if org_ids is not None:
+        query = query.filter(Organisation.id.in_(org_ids))
     family_event_metas = query.all()
 
     if not family_event_metas:
@@ -136,7 +136,7 @@ def get(db: Session, import_id: str) -> Optional[EventReadDTO]:
 
 
 def search(
-    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_ids: Optional[list[int]]
 ) -> list[EventReadDTO]:
     """
     Get family events matching a search term on the event title or type.
@@ -144,7 +144,7 @@ def search(
     :param db Session: The database connection.
     :param dict search_params: Any search terms to filter on specified
         fields (title & event type name by default if 'q' specified).
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.
@@ -160,8 +160,8 @@ def search(
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
         query = _get_query(db).filter(condition)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
+        if org_ids is not None:
+            query = query.filter(Organisation.id.in_(org_ids))
         found = query.limit(search_params["max_results"]).all()
     except OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
@@ -276,19 +276,19 @@ def delete(db: Session, import_id: str) -> bool:
     return True
 
 
-def count(db: Session, org_id: Optional[int]) -> Optional[int]:
+def count(db: Session, org_ids: Optional[list[int]]) -> Optional[int]:
     """
     Counts the number of family events in the repository.
 
     :param db Session: The database connection.
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :return Optional[int]: The number of family events in the repository
         or nothing.
     """
     try:
         query = _get_query(db)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
+        if org_ids is not None:
+            query = query.filter(Organisation.id.in_(org_ids))
         n_events = query.count()
     except NoResultFound as e:
         _LOGGER.debug(e)

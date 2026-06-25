@@ -73,11 +73,15 @@ def authenticate_user(email: str, password: str) -> str:
         app_user_links = app_user_repo.get_app_user_authorisation(db, user)
 
     authorisation = {
-        cast(str, org.name): {"is_admin": cast(bool, org_user.is_admin)}
+        cast(str, org.name): {
+            "is_admin": cast(bool, org_user.is_admin),
+            "org_id": cast(int, org.id),
+        }
         for org_user, org in app_user_links
-        if org.id == org_id
     }
 
+    org_ids = [cast(int, org.id) for _, org in app_user_links]
+
     return token_service.encode(
-        email, org_id, cast(bool, user.is_superuser), authorisation
+        email, org_id, cast(bool, user.is_superuser), authorisation, org_ids=org_ids
     )

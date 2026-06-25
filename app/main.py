@@ -31,6 +31,7 @@ from app.api.api_v1.routers import (
     event_router,
     families_router,
     organisations_router,
+    user_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
 from app.clients.db.session import engine
@@ -172,6 +173,13 @@ app.include_router(
     app_token_router,
     prefix="/api/v1",
     tags=["app-token"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    user_router,
+    prefix="/api/v1",
+    tags=["users"],
     dependencies=[Depends(check_user_auth)],
 )
 

@@ -17,7 +17,7 @@ class FamilyRepo(Protocol):
     no_org: bool = False
 
     @staticmethod
-    def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
+    def all(db: Session, org_ids: Optional[list[int]]) -> list[FamilyReadDTO]:
         """Returns all the families"""
         ...
 
@@ -30,7 +30,7 @@ class FamilyRepo(Protocol):
     def search(
         db: Session,
         search_params: dict[str, Union[str, int]],
-        org_id: Optional[int],
+        org_ids: Optional[list[int]],
         geography: Optional[list[str]],
         corpus: Optional[list[str]] = None,
     ) -> list[FamilyReadDTO]:
@@ -61,7 +61,7 @@ class FamilyRepo(Protocol):
         ...
 
     @staticmethod
-    def count(db: Session, org_id: Optional[int]) -> Optional[int]:
+    def count(db: Session, org_ids: Optional[list[int]]) -> Optional[int]:
         """Counts all the families"""
         ...
 

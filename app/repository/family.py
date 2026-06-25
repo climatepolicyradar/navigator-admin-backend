@@ -344,19 +344,19 @@ def _update_intention(
     )
 
 
-def all(db: Session, org_id: Optional[int]) -> list[FamilyReadDTO]:
+def all(db: Session, org_ids: Optional[list[int]]) -> list[FamilyReadDTO]:
     """Return all families.
 
     Returns all the families as DTOs with a projection only query.
     Avoids loading ORM graphs and eliminates N+1 queries.
 
     :param db Session: the database connection
-    :param org_id int: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :return Optional[FamilyResponse]: All of things
     """
     stmt = _get_query()
-    if org_id is not None:
-        stmt = stmt.where(Organisation.id == org_id)
+    if org_ids is not None:
+        stmt = stmt.where(Organisation.id.in_(org_ids))
     rows = db.execute(stmt.order_by(desc(Family.last_modified))).mappings().fetchall()
     return [_row_to_dto(r) for r in rows]
 
@@ -378,7 +378,7 @@ def get(db: Session, import_id: str) -> Optional[FamilyReadDTO]:
 def search(
     db: Session,
     search_params: dict[str, Union[str, int]],
-    org_id: Optional[int],
+    org_ids: Optional[list[int]],
     geography: Optional[list[str]],
     corpus: Optional[list[str]] = None,
 ) -> list[FamilyReadDTO]:
@@ -453,7 +453,7 @@ def search(
 
     sql_query, query_params = construct_raw_sql_query_to_retrieve_all_families(
         params,
-        org_id=org_id,
+        org_ids=org_ids,
         filters=where_clause,
     )
 
@@ -795,18 +795,18 @@ def get_organisation(db: Session, family_import_id: str) -> Optional[Organisatio
     )
 
 
-def count(db: Session, org_id: Optional[int]) -> Optional[int]:
+def count(db: Session, org_ids: Optional[list[int]]) -> Optional[int]:
     """
     Counts the number of families in the repository.
 
     :param db Session: the database connection
-    :param org_id int: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :return Optional[int]: The number of families in the repository or none.
     """
     try:
         stmt = _get_query()
-        if org_id is not None:
-            stmt = stmt.where(Organisation.id == org_id)
+        if org_ids is not None:
+            stmt = stmt.where(Organisation.id.in_(org_ids))
         n_families = db.execute(select(func.count()).select_from(stmt)).scalar()
     except NoResultFound as e:
         _LOGGER.debug(e)

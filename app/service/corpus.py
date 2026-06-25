@@ -148,8 +148,8 @@ def all(user: UserContext) -> list[CorpusReadDTO]:
     :return list[CorpusReadDTO]: The list of corpora.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return corpus_repo.all(db, org_id)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return corpus_repo.all(db, org_ids)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -169,8 +169,8 @@ def search(
         given search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return corpus_repo.search(db, query_params, org_id)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return corpus_repo.search(db, query_params, org_ids)
 
 
 @db_session.with_database()

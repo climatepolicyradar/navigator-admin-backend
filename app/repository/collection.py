@@ -113,17 +113,17 @@ def validate(db: Session, import_ids: set[str]) -> bool:
     return bool(len(import_ids) == matches_in_set)
 
 
-def all(db: Session, org_id: Optional[int]) -> list[CollectionReadDTO]:
+def all(db: Session, org_ids: Optional[list[int]]) -> list[CollectionReadDTO]:
     """
     Returns all the collections.
 
     :param db Session: the database connection
-    :param org_id int: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :return Optional[CollectionResponse]: All of things
     """
     query = _get_query(db)
-    if org_id is not None:
-        query = query.filter(Organisation.id == org_id)
+    if org_ids is not None:
+        query = query.filter(Organisation.id.in_(org_ids))
     collections = query.order_by(desc(Collection.last_modified)).all()
 
     if not collections:
@@ -152,7 +152,7 @@ def get(db: Session, import_id: str) -> Optional[CollectionReadDTO]:
 
 
 def search(
-    db: Session, search_params: dict[str, Union[str, int]], org_id: Optional[int]
+    db: Session, search_params: dict[str, Union[str, int]], org_ids: Optional[list[int]]
 ) -> list[CollectionReadDTO]:
     """
     Gets a list of collections from the repo searching given fields.
@@ -160,7 +160,7 @@ def search(
     :param db Session: the database connection
     :param dict search_params: Any search terms to filter on specified
         fields (title & summary by default if 'q' specified).
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :raises HTTPException: If a DB error occurs a 503 is returned.
     :raises HTTPException: If the search request times out a 408 is
         returned.
@@ -176,8 +176,8 @@ def search(
     condition = and_(*search) if len(search) > 1 else search[0]
     try:
         query = _get_query(db).filter(condition)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
+        if org_ids is not None:
+            query = query.filter(Organisation.id.in_(org_ids))
         found = (
             query.order_by(desc(Collection.last_modified))
             .limit(search_params["max_results"])
@@ -320,18 +320,18 @@ def delete(db: Session, import_id: str) -> bool:
     return result.rowcount > 0  # type: ignore
 
 
-def count(db: Session, org_id: Optional[int]) -> Optional[int]:
+def count(db: Session, org_ids: Optional[list[int]]) -> Optional[int]:
     """
     Counts the number of collections in the repository.
 
     :param db Session: the database connection
-    :param org_id Optional[int]: the ID of the organisation the user belongs to
+    :param org_ids Optional[list[int]]: org IDs to filter by, or None for all
     :return Optional[int]: The number of collections in the repository or none.
     """
     try:
         query = _get_query(db)
-        if org_id is not None:
-            query = query.filter(Organisation.id == org_id)
+        if org_ids is not None:
+            query = query.filter(Organisation.id.in_(org_ids))
         n_collections = query.count()
     except Exception as e:
         _LOGGER.error(e)

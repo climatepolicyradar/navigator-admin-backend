@@ -56,8 +56,8 @@ def all(user: UserContext) -> list[CollectionReadDTO]:
     """
     try:
         with db_session.get_db() as db:
-            org_id = app_user.restrict_entities_to_user_org(user)
-            return collection_repo.all(db, org_id)
+            org_ids = app_user.restrict_entities_to_user_org(user)
+            return collection_repo.all(db, org_ids)
     except exc.SQLAlchemyError as e:
         msg = f"Error when getting all collections: {e}"
         _LOGGER.exception(msg)
@@ -82,8 +82,8 @@ def search(
         the given search terms.
     """
     with db_session.get_db() as db:
-        org_id = app_user.restrict_entities_to_user_org(user)
-        return collection_repo.search(db, search_params, org_id)
+        org_ids = app_user.restrict_entities_to_user_org(user)
+        return collection_repo.search(db, search_params, org_ids)
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
