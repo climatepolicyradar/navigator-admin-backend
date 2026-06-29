@@ -241,7 +241,7 @@ def rollback_organisation_repo(monkeypatch, mocker):
 @pytest.fixture
 def superuser_header_token() -> Dict[str, str]:
     a_token = token_service.encode(
-        "super@cpr.org", SUPER_ORG_ID, True, {"is_admin": True}
+        "super@cpr.org", True, {"is_admin": True}, org_ids=[SUPER_ORG_ID]
     )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
@@ -249,7 +249,9 @@ def superuser_header_token() -> Dict[str, str]:
 
 @pytest.fixture
 def non_admin_superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("non-admin-super@cpr.org", SUPER_ORG_ID, True, {})
+    a_token = token_service.encode(
+        "non-admin-super@cpr.org", True, {}, org_ids=[SUPER_ORG_ID]
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
@@ -257,7 +259,7 @@ def non_admin_superuser_header_token() -> Dict[str, str]:
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
     a_token = token_service.encode(
-        "cclw@cpr.org", CCLW_ORG_ID, False, {"is_admin": False}
+        "cclw@cpr.org", False, {"is_admin": False}, org_ids=[CCLW_ORG_ID]
     )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
@@ -266,7 +268,7 @@ def user_header_token() -> Dict[str, str]:
 @pytest.fixture
 def admin_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode(
-        "admin@cpr.org", CCLW_ORG_ID, False, {"is_admin": True}
+        "admin@cpr.org", False, {"is_admin": True}, org_ids=[CCLW_ORG_ID]
     )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
@@ -275,7 +277,7 @@ def admin_user_header_token() -> Dict[str, str]:
 @pytest.fixture
 def non_cclw_user_header_token() -> Dict[str, str]:
     a_token = token_service.encode(
-        "unfccc@cpr.org", UNFCCC_ORG_ID, False, {"is_admin": False}
+        "unfccc@cpr.org", False, {"is_admin": False}, org_ids=[UNFCCC_ORG_ID]
     )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
@@ -283,7 +285,9 @@ def non_cclw_user_header_token() -> Dict[str, str]:
 
 @pytest.fixture
 def invalid_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("non-admin@cpr.org", CCLW_ORG_ID, False, {})
+    a_token = token_service.encode(
+        "non-admin@cpr.org", False, {}, org_ids=[CCLW_ORG_ID]
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 

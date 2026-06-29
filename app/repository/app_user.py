@@ -94,18 +94,5 @@ def update_org_memberships(
                 is_admin=org.is_admin,
             )
         )
+
     db.flush()
-
-
-def get_org_id(db: Session, user_email: str) -> Optional[int]:
-    """Gets the organisation id given the user's email"""
-    result = (
-        db.query(Organisation.id)
-        .select_from(Organisation)
-        .join(OrganisationUser, Organisation.id == OrganisationUser.organisation_id)
-        .join(AppUser, AppUser.email == user_email)
-        .filter(AppUser.email == OrganisationUser.appuser_email)
-        .scalar()
-    )
-    if result is not None:
-        return cast(int, result)

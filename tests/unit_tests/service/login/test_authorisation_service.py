@@ -65,7 +65,7 @@ def test_can_auth(
     assert user.email == VALID_USERNAME
     assert user.is_superuser is True
     assert user.authorisation is not None
-    assert len(user.authorisation.keys()) == 0
+    assert len(user.authorisation.keys()) == 1
 
     assert app_user_repo_mock.get_user_by_email.call_count == 1
     assert app_user_repo_mock.get_app_user_authorisation.call_count == 1

@@ -274,42 +274,52 @@ def organisation_service_mock(monkeypatch, mocker):
 
 @pytest.fixture
 def superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("super@cpr.org", ORG_ID, True, {"is_admin": True})
+    a_token = token_service.encode(
+        "super@cpr.org", True, {"is_admin": True}, org_ids=[ORG_ID]
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def non_admin_superuser_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("non-admin-super@cpr.org", ORG_ID, True, {})
+    a_token = token_service.encode(
+        "non-admin-super@cpr.org", True, {}, org_ids=[ORG_ID]
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("cclw@cpr.org", ORG_ID, False, {"is_admin": False})
+    a_token = token_service.encode(
+        "cclw@cpr.org", False, {"is_admin": False}, org_ids=[ORG_ID]
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def admin_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("admin@cpr.org", ORG_ID, False, {"is_admin": True})
+    a_token = token_service.encode(
+        "admin@cpr.org", False, {"is_admin": True}, org_ids=[ORG_ID]
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def non_cclw_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("unfccc@cpr.org", ORG_ID, False, {"is_admin": False})
+    a_token = token_service.encode(
+        "unfccc@cpr.org", False, {"is_admin": False}, org_ids=[ORG_ID]
+    )
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
 
 @pytest.fixture
 def invalid_user_header_token() -> Dict[str, str]:
-    a_token = token_service.encode("non-admin@cpr.org", ORG_ID, False, {})
+    a_token = token_service.encode("non-admin@cpr.org", False, {}, org_ids=[ORG_ID])
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
 
@@ -378,26 +388,38 @@ def basic_s3_client():
 @pytest.fixture
 def super_user_context():
     return UserContext(
-        email="super@here.com", org_id=50, is_superuser=True, authorisation={}
+        email="super@here.com",
+        org_id=50,
+        org_ids=[50],
+        is_superuser=True,
+        authorisation={},
     )
 
 
 @pytest.fixture
 def admin_user_context():
     return UserContext(
-        email="admin@here.com", org_id=1, is_superuser=False, authorisation={}
+        email="admin@here.com",
+        org_id=1,
+        org_ids=[1],
+        is_superuser=False,
+        authorisation={},
     )
 
 
 @pytest.fixture
 def another_admin_user_context():
     return UserContext(
-        email="another-admin@here.com", org_id=3, is_superuser=False, authorisation={}
+        email="another-admin@here.com",
+        org_id=3,
+        org_ids=[3],
+        is_superuser=False,
+        authorisation={},
     )
 
 
 @pytest.fixture
 def bad_user_context():
     return UserContext(
-        email="not-an-email", org_id=0, is_superuser=False, authorisation={}
+        email="not-an-email", org_id=0, org_ids=[], is_superuser=False, authorisation={}
     )

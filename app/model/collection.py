@@ -36,3 +36,4 @@ class CollectionCreateDTO(BaseModel):
     title: str
     description: str
     metadata: Optional[Json] = {}
+    org_id: Optional[int] = None
