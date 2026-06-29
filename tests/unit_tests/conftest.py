@@ -388,26 +388,38 @@ def basic_s3_client():
 @pytest.fixture
 def super_user_context():
     return UserContext(
-        email="super@here.com", org_id=50, is_superuser=True, authorisation={}
+        email="super@here.com",
+        org_id=50,
+        org_ids=[50],
+        is_superuser=True,
+        authorisation={},
     )
 
 
 @pytest.fixture
 def admin_user_context():
     return UserContext(
-        email="admin@here.com", org_id=1, is_superuser=False, authorisation={}
+        email="admin@here.com",
+        org_id=1,
+        org_ids=[1],
+        is_superuser=False,
+        authorisation={},
     )
 
 
 @pytest.fixture
 def another_admin_user_context():
     return UserContext(
-        email="another-admin@here.com", org_id=3, is_superuser=False, authorisation={}
+        email="another-admin@here.com",
+        org_id=3,
+        org_ids=[3],
+        is_superuser=False,
+        authorisation={},
     )
 
 
 @pytest.fixture
 def bad_user_context():
     return UserContext(
-        email="not-an-email", org_id=0, is_superuser=False, authorisation={}
+        email="not-an-email", org_id=0, org_ids=[], is_superuser=False, authorisation={}
     )
