@@ -1,4 +1,5 @@
 from typing import Tuple
+from unittest.mock import MagicMock
 
 from db_client.models.organisation.users import AppUser, Organisation, OrganisationUser
 from pytest import MonkeyPatch
@@ -23,7 +24,15 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
     def mock_get_app_user_authorisation(
         _, __
     ) -> list[Tuple[OrganisationUser, Organisation]]:
-        return []
+        org_id = (
+            ALTERNATIVE_ORG_ID if app_user_repo.alternative_org else STANDARD_ORG_ID
+        )
+        org = MagicMock()
+        org.id = org_id
+        org.name = f"org-{org_id}"
+        org_user = MagicMock()
+        org_user.is_admin = False
+        return [(org_user, org)]
 
     def mock_get_user_by_email(_, __) -> MaybeAppUser:
         if not app_user_repo.error:
@@ -34,11 +43,6 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
                 is_superuser=True,
             )
 
-    def mock_get_org_id(_, user_email: str) -> int:
-        if app_user_repo.alternative_org is True:
-            return ALTERNATIVE_ORG_ID
-        return STANDARD_ORG_ID
-
     def mock_is_active(_, email: str) -> bool:
         return bool(app_user_repo.user_active is True)
 
@@ -47,9 +51,6 @@ def mock_app_user_repo(app_user_repo, monkeypatch: MonkeyPatch, mocker):
 
     monkeypatch.setattr(app_user_repo, "get_user_by_email", mock_get_user_by_email)
     mocker.spy(app_user_repo, "get_user_by_email")
-
-    monkeypatch.setattr(app_user_repo, "get_org_id", mock_get_org_id)
-    mocker.spy(app_user_repo, "get_org_id")
 
     monkeypatch.setattr(app_user_repo, "is_active", mock_is_active)
     mocker.spy(app_user_repo, "is_active")

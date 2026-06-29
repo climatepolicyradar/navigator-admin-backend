@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def encode(
     email: str,
-    org_id: int,
     is_superuser: bool,
     authorisation: dict,
     minutes: Optional[int] = None,
@@ -30,6 +29,7 @@ def encode(
     :param bool is_superuser: User's ability to be a superuser.
     :param dict authorisation: Authorisation information (not yet fully spec'd)
     :param Optional[int] minutes: TTL for the token
+    :param Optional[list[int]] org_ids: All organisation IDs the user belongs to
     :return str: The encoded token
     """
 
@@ -44,16 +44,15 @@ def encode(
     if not isinstance(is_superuser, bool):
         raise TokenError(f"Parameter is_superuser should be a bool, not {is_superuser}")
 
-    if not isinstance(org_id, int):
-        raise TokenError(f"Parameter org_id should be an int, not {org_id}")
-
+    resolved_org_ids = org_ids or []
     to_encode = {
         "sub": email,
         "email": email,
         "is_superuser": is_superuser,
         "authorisation": authorisation,
-        "org_id": org_id,
-        "org_ids": org_ids if org_ids is not None else [org_id],
+        "org_ids": resolved_org_ids,
+        # org_id kept for backward compat with existing tokens
+        "org_id": resolved_org_ids[0] if resolved_org_ids else None,
     }
     expiry_minutes = minutes or ACCESS_TOKEN_EXPIRE_MINUTES
     expire = datetime.utcnow() + timedelta(minutes=expiry_minutes)
@@ -85,15 +84,17 @@ def decode(token: str) -> UserContext:
 
     authorisation: Optional[dict[str, Any]] = payload.get("authorisation", {})
 
-    org_id = payload.get("org_id")
-    if org_id is None or not isinstance(org_id, int):
-        raise TokenError("Token did not contain an organisation_id")
+    org_id: Optional[int] = payload.get("org_id")
+    org_ids: list[int] = payload.get("org_ids") or (
+        [org_id] if org_id is not None else []
+    )
 
-    org_ids: list[int] = payload.get("org_ids") or [org_id]
+    if not org_ids:
+        raise TokenError("Token did not contain any organisation_id")
 
     jwt_user = UserContext(
         email=email,
-        org_id=org_id,
+        org_id=org_ids[0],
         org_ids=org_ids,
         is_superuser=payload.get("is_superuser", False),
         authorisation=authorisation,

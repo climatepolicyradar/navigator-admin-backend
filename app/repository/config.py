@@ -91,7 +91,7 @@ def get_corpora(db: Session, user: UserContext) -> Sequence[CorpusData]:
     if user.is_superuser:
         corpora = corpora.all()
     else:
-        corpora = corpora.filter(Organisation.id == user.org_id).all()
+        corpora = corpora.filter(Organisation.id.in_(user.org_ids)).all()
 
     corpus_data_list = []
     for row in corpora:

@@ -22,7 +22,7 @@ def is_superuser(db: Session, user: UserContext) -> bool:
 def restrict_entities_to_user_org(user: UserContext) -> Optional[list[int]]:
     if user.is_superuser:
         return None
-    return user.org_ids or [user.org_id]
+    return user.org_ids
 
 
 def all_users() -> list[UserReadDTO]:
@@ -71,7 +71,7 @@ def raise_if_unauthorised_to_make_changes(
     if user.is_superuser:
         return True
 
-    accessible = restrict_entities_to_user_org(user) or [user.org_id]
+    accessible = restrict_entities_to_user_org(user) or []
     if entity_org_id not in accessible:
         msg = f"User '{user.email}' is not authorised to perform operation on '{import_id}'"
         _LOGGER.error(msg)

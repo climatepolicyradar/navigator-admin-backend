@@ -46,7 +46,6 @@ def authenticate_user(email: str, password: str) -> str:
     :return str: The JWT token.
     """
 
-    org_id = None
     with db_session.get_db() as db:
         try:
             user = app_user_repo.get_user_by_email(db, email)
@@ -60,17 +59,16 @@ def authenticate_user(email: str, password: str) -> str:
             _LOGGER.error(f"Failed login attempt as inactive for {email}")
             raise AuthenticationError(f"User {email} is marked as not active.")
 
-        org_id = app_user_repo.get_org_id(db, cast(str, user.email))
-        if org_id is None:
-            _LOGGER.error(f"Failed login attempt, org not found for {email}")
-            raise RepositoryError(f"Organisation not found for {email}")
-
         hash = str(user.hashed_password)
         if len(hash) == 0 or not verify_password(password, hash):
             _LOGGER.error(f"Failed login attempt for password mismatch for {email}")
             raise AuthenticationError(f"Could not verify password for {email}")
 
         app_user_links = app_user_repo.get_app_user_authorisation(db, user)
+
+    if not app_user_links:
+        _LOGGER.error(f"Failed login attempt, no orgs found for {email}")
+        raise RepositoryError(f"Organisation not found for {email}")
 
     authorisation = {
         cast(str, org.name): {
@@ -83,5 +81,5 @@ def authenticate_user(email: str, password: str) -> str:
     org_ids = [cast(int, org.id) for _, org in app_user_links]
 
     return token_service.encode(
-        email, org_id, cast(bool, user.is_superuser), authorisation, org_ids=org_ids
+        email, cast(bool, user.is_superuser), authorisation, org_ids=org_ids
     )
