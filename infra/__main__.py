@@ -34,6 +34,7 @@ from pulumi_aws.ecs.express_gateway_service import (
     ExpressGatewayServiceNetworkConfigurationArgs,
     ExpressGatewayServicePrimaryContainerArgs,
     ExpressGatewayServicePrimaryContainerEnvironmentArgs,
+    ExpressGatewayServicePrimaryContainerSecretArgs,
     ExpressGatewayServiceScalingTargetArgs,
 )
 from util.naming import DEFAULT_TAGS
@@ -57,6 +58,34 @@ CONFIG = pulumi.Config()
 stack = pulumi.get_stack()
 name = "admin-backend"
 NAME_PREFIX = f"{stack}-{pulumi.get_project()}"
+
+
+def create_ecs_backend_environment() -> dict[str, str]:
+    # Create the environment config required for the ecs backend service
+    bulk_import_bucket = CONFIG.require("bulk_import_bucket")
+    database_dump_bucket = CONFIG.require("database_dump_bucket")
+    log_level = CONFIG.require("log_level")
+    cache_bucket = CONFIG.require("cache_bucket")
+    cdn_url = CONFIG.require("cdn_url")
+
+    stack = pulumi.get_stack()
+
+    environment: dict[str, str] = {
+        "BULK_IMPORT_BUCKET": bulk_import_bucket,
+        "DATABASE_DUMP_BUCKET": database_dump_bucket,
+        "CACHE_BUCKET": cache_bucket,
+        "CDN_URL": cdn_url,
+        "AWS_REGION": "eu-west-1",
+        "LOG_LEVEL": log_level,
+        "ENV": pulumi.get_stack(),
+    }
+    if stack == "production":
+        environment["SLACK_CHANNEL"] = CONFIG.require("slack_channel")
+        environment["SLACK_GROUP_ID_APPLICATION_ENGINEERS"] = CONFIG.require(
+            "application_engineers_slack_group_id"
+        )
+
+    return environment
 
 
 def _create_backend_environment() -> dict[str, str]:
@@ -666,7 +695,113 @@ ecs_cluster = ecs.Cluster(
     ],
 )
 
+
+# ---
+# SSM Parameters for ECS Express
+# ---
+
+
+aws.iam.RolePolicy(
+    f"{name}-ecs-task-execution-role-ssm-policy",
+    role=ecs_task_execution_role.id,
+    policy=aws.iam.get_policy_document(
+        statements=[
+            aws.iam.GetPolicyDocumentStatementArgs(
+                effect="Allow",
+                actions=[
+                    "ssm:GetParameter",
+                    "ssm:GetParameters",
+                ],
+                resources=[f"arn:aws:ssm:eu-west-1:{account_id}:parameter/{name}/*"],
+            )
+        ]
+    ).json,
+)
+
+
+aws.iam.RolePolicy(
+    f"{name}-ecs-task-role-ssm-policy",
+    role=ecs_task_role.id,
+    policy=aws.iam.get_policy_document(
+        statements=[
+            aws.iam.GetPolicyDocumentStatementArgs(
+                effect="Allow",
+                actions=[
+                    "ssm:GetParameter",
+                    "ssm:GetParameters",
+                ],
+                resources=[f"arn:aws:ssm:eu-west-1:{account_id}:parameter/{name}/*"],
+            )
+        ]
+    ).json,
+)
+
+admin_postgres_host = aws.ssm.Parameter(
+    f"{name}-ecs-admin-postgres-host",
+    name=f"/{name}/ecs/admin-postgres-host",
+    description="RDS host for the admin backend",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=CONFIG.require("rds_address"),
+)
+
+admin_postgres_password = aws.ssm.Parameter(
+    f"{name}-ecs-admin-postgres-password",
+    name=f"/{name}/ecs/admin-postgres-password",
+    description="RDS password for the admin backend",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=CONFIG.require("rds_password"),
+)
+
+admin_postgres_username = aws.ssm.Parameter(
+    f"{name}-ecs-admin-postgres-username",
+    name=f"/{name}/ecs/admin-postgres-username",
+    description="RDS username for the admin backend",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=CONFIG.require("rds_username"),
+)
+
+admin_postgres_database = aws.ssm.Parameter(
+    f"{name}-ecs-admin-postgres-database",
+    name=f"/{name}/ecs/admin-postgres-database",
+    description="RDS database name for the admin backend",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=CONFIG.require("rds_database"),
+)
+
+secret_key = aws.ssm.Parameter(
+    f"{name}-ecs-secret-key",
+    name=f"/{name}/ecs/secret-key",
+    description="Secret key for the admin backend",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=CONFIG.require("secret_key"),
+)
+
+slack_oauth_token = aws.ssm.Parameter(
+    f"{name}-ecs-slack-oauth-token",
+    name=f"/{name}/ecs/slack-oauth-token",
+    description="Slack OAuth token for the admin backend",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=(
+        CONFIG.require("slack_oauth_token") if stack == "production" else "PLACEHOLDER"
+    ),
+)
+
+backend_stack = pulumi.automation.select_stack(
+    stack_name=f"climatepolicyradar/backend/{stack}",
+    work_dir="../backend",
+)
+backend_token_secret_key = backend_stack.get_config("backend_token_secret_key").value
+
+token_secret_key = aws.ssm.Parameter(
+    f"{name}-ecs-token-secret-key",
+    name=f"/{name}/ecs/token-secret-key",
+    description="Token secret key for the admin backend",
+    type=aws.ssm.ParameterType.SECURE_STRING,
+    value=backend_token_secret_key,
+)
+
 env_vars = _create_backend_environment()
+ecs_env_vars = create_ecs_backend_environment()
 
 # -----
 # ECS networking — public-facing ALB, locked to CloudFront
@@ -713,7 +848,37 @@ primary_container = ExpressGatewayServicePrimaryContainerArgs(
     container_port=8888,
     environments=[
         ExpressGatewayServicePrimaryContainerEnvironmentArgs(name=k, value=v)
-        for k, v in env_vars.items()
+        for k, v in ecs_env_vars.items()
+    ],
+    secrets=[
+        ExpressGatewayServicePrimaryContainerSecretArgs(
+            name="ADMIN_POSTGRES_HOST",
+            value_from=admin_postgres_host.arn,
+        ),
+        ExpressGatewayServicePrimaryContainerSecretArgs(
+            name="ADMIN_POSTGRES_PASSWORD",
+            value_from=admin_postgres_password.arn,
+        ),
+        ExpressGatewayServicePrimaryContainerSecretArgs(
+            name="ADMIN_POSTGRES_USER",
+            value_from=admin_postgres_username.arn,
+        ),
+        ExpressGatewayServicePrimaryContainerSecretArgs(
+            name="ADMIN_POSTGRES_DATABASE",
+            value_from=admin_postgres_database.arn,
+        ),
+        ExpressGatewayServicePrimaryContainerSecretArgs(
+            name="SECRET_KEY",
+            value_from=secret_key.arn,
+        ),
+        ExpressGatewayServicePrimaryContainerSecretArgs(
+            name="SLACK_OAUTH_TOKEN",
+            value_from=slack_oauth_token.arn,
+        ),
+        ExpressGatewayServicePrimaryContainerSecretArgs(
+            name="TOKEN_SECRET_KEY",
+            value_from=token_secret_key.arn,
+        ),
     ],
 )
 
