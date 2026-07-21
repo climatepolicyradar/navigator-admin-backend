@@ -1,24 +1,3 @@
-"""
-                    .--.
-                   (o  o)
-                   /    \
-                  /|    |\
-                  ^^    ^^
-
-    🚧 migration in progress 🚧
-
-    App Runner → ECS Express
-    STATUS
-  → ECS Express is live behind CloudFront
-  → Cleanup and refactor work to be completed, with the infra code moved to the infra
-    directory in the service
-
-    Roadmap
-  → Remove old App Runner service and related resources
-
-    This file is temporary and mid-refactor.
-"""
-
 import json
 import sys
 from pathlib import Path
@@ -39,12 +18,6 @@ from pulumi_aws.ecs.express_gateway_service import (
 )
 from util.naming import DEFAULT_TAGS
 
-from resources.app_runner_service import (
-    AppRunnerConfig,
-    AppRunnerService,
-    HealthCheckConfig,
-    VpcConfig,
-)
 from resources.ecr_repository import ECRRepository, ECRRepositoryConfig
 from resources.github_actions_role import GitHubActionsRole
 from resources.util import validate_aws_account, validate_stack_and_branch
@@ -88,72 +61,6 @@ def create_ecs_backend_environment() -> dict[str, str]:
     return environment
 
 
-def _create_backend_environment() -> dict[str, str]:
-    # Create the environment config required for the backend service
-    rds_username = CONFIG.require("rds_username")
-    rds_password = CONFIG.require("rds_password")
-    rds_address = CONFIG.require("rds_address")
-    rds_database = CONFIG.require("rds_database")
-    secret_key = CONFIG.require("secret_key")
-    bulk_import_bucket = CONFIG.require("bulk_import_bucket")
-    database_dump_bucket = CONFIG.require("database_dump_bucket")
-    log_level = CONFIG.require("log_level")
-    cache_bucket = CONFIG.require("cache_bucket")
-    cdn_url = CONFIG.require("cdn_url")
-
-    stack = pulumi.get_stack()
-    backend_stack = pulumi.automation.select_stack(
-        stack_name=f"climatepolicyradar/backend/{stack}",
-        work_dir="../backend",
-    )
-    backend_token_secret_key = backend_stack.get_config(
-        "backend_token_secret_key"
-    ).value
-
-    environment: dict[str, str] = {
-        "ADMIN_POSTGRES_USER": rds_username,
-        "ADMIN_POSTGRES_PASSWORD": rds_password,
-        "ADMIN_POSTGRES_HOST": rds_address,
-        "ADMIN_POSTGRES_DATABASE": rds_database,
-        "SECRET_KEY": secret_key,
-        "BULK_IMPORT_BUCKET": bulk_import_bucket,
-        "DATABASE_DUMP_BUCKET": database_dump_bucket,
-        "CACHE_BUCKET": cache_bucket,
-        "CDN_URL": cdn_url,
-        "AWS_REGION": "eu-west-1",
-        "TOKEN_SECRET_KEY": backend_token_secret_key,
-        "LOG_LEVEL": log_level,
-        "ENV": pulumi.get_stack(),
-    }
-    if stack == "production":
-        environment["SLACK_OAUTH_TOKEN"] = CONFIG.require("slack_oauth_token")
-        environment["SLACK_CHANNEL"] = CONFIG.require("slack_channel")
-        environment["SLACK_GROUP_ID_APPLICATION_ENGINEERS"] = CONFIG.require(
-            "application_engineers_slack_group_id"
-        )
-
-    return environment
-
-
-def _create_backend_vpc_connector() -> aws.apprunner.VpcConnector:
-    # Create a VPC connector to allow AppRunner instances to access private services
-    vpc_connector_tags = dict(DEFAULT_TAGS)
-    vpc_connector_tags["Name"] = f"{NAME_PREFIX}-vpc-connector"
-    vpc_connector = aws.apprunner.VpcConnector(
-        f"{NAME_PREFIX}-vpc-connector",
-        vpc_connector_name=vpc_connector_tags["Name"],
-        security_groups=[CONFIG.require("vpc_security_group_admin_backend")],
-        subnets=[
-            CONFIG.require("vpc_private_subnet_1_id"),
-            CONFIG.require("vpc_private_subnet_2_id"),
-            CONFIG.require("vpc_private_subnet_3_id"),
-        ],
-        tags=vpc_connector_tags,
-    )
-
-    return vpc_connector
-
-
 ########################################################################
 # Create ECR repo
 ########################################################################
@@ -176,46 +83,6 @@ image_identifier = ecr_repo.repository.repository_url.apply(
     lambda url: f"{url}:{docker_tag}"
 )
 image_identifier.apply(lambda id: pulumi.info(f"Final image identifier: {id}"))
-
-########################################################################
-# Create App Runner service
-########################################################################
-
-# Create old service
-vpc_connector = _create_backend_vpc_connector()
-
-# Create new service
-# Create config for the new service
-config = AppRunnerConfig(
-    max_concurrency=int(CONFIG.require("apprunner_backend_max_concurrency")),
-    max_instances=int(CONFIG.require("apprunner_backend_max_instance_count")),
-    min_instances=int(CONFIG.require("apprunner_backend_min_instance_count")),
-    port=8888,
-    cpu="2 vCPU",
-    memory="4 GB",
-    vpc_config=VpcConfig(
-        vpc_connector_arn=vpc_connector.arn,
-    ),
-    health_check_config=HealthCheckConfig(
-        path="/health",
-        protocol="HTTP",
-    ),
-    s3_bucket_access={
-        CONFIG.require("bulk_import_bucket"): ["*"],
-        CONFIG.require("database_dump_bucket"): ["*"],
-    },
-    auto_deploy=True,
-)
-
-# Create the new service with the same configuration as the old one
-new_backend = AppRunnerService(
-    name=NAME_PREFIX,
-    config=config,
-    image_identifier=image_identifier,
-    env_vars=_create_backend_environment(),
-)
-pulumi.export("apprunner_service_url", new_backend.service.service_url)
-pulumi.export("new_apprunner_service_url", new_backend.service.service_url)
 
 
 ########################################################################
@@ -800,7 +667,7 @@ token_secret_key = aws.ssm.Parameter(
     value=backend_token_secret_key,
 )
 
-env_vars = _create_backend_environment()
+
 ecs_env_vars = create_ecs_backend_environment()
 
 # -----
