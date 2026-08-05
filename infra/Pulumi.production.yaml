@@ -40,7 +40,7 @@ config:
     secure: AAABAPComJt03u0FvSk/1Yo8n+6SHWi14v7SlIsKjjQkYmSbrqkGPA3JCtn8A5ydkiR//27v1a8/gr0OuSpvn2iwf9DVgl9p+aVCT3QdNZOm0/I4A7851AE=
   admin_backend:slack_channel: updates-document-pipeline
   admin_backend:application_engineers_slack_group_id:
-    secure: AAABAMo/6TWzeb7IdQsaXJ+dzVFggujmLjqUb/iPMzyfqy03H13Fgc+9Sw==
+    secure: AAABAC+UhC2r4gzXCE2cCi1UeHuQwg8fszGW3hI14RlNJyOUwgPH/pS2Pw==
   admin_backend:cloudfront_origin_prefix_list_id:
     secure: AAABAPKr1/jPITT4649ne5mWABG1AhYMFBWfmnVUn6GQFm6h9UmR/ffvag==
   admin_backend:vpc_public_subnet_1_id:
