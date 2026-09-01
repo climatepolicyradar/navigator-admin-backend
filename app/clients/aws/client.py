@@ -21,10 +21,16 @@ def _get_client_from_config(config: AWSConfig) -> AWSClient:
 
 
 def get_s3_client() -> AWSClient:
-    """Get an AWS S3 client"""
+    """Get an AWS S3 client.
+
+    AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY are only passed through when set
+    explicitly (e.g. for local dev). Leaving them unset lets boto3 fall back
+    to its default credential chain, which resolves credentials from the
+    ECS task role in deployed environments.
+    """
     _AWS_REGION = "eu-west-1"
-    _AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
-    _AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+    _AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    _AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
     _SIGNATURE_VERSION = "s3v4"
     config = AWSConfig(
         service_name="s3",

@@ -7,12 +7,39 @@ from unittest.mock import patch
 import pytest
 from botocore.exceptions import ClientError
 
+from app.clients.aws.client import get_s3_client
 from app.clients.aws.s3bucket import (
     S3UploadContext,
     upload_bulk_import_json_to_s3,
     upload_json_to_s3,
     upload_sql_db_dump_to_s3,
 )
+
+
+def test_get_s3_client_uses_default_credential_chain_when_env_vars_unset():
+    """When AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY are not set (e.g. in ECS,
+    where credentials should come from the task role), get_s3_client() must
+    not pass explicit empty-string credentials to boto3 - doing so builds a
+    static, resolved (but invalid) credentials object and prevents boto3
+    from ever consulting its default credential chain (env vars, ECS task
+    role, IMDS)."""
+    with patch.dict(os.environ, {}, clear=True):
+        client = get_s3_client()
+
+    assert client._request_signer._credentials is None
+
+
+def test_get_s3_client_uses_explicit_credentials_when_env_vars_set():
+    with patch.dict(
+        os.environ,
+        {"AWS_ACCESS_KEY_ID": "test-key", "AWS_SECRET_ACCESS_KEY": "test-secret"},
+    ):
+        client = get_s3_client()
+
+    credentials = client._request_signer._credentials
+    assert credentials is not None
+    assert credentials.access_key == "test-key"
+    assert credentials.secret_key == "test-secret"
 
 
 def test_upload_json_to_s3_when_ok(basic_s3_client):
