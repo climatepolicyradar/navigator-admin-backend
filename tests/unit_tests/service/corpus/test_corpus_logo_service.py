@@ -11,6 +11,8 @@ def test_get_upload_url_success(corpus_repo_mock, monkeypatch):
 
     monkeypatch.setenv("CDN_URL", "https://somecdn.org")
     monkeypatch.setenv("CACHE_BUCKET", "some-cache-bucket")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
 
     result = corpus_service.get_upload_url("some_corpus_id")
     assert result is not None
