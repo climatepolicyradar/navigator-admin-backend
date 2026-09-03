@@ -290,9 +290,12 @@ def get_upload_url(corpus_id: str, db: Optional[Session] = None) -> CorpusLogoUp
     cache_bucket = os.environ["CACHE_BUCKET"]
     key = f"corpora/{corpus_id}/logo.png"
 
-    # Get the upload URLs
+    # Get the upload URLs. cache_control is required so that a fresh upload
+    # to this fixed key can never be served stale by a CDN or browser cache.
     client = get_s3_client()
-    presigned_url, cdn_url = get_upload_details(client, key, cache_bucket, cdn_base_url)
+    presigned_url, cdn_url = get_upload_details(
+        client, key, cache_bucket, cdn_base_url, cache_control="no-cache"
+    )
 
     return CorpusLogoUploadDTO(
         presigned_upload_url=presigned_url, object_cdn_url=cdn_url

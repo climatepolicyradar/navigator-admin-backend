@@ -4,7 +4,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 from urllib.parse import quote_plus, urlsplit
 
 import boto3
@@ -54,21 +54,28 @@ def s3_to_cdn_url(s3_url: AnyHttpUrl, cdn_url: AnyHttpUrl) -> AnyHttpUrl:
 
 
 def generate_pre_signed_url(
-    client: AWSClient, bucket_name: str, key: str
+    client: AWSClient,
+    bucket_name: str,
+    key: str,
+    cache_control: Optional[str] = None,
 ) -> AnyHttpUrl:
     """
     Generate a pre-signed URL to an object for file uploads
 
+    :param cache_control: If set, signed into the URL so that only a PUT
+        sending a matching Cache-Control header will be accepted, and the
+        uploaded object is stored with that Cache-Control value.
     :return str: A pre-signed URL
     """
+    params = {
+        "Bucket": bucket_name,
+        "Key": key,
+    }
+    if cache_control is not None:
+        params["CacheControl"] = cache_control
+
     try:
-        url = client.generate_presigned_url(
-            "put_object",
-            Params={
-                "Bucket": bucket_name,
-                "Key": key,
-            },
-        )
+        url = client.generate_presigned_url("put_object", Params=params)
         return AnyHttpUrl(url)
     except ClientError:
         msg = f"Request to create pre-signed URL for {key} failed"
@@ -177,10 +184,14 @@ def _get_object_url_in_cdn(
 
 
 def get_upload_details(
-    client: AWSClient, key: str, bucket_name: str, cdn_url: AnyHttpUrl
+    client: AWSClient,
+    key: str,
+    bucket_name: str,
+    cdn_url: AnyHttpUrl,
+    cache_control: Optional[str] = None,
 ) -> Tuple[AnyHttpUrl, AnyHttpUrl]:
     return (
-        generate_pre_signed_url(client, bucket_name, key),
+        generate_pre_signed_url(client, bucket_name, key, cache_control=cache_control),
         _get_object_url_in_cdn(client, key, bucket_name, cdn_url),
     )
 
