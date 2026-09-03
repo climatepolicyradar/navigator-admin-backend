@@ -3,17 +3,76 @@ import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlparse
 
 import pytest
+import requests
 from botocore.exceptions import ClientError
 
 from app.clients.aws.client import get_s3_client
 from app.clients.aws.s3bucket import (
     S3UploadContext,
+    generate_pre_signed_url,
+    get_upload_details,
     upload_bulk_import_json_to_s3,
     upload_json_to_s3,
     upload_sql_db_dump_to_s3,
 )
+
+
+def test_generate_pre_signed_url_signs_in_cache_control_header(basic_s3_client):
+    """A presigned URL generated with a cache_control value must sign
+    Cache-Control into the SigV4 signed headers, so that only a PUT sending
+    the matching header is accepted by S3 (verified directly against
+    botocore's signer, since moto does not enforce SigV4 header validation
+    the way real S3 does).
+
+    Uses get_s3_client() (rather than the basic_s3_client fixture's plain
+    boto3.client('s3')) because production explicitly configures SigV4 -
+    the default client signature version doesn't reflect what generates the
+    real presigned URLs.
+    """
+    with patch.dict(
+        os.environ, {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}
+    ):
+        client = get_s3_client()
+
+    url = generate_pre_signed_url(
+        client, "test_bucket", "logo.png", cache_control="no-cache"
+    )
+
+    query_params = parse_qs(urlparse(str(url)).query)
+    signed_headers = query_params["X-Amz-SignedHeaders"][0]
+    assert "cache-control" in signed_headers.split(";")
+
+    matching_response = requests.put(
+        str(url),
+        data=b"image bytes",
+        headers={"Cache-Control": "no-cache"},
+    )
+    assert matching_response.status_code == 200
+
+
+def test_get_upload_details_forwards_cache_control(basic_s3_client):
+    """get_upload_details must pass cache_control through to the presigned
+    URL it generates, so callers can require a specific Cache-Control on
+    upload without duplicating that plumbing themselves."""
+    with patch.dict(
+        os.environ, {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}
+    ):
+        client = get_s3_client()
+
+    presigned_url, _ = get_upload_details(
+        client,
+        "logo.png",
+        "test_bucket",
+        "https://cdn.test.com",  # type: ignore[arg-type]
+        cache_control="no-cache",
+    )
+
+    query_params = parse_qs(urlparse(str(presigned_url)).query)
+    signed_headers = query_params["X-Amz-SignedHeaders"][0]
+    assert "cache-control" in signed_headers.split(";")
 
 
 def test_get_s3_client_uses_default_credential_chain_when_env_vars_unset():
