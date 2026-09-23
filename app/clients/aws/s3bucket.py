@@ -4,7 +4,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any, BinaryIO, Optional, Tuple
 from urllib.parse import quote_plus, urlsplit
 
 import boto3
@@ -194,6 +194,25 @@ def get_upload_details(
         generate_pre_signed_url(client, bucket_name, key, cache_control=cache_control),
         _get_object_url_in_cdn(client, key, bucket_name, cdn_url),
     )
+
+
+def upload_csv_to_s3(file_obj: BinaryIO, file_name: str) -> str:
+    """
+    Upload a CSV file-like object to S3.
+
+    :param BinaryIO file_obj: The uploaded CSV, opened in binary mode.
+    :param str file_name: The name of the CSV file.
+    :return str: The S3 key the file was written to.
+    """
+    bucket = os.environ.get("CSV_UPLOAD_BUCKET", "cpr-tmp")
+
+    key = f"csv-uploads/{file_name}"
+
+    s3_client = boto3.client("s3")
+    s3_client.upload_fileobj(
+        file_obj, bucket, key, ExtraArgs={"ContentType": "text/csv"}
+    )
+    return key
 
 
 # TODO: add more s3 functions like listing and reading files here
