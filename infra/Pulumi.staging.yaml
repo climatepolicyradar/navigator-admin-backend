@@ -48,5 +48,6 @@ config:
     secure: AAABAD0SBcZsgzj0npiJ/NlaqPP8si6wqvTsoR1eAdpf0CSzezK2bBZbsyate1lXyyV/tIkc2rA=
   admin_backend:cloudfront_origin_prefix_list_id:
     secure: AAABAJiNP/1WalejvWtIdv+BuNE4JnR2hWrr5tGTwl7OiEZ1wqcNCivzvA==
+  admin_backend:data_mapper_csv_upload_bucket: cpr-staging-data-in-stage
 environment:
   - admin_backend/staging

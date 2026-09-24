@@ -37,6 +37,7 @@ def create_ecs_backend_environment() -> dict[str, str]:
     # Create the environment config required for the ecs backend service
     bulk_import_bucket = CONFIG.require("bulk_import_bucket")
     database_dump_bucket = CONFIG.require("database_dump_bucket")
+    data_mapper_csv_upload_bucket = CONFIG.require("data_mapper_csv_upload_bucket")
     log_level = CONFIG.require("log_level")
     cache_bucket = CONFIG.require("cache_bucket")
     cdn_url = CONFIG.require("cdn_url")
@@ -46,6 +47,7 @@ def create_ecs_backend_environment() -> dict[str, str]:
     environment: dict[str, str] = {
         "BULK_IMPORT_BUCKET": bulk_import_bucket,
         "DATABASE_DUMP_BUCKET": database_dump_bucket,
+        "DATA_MAPPER_CSV_UPLOAD_BUCKET": data_mapper_csv_upload_bucket,
         "CACHE_BUCKET": cache_bucket,
         "CDN_URL": cdn_url,
         "AWS_REGION": "eu-west-1",
@@ -355,11 +357,16 @@ rds_backups = aws.s3.Bucket(
 
 bulk_import_bucket = aws.s3.get_bucket(bucket=f"cpr-{stack}-bulkimport")
 cpr_document_cache_bucket = aws.s3.get_bucket(bucket=f"cpr-{stack}-document-cache")
+data_mapper_csv_upload_bucket = aws.s3.get_bucket(
+    bucket=CONFIG.require("data_mapper_csv_upload_bucket")
+)  # Have gone away from convention here because the bucket doesn't follow the same naming convention across stacks.
+
 
 s3_bucket_arns = [
     rds_backups.arn,
     cpr_document_cache_bucket.arn,
     bulk_import_bucket.arn,
+    data_mapper_csv_upload_bucket.arn,
 ]
 
 if stack == "production":

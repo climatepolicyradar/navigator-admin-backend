@@ -51,5 +51,6 @@ config:
     secure: AAABAFghn7ER4wHh6u6kYEbrTBcgU5REulynCzUY00bBfRsaVr7Mp9mGyYHzVxdp0nCjvMxwgQQ=
   admin_backend:vpc_id:
     secure: AAABAEd6lfpyqiu4gdkQ62rxsAVha4oYurWog1/kkO2pJL5pemnDjDqDl0RPcsMMjUanRAI=
+  admin_backend:data_mapper_csv_upload_bucket: cpr-prod-data-in-stage
 environment:
   - admin_backend/production
