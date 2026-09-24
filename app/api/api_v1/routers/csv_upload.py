@@ -33,6 +33,6 @@ def upload_csv(file: UploadFile) -> Json:
     except ClientError as e:
         _LOGGER.exception(e)
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload file to S3",
         )
