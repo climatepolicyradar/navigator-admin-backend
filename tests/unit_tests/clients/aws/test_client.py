@@ -245,11 +245,10 @@ UNLOCK TABLES;
 CSV_CONTENT = b"name,value\nfoo,1\nbar,2\n"
 
 
-@patch.dict(os.environ, {"CSV_UPLOAD_BUCKET": "test_bucket"})
+@patch.dict(os.environ, {"DATA_MAPPER_CSV_UPLOAD_BUCKET": "test_bucket"})
 def test_upload_csv_to_s3_success(basic_s3_client):
     key = upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test.csv")
 
-    assert key.startswith("csv-uploads/")
     assert key.endswith(".csv")
 
     get_response = basic_s3_client.get_object(Bucket="test_bucket", Key=key)
@@ -257,20 +256,18 @@ def test_upload_csv_to_s3_success(basic_s3_client):
     assert get_response["ContentType"] == "text/csv"
 
 
-@patch.dict(os.environ, {"CSV_UPLOAD_BUCKET": "test_bucket"})
+@patch.dict(os.environ, {"DATA_MAPPER_CSV_UPLOAD_BUCKET": "test_bucket"})
 def test_upload_csv_to_s3_generates_unique_keys(basic_s3_client):
     first_key = upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test.csv")
     second_key = upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test2.csv")
 
     assert first_key != second_key
 
-    find_response = basic_s3_client.list_objects_v2(
-        Bucket="test_bucket", Prefix="csv-uploads/"
-    )
+    find_response = basic_s3_client.list_objects_v2(Bucket="test_bucket", Prefix="test")
     assert len(find_response["Contents"]) == 2
 
 
-@patch.dict(os.environ, {"CSV_UPLOAD_BUCKET": "non-existent-bucket"})
+@patch.dict(os.environ, {"DATA_MAPPER_CSV_UPLOAD_BUCKET": "non-existent-bucket"})
 def test_upload_csv_to_s3_when_bucket_missing(basic_s3_client):
     with pytest.raises(ClientError) as e:
         upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test.csv")
