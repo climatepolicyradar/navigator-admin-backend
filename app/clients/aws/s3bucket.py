@@ -204,9 +204,12 @@ def upload_csv_to_s3(file_obj: BinaryIO, file_name: str) -> str:
     :param str file_name: The name of the CSV file.
     :return str: The S3 key the file was written to.
     """
-    bucket = os.environ.get("CSV_UPLOAD_BUCKET", "cpr-tmp")
+    bucket = os.environ.get("DATA_MAPPER_CSV_UPLOAD_BUCKET")
 
-    key = f"csv-uploads/{file_name}"
+    if not bucket:
+        raise ValueError("DATA_MAPPER_CSV_UPLOAD_BUCKET environment variable not set")
+
+    key = f"{file_name}"
 
     s3_client = boto3.client("s3")
     s3_client.upload_fileobj(
