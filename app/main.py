@@ -27,6 +27,7 @@ from app.api.api_v1.routers import (
     config_router,
     corpora_router,
     corpus_types_router,
+    csv_upload_router,
     document_router,
     event_router,
     families_router,
@@ -41,7 +42,7 @@ from app.telemetry import Telemetry
 from app.telemetry_config import ServiceManifest, TelemetryConfig
 
 _ALLOW_ORIGIN_REGEX = (
-    r"http://localhost:3000|"
+    r"http://localhost:3000$|"
     r"https://.+\.climatepolicyradar\.org|"
     r"https://.+\.staging.climatepolicyradar\.org|"
     r"https://.+\.sandbox\.climatepolicyradar\.org|"
@@ -180,6 +181,13 @@ app.include_router(
     user_router,
     prefix="/api/v1",
     tags=["users"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    csv_upload_router,
+    prefix="/api/v1",
+    tags=["csv-upload"],
     dependencies=[Depends(check_user_auth)],
 )
 

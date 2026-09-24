@@ -24,6 +24,7 @@ class AuthEndpoint(str, enum.Enum):
     ORGANISATION = "ORGANISATIONS"
     APP_TOKEN = "APP-TOKENS"  # nosec B105
     USER = "USERS"
+    CSV_UPLOAD = "CSV-UPLOAD"
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
@@ -96,5 +97,10 @@ AUTH_TABLE: AuthMap = {
         AuthOperation.CREATE: AuthAccess.SUPER,
         AuthOperation.READ: AuthAccess.SUPER,
         AuthOperation.UPDATE: AuthAccess.SUPER,
+    },
+    # CSV Upload
+    AuthEndpoint.CSV_UPLOAD: {
+        AuthOperation.CREATE: AuthAccess.USER,
+        AuthOperation.READ: AuthAccess.USER,
     },
 }
