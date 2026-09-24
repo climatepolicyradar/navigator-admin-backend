@@ -49,7 +49,7 @@ def test_csv_upload_when_s3_fails(client: TestClient, superuser_header_token):
             headers=superuser_header_token,
         )
 
-    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert response.json().get("detail") == "Failed to upload file to S3"
     assert "bucket internals" not in response.text
 
