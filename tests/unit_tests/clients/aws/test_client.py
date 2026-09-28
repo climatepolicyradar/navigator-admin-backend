@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import tempfile
@@ -15,6 +16,7 @@ from app.clients.aws.s3bucket import (
     generate_pre_signed_url,
     get_upload_details,
     upload_bulk_import_json_to_s3,
+    upload_csv_to_s3,
     upload_json_to_s3,
     upload_sql_db_dump_to_s3,
 )
@@ -238,3 +240,36 @@ UNLOCK TABLES;
         # Cleanup in case the test fails
         if Path(tmp_file_path).exists():
             Path(tmp_file_path).unlink()
+
+
+CSV_CONTENT = b"name,value\nfoo,1\nbar,2\n"
+
+
+@patch.dict(os.environ, {"DATA_MAPPER_CSV_UPLOAD_BUCKET": "test_bucket"})
+def test_upload_csv_to_s3_success(basic_s3_client):
+    key = upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test.csv")
+
+    assert key.endswith(".csv")
+
+    get_response = basic_s3_client.get_object(Bucket="test_bucket", Key=key)
+    assert get_response["Body"].read() == CSV_CONTENT
+    assert get_response["ContentType"] == "text/csv"
+
+
+@patch.dict(os.environ, {"DATA_MAPPER_CSV_UPLOAD_BUCKET": "test_bucket"})
+def test_upload_csv_to_s3_generates_unique_keys(basic_s3_client):
+    first_key = upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test.csv")
+    second_key = upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test2.csv")
+
+    assert first_key != second_key
+
+    find_response = basic_s3_client.list_objects_v2(Bucket="test_bucket", Prefix="test")
+    assert len(find_response["Contents"]) == 2
+
+
+@patch.dict(os.environ, {"DATA_MAPPER_CSV_UPLOAD_BUCKET": "non-existent-bucket"})
+def test_upload_csv_to_s3_when_bucket_missing(basic_s3_client):
+    with pytest.raises(ClientError) as e:
+        upload_csv_to_s3(io.BytesIO(CSV_CONTENT), "test.csv")
+
+    assert e.value.response["Error"]["Code"] == "NoSuchBucket"
