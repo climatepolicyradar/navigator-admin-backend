@@ -57,7 +57,9 @@ def test_update_document_super(
     assert data["metadata"] == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
-    assert data["slug"].startswith("updated-title")
+    assert (
+        data["slug"] == "document-slug-2"
+    )  # We have removed minting new slugs on update - this is the original slug from setup_db.py
     assert data["user_language_name"] == "Ghotuo"
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
@@ -75,16 +77,6 @@ def test_update_document_super(
         .one()
     )
     assert lang.language_id == 1
-
-    # Check slug is updated too
-    slugs = (
-        data_db.query(Slug)
-        .filter(Slug.family_document_import_id == "D.0.0.2")
-        .order_by(Slug.created.desc())
-        .all()
-    )
-    last_slug = slugs[0].name
-    assert last_slug.startswith("updated-title")
 
 
 def test_update_document_cclw(client: TestClient, data_db: Session, user_header_token):
@@ -107,7 +99,7 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     assert data["metadata"] == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
-    assert data["slug"].startswith("updated-title")
+
     assert data["user_language_name"] == "Ghotuo"
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.3")
@@ -126,15 +118,58 @@ def test_update_document_cclw(client: TestClient, data_db: Session, user_header_
     )
     assert lang.language_id == 1
 
-    # Check slug is updated too
+
+def test_update_document_does_not_update_document_slug(
+    client: TestClient, data_db: Session, non_cclw_user_header_token
+):
+    setup_db(data_db)
+    new_document = create_document_write_dto(
+        title="Updated Title",
+        variant_name="Translation",
+        metadata={"role": ["SUMMARY"], "type": ["Annex"]},
+        user_language_name="Ghotuo",
+    )
+    response = client.put(
+        "/api/v1/documents/D.0.0.2",
+        json=new_document.model_dump(mode="json"),
+        headers=non_cclw_user_header_token,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["import_id"] == "D.0.0.2"
+    assert data["variant_name"] == "Translation"
+    assert data["metadata"] == {"role": ["SUMMARY"], "type": ["Annex"]}
+    assert data["title"] == "Updated Title"
+    assert data["source_url"] == "http://update_source/"
+    assert data["user_language_name"] == "Ghotuo"
+
+    fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
+    assert fd.import_id == "D.0.0.2"
+    assert fd.variant_name == "Translation"
+    assert fd.valid_metadata == {"role": ["SUMMARY"], "type": ["Annex"]}
+    assert pd.title == "Updated Title"
+    assert pd.source_url == "http://update_source/"
+
+    # Check the user language in the db
+    lang = (
+        data_db.query(PhysicalDocumentLanguage)
+        .filter(PhysicalDocumentLanguage.document_id == data["physical_id"])
+        .filter(PhysicalDocumentLanguage.source == LanguageSource.USER)
+        .one()
+    )
+    assert lang.language_id == 1
+
+    # Check slug is not updated
     slugs = (
         data_db.query(Slug)
-        .filter(Slug.family_document_import_id == "D.0.0.3")
+        .filter(Slug.family_document_import_id == "D.0.0.2")
         .order_by(Slug.created.desc())
         .all()
     )
-    last_slug = slugs[0].name
-    assert last_slug.startswith("updated-title")
+
+    assert len(slugs) == 1
+    document_slug = slugs[0].name
+    assert document_slug.startswith("document-slug-2")
 
 
 def test_update_document_unfccc(
@@ -159,7 +194,6 @@ def test_update_document_unfccc(
     assert data["metadata"] == {"role": ["SUMMARY"], "type": ["Annex"]}
     assert data["title"] == "Updated Title"
     assert data["source_url"] == "http://update_source/"
-    assert data["slug"].startswith("updated-title")
     assert data["user_language_name"] == "Ghotuo"
 
     fd, pd = _get_doc_tuple(data_db, "D.0.0.2")
@@ -177,16 +211,6 @@ def test_update_document_unfccc(
         .one()
     )
     assert lang.language_id == 1
-
-    # Check slug is updated too
-    slugs = (
-        data_db.query(Slug)
-        .filter(Slug.family_document_import_id == "D.0.0.2")
-        .order_by(Slug.created.desc())
-        .all()
-    )
-    last_slug = slugs[0].name
-    assert last_slug.startswith("updated-title")
 
 
 def test_update_document_no_source_url(

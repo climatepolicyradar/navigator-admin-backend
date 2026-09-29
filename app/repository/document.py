@@ -299,8 +299,6 @@ def update(
     new_language = _get_requested_language(db, new_values)
     has_language_changed = not _is_language_equal(existing_language, new_language)
 
-    update_slug = original_pd.title != new_values["title"]
-
     commands = [
         db_update(PhysicalDocument)
         .where(PhysicalDocument.id == original_pd.id)
@@ -359,13 +357,6 @@ def update(
         _LOGGER.error(msg)
         raise RepositoryError(msg)
 
-    if update_slug:
-        db.add(
-            Slug(
-                family_document_import_id=original_fd.import_id,
-                name=slug or generate_slug(db, new_values["title"]),
-            )
-        )
     return True
 
 
