@@ -576,18 +576,6 @@ def update(
             _LOGGER.error(msg)
             raise RepositoryError(msg)
 
-    # Update slug if title changed
-    if update_title:
-        db.flush()
-        name = generate_slug(db, family.title)
-        new_slug = Slug(
-            family_import_id=import_id,
-            family_document_import_id=None,
-            name=name,
-        )
-        db.add(new_slug)
-        _LOGGER.info(f"Added a new slug for {import_id} of {new_slug.name}")
-
     # Update collections if collections changed.
     if update_collections:
         original_collections = set(
