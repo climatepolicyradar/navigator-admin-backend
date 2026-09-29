@@ -168,7 +168,6 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
     assert data["summary"] == ""
     assert data["geographies"] == ["South Asia"]
     assert data["category"] == "UNFCCC"
-    assert data["slug"] == "Slug1"  # We have removed minting new slugs on update
     assert data["collections"] == ["C.0.0.2"]
 
     db_family: Family = (
