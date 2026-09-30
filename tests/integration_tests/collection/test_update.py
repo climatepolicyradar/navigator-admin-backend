@@ -87,7 +87,7 @@ def test_update_collection_with_metadata(
     assert org is not None
 
 
-def test_update_collections_updates_associated_slug(
+def test_update_collections_does_not_modify_slug(
     client: TestClient, data_db: Session, user_header_token
 ):
     setup_db(data_db)
@@ -116,8 +116,7 @@ def test_update_collections_updates_associated_slug(
     )
     assert slug is not None
 
-    assert "this-is-the-updated-title-of-this-collection" in slug.name
-    assert slug.name != original_slug_name
+    assert slug.name == original_slug_name
 
 
 def test_update_collection_when_not_authorised(client: TestClient, data_db: Session):

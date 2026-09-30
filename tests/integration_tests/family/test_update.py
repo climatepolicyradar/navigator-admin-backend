@@ -168,7 +168,6 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
     assert data["summary"] == ""
     assert data["geographies"] == ["South Asia"]
     assert data["category"] == "UNFCCC"
-    assert data["slug"].startswith("updated-title")
     assert data["collections"] == ["C.0.0.2"]
 
     db_family: Family = (
@@ -188,8 +187,8 @@ def test_update_family_slug(client: TestClient, data_db: Session, user_header_to
         .order_by(Slug.created.desc())
         .all()
     )
-    assert len(db_slug) == 2
-    assert str(db_slug[0].name).startswith("updated-title")
+    assert len(db_slug) == 1
+    assert str(db_slug[0].name) == "Slug1"
 
     db_collection: Optional[list[CollectionFamily]] = (
         data_db.query(CollectionFamily)

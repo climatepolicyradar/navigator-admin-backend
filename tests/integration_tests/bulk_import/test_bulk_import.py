@@ -704,25 +704,21 @@ def test_generates_unique_slugs_for_documents_with_identical_titles_on_create(
 
 
 @pytest.mark.s3
-def test_generates_unique_slugs_for_documents_with_identical_titles_on_update(
+def test_does_not_generate_new_slugs_for_documents_when_title_updated(
     caplog,
     data_db: Session,
     client: TestClient,
     superuser_header_token,
 ):
     """
-    This test ensures that given multiple documents with the same title a unique slug
-    is generated for each and thus the documents can be saved to the DB at the end
-    of bulk import. However, the current length of the suffix added to the slug
-    to ensure uniqueness (6), means that the likelihood of a collision is extremely low,
-    which makes it extremely difficult to write a consistently failing test.
-    So in most cases, this test will pass simply because there no slugs were duplicated.
+    Updating a document's title via bulk import must not mint a new slug.
+    Each document keeps the single slug it was given on creation.
     """
     input_data = {
         "families": [{**default_family, "collections": []}],
         "documents": [
             {**default_document, "import_id": f"test.new.document.{i}"}
-            for i in range(1000)
+            for i in range(10)
         ],
     }
 
@@ -732,8 +728,14 @@ def test_generates_unique_slugs_for_documents_with_identical_titles_on_update(
             files={"data": build_json_file(input_data)},
             headers=superuser_header_token,
         )
-
         assert response.status_code == status.HTTP_202_ACCEPTED
+
+    slugs_before = {
+        doc.import_id: [slug.name for slug in doc.slugs]
+        for doc in data_db.query(FamilyDocument).all()
+    }
+    assert len(slugs_before) == len(input_data["documents"])
+    assert all(len(names) == 1 for names in slugs_before.values())
 
     updated_data = {
         **input_data,
@@ -746,15 +748,23 @@ def test_generates_unique_slugs_for_documents_with_identical_titles_on_update(
             files={"data": build_json_file(updated_data)},
             headers=superuser_header_token,
         )
-
         assert response.status_code == status.HTTP_202_ACCEPTED
 
+    data_db.expire_all()
     saved_documents = data_db.query(FamilyDocument).all()
-    saved_unique_slugs = set(doc.slugs[0].name for doc in saved_documents)
 
-    assert all(slug.startswith("updated") for slug in saved_unique_slugs)
-    # check all updated slugs are unique
-    assert len(saved_documents) == len(saved_unique_slugs)
+    # Guard against a vacuous pass: the title change must really have been applied.
+    assert all(doc.physical_document.title == "Updated" for doc in saved_documents)
+
+    slugs_after = {
+        doc.import_id: [slug.name for slug in doc.slugs] for doc in saved_documents
+    }
+
+    # Slugs are exactly as they were: none added, none replaced.
+    assert slugs_after == slugs_before
+    assert not any(
+        name.startswith("updated") for names in slugs_after.values() for name in names
+    )
 
 
 @pytest.mark.s3

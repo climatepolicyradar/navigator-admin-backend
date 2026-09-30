@@ -180,7 +180,7 @@ EXPECTED_DOCUMENTS = [
         "variant_name": "Original Language",
         "status": "Created",
         "metadata": {"role": ["MAIN"], "type": ["Law"]},
-        "slug": "",
+        "slug": "document-slug-1",
         "title": "big title1",
         "md5_sum": "sum1",
         "cdn_object": "obj1",
@@ -198,7 +198,7 @@ EXPECTED_DOCUMENTS = [
         "variant_name": "Original Language",
         "status": "Created",
         "metadata": {"role": ["MAIN"], "type": ["Law"]},
-        "slug": "",
+        "slug": "document-slug-2",
         "title": "title2",
         "md5_sum": "sum2",
         "cdn_object": "obj2",
@@ -216,7 +216,7 @@ EXPECTED_DOCUMENTS = [
         "variant_name": "Original Language",
         "status": "Created",
         "metadata": {"role": ["MAIN"], "type": ["Law"]},
-        "slug": "",
+        "slug": "document-slug-3",
         "title": "title3",
         "md5_sum": "sum3",
         "cdn_object": "obj3",
@@ -669,6 +669,14 @@ def _setup_document_data(test_db: Session, configure_empty: bool = False) -> Non
             )
             test_db.add(fd)
             test_db.flush()
+
+    for _, data in enumerate(EXPECTED_DOCUMENTS):
+        test_db.add(
+            Slug(
+                name=data["slug"],
+                family_document_import_id=data["import_id"],
+            )
+        )
 
     # Setup english as user language for first document
     test_db.add(

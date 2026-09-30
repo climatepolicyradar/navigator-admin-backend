@@ -211,8 +211,6 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         _LOGGER.error(f"Unable to find collection for update {collection}")
         return False
 
-    update_title = new_values["title"] != original_collection.title
-
     result = db.execute(
         db_update(Collection)
         .where(Collection.import_id == import_id)
@@ -233,7 +231,7 @@ def update(db: Session, import_id: str, collection: CollectionWriteDTO) -> bool:
         )
     ).one_or_none()
 
-    if update_title or slug is None:
+    if slug is None:
         db.flush()
         name = generate_slug(db, new_values["title"])
         slug_update = db.execute(
