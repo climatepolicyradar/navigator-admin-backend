@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 
 from app.clients.aws.s3bucket import upload_csv_to_s3
 from app.model.general import Json
-from app.service.csv_upload_validation_service import CSVValidationError, validate_csv
+from app.service.csv_upload import CSVValidationError, validate_csv
 
 csv_upload_router = r = APIRouter()
 

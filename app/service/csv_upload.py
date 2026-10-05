@@ -4,7 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import BinaryIO, TextIO
 
-from enums.csv_columns import CSVColumn
+from app.enums.csv_columns import CSVColumn
 
 EXPECTED_COLUMNS: list[str] = [col.value for col in CSVColumn]
 DATA_PROVIDER_COLUMN = "data_provider"
@@ -40,6 +40,14 @@ def _check_column_order(header: list[str]) -> None:
         )
 
 
+def _check_no_duplicate_columns(header: list[str]) -> None:
+    duplicates = sorted(
+        {col for col in header if col in EXPECTED_COLUMNS and header.count(col) > 1}
+    )
+    if duplicates:
+        raise CSVValidationError(f"Duplicate columns: {', '.join(duplicates)}")
+
+
 def _check_data_provider(header: list[str], first_row: list[str] | None) -> None:
     if first_row is None:
         raise CSVValidationError("The file has a header row but no data rows.")
@@ -71,5 +79,6 @@ def validate_csv(file: BinaryIO) -> None:
         raise CSVValidationError("The file is empty.")
 
     _check_columns_present(header)
+    _check_no_duplicate_columns(header)
     _check_column_order(header)
     _check_data_provider(header, first_row)
