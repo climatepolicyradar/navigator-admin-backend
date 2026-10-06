@@ -24,6 +24,14 @@ def upload_csv(file: UploadFile) -> Json:
     :return Json: The S3 key the file was written to.
     """
 
+    file_name = file.filename
+
+    if not file_name or not file_name.strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Uploaded file must have a filename",
+        )
+
     try:
         validate_csv(file.file)
     except CSVValidationError as e:
