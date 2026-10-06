@@ -16,7 +16,7 @@ _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 @r.post("/csv-upload", response_model=Json, status_code=status.HTTP_201_CREATED)
-def upload_csv(file: UploadFile) -> Json:
+def upload_csv(file: UploadFile, data_provider: str) -> Json:
     """
     Upload a CSV file to S3.
 
@@ -41,10 +41,7 @@ def upload_csv(file: UploadFile) -> Json:
         )
 
     try:
-        file_name = (
-            file.filename if file.filename else "untitled.csv"
-        )  # To handle cases where the filename is not provided
-        key = upload_csv_to_s3(file.file, file_name)
+        key = upload_csv_to_s3(file.file, file_name, data_provider)
         _LOGGER.info(f"✅ CSV uploaded to {key}")
         return {"message": "CSV uploaded successfully", "key": key}
     except ClientError as e:
