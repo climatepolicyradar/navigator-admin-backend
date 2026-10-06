@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, BinaryIO, Optional, Tuple
 from urllib.parse import quote_plus, urlsplit
@@ -196,20 +196,26 @@ def get_upload_details(
     )
 
 
-def upload_csv_to_s3(file_obj: BinaryIO, file_name: str) -> str:
+def upload_csv_to_s3(
+    file_obj: BinaryIO, file_name: str, normalised_data_provider: str
+) -> str:
     """
     Upload a CSV file-like object to S3.
 
     :param BinaryIO file_obj: The uploaded CSV, opened in binary mode.
     :param str file_name: The name of the CSV file.
+    :param str normalised_data_provider: The name of the data provider, normalised.
     :return str: The S3 key the file was written to.
+    :raises ValueError: If the DATA_MAPPER_CSV_UPLOAD_BUCKET environment variable is not set.
+
     """
     bucket = os.environ.get("DATA_MAPPER_CSV_UPLOAD_BUCKET")
 
     if not bucket:
         raise ValueError("DATA_MAPPER_CSV_UPLOAD_BUCKET environment variable not set")
 
-    key = f"{file_name}"
+    upload_date = datetime.now(timezone.utc).date().isoformat()
+    key = f"bulk_import/csv_import/{normalised_data_provider}/{upload_date}/{file_name}"
 
     s3_client = boto3.client("s3")
     s3_client.upload_fileobj(

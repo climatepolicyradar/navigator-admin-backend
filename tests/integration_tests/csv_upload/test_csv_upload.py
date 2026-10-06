@@ -23,6 +23,7 @@ def test_csv_upload_returns_unprocessable_entity_when_required_column_missing(
     response = client.post(
         "/api/v1/csv-upload",
         files={"file": ("upload.csv", _csv_bytes(columns), "text/csv")},
+        data={"data_provider": "CapsuleCorp"},
         headers=superuser_header_token,
     )
 
@@ -39,6 +40,7 @@ def test_csv_upload_returns_unprocessable_entity_when_data_provider_empty(
     response = client.post(
         "/api/v1/csv-upload",
         files={"file": ("upload.csv", content, "text/csv")},
+        data={"data_provider": "CapsuleCorp"},
         headers=superuser_header_token,
     )
 
@@ -58,6 +60,7 @@ def test_csv_upload_returns_unprocessable_entity_when_columns_in_wrong_order(
     response = client.post(
         "/api/v1/csv-upload",
         files={"file": ("upload.csv", _csv_bytes(columns), "text/csv")},
+        data={"data_provider": "CapsuleCorp"},
         headers=superuser_header_token,
     )
 
@@ -75,6 +78,7 @@ def test_csv_upload_returns_unprocessable_entity_when_column_duplicated(
     response = client.post(
         "/api/v1/csv-upload",
         files={"file": ("upload.csv", _csv_bytes(columns), "text/csv")},
+        data={"data_provider": "CapsuleCorp"},
         headers=superuser_header_token,
     )
 
@@ -93,8 +97,67 @@ def test_csv_upload_returns_s3_key_when_valid(
         response = client.post(
             "/api/v1/csv-upload",
             files={"file": ("upload.csv", content, "text/csv")},
+            data={"data_provider": "CapsuleCorp"},
             headers=superuser_header_token,
         )
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {"message": "CSV uploaded successfully", "key": s3_key}
+
+
+def test_csv_upload_returns_unprocessable_entity_when_filename_is_empty(
+    client: TestClient,
+    superuser_header_token,
+):
+    missing_column = EXPECTED_COLUMNS[-1]
+    columns = [col for col in EXPECTED_COLUMNS if col != missing_column]
+
+    response = client.post(
+        "/api/v1/csv-upload",
+        files={"file": (" ", _csv_bytes(columns), "text/csv")},
+        data={"data_provider": "CapsuleCorp"},
+        headers=superuser_header_token,
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.json() == {"detail": "Uploaded file must have a filename"}
+
+
+def test_csv_upload_returns_unprocessable_entity_when_data_provider_is_missing(
+    client: TestClient,
+    superuser_header_token,
+):
+    s3_key = "uploads/upload.csv"
+    content = _csv_bytes(list(EXPECTED_COLUMNS))
+
+    with patch(PATCH_TARGET, return_value=s3_key):
+        response = client.post(
+            "/api/v1/csv-upload",
+            files={"file": ("upload.csv", content, "text/csv")},
+            headers=superuser_header_token,
+        )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    error = response.json()["detail"][0]
+    assert error["type"] == "missing"
+    assert error["loc"] == ["body", "data_provider"]
+
+
+def test_csv_upload_returns_unprocessable_entity_when_data_provider_is_malformed(
+    client: TestClient,
+    superuser_header_token,
+):
+    s3_key = "uploads/upload.csv"
+    content = _csv_bytes(list(EXPECTED_COLUMNS))
+
+    with patch(PATCH_TARGET, return_value=s3_key):
+        response = client.post(
+            "/api/v1/csv-upload",
+            files={"file": ("upload.csv", content, "text/csv")},
+            headers=superuser_header_token,
+            data={"data_provider": "Invalid/Provider/Name"},
+        )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.json() == {"detail": "data_provider must not contain '/'"}

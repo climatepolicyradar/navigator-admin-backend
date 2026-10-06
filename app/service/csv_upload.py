@@ -82,3 +82,24 @@ def validate_csv(file: BinaryIO) -> None:
     _check_no_duplicate_columns(header)
     _check_column_order(header)
     _check_data_provider(header, first_row)
+
+
+def normalise_data_provider(data_provider: str) -> str:
+    """
+    Normalise a data provider name for use in an S3 key.
+
+    Removes all whitespace and lowercases, e.g. "ClimATE Case C" -> "climatecasec".
+
+    :param str data_provider: The raw data provider name.
+    :return str: The normalised data provider name.
+    :raises ValueError: If the name is empty or contains a "/".
+    """
+    if "/" in data_provider:
+        raise ValueError("data_provider must not contain '/'")
+
+    normalised = "".join(data_provider.split()).lower()
+
+    if not normalised:
+        raise ValueError("data_provider must not be empty")
+
+    return normalised
