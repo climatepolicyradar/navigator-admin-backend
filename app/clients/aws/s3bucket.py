@@ -203,7 +203,7 @@ def upload_csv_to_s3(file_obj: BinaryIO, file_name: str, data_provider: str) -> 
 
     :param BinaryIO file_obj: The uploaded CSV, opened in binary mode.
     :param str file_name: The name of the CSV file.
-    :param str data_provider: The name of the data provider, used to normalise the S3 key.
+    :param str data_provider: The name of the data provider. Normalised before being used in the S3 key.
     :return str: The S3 key the file was written to.
     :raises ValueError: If the DATA_MAPPER_CSV_UPLOAD_BUCKET environment variable is not set.
     :raises ValueError: If the data_provider is empty or contains a "/".

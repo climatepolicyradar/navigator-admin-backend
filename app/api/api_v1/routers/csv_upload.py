@@ -21,6 +21,7 @@ def upload_csv(file: UploadFile, data_provider: str) -> Json:
     Upload a CSV file to S3.
 
     :param UploadFile file: The CSV file to upload.
+    :param str data_provider: The name of the data provider.
     :return Json: The S3 key the file was written to.
     """
 
