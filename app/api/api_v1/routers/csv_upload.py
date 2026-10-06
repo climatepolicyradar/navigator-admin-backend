@@ -1,12 +1,17 @@
 import logging
 import os
+from typing import Annotated
 
 from botocore.exceptions import ClientError
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, Form, HTTPException, UploadFile, status
 
 from app.clients.aws.s3bucket import upload_csv_to_s3
 from app.model.general import Json
-from app.service.csv_upload import CSVValidationError, validate_csv
+from app.service.csv_upload import (
+    CSVValidationError,
+    normalise_data_provider,
+    validate_csv,
+)
 
 csv_upload_router = r = APIRouter()
 
@@ -16,13 +21,30 @@ _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 @r.post("/csv-upload", response_model=Json, status_code=status.HTTP_201_CREATED)
-def upload_csv(file: UploadFile) -> Json:
+def upload_csv(file: UploadFile, data_provider: Annotated[str, Form()]) -> Json:
     """
     Upload a CSV file to S3.
 
     :param UploadFile file: The CSV file to upload.
+    :param str data_provider: The name of the data provider.
     :return Json: The S3 key the file was written to.
     """
+
+    file_name = file.filename
+
+    if not file_name or not file_name.strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Uploaded file must have a filename",
+        )
+
+    try:
+        normalised_data_provider = normalise_data_provider(data_provider)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
 
     try:
         validate_csv(file.file)
@@ -33,10 +55,7 @@ def upload_csv(file: UploadFile) -> Json:
         )
 
     try:
-        file_name = (
-            file.filename if file.filename else "untitled.csv"
-        )  # To handle cases where the filename is not provided
-        key = upload_csv_to_s3(file.file, file_name)
+        key = upload_csv_to_s3(file.file, file_name, normalised_data_provider)
         _LOGGER.info(f"✅ CSV uploaded to {key}")
         return {"message": "CSV uploaded successfully", "key": key}
     except ClientError as e:

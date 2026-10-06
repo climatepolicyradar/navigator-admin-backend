@@ -8,7 +8,6 @@ from app.service.csv_upload import DATA_PROVIDER_COLUMN, EXPECTED_COLUMNS
 
 UPLOAD_URL = "/api/v1/csv-upload"
 PATCH_TARGET = "app.api.api_v1.routers.csv_upload.upload_csv_to_s3"
-CSV_CONTENT = b"name,value\nfoo,1\nbar,2\n"
 TEST_KEY = "csv-uploads/test-key.csv"
 
 
@@ -27,6 +26,7 @@ def test_csv_upload_when_ok(upload_mock, client: TestClient, superuser_header_to
     response = client.post(
         UPLOAD_URL,
         files={"file": build_csv_file(list(EXPECTED_COLUMNS))},
+        data={"data_provider": "CapsuleCorp"},
         headers=superuser_header_token,
     )
 
@@ -48,6 +48,7 @@ def test_csv_upload_when_s3_fails(client: TestClient, superuser_header_token):
         response = client.post(
             UPLOAD_URL,
             files={"file": build_csv_file(list(EXPECTED_COLUMNS))},
+            data={"data_provider": "CapsuleCorp"},
             headers=superuser_header_token,
         )
 
