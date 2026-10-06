@@ -1,8 +1,9 @@
 import logging
 import os
+from typing import Annotated
 
 from botocore.exceptions import ClientError
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, Form, HTTPException, UploadFile, status
 
 from app.clients.aws.s3bucket import upload_csv_to_s3
 from app.model.general import Json
@@ -16,7 +17,7 @@ _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 @r.post("/csv-upload", response_model=Json, status_code=status.HTTP_201_CREATED)
-def upload_csv(file: UploadFile, data_provider: str) -> Json:
+def upload_csv(file: UploadFile, data_provider: Annotated[str, Form()]) -> Json:
     """
     Upload a CSV file to S3.
 
