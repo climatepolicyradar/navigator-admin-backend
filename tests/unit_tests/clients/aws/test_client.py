@@ -263,7 +263,9 @@ def test_upload_csv_to_s3_generates_unique_keys(basic_s3_client):
 
     assert first_key != second_key
 
-    find_response = basic_s3_client.list_objects_v2(Bucket="test_bucket", Prefix="test")
+    find_response = basic_s3_client.list_objects_v2(
+        Bucket="test_bucket", Prefix="bulk_import/csv_import/test_provider/"
+    )
     assert len(find_response["Contents"]) == 2
 
 
