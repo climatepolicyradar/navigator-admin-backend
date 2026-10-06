@@ -100,7 +100,7 @@ AUTH_TABLE: AuthMap = {
     },
     # CSV Upload
     AuthEndpoint.CSV_UPLOAD: {
-        AuthOperation.CREATE: AuthAccess.USER,
-        AuthOperation.READ: AuthAccess.USER,
+        AuthOperation.CREATE: AuthAccess.SUPER,
+        AuthOperation.READ: AuthAccess.SUPER,
     },
 }
