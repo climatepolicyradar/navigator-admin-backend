@@ -142,3 +142,22 @@ def test_csv_upload_returns_unprocessable_entity_when_data_provider_is_missing(
     error = response.json()["detail"][0]
     assert error["type"] == "missing"
     assert error["loc"] == ["body", "data_provider"]
+
+
+def test_csv_upload_returns_unprocessable_entity_when_data_provider_is_malformed(
+    client: TestClient,
+    superuser_header_token,
+):
+    s3_key = "uploads/upload.csv"
+    content = _csv_bytes(list(EXPECTED_COLUMNS))
+
+    with patch(PATCH_TARGET, return_value=s3_key):
+        response = client.post(
+            "/api/v1/csv-upload",
+            files={"file": ("upload.csv", content, "text/csv")},
+            headers=superuser_header_token,
+            data={"data_provider": "Invalid/Provider/Name"},
+        )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.json() == {"detail": "data_provider must not contain '/'"}
