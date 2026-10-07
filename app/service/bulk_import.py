@@ -9,8 +9,9 @@ import logging
 import math
 import os
 import time
+from datetime import datetime, timezone
 from typing import Any, Optional
-from uuid import uuid4
+from uuid import UUID
 
 from db_client.models.dfce.family import FamilyDocument
 from db_client.models.dfce.taxonomy_entry import EntitySpecificTaxonomyKeys
@@ -29,7 +30,9 @@ import app.service.notification as notification_service
 import app.service.taxonomy as taxonomy
 import app.service.validation as validation
 from app.clients.aws.s3bucket import (
+    get_bulk_import_status_from_s3,
     upload_bulk_import_json_to_s3,
+    upload_bulk_import_status_to_s3,
     upload_sql_db_dump_to_s3,
 )
 from app.errors import ValidationError
@@ -38,6 +41,8 @@ from app.model.bulk_import import (
     BulkImportDocumentDTO,
     BulkImportEventDTO,
     BulkImportFamilyDTO,
+    BulkImportStatus,
+    BulkImportStatusDTO,
 )
 from app.repository.helpers import generate_slug
 from app.service.database_dump import delete_local_file, get_database_dump
@@ -419,6 +424,21 @@ def _filter_event_data(
     return filtered_event_data
 
 
+def _count_entities(data: dict[str, Any]) -> dict[str, int]:
+    """
+    Counts the entities saved by a bulk import.
+
+    :param dict[str, Any] data: The data that was imported.
+    :return dict[str, int]: The number of each entity that was saved.
+    """
+    return {
+        "collections": len(data.get("collections", [])),
+        "families": len(data.get("families", [])),
+        "documents": len(data.get("documents", [])),
+        "events": len(data.get("events", [])),
+    }
+
+
 def _create_summary(data: dict[str, Any]) -> str:
     """
     Creates a summary of the bulk import.
@@ -429,12 +449,7 @@ def _create_summary(data: dict[str, Any]) -> str:
     if not data:
         return "🗒️ No data to import."
 
-    counts = {
-        "collections": len(data.get("collections", [])),
-        "families": len(data.get("families", [])),
-        "documents": len(data.get("documents", [])),
-        "events": len(data.get("events", [])),
-    }
+    counts = _count_entities(data)
 
     if not any(counts.values()):
         return "🗒️ No data to import."
@@ -443,24 +458,82 @@ def _create_summary(data: dict[str, Any]) -> str:
     return "🗒️ Saved\n" + ",\n".join(summary_lines)
 
 
+def _record_status(import_status: BulkImportStatusDTO) -> None:
+    """
+    Record the status of a bulk import to S3.
+
+    Failures to record are logged and swallowed: the status exists for observability
+    and must never fail an import, nor mask the error that caused one to fail.
+
+    :param BulkImportStatusDTO import_status: The status to record.
+    """
+    try:
+        upload_bulk_import_status_to_s3(
+            import_status.import_id, import_status.model_dump(mode="json")
+        )
+    except Exception as e:
+        _LOGGER.error(f"💥 Failed to record bulk import status caused by: {e}")
+
+
+def record_import_accepted(import_id: UUID, corpus_import_id: str) -> None:
+    """
+    Record that a bulk import has been accepted and is about to start.
+
+    Recorded before the import is queued so that a caller polling for the outcome can
+    tell an import that is still running from one whose container died before it could
+    record a terminal status, and from an id that was never issued.
+
+    :param UUID import_id: The id of this bulk import.
+    :param str corpus_import_id: The import_id of the corpus being imported into.
+    """
+    _record_status(
+        BulkImportStatusDTO(
+            import_id=str(import_id),
+            corpus_import_id=corpus_import_id,
+            status=BulkImportStatus.RUNNING,
+            started_at=datetime.now(timezone.utc),
+        )
+    )
+
+
+def get_import_status(import_id: UUID) -> Optional[BulkImportStatusDTO]:
+    """
+    Get the status of a bulk import.
+
+    :param UUID import_id: The id of the bulk import.
+    :return Optional[BulkImportStatusDTO]: The status of the bulk import, or None if no
+        status has been recorded against this id.
+    """
+    import_status = get_bulk_import_status_from_s3(str(import_id))
+    if import_status is None:
+        return None
+
+    return BulkImportStatusDTO.model_validate(import_status)
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(
     data: dict[str, Any],
     corpus_import_id: str,
+    import_id: UUID,
 ) -> None:
     """
     Imports data for a given corpus_import_id.
 
     :param dict[str, Any] data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
+    :param UUID import_id: The id of this bulk import, which its status is recorded against.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
     start_time = time.time()
+    started_at = datetime.now(timezone.utc)
     thread_id = notification_service.send_notification(
         f"🚀 Bulk import for corpus: {corpus_import_id} has started."
     )
     end_message = ""
+    import_status = BulkImportStatus.FAILURE
+    error: Optional[str] = None
 
     _LOGGER.info("Getting DB session")
     with db_session.get_db() as db:
@@ -498,23 +571,24 @@ def import_data(
             db.commit()
 
             if any([collection_data, family_data, document_data, event_data]):
-                import_uuid = uuid4()
                 upload_bulk_import_json_to_s3(
-                    f"{import_uuid}-request", corpus_import_id, data
+                    f"{import_id}-request", corpus_import_id, data
                 )
                 upload_bulk_import_json_to_s3(
-                    f"{import_uuid}-result", corpus_import_id, result
+                    f"{import_id}-result", corpus_import_id, result
                 )
             else:
                 _LOGGER.info("🗒️ No data to import.")
 
             end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(result)}"
+            import_status = BulkImportStatus.SUCCESS
         except Exception as e:
             _LOGGER.error(
                 f"💥 Rolling back transaction due to the following error: {e}",
                 exc_info=True,
             )
             db.rollback()
+            error = str(e)
             group_id = os.environ.get(
                 "SLACK_GROUP_ID_APPLICATION_ENGINEERS", ""
             ).strip()
@@ -525,3 +599,19 @@ def import_data(
         finally:
             notification_service.send_notification(end_message, thread_id)
             trigger_db_dump_upload_to_sql(thread_id)
+            _record_status(
+                BulkImportStatusDTO(
+                    import_id=str(import_id),
+                    corpus_import_id=corpus_import_id,
+                    status=import_status,
+                    started_at=started_at,
+                    finished_at=datetime.now(timezone.utc),
+                    duration_seconds=_get_duration(start_time),
+                    counts=(
+                        _count_entities(result)
+                        if import_status is BulkImportStatus.SUCCESS
+                        else None
+                    ),
+                    error=error,
+                )
+            )

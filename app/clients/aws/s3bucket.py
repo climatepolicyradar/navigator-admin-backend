@@ -144,6 +144,65 @@ def upload_bulk_import_json_to_s3(
     upload_json_to_s3(s3_client, context, data)
 
 
+BULK_IMPORT_STATUS_PREFIX = "status"
+
+
+def _bulk_import_status_key(import_id: str) -> str:
+    """
+    Build the S3 key holding the status of a bulk import.
+
+    :param str import_id: The uuid of the bulk import action.
+    :return str: The S3 key of the status object.
+    """
+    return f"{BULK_IMPORT_STATUS_PREFIX}/{import_id}.json"
+
+
+def upload_bulk_import_status_to_s3(import_id: str, status: dict[str, Any]) -> None:
+    """
+    Upload the status of a bulk import to S3, overwriting any previous status.
+
+    :param str import_id: The uuid of the bulk import action.
+    :param dict[str, Any] status: The status of the bulk import.
+    :raises Exception: on any error when uploading the status to S3.
+    """
+    bulk_import_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
+
+    s3_client = boto3.client("s3")
+
+    context = S3UploadContext(
+        bucket_name=bulk_import_upload_bucket,
+        object_name=_bulk_import_status_key(import_id),
+    )
+    upload_json_to_s3(s3_client, context, status)
+
+
+def get_bulk_import_status_from_s3(import_id: str) -> Optional[dict[str, Any]]:
+    """
+    Get the status of a bulk import from S3.
+
+    :param str import_id: The uuid of the bulk import action.
+    :return Optional[dict[str, Any]]: The status of the bulk import, or None if no
+        status has been recorded for this id.
+    :raises Exception: on any error other than the status not existing.
+    """
+    bulk_import_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
+
+    s3_client = boto3.client("s3")
+
+    try:
+        response = s3_client.get_object(
+            Bucket=bulk_import_upload_bucket,
+            Key=_bulk_import_status_key(import_id),
+        )
+    except ClientError as e:
+        if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
+            return None
+        _LOGGER.error(f"💥 Failed to get bulk import status from S3: {e}")
+        raise
+
+    return json.loads(response["Body"].read().decode("utf-8"))
+
+
 def upload_sql_db_dump_to_s3(dump_file: str) -> None:
     """
     Upload the database dump to S3 and clean up local file.

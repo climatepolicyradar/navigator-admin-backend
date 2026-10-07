@@ -4,6 +4,7 @@ import os
 import re
 from datetime import datetime
 from unittest.mock import ANY, MagicMock, Mock, patch
+from uuid import UUID, uuid4
 
 import pytest
 from db_client.models.dfce.family import FamilyDocument
@@ -11,6 +12,7 @@ from sqlalchemy.orm import Session
 
 import app.service.bulk_import as bulk_import_service
 from app.errors import ValidationError
+from app.model.bulk_import import BulkImportStatus
 from app.model.family import FamilyReadDTO
 from tests.helpers.bulk_import import (
     default_collection,
@@ -18,8 +20,9 @@ from tests.helpers.bulk_import import (
     default_family,
 )
 
+TEST_IMPORT_ID = UUID("11111111-1111-1111-1111-111111111111")
 
-@patch("app.service.bulk_import.uuid4", Mock(return_value="1111-1111"))
+
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 @patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
 def test_input_json_and_result_saved_to_s3_on_bulk_import(
@@ -42,10 +45,10 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
         ]
     }
 
-    bulk_import_service.import_data(json_data, "test_corpus_id")
+    bulk_import_service.import_data(json_data, "test_corpus_id", TEST_IMPORT_ID)
 
     bulk_import_input_json = basic_s3_client.list_objects_v2(
-        Bucket=bucket_name, Prefix="1111-1111-result-test_corpus_id"
+        Bucket=bucket_name, Prefix=f"{TEST_IMPORT_ID}-result-test_corpus_id"
     )
     objects = bulk_import_input_json["Contents"]
     assert len(objects) == 1
@@ -82,7 +85,7 @@ def test_slack_notification_sent_on_success(
             "app.service.bulk_import.notification_service.send_notification"
         ) as mock_notification_service,
     ):
-        bulk_import_service.import_data(test_data, "test_corpus_id")
+        bulk_import_service.import_data(test_data, "test_corpus_id", TEST_IMPORT_ID)
 
         assert 2 == mock_notification_service.call_count
         assert any(
@@ -111,7 +114,7 @@ def test_slack_notification_sent_on_error(
         ) as mock_notification_service,
     ):
         mock_notification_service.return_value = "1"
-        bulk_import_service.import_data(test_data, "test")
+        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_ID)
 
     assert 2 == mock_notification_service.call_count
     mock_notification_service.assert_called_with(
@@ -145,7 +148,7 @@ def test_import_data_when_metadata_contains_non_string_values(
 ):
     mock_trigger_db_dump.return_value = None
     with caplog.at_level(logging.ERROR):
-        bulk_import_service.import_data(test_data, "test")
+        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_ID)
 
     assert "Input should be a valid string" in caplog.text
 
@@ -167,7 +170,7 @@ def test_import_data_when_data_invalid(mock_trigger_db_dump, caplog, basic_s3_cl
     mock_trigger_db_dump.return_value = None
 
     with caplog.at_level(logging.ERROR):
-        bulk_import_service.import_data(test_data, "test")
+        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_ID)
 
     assert "The import id invalid is invalid!" in caplog.text
 
@@ -548,3 +551,110 @@ def test_filter_event_data_does_not_return_event_when_related_document_does_not_
     result = bulk_import_service._filter_event_data(event_data, db_mock)
 
     assert result == []
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_record_import_accepted_records_a_running_status(basic_s3_client):
+    bulk_import_service.record_import_accepted(TEST_IMPORT_ID, "test_corpus_id")
+
+    import_status = bulk_import_service.get_import_status(TEST_IMPORT_ID)
+
+    assert import_status is not None
+    assert import_status.status == BulkImportStatus.RUNNING
+    assert import_status.corpus_import_id == "test_corpus_id"
+    assert import_status.finished_at is None
+    assert import_status.counts is None
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+def test_get_import_status_when_nothing_recorded(basic_s3_client):
+    assert bulk_import_service.get_import_status(uuid4()) is None
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
+def test_success_status_recorded_on_bulk_import(
+    mock_trigger_db_dump,
+    basic_s3_client,
+    validation_service_mock,
+    corpus_repo_mock,
+    collection_repo_mock,
+):
+    mock_trigger_db_dump.return_value = None
+    test_data = {
+        "collections": [
+            {
+                "import_id": "test.new.collection.0",
+                "title": "Test title",
+                "description": "Test description",
+                "metadata": {},
+            }
+        ],
+    }
+
+    bulk_import_service.import_data(test_data, "test_corpus_id", TEST_IMPORT_ID)
+
+    import_status = bulk_import_service.get_import_status(TEST_IMPORT_ID)
+
+    assert import_status is not None
+    assert import_status.status == BulkImportStatus.SUCCESS
+    assert import_status.counts == {
+        "collections": 1,
+        "families": 0,
+        "documents": 0,
+        "events": 0,
+    }
+    assert import_status.error is None
+    assert import_status.finished_at is not None
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
+def test_failure_status_recorded_on_bulk_import(
+    mock_trigger_db_dump, basic_s3_client, validation_service_mock
+):
+    validation_service_mock.throw_validation_error = True
+    mock_trigger_db_dump.return_value = None
+
+    bulk_import_service.import_data({"collections": [{}]}, "test", TEST_IMPORT_ID)
+
+    import_status = bulk_import_service.get_import_status(TEST_IMPORT_ID)
+
+    assert import_status is not None
+    assert import_status.status == BulkImportStatus.FAILURE
+    assert import_status.counts is None
+    assert import_status.error is not None
+
+
+@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
+@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
+def test_bulk_import_still_completes_when_status_cannot_be_recorded(
+    mock_trigger_db_dump,
+    caplog,
+    basic_s3_client,
+    validation_service_mock,
+    corpus_repo_mock,
+    collection_repo_mock,
+):
+    mock_trigger_db_dump.return_value = None
+    test_data = {
+        "collections": [
+            {
+                "import_id": "test.new.collection.0",
+                "title": "Test title",
+                "description": "Test description",
+                "metadata": {},
+            }
+        ],
+    }
+
+    with (
+        caplog.at_level(logging.ERROR),
+        patch(
+            "app.service.bulk_import.upload_bulk_import_status_to_s3",
+            side_effect=Exception("s3 is down"),
+        ),
+    ):
+        bulk_import_service.import_data(test_data, "test_corpus_id", TEST_IMPORT_ID)
+
+    assert "Failed to record bulk import status caused by: s3 is down" in caplog.text

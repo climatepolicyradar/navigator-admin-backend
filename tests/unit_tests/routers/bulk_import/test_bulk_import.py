@@ -1,6 +1,7 @@
 import io
 import json
 from unittest.mock import Mock, patch
+from uuid import UUID
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -66,6 +67,7 @@ def test_bulk_import_when_admin_non_super(client: TestClient, admin_user_header_
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+@patch("app.api.api_v1.routers.bulk_import.record_import_accepted", Mock())
 @patch("app.api.api_v1.routers.bulk_import.validate_corpus_exists", Mock())
 def test_bulk_import_data_when_ok(client: TestClient, superuser_header_token):
     corpus_import_id = "test"
@@ -81,9 +83,12 @@ def test_bulk_import_data_when_ok(client: TestClient, superuser_header_token):
     background_task_mock.assert_called_once()
 
     assert response.status_code == status.HTTP_202_ACCEPTED
-    assert response.json() == {
-        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-    }
+    response_json = response.json()
+    assert (
+        response_json["message"]
+        == "Bulk import request accepted. Check Cloudwatch logs for result."
+    )
+    assert UUID(response_json["import_id"])
 
 
 @patch("app.api.api_v1.routers.bulk_import.validate_corpus_exists", Mock())
