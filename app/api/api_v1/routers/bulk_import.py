@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status
 
@@ -63,7 +64,7 @@ async def bulk_import(
     :param UploadFile data: File containing json representation of data to import.
     :param str corpus_import_id: The ID of the corpus to import.
     :param BackgroundTasks background_tasks: Background tasks to be performed after the request is completed.
-    :return Json: json representation of the data to import.
+    :return Json: the id of the accepted bulk import, which its status can be polled with.
     """
     try:
         content = await data.read()
@@ -77,10 +78,12 @@ async def bulk_import(
 
         _LOGGER.info("✅ Validation successful")
 
-        background_tasks.add_task(import_data, data_dict, corpus_import_id)
+        import_id = uuid4()
+        background_tasks.add_task(import_data, data_dict, corpus_import_id, import_id)
 
         return {
-            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
+            "message": "Bulk import request accepted. Check Cloudwatch logs for result.",
+            "import_id": str(import_id),
         }
     except ValidationError as e:
         _LOGGER.exception(e.message)
