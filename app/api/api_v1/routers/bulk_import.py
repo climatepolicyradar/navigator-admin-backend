@@ -1,19 +1,17 @@
 import json
 import logging
 import os
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status
 
 from app.errors import ValidationError
-from app.model.bulk_import import BulkImportStatusDTO
 from app.model.general import Json
 from app.service.bulk_import import (
     get_collection_template,
     get_document_template,
     get_event_template,
     get_family_template,
-    get_import_status,
     import_data,
 )
 from app.service.validation import validate_bulk_import_data, validate_corpus_exists
@@ -98,32 +96,3 @@ async def bulk_import(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
         )
-
-
-@r.get(
-    "/bulk-import/status/{import_id}",
-    response_model=BulkImportStatusDTO,
-    status_code=status.HTTP_200_OK,
-)
-async def get_bulk_import_status(import_id: UUID) -> BulkImportStatusDTO:
-    """
-    Bulk import status endpoint.
-
-    The bulk import endpoint returns as soon as the data is validated and runs the
-    import itself in the background, so callers poll this endpoint with the import_id
-    it gave them to find out whether that import is still running, and whether it
-    succeeded. An import_id with no outcome recorded yet is reported as running, which
-    includes one that was never issued or whose import died before it finished.
-
-    :param UUID import_id: The id of the bulk import, as returned by the bulk import endpoint.
-    :return BulkImportStatusDTO: The status of the bulk import.
-    """
-    try:
-        import_status = get_import_status(import_id)
-    except Exception as e:
-        _LOGGER.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
-        )
-
-    return import_status

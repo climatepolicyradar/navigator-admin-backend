@@ -29,7 +29,6 @@ import app.service.notification as notification_service
 import app.service.taxonomy as taxonomy
 import app.service.validation as validation
 from app.clients.aws.s3bucket import (
-    get_bulk_import_json_from_s3,
     upload_bulk_import_json_to_s3,
     upload_sql_db_dump_to_s3,
 )
@@ -39,8 +38,6 @@ from app.model.bulk_import import (
     BulkImportDocumentDTO,
     BulkImportEventDTO,
     BulkImportFamilyDTO,
-    BulkImportStatus,
-    BulkImportStatusDTO,
 )
 from app.repository.helpers import generate_slug
 from app.service.database_dump import delete_local_file, get_database_dump
@@ -422,21 +419,6 @@ def _filter_event_data(
     return filtered_event_data
 
 
-def _count_entities(data: dict[str, Any]) -> dict[str, int]:
-    """
-    Counts the entities saved by a bulk import.
-
-    :param dict[str, Any] data: The data that was imported.
-    :return dict[str, int]: The number of each entity that was saved.
-    """
-    return {
-        "collections": len(data.get("collections", [])),
-        "families": len(data.get("families", [])),
-        "documents": len(data.get("documents", [])),
-        "events": len(data.get("events", [])),
-    }
-
-
 def _create_summary(data: dict[str, Any]) -> str:
     """
     Creates a summary of the bulk import.
@@ -447,7 +429,12 @@ def _create_summary(data: dict[str, Any]) -> str:
     if not data:
         return "🗒️ No data to import."
 
-    counts = _count_entities(data)
+    counts = {
+        "collections": len(data.get("collections", [])),
+        "families": len(data.get("families", [])),
+        "documents": len(data.get("documents", [])),
+        "events": len(data.get("events", [])),
+    }
 
     if not any(counts.values()):
         return "🗒️ No data to import."
@@ -464,7 +451,7 @@ def _record_outcome(
     error: Optional[str],
 ) -> None:
     """
-    Record the outcome of a bulk import to S3, where the status endpoint reads it from.
+    Record the outcome of a bulk import to S3, where callers poll for it.
 
     A success writes the request and result files, even when there was no data to
     import, and a failure writes a failure file. Failures to record are logged and
@@ -490,37 +477,6 @@ def _record_outcome(
             )
     except Exception as e:
         _LOGGER.error(f"💥 Failed to record bulk import outcome caused by: {e}")
-
-
-def get_import_status(import_id: UUID) -> BulkImportStatusDTO:
-    """
-    Get the status of a bulk import from the files it writes to S3 once finished.
-
-    An import with neither a result nor a failure file is still running, or was never
-    issued, or its container died before it could record an outcome.
-
-    :param UUID import_id: The id of the bulk import.
-    :return BulkImportStatusDTO: The status of the bulk import.
-    """
-    result = get_bulk_import_json_from_s3(f"{import_id}-result")
-    if result is not None:
-        return BulkImportStatusDTO(
-            import_id=str(import_id),
-            status=BulkImportStatus.SUCCESS,
-            counts=_count_entities(result),
-        )
-
-    failure = get_bulk_import_json_from_s3(f"{import_id}-failure")
-    if failure is not None:
-        return BulkImportStatusDTO(
-            import_id=str(import_id),
-            status=BulkImportStatus.FAILURE,
-            error=failure.get("error"),
-        )
-
-    return BulkImportStatusDTO(
-        import_id=str(import_id), status=BulkImportStatus.RUNNING
-    )
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))

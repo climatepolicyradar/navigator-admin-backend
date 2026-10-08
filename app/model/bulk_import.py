@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from datetime import datetime
-from enum import Enum
 from typing import Any, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, RootModel, model_validator
@@ -328,24 +327,3 @@ def log_differences(update_dto: BaseModel, current_dto: BaseModel, keys: set) ->
                     default=str,
                 )
             )
-
-
-class BulkImportStatus(str, Enum):
-    """The state of a bulk import."""
-
-    RUNNING = "running"
-    SUCCESS = "success"
-    FAILURE = "failure"
-
-
-class BulkImportStatusDTO(BaseModel):
-    """
-    The status of a single bulk import, read back from the files it writes to S3.
-
-    Lets callers which received a 202 from the bulk import endpoint poll for the outcome.
-    """
-
-    import_id: str
-    status: BulkImportStatus
-    counts: Optional[dict[str, int]] = None
-    error: Optional[str] = None

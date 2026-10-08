@@ -144,30 +144,6 @@ def upload_bulk_import_json_to_s3(
     upload_json_to_s3(s3_client, context, data)
 
 
-def get_bulk_import_json_from_s3(import_id: str) -> Optional[dict[str, Any]]:
-    """
-    Get a bulk import JSON file from S3 by the import_id it was uploaded with.
-
-    Filenames also carry the corpus and a timestamp, so the file is found by prefix.
-
-    :param str import_id: The id the file was uploaded with, e.g. "<uuid>-result".
-    :return Optional[dict[str, Any]]: The file's contents, or None if there is no such file.
-    """
-    bulk_import_upload_bucket = os.environ["BULK_IMPORT_BUCKET"]
-
-    s3_client = boto3.client("s3")
-
-    response = s3_client.list_objects_v2(
-        Bucket=bulk_import_upload_bucket, Prefix=f"{import_id}-", MaxKeys=1
-    )
-    objects = response.get("Contents", [])
-    if not objects:
-        return None
-
-    obj = s3_client.get_object(Bucket=bulk_import_upload_bucket, Key=objects[0]["Key"])
-    return json.loads(obj["Body"].read().decode("utf-8"))
-
-
 def upload_sql_db_dump_to_s3(dump_file: str) -> None:
     """
     Upload the database dump to S3 and clean up local file.
