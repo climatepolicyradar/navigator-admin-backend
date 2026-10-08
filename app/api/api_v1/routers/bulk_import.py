@@ -15,7 +15,6 @@ from app.service.bulk_import import (
     get_family_template,
     get_import_status,
     import_data,
-    record_import_accepted,
 )
 from app.service.validation import validate_bulk_import_data, validate_corpus_exists
 from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
@@ -82,7 +81,6 @@ async def bulk_import(
         _LOGGER.info("✅ Validation successful")
 
         import_id = uuid4()
-        record_import_accepted(import_id, corpus_import_id)
         background_tasks.add_task(import_data, data_dict, corpus_import_id, import_id)
 
         return {
@@ -114,7 +112,8 @@ async def get_bulk_import_status(import_id: UUID) -> BulkImportStatusDTO:
     The bulk import endpoint returns as soon as the data is validated and runs the
     import itself in the background, so callers poll this endpoint with the import_id
     it gave them to find out whether that import is still running, and whether it
-    succeeded.
+    succeeded. An import_id with no outcome recorded yet is reported as running, which
+    includes one that was never issued or whose import died before it finished.
 
     :param UUID import_id: The id of the bulk import, as returned by the bulk import endpoint.
     :return BulkImportStatusDTO: The status of the bulk import.
@@ -125,12 +124,6 @@ async def get_bulk_import_status(import_id: UUID) -> BulkImportStatusDTO:
         _LOGGER.exception(e)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
-        )
-
-    if import_status is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No bulk import found with id: {import_id}",
         )
 
     return import_status

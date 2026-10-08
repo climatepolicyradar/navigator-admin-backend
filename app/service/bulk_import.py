@@ -9,7 +9,6 @@ import logging
 import math
 import os
 import time
-from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID
 
@@ -30,9 +29,8 @@ import app.service.notification as notification_service
 import app.service.taxonomy as taxonomy
 import app.service.validation as validation
 from app.clients.aws.s3bucket import (
-    get_bulk_import_status_from_s3,
+    get_bulk_import_json_from_s3,
     upload_bulk_import_json_to_s3,
-    upload_bulk_import_status_to_s3,
     upload_sql_db_dump_to_s3,
 )
 from app.errors import ValidationError
@@ -458,57 +456,71 @@ def _create_summary(data: dict[str, Any]) -> str:
     return "🗒️ Saved\n" + ",\n".join(summary_lines)
 
 
-def _record_status(import_status: BulkImportStatusDTO) -> None:
+def _record_outcome(
+    import_id: UUID,
+    corpus_import_id: str,
+    data: dict[str, Any],
+    result: dict[str, Any],
+    error: Optional[str],
+) -> None:
     """
-    Record the status of a bulk import to S3.
+    Record the outcome of a bulk import to S3, where the status endpoint reads it from.
 
-    Failures to record are logged and swallowed: the status exists for observability
-    and must never fail an import, nor mask the error that caused one to fail.
-
-    :param BulkImportStatusDTO import_status: The status to record.
-    """
-    try:
-        upload_bulk_import_status_to_s3(
-            import_status.import_id, import_status.model_dump(mode="json")
-        )
-    except Exception as e:
-        _LOGGER.error(f"💥 Failed to record bulk import status caused by: {e}")
-
-
-def record_import_accepted(import_id: UUID, corpus_import_id: str) -> None:
-    """
-    Record that a bulk import has been accepted and is about to start.
-
-    Recorded before the import is queued so that a caller polling for the outcome can
-    tell an import that is still running from one whose container died before it could
-    record a terminal status, and from an id that was never issued.
+    A success writes the request and result files, even when there was no data to
+    import, and a failure writes a failure file. Failures to record are logged and
+    swallowed, so they never fail an import nor mask the error that caused one to fail.
 
     :param UUID import_id: The id of this bulk import.
-    :param str corpus_import_id: The import_id of the corpus being imported into.
+    :param str corpus_import_id: The import_id of the corpus the data was imported into.
+    :param dict[str, Any] data: The data that was imported.
+    :param dict[str, Any] result: The import_ids saved by the import.
+    :param Optional[str] error: The error the import failed with, or None if it succeeded.
     """
-    _record_status(
-        BulkImportStatusDTO(
-            import_id=str(import_id),
-            corpus_import_id=corpus_import_id,
-            status=BulkImportStatus.RUNNING,
-            started_at=datetime.now(timezone.utc),
-        )
-    )
+    try:
+        if error is None:
+            upload_bulk_import_json_to_s3(
+                f"{import_id}-request", corpus_import_id, data
+            )
+            upload_bulk_import_json_to_s3(
+                f"{import_id}-result", corpus_import_id, result
+            )
+        else:
+            upload_bulk_import_json_to_s3(
+                f"{import_id}-failure", corpus_import_id, {"error": error}
+            )
+    except Exception as e:
+        _LOGGER.error(f"💥 Failed to record bulk import outcome caused by: {e}")
 
 
-def get_import_status(import_id: UUID) -> Optional[BulkImportStatusDTO]:
+def get_import_status(import_id: UUID) -> BulkImportStatusDTO:
     """
-    Get the status of a bulk import.
+    Get the status of a bulk import from the files it writes to S3 once finished.
+
+    An import with neither a result nor a failure file is still running, or was never
+    issued, or its container died before it could record an outcome.
 
     :param UUID import_id: The id of the bulk import.
-    :return Optional[BulkImportStatusDTO]: The status of the bulk import, or None if no
-        status has been recorded against this id.
+    :return BulkImportStatusDTO: The status of the bulk import.
     """
-    import_status = get_bulk_import_status_from_s3(str(import_id))
-    if import_status is None:
-        return None
+    result = get_bulk_import_json_from_s3(f"{import_id}-result")
+    if result is not None:
+        return BulkImportStatusDTO(
+            import_id=str(import_id),
+            status=BulkImportStatus.SUCCESS,
+            counts=_count_entities(result),
+        )
 
-    return BulkImportStatusDTO.model_validate(import_status)
+    failure = get_bulk_import_json_from_s3(f"{import_id}-failure")
+    if failure is not None:
+        return BulkImportStatusDTO(
+            import_id=str(import_id),
+            status=BulkImportStatus.FAILURE,
+            error=failure.get("error"),
+        )
+
+    return BulkImportStatusDTO(
+        import_id=str(import_id), status=BulkImportStatus.RUNNING
+    )
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
@@ -522,17 +534,15 @@ def import_data(
 
     :param dict[str, Any] data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
-    :param UUID import_id: The id of this bulk import, which its status is recorded against.
+    :param UUID import_id: The id of this bulk import, which its outcome is recorded against.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
     start_time = time.time()
-    started_at = datetime.now(timezone.utc)
     thread_id = notification_service.send_notification(
         f"🚀 Bulk import for corpus: {corpus_import_id} has started."
     )
     end_message = ""
-    import_status = BulkImportStatus.FAILURE
     error: Optional[str] = None
 
     _LOGGER.info("Getting DB session")
@@ -570,18 +580,10 @@ def import_data(
 
             db.commit()
 
-            if any([collection_data, family_data, document_data, event_data]):
-                upload_bulk_import_json_to_s3(
-                    f"{import_id}-request", corpus_import_id, data
-                )
-                upload_bulk_import_json_to_s3(
-                    f"{import_id}-result", corpus_import_id, result
-                )
-            else:
+            if not any([collection_data, family_data, document_data, event_data]):
                 _LOGGER.info("🗒️ No data to import.")
 
             end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(result)}"
-            import_status = BulkImportStatus.SUCCESS
         except Exception as e:
             _LOGGER.error(
                 f"💥 Rolling back transaction due to the following error: {e}",
@@ -599,19 +601,5 @@ def import_data(
         finally:
             notification_service.send_notification(end_message, thread_id)
             trigger_db_dump_upload_to_sql(thread_id)
-            _record_status(
-                BulkImportStatusDTO(
-                    import_id=str(import_id),
-                    corpus_import_id=corpus_import_id,
-                    status=import_status,
-                    started_at=started_at,
-                    finished_at=datetime.now(timezone.utc),
-                    duration_seconds=_get_duration(start_time),
-                    counts=(
-                        _count_entities(result)
-                        if import_status is BulkImportStatus.SUCCESS
-                        else None
-                    ),
-                    error=error,
-                )
-            )
+            # recorded after the dump, so callers only see an outcome once it's done
+            _record_outcome(import_id, corpus_import_id, data, result, error)

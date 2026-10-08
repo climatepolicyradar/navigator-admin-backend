@@ -340,18 +340,12 @@ class BulkImportStatus(str, Enum):
 
 class BulkImportStatusDTO(BaseModel):
     """
-    The status of a single bulk import.
+    The status of a single bulk import, read back from the files it writes to S3.
 
-    Written to S3 as the import progresses so that callers which received a 202 from
-    the bulk import endpoint can poll for the outcome, and read back by the bulk
-    import status endpoint.
+    Lets callers which received a 202 from the bulk import endpoint poll for the outcome.
     """
 
     import_id: str
-    corpus_import_id: str
     status: BulkImportStatus
-    started_at: datetime
-    finished_at: Optional[datetime] = None
-    duration_seconds: Optional[int] = None
     counts: Optional[dict[str, int]] = None
     error: Optional[str] = None

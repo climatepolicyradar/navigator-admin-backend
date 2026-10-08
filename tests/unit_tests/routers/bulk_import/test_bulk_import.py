@@ -67,7 +67,6 @@ def test_bulk_import_when_admin_non_super(client: TestClient, admin_user_header_
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@patch("app.api.api_v1.routers.bulk_import.record_import_accepted", Mock())
 @patch("app.api.api_v1.routers.bulk_import.validate_corpus_exists", Mock())
 def test_bulk_import_data_when_ok(client: TestClient, superuser_header_token):
     corpus_import_id = "test"
