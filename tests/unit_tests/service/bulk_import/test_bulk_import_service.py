@@ -554,7 +554,7 @@ def test_filter_event_data_does_not_return_event_when_related_document_does_not_
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 @patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
-def test_request_and_result_recorded_on_bulk_import_with_no_data(
+def test_result_recorded_on_bulk_import_with_no_data(
     mock_trigger_db_dump, basic_s3_client
 ):
     mock_trigger_db_dump.return_value = None
@@ -564,10 +564,8 @@ def test_request_and_result_recorded_on_bulk_import_with_no_data(
     objects = basic_s3_client.list_objects_v2(
         Bucket="test_bucket", Prefix=f"{TEST_IMPORT_ID}-"
     )["Contents"]
-    keys = sorted(obj["Key"] for obj in objects)
-    assert keys[0].startswith(f"{TEST_IMPORT_ID}-request-test_corpus_id-")
-    assert keys[1].startswith(f"{TEST_IMPORT_ID}-result-test_corpus_id-")
-    assert len(keys) == 2
+    assert len(objects) == 1
+    assert objects[0]["Key"].startswith(f"{TEST_IMPORT_ID}-result-test_corpus_id-")
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})

@@ -499,14 +499,18 @@ def import_data(
 
             db.commit()
 
-            upload_bulk_import_json_to_s3(
-                f"{import_id}-request", corpus_import_id, data
-            )
-            upload_bulk_import_json_to_s3(
-                f"{import_id}-result", corpus_import_id, result
-            )
-            if not any([collection_data, family_data, document_data, event_data]):
+            if any([collection_data, family_data, document_data, event_data]):
+                upload_bulk_import_json_to_s3(
+                    f"{import_id}-request", corpus_import_id, data
+                )
+                upload_bulk_import_json_to_s3(
+                    f"{import_id}-result", corpus_import_id, result
+                )
+            else:
                 _LOGGER.info("🗒️ No data to import.")
+                upload_bulk_import_json_to_s3(
+                    f"{import_id}-result", corpus_import_id, result
+                )
 
             end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(result)}"
         except Exception as e:
