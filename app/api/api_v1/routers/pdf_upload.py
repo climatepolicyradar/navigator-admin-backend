@@ -16,7 +16,7 @@ _LOGGER.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 pdf_upload_router = r = APIRouter()
 
 
-@r.post("/pdfs/upload-urls", response_model=list[PdfUploadDTO])
+@r.post("/pdf-upload", response_model=list[PdfUploadDTO])
 async def get_presigned_urls_for_pdf_uploads(
     body: PdfUploadRequestDTO,
 ) -> list[PdfUploadDTO]:
