@@ -11,21 +11,23 @@ from app.api.api_v1.routers.document import document_router
 from app.api.api_v1.routers.event import event_router
 from app.api.api_v1.routers.family import families_router
 from app.api.api_v1.routers.organisation import organisations_router
+from app.api.api_v1.routers.pdf_upload import pdf_upload_router
 from app.api.api_v1.routers.user import user_router
 
 __all__ = (
     "analytics_router",
     "app_token_router",
     "auth_router",
-    "corpora_router",
-    "corpus_types_router",
+    "bulk_import_router",
     "collections_router",
     "config_router",
+    "corpora_router",
+    "corpus_types_router",
+    "csv_upload_router",
     "document_router",
     "event_router",
     "families_router",
     "organisations_router",
-    "bulk_import_router",
+    "pdf_upload_router",
     "user_router",
-    "csv_upload_router",
 )

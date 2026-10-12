@@ -32,6 +32,7 @@ from app.api.api_v1.routers import (
     event_router,
     families_router,
     organisations_router,
+    pdf_upload_router,
     user_router,
 )
 from app.api.api_v1.routers.auth import check_user_auth
@@ -71,7 +72,7 @@ try:
     )
 except Exception as e:
     _LOGGER.error(
-        f"Failed to load service manifest from {manifest_path}: {type(e).__name__}: {str(e)}",
+        f"Failed to load service manifest from {manifest_path}: {type(e).__name__}: {e!s}",
         exc_info=True,
     )
     otel_config = TelemetryConfig(
@@ -188,6 +189,13 @@ app.include_router(
     csv_upload_router,
     prefix="/api/v1",
     tags=["csv-upload"],
+    dependencies=[Depends(check_user_auth)],
+)
+
+app.include_router(
+    pdf_upload_router,
+    prefix="/api/v1",
+    tags=["pdf-upload"],
     dependencies=[Depends(check_user_auth)],
 )
 
