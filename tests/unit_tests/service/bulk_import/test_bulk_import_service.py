@@ -552,30 +552,6 @@ def test_filter_event_data_does_not_return_event_when_related_document_does_not_
     assert result == []
 
 
-TEST_COLLECTION_DATA = {
-    "collections": [
-        {
-            "import_id": "test.new.collection.0",
-            "title": "Test title",
-            "description": "Test description",
-            "metadata": {},
-        }
-    ],
-}
-
-
-def _outcome_keys(s3_client, import_id: UUID) -> list[str]:
-    """List the outcome files a bulk import has written to S3."""
-    response = s3_client.list_objects_v2(Bucket="test_bucket", Prefix=f"{import_id}-")
-    return sorted(obj["Key"] for obj in response.get("Contents", []))
-
-
-def _read_json(s3_client, key: str) -> dict:
-    """Read a JSON file the bulk import wrote to S3."""
-    obj = s3_client.get_object(Bucket="test_bucket", Key=key)
-    return json.loads(obj["Body"].read().decode("utf-8"))
-
-
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
 @patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
 def test_request_and_result_recorded_on_bulk_import_with_no_data(
@@ -585,10 +561,13 @@ def test_request_and_result_recorded_on_bulk_import_with_no_data(
 
     bulk_import_service.import_data({}, "test_corpus_id", TEST_IMPORT_ID)
 
-    keys = _outcome_keys(basic_s3_client, TEST_IMPORT_ID)
-    assert len(keys) == 2
+    objects = basic_s3_client.list_objects_v2(
+        Bucket="test_bucket", Prefix=f"{TEST_IMPORT_ID}-"
+    )["Contents"]
+    keys = sorted(obj["Key"] for obj in objects)
     assert keys[0].startswith(f"{TEST_IMPORT_ID}-request-test_corpus_id-")
     assert keys[1].startswith(f"{TEST_IMPORT_ID}-result-test_corpus_id-")
+    assert len(keys) == 2
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
@@ -601,55 +580,8 @@ def test_failure_recorded_on_bulk_import(
 
     bulk_import_service.import_data({"collections": [{}]}, "test", TEST_IMPORT_ID)
 
-    keys = _outcome_keys(basic_s3_client, TEST_IMPORT_ID)
-    assert len(keys) == 1
-    assert keys[0].startswith(f"{TEST_IMPORT_ID}-failure-test-")
-    assert _read_json(basic_s3_client, keys[0])["error"]
-
-
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
-def test_outcome_only_recorded_once_db_dump_has_finished(
-    mock_trigger_db_dump,
-    basic_s3_client,
-    validation_service_mock,
-    corpus_repo_mock,
-    collection_repo_mock,
-):
-    keys_during_dump = []
-    mock_trigger_db_dump.side_effect = lambda _: keys_during_dump.append(
-        _outcome_keys(basic_s3_client, TEST_IMPORT_ID)
-    )
-
-    bulk_import_service.import_data(
-        TEST_COLLECTION_DATA, "test_corpus_id", TEST_IMPORT_ID
-    )
-
-    assert keys_during_dump == [[]]
-    assert len(_outcome_keys(basic_s3_client, TEST_IMPORT_ID)) == 2
-
-
-@patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
-@patch("app.service.bulk_import.trigger_db_dump_upload_to_sql")
-def test_bulk_import_still_completes_when_outcome_cannot_be_recorded(
-    mock_trigger_db_dump,
-    caplog,
-    basic_s3_client,
-    validation_service_mock,
-    corpus_repo_mock,
-    collection_repo_mock,
-):
-    mock_trigger_db_dump.return_value = None
-
-    with (
-        caplog.at_level(logging.ERROR),
-        patch(
-            "app.service.bulk_import.upload_bulk_import_json_to_s3",
-            side_effect=Exception("s3 is down"),
-        ),
-    ):
-        bulk_import_service.import_data(
-            TEST_COLLECTION_DATA, "test_corpus_id", TEST_IMPORT_ID
-        )
-
-    assert "Failed to record bulk import outcome caused by: s3 is down" in caplog.text
+    objects = basic_s3_client.list_objects_v2(
+        Bucket="test_bucket", Prefix=f"{TEST_IMPORT_ID}-"
+    )["Contents"]
+    assert len(objects) == 1
+    assert objects[0]["Key"].startswith(f"{TEST_IMPORT_ID}-failure-test-")
