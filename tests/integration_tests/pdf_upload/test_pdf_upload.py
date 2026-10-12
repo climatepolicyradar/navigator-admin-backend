@@ -31,7 +31,7 @@ def _today() -> str:
     return datetime.now(timezone.utc).date().isoformat()
 
 
-@patch.dict(os.environ, {"PDF_UPLOAD_BUCKET": BUCKET})
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
 def test_pdf_upload_urls_returns_presigned_url_for_single_file(
     client: TestClient,
     superuser_header_token,
@@ -68,7 +68,7 @@ def test_pdf_upload_urls_returns_presigned_url_for_single_file(
         ),
     ],
 )
-@patch.dict(os.environ, {"PDF_UPLOAD_BUCKET": BUCKET})
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
 def test_pdf_upload_urls_returns_bad_request_for_invalid_file(
     client: TestClient,
     superuser_header_token,
@@ -83,7 +83,7 @@ def test_pdf_upload_urls_returns_bad_request_for_invalid_file(
     assert response.json() == {"detail": detail}
 
 
-@patch.dict(os.environ, {"PDF_UPLOAD_BUCKET": BUCKET})
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
 def test_pdf_upload_urls_returns_bad_request_when_no_files(
     client: TestClient,
     superuser_header_token,
@@ -96,7 +96,7 @@ def test_pdf_upload_urls_returns_bad_request_when_no_files(
     }
 
 
-@patch.dict(os.environ, {"PDF_UPLOAD_BUCKET": BUCKET})
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
 def test_pdf_upload_urls_returns_bad_request_when_too_many_files(
     client: TestClient,
     superuser_header_token,
@@ -111,7 +111,7 @@ def test_pdf_upload_urls_returns_bad_request_when_too_many_files(
     }
 
 
-@patch.dict(os.environ, {"PDF_UPLOAD_BUCKET": BUCKET})
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
 def test_pdf_upload_urls_returns_unprocessable_entity_when_body_malformed(
     client: TestClient,
     superuser_header_token,
@@ -121,7 +121,7 @@ def test_pdf_upload_urls_returns_unprocessable_entity_when_body_malformed(
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
-@patch.dict(os.environ, {"PDF_UPLOAD_BUCKET": BUCKET})
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
 def test_pdf_upload_urls_returns_server_error_when_presigning_fails(
     client: TestClient,
     superuser_header_token,

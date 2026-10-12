@@ -62,10 +62,12 @@ def get_pdf_upload_urls(
     """
     _validate_request(request)
 
-    if "PDF_UPLOAD_BUCKET" not in os.environ:
-        raise ValueError("PDF_UPLOAD_BUCKET environment variable not set")
+    if "DOCUMENT_STORE_PDF_UPLOAD_BUCKET" not in os.environ:
+        raise ValueError(
+            "DOCUMENT_STORE_PDF_UPLOAD_BUCKET environment variable not set"
+        )
 
-    bucket = os.environ["PDF_UPLOAD_BUCKET"]
+    bucket = os.environ["DOCUMENT_STORE_PDF_UPLOAD_BUCKET"]
     client = get_s3_client()
 
     directory = (
