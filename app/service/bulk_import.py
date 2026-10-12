@@ -443,42 +443,6 @@ def _create_summary(data: dict[str, Any]) -> str:
     return "🗒️ Saved\n" + ",\n".join(summary_lines)
 
 
-def _record_outcome(
-    import_id: UUID,
-    corpus_import_id: str,
-    data: dict[str, Any],
-    result: dict[str, Any],
-    error: Optional[str],
-) -> None:
-    """
-    Record the outcome of a bulk import to S3, where callers poll for it.
-
-    A success writes the request and result files, even when there was no data to
-    import, and a failure writes a failure file. Failures to record are logged and
-    swallowed, so they never fail an import nor mask the error that caused one to fail.
-
-    :param UUID import_id: The id of this bulk import.
-    :param str corpus_import_id: The import_id of the corpus the data was imported into.
-    :param dict[str, Any] data: The data that was imported.
-    :param dict[str, Any] result: The import_ids saved by the import.
-    :param Optional[str] error: The error the import failed with, or None if it succeeded.
-    """
-    try:
-        if error is None:
-            upload_bulk_import_json_to_s3(
-                f"{import_id}-request", corpus_import_id, data
-            )
-            upload_bulk_import_json_to_s3(
-                f"{import_id}-result", corpus_import_id, result
-            )
-        else:
-            upload_bulk_import_json_to_s3(
-                f"{import_id}-failure", corpus_import_id, {"error": error}
-            )
-    except Exception as e:
-        _LOGGER.error(f"💥 Failed to record bulk import outcome caused by: {e}")
-
-
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def import_data(
     data: dict[str, Any],
@@ -499,7 +463,6 @@ def import_data(
         f"🚀 Bulk import for corpus: {corpus_import_id} has started."
     )
     end_message = ""
-    error: Optional[str] = None
 
     _LOGGER.info("Getting DB session")
     with db_session.get_db() as db:
@@ -536,6 +499,12 @@ def import_data(
 
             db.commit()
 
+            upload_bulk_import_json_to_s3(
+                f"{import_id}-request", corpus_import_id, data
+            )
+            upload_bulk_import_json_to_s3(
+                f"{import_id}-result", corpus_import_id, result
+            )
             if not any([collection_data, family_data, document_data, event_data]):
                 _LOGGER.info("🗒️ No data to import.")
 
@@ -546,7 +515,6 @@ def import_data(
                 exc_info=True,
             )
             db.rollback()
-            error = str(e)
             group_id = os.environ.get(
                 "SLACK_GROUP_ID_APPLICATION_ENGINEERS", ""
             ).strip()
@@ -554,8 +522,9 @@ def import_data(
             end_message = (
                 f"{mention}💥 Bulk import for corpus: {corpus_import_id} has failed."
             )
+            upload_bulk_import_json_to_s3(
+                f"{import_id}-failure", corpus_import_id, {"error": str(e)}
+            )
         finally:
             notification_service.send_notification(end_message, thread_id)
             trigger_db_dump_upload_to_sql(thread_id)
-            # recorded after the dump, so callers only see an outcome once it's done
-            _record_outcome(import_id, corpus_import_id, data, result, error)
