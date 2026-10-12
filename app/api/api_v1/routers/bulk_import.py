@@ -78,12 +78,12 @@ async def bulk_import(
 
         _LOGGER.info("✅ Validation successful")
 
-        import_id = uuid4()
-        background_tasks.add_task(import_data, data_dict, corpus_import_id, import_id)
+        import_uuid = uuid4()
+        background_tasks.add_task(import_data, data_dict, corpus_import_id, import_uuid)
 
         return {
             "message": "Bulk import request accepted. Check Cloudwatch logs for result.",
-            "import_id": str(import_id),
+            "import_uuid": str(import_uuid),
         }
     except ValidationError as e:
         _LOGGER.exception(e.message)

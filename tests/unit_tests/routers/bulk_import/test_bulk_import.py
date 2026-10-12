@@ -87,7 +87,7 @@ def test_bulk_import_data_when_ok(client: TestClient, superuser_header_token):
         response_json["message"]
         == "Bulk import request accepted. Check Cloudwatch logs for result."
     )
-    assert UUID(response_json["import_id"])
+    assert UUID(response_json["import_uuid"])
 
 
 @patch("app.api.api_v1.routers.bulk_import.validate_corpus_exists", Mock())

@@ -19,7 +19,7 @@ from tests.helpers.bulk_import import (
     default_family,
 )
 
-TEST_IMPORT_ID = UUID("11111111-1111-1111-1111-111111111111")
+TEST_IMPORT_UUID = UUID("11111111-1111-1111-1111-111111111111")
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
@@ -44,10 +44,10 @@ def test_input_json_and_result_saved_to_s3_on_bulk_import(
         ]
     }
 
-    bulk_import_service.import_data(json_data, "test_corpus_id", TEST_IMPORT_ID)
+    bulk_import_service.import_data(json_data, "test_corpus_id", TEST_IMPORT_UUID)
 
     bulk_import_input_json = basic_s3_client.list_objects_v2(
-        Bucket=bucket_name, Prefix=f"{TEST_IMPORT_ID}-result-test_corpus_id"
+        Bucket=bucket_name, Prefix=f"{TEST_IMPORT_UUID}-result-test_corpus_id"
     )
     objects = bulk_import_input_json["Contents"]
     assert len(objects) == 1
@@ -84,7 +84,7 @@ def test_slack_notification_sent_on_success(
             "app.service.bulk_import.notification_service.send_notification"
         ) as mock_notification_service,
     ):
-        bulk_import_service.import_data(test_data, "test_corpus_id", TEST_IMPORT_ID)
+        bulk_import_service.import_data(test_data, "test_corpus_id", TEST_IMPORT_UUID)
 
         assert 2 == mock_notification_service.call_count
         assert any(
@@ -113,7 +113,7 @@ def test_slack_notification_sent_on_error(
         ) as mock_notification_service,
     ):
         mock_notification_service.return_value = "1"
-        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_ID)
+        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_UUID)
 
     assert 2 == mock_notification_service.call_count
     mock_notification_service.assert_called_with(
@@ -147,7 +147,7 @@ def test_import_data_when_metadata_contains_non_string_values(
 ):
     mock_trigger_db_dump.return_value = None
     with caplog.at_level(logging.ERROR):
-        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_ID)
+        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_UUID)
 
     assert "Input should be a valid string" in caplog.text
 
@@ -169,7 +169,7 @@ def test_import_data_when_data_invalid(mock_trigger_db_dump, caplog, basic_s3_cl
     mock_trigger_db_dump.return_value = None
 
     with caplog.at_level(logging.ERROR):
-        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_ID)
+        bulk_import_service.import_data(test_data, "test", TEST_IMPORT_UUID)
 
     assert "The import id invalid is invalid!" in caplog.text
 
@@ -559,13 +559,13 @@ def test_result_recorded_on_bulk_import_with_no_data(
 ):
     mock_trigger_db_dump.return_value = None
 
-    bulk_import_service.import_data({}, "test_corpus_id", TEST_IMPORT_ID)
+    bulk_import_service.import_data({}, "test_corpus_id", TEST_IMPORT_UUID)
 
     objects = basic_s3_client.list_objects_v2(
-        Bucket="test_bucket", Prefix=f"{TEST_IMPORT_ID}-"
+        Bucket="test_bucket", Prefix=f"{TEST_IMPORT_UUID}-"
     )["Contents"]
     assert len(objects) == 1
-    assert objects[0]["Key"].startswith(f"{TEST_IMPORT_ID}-result-test_corpus_id-")
+    assert objects[0]["Key"].startswith(f"{TEST_IMPORT_UUID}-result-test_corpus_id-")
 
 
 @patch.dict(os.environ, {"BULK_IMPORT_BUCKET": "test_bucket"})
@@ -576,10 +576,10 @@ def test_failure_recorded_on_bulk_import(
     validation_service_mock.throw_validation_error = True
     mock_trigger_db_dump.return_value = None
 
-    bulk_import_service.import_data({"collections": [{}]}, "test", TEST_IMPORT_ID)
+    bulk_import_service.import_data({"collections": [{}]}, "test", TEST_IMPORT_UUID)
 
     objects = basic_s3_client.list_objects_v2(
-        Bucket="test_bucket", Prefix=f"{TEST_IMPORT_ID}-"
+        Bucket="test_bucket", Prefix=f"{TEST_IMPORT_UUID}-"
     )["Contents"]
     assert len(objects) == 1
-    assert objects[0]["Key"].startswith(f"{TEST_IMPORT_ID}-failure-test-")
+    assert objects[0]["Key"].startswith(f"{TEST_IMPORT_UUID}-failure-test-")

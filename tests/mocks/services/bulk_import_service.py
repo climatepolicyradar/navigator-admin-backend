@@ -14,7 +14,7 @@ def mock_bulk_import_service(bulk_import_service, monkeypatch: MonkeyPatch, mock
             raise RepositoryError("bad repo")
 
     def mock_import_data(
-        data: dict[str, Any], corpus_import_id: str, import_id: UUID
+        data: dict[str, Any], corpus_import_id: str, import_uuid: UUID
     ) -> dict[str, list[str]]:
         maybe_throw()
 

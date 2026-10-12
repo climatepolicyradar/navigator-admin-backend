@@ -447,14 +447,14 @@ def _create_summary(data: dict[str, Any]) -> str:
 def import_data(
     data: dict[str, Any],
     corpus_import_id: str,
-    import_id: UUID,
+    import_uuid: UUID,
 ) -> None:
     """
     Imports data for a given corpus_import_id.
 
     :param dict[str, Any] data: The data to be imported.
     :param str corpus_import_id: The import_id of the corpus the data should be imported into.
-    :param UUID import_id: The id of this bulk import, which its outcome is recorded against.
+    :param UUID import_uuid: The id of this bulk import, which its outcome is recorded against.
     :raises RepositoryError: raised on a database error.
     :raises ValidationError: raised should the data be invalid.
     """
@@ -501,15 +501,15 @@ def import_data(
 
             if any([collection_data, family_data, document_data, event_data]):
                 upload_bulk_import_json_to_s3(
-                    f"{import_id}-request", corpus_import_id, data
+                    f"{import_uuid}-request", corpus_import_id, data
                 )
                 upload_bulk_import_json_to_s3(
-                    f"{import_id}-result", corpus_import_id, result
+                    f"{import_uuid}-result", corpus_import_id, result
                 )
             else:
                 _LOGGER.info("🗒️ No data to import.")
                 upload_bulk_import_json_to_s3(
-                    f"{import_id}-result", corpus_import_id, result
+                    f"{import_uuid}-result", corpus_import_id, result
                 )
 
             end_message = f"🎉 Bulk import for corpus: {corpus_import_id} successfully completed in {_get_duration(start_time)} seconds.\n{_create_summary(result)}"
@@ -527,7 +527,7 @@ def import_data(
                 f"{mention}💥 Bulk import for corpus: {corpus_import_id} has failed."
             )
             upload_bulk_import_json_to_s3(
-                f"{import_id}-failure", corpus_import_id, {"error": str(e)}
+                f"{import_uuid}-failure", corpus_import_id, {"error": str(e)}
             )
         finally:
             notification_service.send_notification(end_message, thread_id)
