@@ -1,5 +1,5 @@
 import enum
-from typing import Mapping
+from collections.abc import Mapping
 
 from db_client.models.organisation.authorisation import AuthAccess, AuthOperation
 
@@ -25,6 +25,7 @@ class AuthEndpoint(str, enum.Enum):
     APP_TOKEN = "APP-TOKENS"  # nosec B105
     USER = "USERS"
     CSV_UPLOAD = "CSV-UPLOAD"
+    PDF_UPLOAD = "PDF-UPLOAD"
 
 
 AuthMap = Mapping[AuthEndpoint, Mapping[AuthOperation, AuthAccess]]
@@ -100,6 +101,11 @@ AUTH_TABLE: AuthMap = {
     },
     # CSV Upload
     AuthEndpoint.CSV_UPLOAD: {
+        AuthOperation.CREATE: AuthAccess.SUPER,
+        AuthOperation.READ: AuthAccess.SUPER,
+    },
+    # PDF Upload
+    AuthEndpoint.PDF_UPLOAD: {
         AuthOperation.CREATE: AuthAccess.SUPER,
         AuthOperation.READ: AuthAccess.SUPER,
     },
