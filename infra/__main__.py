@@ -38,6 +38,9 @@ def create_ecs_backend_environment() -> dict[str, str]:
     bulk_import_bucket = CONFIG.require("bulk_import_bucket")
     database_dump_bucket = CONFIG.require("database_dump_bucket")
     data_mapper_csv_upload_bucket = CONFIG.require("data_mapper_csv_upload_bucket")
+    document_store_pdf_upload_bucket = CONFIG.require(
+        "document_store_pdf_upload_bucket"
+    )
     log_level = CONFIG.require("log_level")
     cache_bucket = CONFIG.require("cache_bucket")
     cdn_url = CONFIG.require("cdn_url")
@@ -48,6 +51,7 @@ def create_ecs_backend_environment() -> dict[str, str]:
         "BULK_IMPORT_BUCKET": bulk_import_bucket,
         "DATABASE_DUMP_BUCKET": database_dump_bucket,
         "DATA_MAPPER_CSV_UPLOAD_BUCKET": data_mapper_csv_upload_bucket,
+        "DOCUMENT_STORE_PDF_UPLOAD_BUCKET": document_store_pdf_upload_bucket,
         "CACHE_BUCKET": cache_bucket,
         "CDN_URL": cdn_url,
         "AWS_REGION": "eu-west-1",
@@ -435,29 +439,27 @@ ecs_write_s3_policy = iam.Policy(
     name=f"{name}-write-s3-policy",
     description="Policy to allow reading and writing data files from/to S3",
     policy=pulumi.Output.json_dumps(
-        (
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "s3:GetObject",
-                            "s3:ListBucket",
-                            "s3:PutObject",
-                            "s3:DeleteObject",
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:GetObject",
+                        "s3:ListBucket",
+                        "s3:PutObject",
+                        "s3:DeleteObject",
+                    ],
+                    "Resource": [
+                        *s3_bucket_arns,
+                        *[
+                            pulumi.Output.from_input(arn).apply(lambda a: f"{a}/*")
+                            for arn in s3_bucket_arns
                         ],
-                        "Resource": [
-                            *s3_bucket_arns,
-                            *[
-                                pulumi.Output.from_input(arn).apply(lambda a: f"{a}/*")
-                                for arn in s3_bucket_arns
-                            ],
-                        ],
-                    }
-                ],
-            }
-        )
+                    ],
+                }
+            ],
+        }
     ),
 )
 
