@@ -1,5 +1,8 @@
 import logging
+import os
+from uuid import UUID
 
+import boto3
 import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection, CollectionFamily
@@ -63,6 +66,25 @@ def create_input_json_with_two_of_each_entity():
     )
 
 
+def assert_bulk_import_accepted(response) -> str:
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    response_json = response.json()
+    assert (
+        response_json["message"]
+        == "Bulk import request accepted. Check Cloudwatch logs for result."
+    )
+    return str(UUID(response_json["import_uuid"]))
+
+
+def assert_bulk_import_outcome_recorded(import_uuid: str, outcome: str):
+    """Asserts the outcome the import's status is polled from was written to S3."""
+    saved_objects = boto3.client("s3").list_objects_v2(
+        Bucket=os.environ["BULK_IMPORT_BUCKET"], Prefix=f"{import_uuid}-{outcome}-"
+    )
+
+    assert saved_objects["KeyCount"] == 1
+
+
 @pytest.mark.s3
 def test_bulk_import_successfully_saves_all_data_to_db_when_no_error(
     data_db: Session, client: TestClient, superuser_header_token
@@ -80,10 +102,8 @@ def test_bulk_import_successfully_saves_all_data_to_db_when_no_error(
     expected_document_import_ids = ["test.new.document.0", "test.new.document.1"]
     expected_event_import_ids = ["test.new.event.0", "test.new.event.1"]
 
-    assert response.status_code == status.HTTP_202_ACCEPTED
-    assert response.json() == {
-        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-    }
+    import_uuid = assert_bulk_import_accepted(response)
+    assert_bulk_import_outcome_recorded(import_uuid, "result")
 
     saved_collections = (
         data_db.query(Collection)
@@ -578,11 +598,9 @@ def test_bulk_import_does_not_save_data_to_db_on_error(
             headers=superuser_header_token,
         )
 
-        assert response.status_code == status.HTTP_202_ACCEPTED
-        assert response.json() == {
-            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-        }
+        import_uuid = assert_bulk_import_accepted(response)
 
+    assert_bulk_import_outcome_recorded(import_uuid, "failure")
     assert "Rolling back transaction due to the following error:" in caplog.text
     actual_collection = (
         data_db.query(Collection)
@@ -617,10 +635,7 @@ def test_bulk_import_idempotency_on_create(
             headers=superuser_header_token,
         )
 
-        assert first_response.status_code == status.HTTP_202_ACCEPTED
-        assert first_response.json() == {
-            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-        }
+        assert_bulk_import_accepted(first_response)
 
     assert (
         "Created"
@@ -644,10 +659,7 @@ def test_bulk_import_idempotency_on_create(
             headers=superuser_header_token,
         )
 
-        assert second_response.status_code == status.HTTP_202_ACCEPTED
-        assert second_response.json() == {
-            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-        }
+        assert_bulk_import_accepted(second_response)
 
     # checking that subsequent bulk import does not change the status
     assert (
@@ -692,10 +704,7 @@ def test_generates_unique_slugs_for_documents_with_identical_titles_on_create(
             headers=superuser_header_token,
         )
 
-        assert response.status_code == status.HTTP_202_ACCEPTED
-        assert response.json() == {
-            "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-        }
+        assert_bulk_import_accepted(response)
 
     saved_documents = data_db.query(FamilyDocument).all()
     saved_unique_slugs = set(doc.slugs[0].name for doc in saved_documents)
@@ -815,10 +824,7 @@ def test_bulk_import_event_with_link_to_a_document(
         headers=superuser_header_token,
     )
 
-    assert response.status_code == status.HTTP_202_ACCEPTED
-    assert response.json() == {
-        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-    }
+    assert_bulk_import_accepted(response)
 
     saved_event = (
         data_db.query(FamilyEvent)
@@ -855,10 +861,7 @@ def test_bulk_import_update_event_link_to_a_document(
         headers=superuser_header_token,
     )
 
-    assert response.status_code == status.HTTP_202_ACCEPTED
-    assert response.json() == {
-        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-    }
+    assert_bulk_import_accepted(response)
 
     saved_event = (
         data_db.query(FamilyEvent)
@@ -885,10 +888,7 @@ def test_bulk_import_update_event_link_to_a_document(
         headers=superuser_header_token,
     )
 
-    assert update_response.status_code == status.HTTP_202_ACCEPTED
-    assert update_response.json() == {
-        "message": "Bulk import request accepted. Check Cloudwatch logs for result."
-    }
+    assert_bulk_import_accepted(update_response)
 
     saved_event = (
         data_db.query(FamilyEvent)
