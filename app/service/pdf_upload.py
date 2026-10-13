@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Self
+from urllib.parse import quote
 
 from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 
@@ -37,6 +38,7 @@ class PdfUploadRequestDTO(BaseModel):
 class PdfUploadDTO(BaseModel):
     file_name: str
     key: str
+    destination_url: str
     presigned_upload_url: AnyHttpUrl
 
 
@@ -47,6 +49,10 @@ class PdfUploadFolder(str, Enum):
 def _safe_pdf_name(name: str) -> str:
     stem = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(name).stem).strip("._") or "document"
     return f"{stem[:100]}.pdf"
+
+
+def _destination_url(bucket: str, region: str, key: str) -> str:
+    return f"https://{bucket}.s3.{region}.amazonaws.com/{quote(key, safe='/')}"
 
 
 def get_pdf_upload_urls(
@@ -63,6 +69,7 @@ def get_pdf_upload_urls(
     """
 
     client = get_s3_client()
+    region = client.meta.region_name
 
     directory = (
         folder.value
@@ -77,6 +84,7 @@ def get_pdf_upload_urls(
             PdfUploadDTO(
                 file_name=f.file_name,
                 key=key,
+                destination_url=_destination_url(bucket, region, key),
                 presigned_upload_url=generate_pdf_pre_signed_url(client, bucket, key),
             )
         )
