@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from fastapi import status
@@ -36,6 +37,7 @@ UPLOAD_RESPONSE = [
 ]
 
 
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": "test-pdf-bucket"})
 @patch(PATCH_TARGET, return_value=UPLOAD_RESPONSE)
 def test_pdf_upload_when_ok(upload_mock, client: TestClient, superuser_header_token):
     response = client.post(UPLOAD_URL, json=VALID_BODY, headers=superuser_header_token)
@@ -45,6 +47,7 @@ def test_pdf_upload_when_ok(upload_mock, client: TestClient, superuser_header_to
     assert response.json() == UPLOAD_RESPONSE
 
 
+@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": "test-pdf-bucket"})
 def test_pdf_upload_when_s3_fails(client: TestClient, superuser_header_token):
     error = PreSignedUrlError("Request failed: s3 error")
 

@@ -26,9 +26,17 @@ async def get_presigned_urls_for_pdf_uploads(
     :return: One upload URL set per file
     """
     _LOGGER.info(f"Getting upload URLs for {len(body.files)} PDF(s)")
-    try:
-        return get_pdf_upload_urls(body)
 
+    bucket = os.environ.get("DOCUMENT_STORE_PDF_UPLOAD_BUCKET")
+    if not bucket:
+        _LOGGER.error("DOCUMENT_STORE_PDF_UPLOAD_BUCKET environment variable not set")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Missing required settings for PDF upload",
+        )
+
+    try:
+        return get_pdf_upload_urls(body, bucket)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except PreSignedUrlError as e:
