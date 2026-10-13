@@ -68,8 +68,7 @@ def test_pdf_upload_urls_returns_presigned_url_for_single_file(
         ),
     ],
 )
-@patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
-def test_pdf_upload_urls_returns_bad_request_for_invalid_file(
+def test_pdf_upload_urls_returns_unprocessable_entity_for_invalid_file(
     client: TestClient,
     superuser_header_token,
     file_spec: dict,
@@ -79,25 +78,28 @@ def test_pdf_upload_urls_returns_bad_request_for_invalid_file(
         URL, json={"files": [file_spec]}, headers=superuser_header_token
     )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"detail": detail}
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    errors = response.json()["detail"]
+    assert len(errors) == 1
+    assert errors[0]["loc"] == ["body", "files", 0]
+    assert detail in errors[0]["msg"]
 
 
 @patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
-def test_pdf_upload_urls_returns_bad_request_when_no_files(
+def test_pdf_upload_urls_returns_unprocessable_entity_when_no_files(
     client: TestClient,
     superuser_header_token,
 ):
     response = client.post(URL, json={"files": []}, headers=superuser_header_token)
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {
-        "detail": f"Provide between 1 and {MAX_FILES_PER_REQUEST} files"
-    }
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    error = response.json()["detail"][0]
+    assert error["loc"] == ["body", "files"]
+    assert error["type"] == "too_short"
 
 
 @patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})
-def test_pdf_upload_urls_returns_bad_request_when_too_many_files(
+def test_pdf_upload_urls_returns_unprocessable_entity_when_too_many_files(
     client: TestClient,
     superuser_header_token,
 ):
@@ -105,10 +107,10 @@ def test_pdf_upload_urls_returns_bad_request_when_too_many_files(
 
     response = client.post(URL, json={"files": files}, headers=superuser_header_token)
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {
-        "detail": f"Provide between 1 and {MAX_FILES_PER_REQUEST} files"
-    }
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    error = response.json()["detail"][0]
+    assert error["loc"] == ["body", "files"]
+    assert error["type"] == "too_long"
 
 
 @patch.dict(os.environ, {"DOCUMENT_STORE_PDF_UPLOAD_BUCKET": BUCKET})

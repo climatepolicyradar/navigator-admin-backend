@@ -1,14 +1,13 @@
-import os
 import re
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
+from typing import Self
 
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 
 from app.clients.aws.client import get_s3_client
 from app.clients.aws.s3bucket import PDF_CONTENT_TYPE, generate_pdf_pre_signed_url
-from app.errors import ValidationError
 
 MAX_FILES_PER_REQUEST = 10
 
@@ -18,9 +17,20 @@ class PdfUploadFileDTO(BaseModel):
     size: int
     content_type: str
 
+    @model_validator(mode="after")
+    def must_be_pdf(self) -> Self:
+        if (
+            not self.file_name.lower().endswith(".pdf")
+            or self.content_type != PDF_CONTENT_TYPE
+        ):
+            raise ValueError(f"{self.file_name} is not a PDF")
+        return self
+
 
 class PdfUploadRequestDTO(BaseModel):
-    files: list[PdfUploadFileDTO]
+    files: list[PdfUploadFileDTO] = Field(
+        min_length=1, max_length=MAX_FILES_PER_REQUEST
+    )
     # TODO: folder: PdfUploadFolder = PdfUploadFolder.DEFAULT
 
 
@@ -39,35 +49,19 @@ def _safe_pdf_name(name: str) -> str:
     return f"{stem[:100]}.pdf"
 
 
-def _validate_request(request: PdfUploadRequestDTO) -> None:
-    if not request.files or len(request.files) > MAX_FILES_PER_REQUEST:
-        raise ValidationError(f"Provide between 1 and {MAX_FILES_PER_REQUEST} files")
-    for f in request.files:
-        if (
-            not f.file_name.lower().endswith(".pdf")
-            or f.content_type != PDF_CONTENT_TYPE
-        ):
-            raise ValidationError(f"{f.file_name} is not a PDF")
-
-
 def get_pdf_upload_urls(
     request: PdfUploadRequestDTO,
+    bucket: str,
     folder: PdfUploadFolder | None = None,
 ) -> list[PdfUploadDTO]:
     """Get presigned URLs for uploading one or more PDFs.
 
     :param request: The files to upload
+    :param bucket: The S3 bucket to upload to
     :param folder: Destination
     :return: One upload DTO per file, in the same order as the request
     """
-    _validate_request(request)
 
-    if "DOCUMENT_STORE_PDF_UPLOAD_BUCKET" not in os.environ:
-        raise ValueError(
-            "DOCUMENT_STORE_PDF_UPLOAD_BUCKET environment variable not set"
-        )
-
-    bucket = os.environ["DOCUMENT_STORE_PDF_UPLOAD_BUCKET"]
     client = get_s3_client()
 
     directory = (
