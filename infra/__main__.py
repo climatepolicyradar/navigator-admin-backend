@@ -318,6 +318,13 @@ aws.ssm.Parameter(
     value=CONFIG.require("rds_database"),
 )
 
+aws.ssm.Parameter(
+    "/Admin-Backend/Bulk-Import/Bucket-Name",
+    name="/Admin-Backend/Bulk-Import/Bucket-Name",
+    type=aws.ssm.ParameterType.STRING,
+    value=CONFIG.require("bulk_import_bucket"),
+)
+
 pulumi.export(
     "navigator_admin_read_replica_endpoint", navigator_admin_read_replica.endpoint
 )
