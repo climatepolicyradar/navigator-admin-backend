@@ -8,14 +8,16 @@ from typing import Any, BinaryIO, Optional, Tuple
 from urllib.parse import quote_plus, urlsplit
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 from pydantic import AnyHttpUrl, BaseModel
 
 from app.clients.aws.client import AWSClient
-from app.errors import RepositoryError
+from app.errors import PreSignedUrlError, RepositoryError
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.INFO)
+
+PDF_CONTENT_TYPE = "application/pdf"
 
 
 class S3UploadContext(BaseModel):
@@ -222,6 +224,33 @@ def upload_csv_to_s3(
         file_obj, bucket, key, ExtraArgs={"ContentType": "text/csv"}
     )
     return key
+
+
+def generate_pdf_pre_signed_url(
+    client: AWSClient,
+    bucket_name: str,
+    key: str,
+) -> AnyHttpUrl:
+    """
+    Generate a pre-signed PUT URL for uploading a PDF to the given key.
+
+    The content type is signed into the URL, so S3 rejects any upload that
+    doesn't send a matching Content-Type: application/pdf header.
+    """
+    try:
+        url = client.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": bucket_name,
+                "Key": key,
+                "ContentType": PDF_CONTENT_TYPE,
+            },
+        )
+        return AnyHttpUrl(url)
+    except (ClientError, BotoCoreError) as e:
+        raise PreSignedUrlError(
+            f"Request to create pre-signed URL for {key} failed"
+        ) from e
 
 
 # TODO: add more s3 functions like listing and reading files here

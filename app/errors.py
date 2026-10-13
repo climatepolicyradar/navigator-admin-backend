@@ -22,34 +22,26 @@ class ExceptionWithMessage(Exception):
 class AuthenticationError(ExceptionWithMessage):
     """Raised when authentication fails."""
 
-    pass
-
 
 class RepositoryError(ExceptionWithMessage):
     """Raised when something fails in the database."""
-
-    pass
 
 
 class ConflictError(ExceptionWithMessage):
     """Raised when entity already exists."""
 
-    pass
-
 
 class TokenError(ExceptionWithMessage):
     """Raised when there is an error encoding/decoding the token."""
-
-    pass
 
 
 class ValidationError(ExceptionWithMessage):
     """Raised when validation fails."""
 
-    pass
-
 
 class AuthorisationError(ExceptionWithMessage):
     """Raised when authentication fails."""
 
-    pass
+
+class PreSignedUrlError(ExceptionWithMessage):
+    """Raised when there is an error generating a pre-signed URL."""
