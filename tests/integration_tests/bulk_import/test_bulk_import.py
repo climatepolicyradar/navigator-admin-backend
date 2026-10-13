@@ -1,6 +1,8 @@
 import logging
+import os
 from uuid import UUID
 
+import boto3
 import pytest
 from db_client.models.dfce import FamilyEvent
 from db_client.models.dfce.collection import Collection, CollectionFamily
@@ -64,14 +66,23 @@ def create_input_json_with_two_of_each_entity():
     )
 
 
-def assert_bulk_import_accepted(response):
+def assert_bulk_import_accepted(response) -> str:
     assert response.status_code == status.HTTP_202_ACCEPTED
     response_json = response.json()
     assert (
         response_json["message"]
         == "Bulk import request accepted. Check Cloudwatch logs for result."
     )
-    assert UUID(response_json["import_uuid"])
+    return str(UUID(response_json["import_uuid"]))
+
+
+def assert_bulk_import_outcome_recorded(import_uuid: str, outcome: str):
+    """Asserts the outcome the import's status is polled from was written to S3."""
+    saved_objects = boto3.client("s3").list_objects_v2(
+        Bucket=os.environ["BULK_IMPORT_BUCKET"], Prefix=f"{import_uuid}-{outcome}-"
+    )
+
+    assert saved_objects["KeyCount"] == 1
 
 
 @pytest.mark.s3
@@ -91,7 +102,8 @@ def test_bulk_import_successfully_saves_all_data_to_db_when_no_error(
     expected_document_import_ids = ["test.new.document.0", "test.new.document.1"]
     expected_event_import_ids = ["test.new.event.0", "test.new.event.1"]
 
-    assert_bulk_import_accepted(response)
+    import_uuid = assert_bulk_import_accepted(response)
+    assert_bulk_import_outcome_recorded(import_uuid, "result")
 
     saved_collections = (
         data_db.query(Collection)
@@ -586,8 +598,9 @@ def test_bulk_import_does_not_save_data_to_db_on_error(
             headers=superuser_header_token,
         )
 
-        assert_bulk_import_accepted(response)
+        import_uuid = assert_bulk_import_accepted(response)
 
+    assert_bulk_import_outcome_recorded(import_uuid, "failure")
     assert "Rolling back transaction due to the following error:" in caplog.text
     actual_collection = (
         data_db.query(Collection)
