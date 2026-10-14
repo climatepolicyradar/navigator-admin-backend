@@ -75,6 +75,10 @@ jobs:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: navigator
 
+      - name: Dump service logs on failure
+        if: failure()
+        run: docker compose -f docker-compose-test.yml logs --no-color
+
   dependabot:
     name: Dependabot Auto-pilot
     needs: [code-quality, unit-test, integration-test]
