@@ -380,6 +380,38 @@ s3_bucket_arns = [
     data_mapper_csv_upload_bucket.arn,
 ]
 
+
+if stack == "staging":
+    staging_pdf_upload_bucket = aws.s3.get_bucket(
+        bucket=CONFIG.require("document_store_pdf_upload_bucket")
+    )
+
+    aws.s3.BucketCorsConfiguration(
+        "staging-document-pdf-upload-store-cors",
+        bucket=staging_pdf_upload_bucket.bucket,
+        cors_rules=[
+            aws.s3.BucketCorsConfigurationCorsRuleArgs(
+                allowed_headers=["*"],
+                allowed_methods=["PUT", "POST", "DELETE"],
+                allowed_origins=["https://*.retool.com"],
+            ),
+            aws.s3.BucketCorsConfigurationCorsRuleArgs(
+                allowed_headers=["Content-Type"],
+                allowed_methods=["PUT"],
+                allowed_origins=[
+                    "http://localhost:3000",
+                    "https://admin.staging.climatepolicyradar.org",
+                ],
+            ),
+            aws.s3.BucketCorsConfigurationCorsRuleArgs(
+                allowed_methods=["GET"],
+                allowed_origins=["*"],
+            ),
+        ],
+    )
+
+    s3_bucket_arns.append(staging_pdf_upload_bucket.arn)
+
 if stack == "production":
     production_document_pdf_upload_store = aws.s3.Bucket(
         "production-document-pdf-upload-store",
@@ -394,6 +426,14 @@ if stack == "production":
                     "DELETE",
                 ],
                 allowed_origins=["https://*.retool.com"],
+            ),
+            aws.s3.BucketCorsRuleArgs(
+                allowed_headers=["Content-Type"],
+                allowed_methods=["PUT"],
+                allowed_origins=[
+                    "https://admin.climatepolicyradar.org",
+                    "https://admin.production.climatepolicyradar.org",
+                ],
             ),
             aws.s3.BucketCorsRuleArgs(
                 allowed_methods=["GET"],
