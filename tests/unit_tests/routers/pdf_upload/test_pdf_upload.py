@@ -32,6 +32,7 @@ UPLOAD_RESPONSE = [
     {
         "file_name": "test.pdf",
         "key": "2026-10-12/test.pdf",
+        "destination_url": "https://test-pdf-bucket.s3.us-east-1.amazonaws.com/2026-10-12/test.pdf",
         "presigned_upload_url": "https://example.com/upload",
     }
 ]

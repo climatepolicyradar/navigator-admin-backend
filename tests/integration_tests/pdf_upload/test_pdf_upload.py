@@ -41,6 +41,7 @@ def test_pdf_upload_urls_returns_presigned_url_for_single_file(
         PdfUploadDTO(
             file_name="report.pdf",
             key=f"{_today()}/report.pdf",
+            destination_url="https://example.com/destination-url",
             presigned_upload_url=AnyHttpUrl("https://example.com/presigned-url"),
         )
     ]
