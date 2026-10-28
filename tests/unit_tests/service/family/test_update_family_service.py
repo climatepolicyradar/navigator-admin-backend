@@ -21,7 +21,7 @@ def test_update(
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None
-    family_repo_mock.get.call_count = 0
+    family_repo_mock.get.reset_mock()
     assert family_repo_mock.get.call_count == 0
 
     updated_family = create_family_write_dto(
@@ -51,7 +51,7 @@ def test_update_when_family_missing(
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None
-    family_repo_mock.get.call_count = 0
+    family_repo_mock.get.reset_mock()
     assert family_repo_mock.get.call_count == 0
 
     updated_family = create_family_write_dto(
@@ -81,7 +81,7 @@ def test_update_raises_when_family_id_invalid(
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
-    family_repo_mock.get.call_count = 0
+    family_repo_mock.get.reset_mock()
     assert family_repo_mock.get.call_count == 0
 
     updated_family = create_family_write_dto(
@@ -112,7 +112,7 @@ def test_update_raises_when_category_invalid(
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
-    family_repo_mock.get.call_count = 0
+    family_repo_mock.get.reset_mock()
     assert family_repo_mock.get.call_count == 0
 
     updated_family = create_family_write_dto(
@@ -143,7 +143,7 @@ def test_update_raises_when_organisation_invalid(
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
-    family_repo_mock.get.call_count = 0
+    family_repo_mock.get.reset_mock()
     assert family_repo_mock.get.call_count == 0
 
     updated_family = create_family_write_dto(
@@ -175,7 +175,7 @@ def test_update_family_raises_when_geography_invalid(
 ):
     family = family_service.get("a.b.c.d")
     assert family is not None  # needed to placate pyright
-    family_repo_mock.get.call_count = 0
+    family_repo_mock.get.reset_mock()
     assert family_repo_mock.get.call_count == 0
 
     updated_family = create_family_write_dto(
@@ -399,7 +399,7 @@ def test_update_success_when_family_organisation_mismatch_with_user_org(
     family = family_service.get("a.b.c.d")
     assert family_repo_mock.get.call_count == 1
     assert family is not None
-    family_repo_mock.get.call_count = 0
+    family_repo_mock.get.reset_mock()
 
     updated_family = create_family_write_dto(
         title="UPDATED TITLE",

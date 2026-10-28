@@ -10,7 +10,7 @@ def test_update(
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
-    document_repo_mock.get.call_count = 0
+    document_repo_mock.get.reset_mock()
     assert document_repo_mock.get.call_count == 0
 
     updated_doc = create_document_write_dto(metadata={"color": ["pink"]})
@@ -46,7 +46,7 @@ def test_update_raises_when_invalid_id(
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None  # needed to placate pyright
-    document_repo_mock.get.call_count = 0
+    document_repo_mock.get.reset_mock()
     assert document_repo_mock.get.call_count == 0
 
     document.import_id = "invalid"
@@ -70,7 +70,7 @@ def test_update_raises_when_invalid_variant(
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None  # needed to placate pyright
-    document_repo_mock.get.call_count = 0
+    document_repo_mock.get.reset_mock()
     assert document_repo_mock.get.call_count == 0
 
     document.variant_name = ""
@@ -94,7 +94,7 @@ def test_update_document_raises_when_metadata_invalid(
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None  # needed to placate pyright
-    document_repo_mock.get.call_count = 0
+    document_repo_mock.get.reset_mock()
     assert document_repo_mock.get.call_count == 0
 
     updated_doc = create_document_write_dto(metadata={"invalid": True})
@@ -123,7 +123,7 @@ def test_update_when_no_org_associated_with_entity(
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
-    document_repo_mock.get.call_count = 0
+    document_repo_mock.get.reset_mock()
     assert document_repo_mock.get.call_count == 0
 
     updated_doc = create_document_write_dto()
@@ -152,7 +152,7 @@ def test_update_raises_when_org_mismatch(
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
-    document_repo_mock.get.call_count = 0
+    document_repo_mock.get.reset_mock()
     assert document_repo_mock.get.call_count == 0
 
     updated_doc = create_document_write_dto()
@@ -180,7 +180,7 @@ def test_update_success_when_org_mismatch_superuser(
 ):
     document = doc_service.get("a.b.c.d")
     assert document is not None
-    document_repo_mock.get.call_count = 0
+    document_repo_mock.get.reset_mock()
     assert document_repo_mock.get.call_count == 0
 
     updated_doc = create_document_write_dto(metadata={"color": ["pink"]})
