@@ -452,6 +452,16 @@ if stack == "production":
         lifecycle_rules=[
             aws.s3.BucketLifecycleRuleArgs(
                 enabled=True,
+                id="intelligent-tiering",
+                transitions=[
+                    aws.s3.BucketLifecycleRuleTransitionArgs(
+                        days=0,
+                        storage_class="INTELLIGENT_TIERING",
+                    ),
+                ],
+            ),
+            aws.s3.BucketLifecycleRuleArgs(
+                enabled=True,
                 id="noncurrent-version-cleanup-90d",
                 noncurrent_version_expiration=aws.s3.BucketLifecycleRuleNoncurrentVersionExpirationArgs(
                     days=90,
