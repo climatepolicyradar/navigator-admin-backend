@@ -28,7 +28,7 @@ boto3 = "^1.42.88"
 moto = "^5.1.22"
 types-sqlalchemy = "^1.4.53.38"
 urllib3 = "^2.6.3"
-db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.12.0" }
+db-client = { git = "https://github.com/climatepolicyradar/navigator-db-client.git", tag = "v3.10.1" }
 bcrypt = "4.0.1"
 fastapi-utils = { version = "0.8.0", extras = ["all"] }
 python-dateutil = "^2.9.0.post0"
