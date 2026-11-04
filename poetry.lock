@@ -585,30 +585,30 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "db-client"
-version = "3.9.21"
+version = "3.12.0"
 description = "All things to do with the datamodel and its storage. Including alembic migrations and datamodel code."
 optional = false
-python-versions = "^3.11"
+python-versions = ">=3.13,<3.14"
 groups = ["main"]
 files = []
 develop = false
 
 [package.dependencies]
-alembic = "^1.7.6"
-alembic-utils = "^0.8.2"
-psycopg2-binary = "^2.9.3"
-pycountry = "^24.6.1"
-pydantic = "^2.4.0"
-python-slugify = "^6.1.2"
-requests = "^2.28"
-sqlalchemy = "^1.4.31,<2.0"
-SQLAlchemy-Utils = "^0.38.2"
+alembic = ">=1.7.6"
+alembic-utils = ">=0.8.2"
+psycopg2-binary = ">=2.9.3"
+pycountry = ">=24.6.1"
+pydantic = ">=2.4.0"
+python-slugify = ">=6.1.2"
+requests = ">=2.28"
+sqlalchemy = ">=1.4.31,<2.0"
+SQLAlchemy-Utils = ">=0.38.2"
 
 [package.source]
 type = "git"
 url = "https://github.com/climatepolicyradar/navigator-db-client.git"
-reference = "v3.9.21"
-resolved_reference = "192818033cbfc231bd7d0307088439cbd4097861"
+reference = "v3.12.0"
+resolved_reference = "ada21d854d5708c5778c7daf0a72113aceccc541"
 
 [[package]]
 name = "dill"
@@ -1382,7 +1382,7 @@ files = [
 
 [package.dependencies]
 googleapis-common-protos = ">=1.57,<2.0"
-grpcio = {version = ">=1.75.1,<2.0.0", markers = "python_version >= \"3.14\""}
+grpcio = {version = ">=1.66.2,<2.0.0", markers = "python_version == \"3.13\""}
 opentelemetry-api = ">=1.15,<2.0"
 opentelemetry-exporter-otlp-proto-common = "1.41.0"
 opentelemetry-proto = "1.41.0"
@@ -3135,5 +3135,5 @@ type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.14"
-content-hash = "4cb9dedc41b23b6db8d72d48403df45e2a5ac0fd86e9e5d1c44d30392e734d02"
+python-versions = "~3.13"
+content-hash = "2d658e7b15f51c837b42725ece524b3549c5287757899d7c16cfcb08c9e7a89f"
