@@ -153,53 +153,10 @@ rds_monitoring_role = aws.iam.Role(
     opts=pulumi.ResourceOptions(protect=True),
 )
 
-rds_kms_key = aws.kms.Key(
-    "rds_kms_key",
-    description="Default key that protects my RDS database volumes when no other key is defined",
-    enable_key_rotation=True,
-    policy=json.dumps(
-        {
-            "Id": "auto-rds-2",
-            "Statement": [
-                {
-                    "Action": [
-                        "kms:Encrypt",
-                        "kms:Decrypt",
-                        "kms:ReEncrypt*",
-                        "kms:GenerateDataKey*",
-                        "kms:CreateGrant",
-                        "kms:ListGrants",
-                        "kms:DescribeKey",
-                    ],
-                    "Condition": {
-                        "StringEquals": {
-                            "kms:CallerAccount": account_id,
-                            "kms:ViaService": "rds.eu-west-1.amazonaws.com",
-                        }
-                    },
-                    "Effect": "Allow",
-                    "Principal": {"AWS": "*"},
-                    "Resource": "*",
-                    "Sid": "Allow access through RDS for all principals in the account that are authorized to use RDS",
-                },
-                {
-                    "Action": [
-                        "kms:Describe*",
-                        "kms:Get*",
-                        "kms:List*",
-                        "kms:RevokeGrant",
-                    ],
-                    "Effect": "Allow",
-                    "Principal": {"AWS": f"arn:aws:iam::{account_id}:root"},
-                    "Resource": "*",
-                    "Sid": "Allow direct access to key metadata to the account",
-                },
-            ],
-            "Version": "2012-10-17",
-        }
-    ),
-    opts=pulumi.ResourceOptions(protect=True),
-)
+# The RDS instances are encrypted with the AWS managed alias/aws/rds key. AWS
+# does not allow its properties, policy or tags to be changed, so it is looked
+# up rather than managed here.
+rds_kms_key = aws.kms.get_key(key_id="alias/aws/rds")
 
 
 # This doesn't have a reason bar the instances were originally provisioned through the console
