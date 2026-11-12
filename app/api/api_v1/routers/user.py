@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 
 from app.errors import RepositoryError, ValidationError
-from app.model.user import UserReadDTO, UserWriteDTO
+from app.model.user import PasswordResetDTO, UserReadDTO, UserWriteDTO
 from app.service import app_user as user_service
 from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
@@ -63,3 +63,8 @@ async def update_user(email: str, user_write: UserWriteDTO) -> UserReadDTO:
             detail=f"User not found: {email}",
         )
     return updated
+
+
+@user_router.post("/users/{email}/password-reset", response_model=PasswordResetDTO)
+def password_reset(email: str):
+    return {"password": "new-password"}

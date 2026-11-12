@@ -1,4 +1,5 @@
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -7,10 +8,10 @@ class UserContext(BaseModel):
     """An object representing what is in the token."""
 
     email: str
-    org_id: Optional[int] = None
+    org_id: int | None = None
     org_ids: list[int] = []
     is_superuser: bool = False
-    authorisation: Optional[Mapping[str, Any]] = None
+    authorisation: Mapping[str, Any] | None = None
 
 
 class OrgMembership(BaseModel):
@@ -34,3 +35,9 @@ class UserWriteDTO(BaseModel):
 
     name: str | None = None
     organisations: list[OrgMembership]
+
+
+class PasswordResetDTO(BaseModel):
+    """Representation of a reset password returned from the API."""
+
+    password: str
