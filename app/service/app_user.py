@@ -83,12 +83,16 @@ def raise_if_unauthorised_to_make_changes(
 
 
 @db_session.with_database()
-def reset_password(target_email: str, db: Session) -> str | None:
+def reset_password(target_email: str, db: Optional[Session] = None) -> str | None:
     """
     Generate a new password for the user with the provided email address,
     hash it and save it to the DB.
     Return the plain text value of the newly generated password
     """
+
+    if db is None:
+        with db_session.get_db() as session:
+            return reset_password(target_email, session)
 
     if app_user_repo.get_user(db, target_email) is None:
         return None
