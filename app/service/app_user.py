@@ -1,5 +1,6 @@
 import logging
 import secrets
+from typing import Optional
 
 from db_client.models.organisation import AppUser
 from sqlalchemy import update as db_update
@@ -22,7 +23,7 @@ def is_superuser(db: Session, user: UserContext) -> bool:
     return app_user_repo.is_superuser(db, user.email)
 
 
-def restrict_entities_to_user_org(user: UserContext) -> list[int] | None:
+def restrict_entities_to_user_org(user: UserContext) -> Optional[list[int]]:
     if user.is_superuser:
         return None
     return user.org_ids
@@ -34,13 +35,13 @@ def all_users() -> list[UserReadDTO]:
         return app_user_repo.all_users(db)
 
 
-def get_user(email: str) -> UserReadDTO | None:
+def get_user(email: str) -> Optional[UserReadDTO]:
     """Return a single user by email, or None if not found."""
     with db_session.get_db() as db:
         return app_user_repo.get_user(db, email)
 
 
-def update_user(email: str, user_write: UserWriteDTO) -> UserReadDTO | None:
+def update_user(email: str, user_write: UserWriteDTO) -> Optional[UserReadDTO]:
     """Update a user's name and organisation memberships.
 
     Validates all supplied org IDs exist, then replaces the user's memberships.

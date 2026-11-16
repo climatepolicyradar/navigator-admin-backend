@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -8,10 +8,10 @@ class UserContext(BaseModel):
     """An object representing what is in the token."""
 
     email: str
-    org_id: int | None = None
+    org_id: Optional[int] = None
     org_ids: list[int] = []
     is_superuser: bool = False
-    authorisation: Mapping[str, Any] | None = None
+    authorisation: Optional[Mapping[str, Any]] = None
 
 
 class OrgMembership(BaseModel):
