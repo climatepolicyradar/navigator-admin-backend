@@ -66,7 +66,13 @@ async def update_user(email: str, user_write: UserWriteDTO) -> UserReadDTO:
 
 
 @user_router.post("/users/{email}/password-reset", response_model=PasswordResetDTO)
-def password_reset(email: str, response: Response):
+def password_reset(email: str, response: Response) -> PasswordResetDTO:
+    """Reset a user's password.
+
+    Plain text password is returned once. Only the hash of the password is stored
+    Superuser only.
+    """
+
     # Prevents caching of the response in browsers and intermediate proxies
     response.headers["Cache-Control"] = "no-store"
 

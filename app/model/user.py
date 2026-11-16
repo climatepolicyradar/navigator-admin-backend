@@ -1,5 +1,4 @@
-from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 from pydantic import BaseModel
 

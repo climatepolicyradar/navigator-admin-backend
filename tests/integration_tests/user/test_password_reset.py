@@ -40,11 +40,12 @@ def test_password_reset_does_not_allow_response_to_be_cached(
     existing_user = AppUser(
         email="cclw@cpr.org",
         name="Test User",
-        hashed_password="Test Organisation",
+        hashed_password="test-password",
         is_superuser=False,
     )
     data_db.add(existing_user)
     data_db.commit()
+
     response = client.post(
         "/api/v1/users/cclw@cpr.org/password-reset",
         headers=superuser_header_token,

@@ -4,7 +4,6 @@ from typing import Optional
 
 from db_client.models.organisation import AppUser
 from sqlalchemy import update as db_update
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -87,14 +86,11 @@ def raise_if_unauthorised_to_make_changes(
 def reset_password(target_email: str) -> str | None:
 
     with db_session.get_db() as db:
-        try:
-            app_user_repo.get_user_by_email(db, target_email)
-
-            new_password = secrets.token_urlsafe(16)
-            new_hashed_password = get_password_hash(new_password)
-            update_password(db, target_email, new_hashed_password)
-            db.commit()
-        except NoResultFound:
+        if app_user_repo.get_user(db, target_email) is None:
             return None
+        new_password = secrets.token_urlsafe(16)
+        new_hashed_password = get_password_hash(new_password)
+        update_password(db, target_email, new_hashed_password)
+        db.commit()
 
-    return new_password
+        return new_password
