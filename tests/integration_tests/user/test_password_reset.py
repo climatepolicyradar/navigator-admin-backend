@@ -112,7 +112,7 @@ def test_password_reset_returns_status_503_SERVICE_UNAVAILABLE_on_db_error(
 
     repository_error = SQLAlchemyError()
 
-    with patch("app.service.app_user.update_password", side_effect=repository_error):
+    with patch("app.repository.app_user.update_password", side_effect=repository_error):
         response = client.post(
             "/api/v1/users/cclw@cpr.org/password-reset",
             headers=superuser_header_token,
