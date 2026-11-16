@@ -83,14 +83,14 @@ def raise_if_unauthorised_to_make_changes(
     return True
 
 
-def reset_password(target_email: str) -> str | None:
+@db_session.with_database()
+def reset_password(target_email: str, db: Session) -> str | None:
 
-    with db_session.get_db() as db:
-        if app_user_repo.get_user(db, target_email) is None:
-            return None
-        new_password = secrets.token_urlsafe(16)
-        new_hashed_password = get_password_hash(new_password)
-        update_password(db, target_email, new_hashed_password)
-        db.commit()
+    if app_user_repo.get_user(db, target_email) is None:
+        return None
+    new_password = secrets.token_urlsafe(16)
+    new_hashed_password = get_password_hash(new_password)
+    update_password(db, target_email, new_hashed_password)
+    db.commit()
 
-        return new_password
+    return new_password
