@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, cast
+from typing import Optional, cast
 
 from db_client.models.organisation import AppUser, Organisation, OrganisationUser
 from sqlalchemy.orm import Session
@@ -41,7 +41,7 @@ def is_active(db: Session, email: str) -> bool:
 
 def get_app_user_authorisation(
     db: Session, app_user: AppUser
-) -> list[Tuple[OrganisationUser, Organisation]]:
+) -> list[tuple[OrganisationUser, Organisation]]:
     query = (
         db.query(OrganisationUser, Organisation)
         .filter(OrganisationUser.appuser_email == app_user.email)
@@ -50,7 +50,7 @@ def get_app_user_authorisation(
     return [(r[0], r[1]) for r in query.all()]
 
 
-def get_user(db: Session, email: str) -> Optional[UserReadDTO]:
+def get_user(db: Session, email: str) -> UserReadDTO | None:
     """Get a user and their organisation memberships by email."""
     user = db.query(AppUser).filter(AppUser.email == email).one_or_none()
     if user is None:
@@ -95,4 +95,12 @@ def update_org_memberships(
             )
         )
 
+    db.flush()
+
+
+def update_password(db: Session, email: str, hashed_password: str):
+    """Replace a user's hashed_password with the value."""
+    db.query(AppUser).filter(AppUser.email == email).update(
+        {"hashed_password": hashed_password}
+    )
     db.flush()

@@ -1,8 +1,9 @@
 import logging
-from typing import Optional
+import secrets
 
 from db_client.models.organisation import AppUser
 from sqlalchemy import update as db_update
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
 import app.clients.db.session as db_session
@@ -10,6 +11,8 @@ import app.repository.organisation as org_repo
 from app.errors import AuthorisationError, ValidationError
 from app.model.user import UserContext, UserReadDTO, UserWriteDTO
 from app.repository import app_user_repo
+from app.repository.app_user import update_password
+from app.service.authentication import get_password_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +22,7 @@ def is_superuser(db: Session, user: UserContext) -> bool:
     return app_user_repo.is_superuser(db, user.email)
 
 
-def restrict_entities_to_user_org(user: UserContext) -> Optional[list[int]]:
+def restrict_entities_to_user_org(user: UserContext) -> list[int] | None:
     if user.is_superuser:
         return None
     return user.org_ids
@@ -31,13 +34,13 @@ def all_users() -> list[UserReadDTO]:
         return app_user_repo.all_users(db)
 
 
-def get_user(email: str) -> Optional[UserReadDTO]:
+def get_user(email: str) -> UserReadDTO | None:
     """Return a single user by email, or None if not found."""
     with db_session.get_db() as db:
         return app_user_repo.get_user(db, email)
 
 
-def update_user(email: str, user_write: UserWriteDTO) -> Optional[UserReadDTO]:
+def update_user(email: str, user_write: UserWriteDTO) -> UserReadDTO | None:
     """Update a user's name and organisation memberships.
 
     Validates all supplied org IDs exist, then replaces the user's memberships.
@@ -78,3 +81,19 @@ def raise_if_unauthorised_to_make_changes(
         raise AuthorisationError(msg)
 
     return True
+
+
+def reset_password(target_email: str) -> str | None:
+
+    with db_session.get_db() as db:
+        try:
+            app_user_repo.get_user_by_email(db, target_email)
+
+            new_password = secrets.token_urlsafe(16)
+            new_hashed_password = get_password_hash(new_password)
+            update_password(db, target_email, new_hashed_password)
+            db.commit()
+        except NoResultFound:
+            return None
+
+    return new_password
