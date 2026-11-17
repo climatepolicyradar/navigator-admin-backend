@@ -34,3 +34,9 @@ class UserWriteDTO(BaseModel):
 
     name: str | None = None
     organisations: list[OrgMembership]
+
+
+class PasswordResetDTO(BaseModel):
+    """Representation of a reset password returned from the API."""
+
+    password: str

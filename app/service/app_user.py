@@ -1,4 +1,5 @@
 import logging
+import secrets
 from typing import Optional
 
 from db_client.models.organisation import AppUser
@@ -10,6 +11,7 @@ import app.repository.organisation as org_repo
 from app.errors import AuthorisationError, ValidationError
 from app.model.user import UserContext, UserReadDTO, UserWriteDTO
 from app.repository import app_user_repo
+from app.service.authentication import get_password_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,3 +80,25 @@ def raise_if_unauthorised_to_make_changes(
         raise AuthorisationError(msg)
 
     return True
+
+
+@db_session.with_database()
+def reset_password(target_email: str, db: Optional[Session] = None) -> str | None:
+    """
+    Generate a new password for the user with the provided email address,
+    hash it and save it to the DB.
+    Return the plain text value of the newly generated password
+    """
+
+    if db is None:
+        with db_session.get_db() as session:
+            return reset_password(target_email, session)
+
+    if app_user_repo.get_user(db, target_email) is None:
+        return None
+    new_password = secrets.token_urlsafe(16)
+    new_hashed_password = get_password_hash(new_password)
+    app_user_repo.update_password(db, target_email, new_hashed_password)
+    db.commit()
+
+    return new_password

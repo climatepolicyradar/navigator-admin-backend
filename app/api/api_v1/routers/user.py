@@ -1,9 +1,9 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from app.errors import RepositoryError, ValidationError
-from app.model.user import UserReadDTO, UserWriteDTO
+from app.model.user import PasswordResetDTO, UserReadDTO, UserWriteDTO
 from app.service import app_user as user_service
 from app.telemetry_exceptions import ExceptionHandlingTelemetryRoute
 
@@ -63,3 +63,29 @@ async def update_user(email: str, user_write: UserWriteDTO) -> UserReadDTO:
             detail=f"User not found: {email}",
         )
     return updated
+
+
+@user_router.post("/users/{email}/password-reset", response_model=PasswordResetDTO)
+def password_reset(email: str, response: Response) -> PasswordResetDTO:
+    """Reset a user's password.
+
+    Plain text password is returned once. Only the hash of the password is stored
+    Superuser only.
+    """
+
+    # Prevents caching of the response in browsers and intermediate proxies
+    response.headers["Cache-Control"] = "no-store"
+
+    try:
+        password = user_service.reset_password(email)
+    except RepositoryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=e.message
+        )
+
+    if password is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"User not found: {email}"
+        )
+
+    return PasswordResetDTO(password=password)

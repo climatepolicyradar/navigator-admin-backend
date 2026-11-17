@@ -96,3 +96,11 @@ def update_org_memberships(
         )
 
     db.flush()
+
+
+def update_password(db: Session, email: str, hashed_password: str):
+    """Replace a user's hashed_password with the value."""
+    db.query(AppUser).filter(AppUser.email == email).update(
+        {"hashed_password": hashed_password}
+    )
+    db.flush()
