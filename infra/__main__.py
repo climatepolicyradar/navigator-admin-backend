@@ -323,7 +323,41 @@ rds_backups = aws.s3.Bucket(
     opts=pulumi.ResourceOptions(protect=True),
 )
 
+
+def _enable_s3_versioning(resource_prefix: str, bucket_name: pulumi.Input[str]) -> None:
+    """Enable S3 versioning and 90-day noncurrent version cleanup on a bucket."""
+    versioning = aws.s3.BucketVersioning(
+        f"{resource_prefix}-versioning",
+        bucket=bucket_name,
+        versioning_configuration=aws.s3.BucketVersioningVersioningConfigurationArgs(
+            status="Enabled",
+        ),
+    )
+    aws.s3.BucketLifecycleConfiguration(
+        f"{resource_prefix}-lifecycle",
+        bucket=bucket_name,
+        rules=[
+            aws.s3.BucketLifecycleConfigurationRuleArgs(
+                id="noncurrent-version-cleanup-90d",
+                status="Enabled",
+                filter=aws.s3.BucketLifecycleConfigurationRuleFilterArgs(),
+                noncurrent_version_expiration=aws.s3.BucketLifecycleConfigurationRuleNoncurrentVersionExpirationArgs(
+                    noncurrent_days=90,
+                ),
+                abort_incomplete_multipart_upload=aws.s3.BucketLifecycleConfigurationRuleAbortIncompleteMultipartUploadArgs(
+                    days_after_initiation=7,
+                ),
+                expiration=aws.s3.BucketLifecycleConfigurationRuleExpirationArgs(
+                    expired_object_delete_marker=True,
+                ),
+            ),
+        ],
+        opts=pulumi.ResourceOptions(depends_on=[versioning]),
+    )
+
+
 bulk_import_bucket = aws.s3.get_bucket(bucket=f"cpr-{stack}-bulkimport")
+_enable_s3_versioning(f"{stack}-bulkimport", bulk_import_bucket.bucket)
 cpr_document_cache_bucket = aws.s3.get_bucket(bucket=f"cpr-{stack}-document-cache")
 data_mapper_csv_upload_bucket = aws.s3.get_bucket(
     bucket=CONFIG.require("data_mapper_csv_upload_bucket")
@@ -341,6 +375,10 @@ s3_bucket_arns = [
 if stack == "staging":
     staging_pdf_upload_bucket = aws.s3.get_bucket(
         bucket=CONFIG.require("document_store_pdf_upload_bucket")
+    )
+
+    _enable_s3_versioning(
+        "staging-document-pdf-upload-store", staging_pdf_upload_bucket.bucket
     )
 
     aws.s3.BucketCorsConfiguration(
